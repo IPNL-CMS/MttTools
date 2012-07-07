@@ -42,21 +42,12 @@ SOBJECTS	= $(SOURCES:.$(SrcSuf)=.$(DllSuf))
 ###
 
 #all: drawPhotonJet_2bkg drawPhotonJetExtrap draw_all_methods_vs_pt draw_all_methods_vs_npv draw_crosschecks
-all: process_all process_all_old
+all: process_all
 
 clean:
 	@rm *.o;
 
 process_all: Extractor2Histos.o process_all.o
-	$(LD) $(LIBS) $(SOFLAGS) $(LDFLAGS) $+ -o $@
-
-process_all_old: Extractor2Histos_old.o process_all_old.o
-	$(LD) $(LIBS) $(SOFLAGS) $(LDFLAGS) $+ -o $@
-
-process_all_old_semie: Extractor2Histos_old.o process_all_old_semie.o
-	$(LD) $(LIBS) $(SOFLAGS) $(LDFLAGS) $+ -o $@
-
-process_all_old_semimu: Extractor2Histos_old.o process_all_old_semimu.o
 	$(LD) $(LIBS) $(SOFLAGS) $(LDFLAGS) $+ -o $@
 
 %.o: %.cpp
