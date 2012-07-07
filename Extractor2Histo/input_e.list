@@ -1,0 +1,11 @@
+# Input_file  Output_file Name
+MTT_TTJets_2012_v1_semie.root                        MTT_Histos_TTbar_2012_v1_semie.root                              TTJets
+MTT_WJetsToLNu_2012_v1_semie.root                    MTT_Histos_Wjets_2012_v1_semie.root                              WJetsToLNu
+MTT_DYJetsToLL_M-50_2012_v1_semie.root               MTT_Histos_ZjetsToLL_M-50_2012_v1_semie.root                     DYJetsToLL
+MTT_Tbar_tW-channel_2012_v1_semie.root               MTT_Histos_AntiSingleTop_tW-channel_2012_v1_semie.root           Tbar_tW-channel
+MTT_Tbar_s-channel_2012_v1_semie.root                MTT_Histos_AntiSingleTop_s-channel_2012_v1_semie.root            Tbar_s-channel
+MTT_T_tW-channel_2012_v1_semie.root                  MTT_Histos_SingleTop_tW-channel_2012_v1_semie.root               T_tW-channel
+MTT_QCD_Pt_20_30_EMEnriched_2012_v1_semie.root       MTT_Histos_QCD_Pt_20_30_EMEnriched_2012_v1_semie.root            QCD_Pt_20_30_EMEnriched
+MTT_QCD_Pt_30_80_EMEnriched_2012_v1_semie.root       MTT_Histos_QCD_Pt_30_80_EMEnriched_2012_v1_semie.root            QCD_Pt_30_80_EMEnriched
+MTT_QCD_Pt_80_170_EMEnriched_2012_v1_semie.root      MTT_Histos_QCD_Pt_80_170_EMEnriched_2012_v1_semie.root           QCD_Pt_80_170_EMEnriched
+end

@@ -1,0 +1,10 @@
+# Input_file  Output_file semimu?
+MTT_ElectronHad_Run2012A_25June.root            MTT_Histos_ElectronHad_Run2012A.root              0
+MTT_SingleElectron_Run2012B_25June.root         MTT_Histos_SingleElectron_Run2012B.root           0
+MTT_SingleElectron_Run2012B_part2_25June.root   MTT_Histos_SingleElectron_Run2012B_part2.root     0
+MTT_SingleElectron_Run2012B_part3_25June.root   MTT_Histos_SingleElectron_Run2012B_part3.root     0
+MTT_MuHad_Run2012A_25June.root                  MTT_Histos_MuHad_Run2012A.root                    1
+MTT_SingleMu_Run2012B_25June.root               MTT_Histos_SingleMu_Run2012B.root                 1
+MTT_SingleMu_Run2012B_part2_25June.root         MTT_Histos_SingleMu_Run2012B_part2.root           1
+MTT_SingleMu_Run2012B_part3_25June.root         MTT_Histos_SingleMu_Run2012B_part3.root           1
+end
