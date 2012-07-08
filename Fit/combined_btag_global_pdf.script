@@ -1,0 +1,45 @@
+# Categories:
+# {electron;0-btag} -> 0
+# {muon;0-btag} -> 1
+# {electron;1-btag} -> 2
+# {muon;1-btag} -> 3
+# {electron;2-btag} -> 4
+# {muon;2-btag} -> 5
+
+# First, create our main observable, ie number of signal events
+nSig[0., -1000., 2000.]
+
+# Create our number of background events, one for each category.
+nBkg_e_0[2000., 0., 50000.]
+nBkg_e_1[2000., 0., 50000.]
+nBkg_e_2[2000., 0., 50000.]
+nBkg_mu_0[2000., 0., 50000.]
+nBkg_mu_1[2000., 0., 50000.]
+nBkg_mu_2[2000., 0., 50000.]
+
+# Create number of signal events variable for each category except {muon;2-btag}, with constraints
+
+# Muon, 0 btag
+prod::nSig_mu_0(eff_ratio_mu_0b_mu_2b, lumiRatio, nSig)
+
+# Electron, 0 btag
+prod::nSig_e_0(eff_ratio_e_0b_mu_0b, lumiRatio, nSig_mu_0)
+
+# Muon, 1 btag
+prod::nSig_mu_1(eff_ratio_mu_1b_mu_2b, lumiRatio, nSig)
+
+# Electron, 1 btag
+prod::nSig_e_1(eff_ratio_e_1b_mu_1b, lumiRatio, nSig_mu_1)
+
+# Electron, 2 btag
+prod::nSig_e_2(eff_ratio_e_2b_mu_2b, lumiRatio, nSig)
+
+# Create global pdf
+SUM::global_pdf_electron_0btag(nSig_e_0 * signal_{electron;0-btag}, nBkg_e_0 * background_{electron;0-btag})
+SUM::global_pdf_muon_0btag(nSig_mu_0 * signal_{muon;0-btag}, nBkg_mu_0 * background_{muon;0-btag})
+
+SUM::global_pdf_electron_1btag(nSig_e_1 * signal_{electron;1-btag}, nBkg_e_1 * background_{electron;1-btag})
+SUM::global_pdf_muon_1btag(nSig_mu_1 * signal_{muon;1-btag}, nBkg_mu_1 * background_{muon;1-btag})
+
+SUM::global_pdf_electron_2btag(nSig_e_2 * signal_{electron;2-btag}, nBkg_e_2 * background_{electron;2-btag})
+SUM::global_pdf_muon_2btag(nSig * signal_{muon;2-btag}, nBkg_mu_2 * background_{muon;2-btag})

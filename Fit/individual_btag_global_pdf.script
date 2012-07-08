@@ -1,0 +1,17 @@
+# Categories:
+# electron -> 11
+# muon -> 13
+
+# First, create our main observable, ie number of signal events
+nSig[0., -1000., 2000.]
+
+# Create our number of background events, one for each category.
+nBkg_e[2000., 0., 50000.]
+nBkg_mu[2000., 0., 50000.]
+
+# Electron
+prod::nSig_e(eff_ratio_e_mu, lumiRatio, nSig)
+
+# Create global pdf
+SUM::global_pdf_electron(nSig_e * signal_electron, nBkg_e * background_electron)
+SUM::global_pdf_muon(nSig * signal_muon, nBkg_mu * background_muon)

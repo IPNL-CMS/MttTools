@@ -1,0 +1,210 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <cmath>
+
+#include "tdrstyle.C"
+
+#include <TString.h>
+#include <TFile.h>
+#include <TCanvas.h>
+
+#include <TROOT.h>
+#include <TH1.h>
+
+#include "Utils.h"
+#include <tclap/CmdLine.h>
+#include <json/json.h>
+
+std::string INPUT_PATH;
+
+void saveToyLimits(const int mass, const double mean, const double rms, const double median, const double m68, const double p68,
+    const double m95, const double p95) {
+
+  const double widthM68 = fabs(m68 - median);
+  const double widthP68 = fabs(p68 - median);
+  const double widthM95 = fabs(m95 - median);
+  const double widthP95 = fabs(p95 - median);
+
+  //const double widthM68 = m68 - median;
+  //const double widthP68 = p68 - median;
+  //const double widthM95 = m95 - median;
+  //const double widthP95 = p95 - median;
+
+  Json::Reader reader;
+  Json::Value root;
+  std::ifstream file("expected_limits.json");
+  reader.parse(file, root);
+  file.close();
+
+  std::stringstream ss;
+  ss << mass;
+  std::string strMass = ss.str();
+
+  root[strMass]["mean"] = mean;
+  root[strMass]["rms"] = rms;
+  root[strMass]["median"] = median;
+  root[strMass]["m68"] = m68;
+  root[strMass]["p68"] = p68;
+  root[strMass]["m95"] = m95;
+  root[strMass]["p95"] = p95;
+  root[strMass]["widthM68"] = widthM68;
+  root[strMass]["widthP68"] = widthP68;
+  root[strMass]["widthM95"] = widthM95;
+  root[strMass]["widthP95"] = widthP95;
+
+  std::ofstream ofile;
+  ofile.open("expected_limits.json", std::ios::out | std::ios::trunc);
+  Json::StyledWriter writer;
+  ofile << writer.write(root);
+  ofile.close();
+}
+
+
+void treatToyStuff(bool writeTxtFile, bool savePsGifFiles, int massZprime) {
+
+
+  gROOT->Clear();  
+  setTDRStyle();
+
+  std::string pdfSignalName = getSignalPdfName();
+  std::string pdfBackgroundName = getFitBackgroundPdfName();
+
+  TString str = TString::Format("%s/data_2011_nominal_%d_toylimit_%s_%s.root", INPUT_PATH.c_str(), massZprime, pdfSignalName.c_str(), pdfBackgroundName.c_str());
+  TFile* f0 = TFile::Open(str);
+
+  TCanvas* cToy = new TCanvas("cToy", "Toy MC pulls", 800, 800);
+  cToy->Divide(1, 2);
+  cToy->cd(1);
+  TH1* hSigFrac_mu = (TH1*) f0->Get("hSigFrac_mu");
+  hSigFrac_mu->Draw();
+  hSigFrac_mu->Fit("gaus");
+  cToy->cd(2);
+  //hLimit_mu->Draw();
+  TH1* hResidual_mu = (TH1*) f0->Get("hResidual_mu");
+  hResidual_mu->Draw();
+  hResidual_mu->Fit("gaus");
+  cToy->Draw();
+
+  TCanvas* cToy2 = new TCanvas("cToy2", "Toy MC pulls", 400, 400);
+  //    cToy2->cd();   
+  TH1* hSigma = (TH1*) f0->Get("hSigma");
+  hSigma->Draw();
+  hSigma->Fit("gaus");
+
+  TCanvas* cerr = new TCanvas("cerr", "Toy MC errors", 400, 400);
+  cerr->Divide(1,2);
+  cerr->cd(1);
+  TH1* hLoErr_mu = (TH1*) f0->Get("hLoErr_mu");
+  hLoErr_mu->Draw();
+  cerr->cd(2);
+  TH1* hHiErr_mu = (TH1*) f0->Get("hHiErr_mu");
+  hHiErr_mu->Draw();
+
+  TCanvas* cLik = new TCanvas("cLik","Likelihoods", 400,400); 
+  //   cLik->cd();
+  TH1* hMinNll = (TH1*) f0->Get("hMinNll");
+  hMinNll->Draw();
+  /*TArrow* arrow = new TArrow(minNllFit, nToyExp/50., minNllFit, 0., 0.03, ">");
+    arrow->SetLineWidth(2.);
+    arrow->SetLineColor(2);
+    arrow->Draw();*/
+  TCanvas* cZ = new TCanvas("cZ","Z cross section", 400,400); 
+  //    cZ->cd();
+  TH1* hLimit_Z = (TH1*) f0->Get("hLimit_Z");
+  //hLimit_Z->GetXaxis()->SetTitle("95% C.L. upper limit on #sigma(pp #rightarrow Z') #times BR(Z' #rightarrow t#bar{t}) (pb)");
+  hLimit_Z->GetXaxis()->SetRangeUser(0.,10.);
+  hLimit_Z->Draw();
+  std::cout << "Mean of the Z limit distribution " << hLimit_Z->GetMean() << std::endl;
+  std::cout << "RMS of the Z limit distribution " << hLimit_Z->GetRMS() << std::endl;
+
+  double areaq = 0.50;
+  double medianq = 0.;
+  hLimit_Z->GetQuantiles(1, &medianq, &areaq);
+  std::cout << "Median of the Z limit distribution " << medianq << std::endl;
+
+  double areaqP68 = 0.84;
+  double P68band = 0.;
+  hLimit_Z->GetQuantiles(1, &P68band, &areaqP68);
+
+  double areaqM68 = 0.16;
+  double M68band = 0.;
+  hLimit_Z->GetQuantiles(1, &M68band, &areaqM68);
+
+  double areaqP95 = 0.975;
+  double P95band = 0.;
+  hLimit_Z->GetQuantiles(1, &P95band, &areaqP95);    
+
+  double areaqM95 = 0.025;
+  double M95band = 0.;
+  hLimit_Z->GetQuantiles(1, &M95band, &areaqM95);
+
+  std::cout << "68% band around the median " << M68band << " " << P68band << std::endl;
+  std::cout << "95% band around the median " << M95band << " " << P95band << std::endl;
+  std::cout << "width of the 68% band around the median " << M68band - medianq << " " << P68band - medianq << std::endl;
+  std::cout << "width of the 95% band around the median " << M95band - medianq << " " << P95band - medianq << std::endl;
+
+
+  if (savePsGifFiles) {
+    TString prefix = TString::Format("data_2011_Zprime%d_%s_%s", massZprime, pdfSignalName.c_str(), pdfBackgroundName.c_str());
+    cToy->Print(TString::Format("%s_LimitPlotsEMu.gif", prefix.Data()));
+    cToy2->Print(TString::Format("%s_LimitPlotsSigma.gif", prefix.Data()));
+    cZ->Print(TString::Format("%s_LimitPlotZ.gif", prefix.Data()));
+    cerr->Print(TString::Format("%s_LimitErrors.gif", prefix.Data()));
+    cLik->Print(TString::Format("%s_LimitNLLToyExp.gif", prefix.Data()));
+    cToy->Print(TString::Format("%s_LimitPlotsEMu.pdf", prefix.Data()));
+    cToy2->Print(TString::Format("%s_pull.pdf", prefix.Data()));
+    cZ->Print(TString::Format("%s_LimitPlotZ.pdf", prefix.Data()));
+    cerr->Print(TString::Format("%s_LimitErrors.pdf", prefix.Data()));
+    cLik->Print(TString::Format("%s_LimitNLLToyExp.pdf", prefix.Data()));
+  }
+  if (writeTxtFile) {
+    ofstream outParFileLimit(TString::Format("data_2011_Zprime%d_fitRes_ToyLimit_median_%s_%s.txt", massZprime, pdfSignalName.c_str(), pdfBackgroundName.c_str()));
+    outParFileLimit << "Mean of the Z limit distribution " << hLimit_Z->GetMean() << std::endl;
+    outParFileLimit << "RMS of the Z limit distribution " << hLimit_Z->GetRMS() << std::endl;
+    outParFileLimit << "Median of the Z limit distribution " << medianq << std::endl;
+    outParFileLimit << "68% band around the median " << M68band << " " << P68band << std::endl;
+    outParFileLimit << "95% band around the median " << M95band << " " << P95band << std::endl;      
+    outParFileLimit << "width of the 68% band around the median " << M68band - medianq << " " << P68band - medianq << std::endl;
+    outParFileLimit << "width of the 95% band around the median " << M95band - medianq << " " << P95band - medianq << std::endl;
+
+    outParFileLimit.close();
+  }
+
+  saveToyLimits(massZprime, hLimit_Z->GetMean(), hLimit_Z->GetRMS(), medianq, M68band, P68band, M95band, P95band);
+
+  f0->Close();
+  delete f0;
+}
+
+int main(int argc, char** argv) {
+  try {
+    TCLAP::CmdLine cmd("Treat toy infos", ' ', "0.1");
+
+    TCLAP::SwitchArg writeArg("", "dont-write-root", "Don't save root files", cmd, true);
+    TCLAP::SwitchArg saveArg("", "dont-save", "Don't save images", cmd, true);
+    TCLAP::ValueArg<std::string> inputPathArg("", "input-path", "Where loading files", false, "./toys/results/", "string", cmd);
+    TCLAP::MultiArg<int> massArg("m", "mass", "Zprime mass", false, "integer", cmd);
+
+    cmd.parse(argc, argv);
+
+    std::vector<int> masses = massArg.getValue();
+    if (masses.size() == 0) {
+      masses.push_back(750);
+      masses.push_back(1000);
+      masses.push_back(1250);
+      masses.push_back(1500);
+    }
+
+    INPUT_PATH = inputPathArg.getValue();
+
+    //FIXME: Parallelize
+    for (std::vector<int>::iterator mass = masses.begin(); mass != masses.end(); ++mass) {
+      treatToyStuff(writeArg.getValue(), saveArg.getValue(), *mass);
+    }
+
+  } catch (TCLAP::ArgException& e) {
+    std::cerr << e.error() << std::endl;
+  }
+}
