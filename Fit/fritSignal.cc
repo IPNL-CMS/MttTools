@@ -127,9 +127,11 @@ void saveParameters(int mass, const std::string& jecType, int btag, double sig_m
 
   Json::Reader reader;
   Json::Value root;
-  std::ifstream file("frit_efficiencies.json");
-  reader.parse(file, root);
-  file.close();
+  if (fileExists("frit_efficiencies.json")) {
+    std::ifstream file("frit_efficiencies.json");
+    reader.parse(file, root);
+    file.close();
+  }
 
   std::stringstream ss;
   ss << mass;

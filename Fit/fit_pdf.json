@@ -1,0 +1,83 @@
+{
+  "{muon;2-btag}": {
+    "signal": {
+      "name": "crystalball",
+      "parameters": "crystalball_mu"
+    },
+    "background": {
+      "name": "faltB",
+      "parameters": "faltB"
+    }
+  },
+  "{electron;2-btag}": {
+    "signal": {
+      "name": "crystalball",
+      "parameters": "crystalball_e"
+    },
+    "background": {
+      "name": "faltB",
+      "parameters": "faltB"
+    }
+  },
+  "{muon;1-btag}": {
+    "signal": {
+      "name": "crystalball",
+      "parameters": "crystalball_mu"
+    },
+    "background": {
+      "name": "faltB",
+      "parameters": "faltB"
+    }
+  },
+  "{electron;1-btag}": {
+    "signal": {
+      "name": "crystalball",
+      "parameters": "crystalball_e"
+    },
+    "background": {
+      "name": "faltB",
+      "parameters": "faltB"
+    }
+  },
+  "{muon;0-btag}": {
+    "signal": {
+      "name": "crystalball",
+      "parameters": "crystalball_mu"
+    },
+    "background": {
+      "name": "faltB",
+      "parameters": "faltB"
+    }
+  },
+  "{electron;0-btag}": {
+    "signal": {
+      "name": "crystalball",
+      "parameters": "crystalball_e"
+    },
+    "background": {
+      "name": "faltB",
+      "parameters": "faltB"
+    }
+  },
+
+  "muon": {
+    "signal": {
+      "name": "crystalball",
+      "parameters": "crystalball_mu"
+    },
+    "background": {
+      "name": "faltB",
+      "parameters": "faltB"
+    }
+  },
+  "electron": {
+    "signal": {
+      "name": "crystalball",
+      "parameters": "crystalball_mu"
+    },
+    "background": {
+      "name": "faltB",
+      "parameters": "faltB"
+    }
+  }
+}

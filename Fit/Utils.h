@@ -1,11 +1,21 @@
 #pragma once
 
+#include <sys/stat.h>
+
 #include <sstream>
 #include <fstream>
 #include <json/json.h>
 
 #include <string.h>
 #include <cstdarg>
+
+bool fileExists(const std::string& filename) {
+  struct stat buf;
+  if (stat(filename.c_str(), &buf) != -1)
+    return true;
+
+  return false;
+}
 
 void getJsonRoot(const std::string& filename, Json::Value& root) {
   std::ifstream file(filename.c_str());

@@ -1,0 +1,40 @@
+{
+  "parameters": {
+    "pdf": {
+      "signal": "crystalball",
+        "background": {
+          "frit": "exp",
+          "fit": "faltB"
+        }
+    },
+      "datasets": {
+        "mc": {
+          "Zprime_M500GeV_W5GeV-madgraph": 500,
+          "Zprime_M750GeV_W7500MeV-madgraph": 750,
+          "Zprime_M1000GeV_W10GeV-madgraph": 1000,
+          "Zprime_M1250GeV_W1250MeV-madgraph": 1250,
+          "Zprime_M1500GeV_W15GeV-madgraph": 1500
+        },
+        "data": {
+          "electrons": [
+            "SingleElectronA1",
+            "SingleElectronA2",
+            "ElectronHadA3",
+            "ElectronHadA4",
+            "ElectronHadA5",
+            "ElectronHadB6",
+            "ElectronHadB7"
+          ],
+          "muons": [
+            "SingleMuA1",
+            "SingleMuA2",
+            "MuHadA3",
+            "MuHadA4",
+            "MuHadA5",
+            "MuHadB6",
+            "MuHadB7"
+          ]
+        }
+      }
+  }
+}
