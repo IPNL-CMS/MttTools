@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
   try {
     TCLAP::CmdLine cmd("Frit Zprime Signal", ' ', "0.1");
 
-    TCLAP::ValueArg<std::string> prefixArg("p", "path", "Where to read the Mtt files", false, "./", "string");
+    TCLAP::ValueArg<std::string> prefixArg("p", "path", "Where to read the Mtt files", false, "./data/", "string");
     TCLAP::ValueArg<int> levelArg("l", "level", "RooFit fit error level", false, -1, "integer");
     TCLAP::SwitchArg warningArg("w", "warning", "Show RooFit fit warnings", false);
     TCLAP::ValueArg<std::string> jecArg("", "jec", "Run the frit for this specific jec.", false, "", "string");

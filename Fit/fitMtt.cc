@@ -1507,9 +1507,9 @@ void fitMtt(int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool wr
     RooDataSet *dataOrig = NULL;
     if (combine) {
       // Combine b-tags
-      TString datafilename_0btag = TString::Format("%s/ds_data_2011-%s_0_btag.txt", BASE_PATH.c_str(), syst_str.c_str());
-      TString datafilename_1btag = TString::Format("%s/ds_data_2011-%s_1_btag.txt", BASE_PATH.c_str(), syst_str.c_str());
-      TString datafilename_2btag = TString::Format("%s/ds_data_2011-%s_2_btag.txt", BASE_PATH.c_str(), syst_str.c_str());
+      TString datafilename_0btag = TString::Format("%s/data/ds_data_2011-%s_0_btag.txt", BASE_PATH.c_str(), syst_str.c_str());
+      TString datafilename_1btag = TString::Format("%s/data/ds_data_2011-%s_1_btag.txt", BASE_PATH.c_str(), syst_str.c_str());
+      TString datafilename_2btag = TString::Format("%s/data/ds_data_2011-%s_2_btag.txt", BASE_PATH.c_str(), syst_str.c_str());
 
       std::cout << "Combining b-tag from " << datafilename_0btag << ", " << datafilename_1btag << " and " << datafilename_2btag << std::endl;
 
@@ -1525,7 +1525,7 @@ void fitMtt(int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool wr
 
     } else {
       // Get dataset from external file
-      TString datafilename = TString::Format("%s/ds_data_2011-%s_%d_btag.txt", BASE_PATH.c_str(), syst_str.c_str(), btag);
+      TString datafilename = TString::Format("%s/data/ds_data_2011-%s_%d_btag.txt", BASE_PATH.c_str(), syst_str.c_str(), btag);
       cout << "Using data from " << datafilename << endl;
       dataOrig = RooDataSet::read(datafilename.Data(), RooArgList(Mtt_KF_reco, whichLepton));
     }
