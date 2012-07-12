@@ -124,6 +124,7 @@ bool DO_SYST_COMPUTATION = false;
 bool SAVE_SIGMA = false;
 bool ONLY_LUMI_SYST = false;
 bool VERBOSE = false;
+bool BATCH_MODE = false;
 
 int main(int argc, char** argv)
 {
@@ -185,6 +186,7 @@ int main(int argc, char** argv)
     TCLAP::SwitchArg onlyLumiSystArg("", "only-lumi-syst", "Only use luminosity error for systematics", cmd);
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", false, 2, "int", cmd);
     TCLAP::SwitchArg verboseArg("v", "verbose", "Verbose mode", cmd);
+    TCLAP::SwitchArg batchArg("", "batch", "Run in batch mode", cmd);
 
     cmd.parse(argc, argv);
 
@@ -201,6 +203,7 @@ int main(int argc, char** argv)
     ONLY_LUMI_SYST = onlyLumiSystArg.getValue();
 
     VERBOSE = verboseArg.getValue();
+    BATCH_MODE = batchArg.getValue();
 
     fitMtt(massArg.getValue(), fitArg.getValue(), fitNameArg.getValue(), doLikScanArg.getValue(), writeRootArg.getValue(), writeTxtArg.getValue(),
         saveFiguresArg.getValue(), doLimitCurveArg.getValue(), nToyArg.getValue(), doLikInToyArg.getValue(), indexArg.getValue(),
@@ -1020,7 +1023,7 @@ void mixEfficiencies(const std::map<int, double>& effs1, const std::map<int, dou
 
 void parseConfigFile(const std::string& filename, RooAbsCategoryLValue& categories, RooWorkspace& workspace) {
 
-  std::fstream configFile(filename.c_str(), std::ios::in);
+  std::fstream configFile((BASE_PATH + "/" + filename).c_str(), std::ios::in);
   std::string line;
   while (std::getline(configFile, line)) {
     if (line[0] == '#' || line.length() == 0)
@@ -1495,12 +1498,12 @@ void fitMtt(int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool wr
   }
   
   // Create output folder
-  TString folderName = TString::Format("%s/%s_%s_%d_btag/", BASE_PATH.c_str(), prefix.Data(), suffix.Data(), btag);
-  mkdir(folderName, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+  if (! BATCH_MODE) {
+    TString folderName = TString::Format("%s/%s_%s_%d_btag/", OUTPUT_PATH.c_str(), prefix.Data(), suffix.Data(), btag);
+    mkdir(folderName, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
-  OUTPUT_PATH += folderName;
-/*  if (BASE_PATH != "./")
-    BASE_PATH += folderName;*/
+    OUTPUT_PATH = folderName;
+  }
 
   if (fit)
   {
@@ -1675,20 +1678,30 @@ void fitMtt(int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool wr
   if (doLimitCurve)
   {
 
+    std::cout << "Starting toys analysis..." << std::endl;
+
     // 0 means a random seed
     RooRandom::randomGenerator()->SetSeed(0);
 
     // Create PDF for toys generation
     std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfsForToys = getCategoriesPdf(BASE_PATH, "fit_pdf.json", Mtt_KF_reco, massZprime, "background", mainCategory, "toy");
+
     std::map<std::string, std::shared_ptr<RooAbsPdf>> globalPdfsForToys;
-    RooSimultaneous simPdfToy("simPdfToy", "simultaneous pdf for toys generation", mainCategory);
+    std::map<int, std::shared_ptr<RooSimultaneous>> simPdfsForGeneration;
+    if (combine) {
+      for (int i = 0; i < maxBTag; i++) {
+        TString name = TString::Format("simPdfToyForGeneration_%d_btag", i);
+        simPdfsForGeneration[i] = std::shared_ptr<RooSimultaneous>(new RooSimultaneous(name, "simultaneous pdf for toys generation", whichLepton));
+      }
+    } else {
+      simPdfsForGeneration[btag] = std::shared_ptr<RooSimultaneous>(new RooSimultaneous("simPdfToyForGeneration", "simultaneous pdf for toys generation", whichLepton));
+    }
     
     // Create PDF for fitting
     RooSimultaneous simPdfToyFit("simPdfToyFit", "simultaneous pdf for toys fitting", mainCategory);
 
     int nEventsToy = 0;
 
-    // File must stay opened until the end
     TFile *fitFile = TFile::Open(TString::Format("%s/%s_fitRes_%s.root", BASE_PATH.c_str(), prefix.Data(), suffix.Data()));
     if (! fitFile) {
       fitFile = TFile::Open(TString::Format("%s/%s_fitRes_%s.root", OUTPUT_PATH.c_str(), prefix.Data(), suffix.Data()));
@@ -1707,6 +1720,7 @@ void fitMtt(int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool wr
       TString objectName = TString::Format("nEvents_%s", cleanedCategory.c_str());
 
       RooRealVar* events = (RooRealVar*) fitFile->Get(objectName);
+      events->SetName(objectName);
       nEventsToy += (int) events->getVal();
 
       nEvents[category] = events;
@@ -1754,17 +1768,38 @@ void fitMtt(int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool wr
 
       // Create extended pdf
       globalPdfsForToys[category] = std::shared_ptr<RooAbsPdf>(new RooExtendPdf(("bkgExtended_" + category).c_str(), "Background extended pdf for toys generation", backgroundPdfsForToys[category]->getPdf(), *nEvents[category]));
-      backgroundPdfsForToys[category]->getPdf().getParameters(RooArgSet(Mtt_KF_reco))->Print("v");
 
-      // Add pdf to simultaneous for toys generation and fitting
-      simPdfToy.addPdf(*globalPdfsForToys[category], category.c_str());
+      if (combine) {
+        std::string leptonName = TString(category).Contains("muon", TString::kIgnoreCase) ? "muon" : "electron";
+        static boost::regex regex("([0-9]+)-btag");
+        boost::smatch regexResults;
+
+        int extractedBTag = 0;
+        if (boost::regex_search(category, regexResults, regex)) {
+          std::string result(regexResults[1].first, regexResults[2].second);
+          extractedBTag = atoi(result.c_str());
+        }
+
+        simPdfsForGeneration[extractedBTag]->addPdf(*globalPdfsForToys[category], leptonName.c_str());
+      } else {
+        simPdfsForGeneration[btag]->addPdf(*globalPdfsForToys[category], category.c_str());
+      }
+
       simPdfToyFit.addPdf(*globalPdfs[category], category.c_str());
     }
 
     std::cout << "Generating " << nEventsToy << " toys events" << std::endl;
 
     // Create parameters for toys generation
-    RooAbsPdf::GenSpec* genSpec = simPdfToy.prepareMultiGen(RooArgSet(Mtt_KF_reco, whichLepton, btagCategory), NumEvents(nEventsToy));
+    std::map<int, std::shared_ptr<RooAbsPdf::GenSpec>> genSpecs;
+
+    if (! combine) {
+      genSpecs[btag] = std::shared_ptr<RooAbsPdf::GenSpec>(simPdfsForGeneration[btag]->prepareMultiGen(RooArgSet(Mtt_KF_reco, whichLepton), NumEvents(nEventsToy), Extended(true)/*, Verbose(true)*/));
+    } else {
+      for (int i = 0; i < maxBTag; i++) {
+        genSpecs[i] = std::shared_ptr<RooAbsPdf::GenSpec>(simPdfsForGeneration[i]->prepareMultiGen(RooArgSet(Mtt_KF_reco, whichLepton, btagCategory), /*NumEvents(nEventsToy),*/ Extended(true)/*, Verbose(true)*/));
+      }
+    }
 
     double minmTTFit = minmTT + 0.0;
     double maxmTTFit = maxmTT - 0.0;
@@ -1782,10 +1817,21 @@ void fitMtt(int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool wr
       std::cout << "Generating toy experiment number " << i << " of " << nToyExp << std::endl;
 
       std::cout << "Generating distribution..." << std::endl;
-      RooDataSet* toyData = simPdfToy.generate(*genSpec);
+      RooDataSet* toyData = nullptr;
+      std::map<int, RooDataSet*> toyDataForEachBTag;
+      if (! combine) {
+        toyData = simPdfsForGeneration[btag]->generate(*genSpecs[btag]);
+      } else {
+        toyData = new RooDataSet("toy_dataset", "toy dataset", RooArgSet(Mtt_KF_reco, whichLepton, btagCategory));
+        for (int j = 0; j < maxBTag; j++) {
+          btagCategory.setIndex(j);
+          toyDataForEachBTag[i] =  simPdfsForGeneration[j]->generate(*genSpecs[j]);
+          toyData->append(*toyDataForEachBTag[i]);
+        }
+      }
       std::cout << "done." << std::endl;
 
-      TFile* myFile = TFile::Open("test.root", "recreate");
+      TFile* myFile = TFile::Open(OUTPUT_PATH + prefix + "_toylimit_" + suffix + "_" + indexJob + "_" + (Long_t) i + ".root", "RECREATE");
       drawHistograms(mainCategory, Mtt_KF_reco, nBins, *toyData, simPdfToyFit, backgroundPdfsForToys, btag, false, std::string(prefix), std::string(suffix), false, false, myFile, true);
       myFile->Close();
       delete myFile;
@@ -1818,8 +1864,7 @@ void fitMtt(int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool wr
       std::cout << "done." << std::endl;
 
       RooFitResult* toyFitRes = minimizer->save();
-
-      toyFitRes->Print();
+      toyFitRes->Print("v");
 
       double nSigVal   = nSig.getVal();
       double nSigErrHi = nSig.getAsymErrorHi();
@@ -1865,7 +1910,8 @@ void fitMtt(int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool wr
       {
 
         LikelihoodResults results;
-        doLikelihoodScan(*toyData, simPdfToyFit, nSig, massZprime, toyFitRes->minNll(), 10, err_sys_ref, results);
+        //FIXME: It's 10 steps
+        doLikelihoodScan(*toyData, simPdfToyFit, nSig, massZprime, toyFitRes->minNll(), 20, err_sys_ref, results);
 
         TString dirName = TString::Format("likscans_%s_toy_%d", indexJob.Data(), i);
         toyResFile->mkdir(dirName);
@@ -1890,12 +1936,14 @@ void fitMtt(int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool wr
         nWorseFit++;
 
       delete toyData;
+
+      for (auto& j: toyDataForEachBTag)
+        delete j.second;
+
       delete toyFitRes;
       delete minimizer;
 
     }
-
-    SAFE_DELETE(genSpec);
 
     Float_t prob = ((Float_t)nWorseFit) / ((Float_t)nToyExp);
     std::cout << "Probability of having a worse fits = " << prob << std::endl;
