@@ -19,7 +19,7 @@
 
 std::string INPUT_PATH;
 
-void saveToyLimits(const int mass, const double mean, const double rms, const double median, const double m68, const double p68,
+void saveToyLimits(const int mass, const int btag, const double mean, const double rms, const double median, const double m68, const double p68,
     const double m95, const double p95) {
 
   const double widthM68 = fabs(m68 - median);
@@ -42,17 +42,21 @@ void saveToyLimits(const int mass, const double mean, const double rms, const do
   ss << mass;
   std::string strMass = ss.str();
 
-  root[strMass]["mean"] = mean;
-  root[strMass]["rms"] = rms;
-  root[strMass]["median"] = median;
-  root[strMass]["m68"] = m68;
-  root[strMass]["p68"] = p68;
-  root[strMass]["m95"] = m95;
-  root[strMass]["p95"] = p95;
-  root[strMass]["widthM68"] = widthM68;
-  root[strMass]["widthP68"] = widthP68;
-  root[strMass]["widthM95"] = widthM95;
-  root[strMass]["widthP95"] = widthP95;
+  ss.clear(); ss.str("");
+  ss << btag;
+  std::string btagStr = ss.str();
+
+  root[strMass][btagStr]["mean"] = mean;
+  root[strMass][btagStr]["rms"] = rms;
+  root[strMass][btagStr]["median"] = median;
+  root[strMass][btagStr]["m68"] = m68;
+  root[strMass][btagStr]["p68"] = p68;
+  root[strMass][btagStr]["m95"] = m95;
+  root[strMass][btagStr]["p95"] = p95;
+  root[strMass][btagStr]["widthM68"] = widthM68;
+  root[strMass][btagStr]["widthP68"] = widthP68;
+  root[strMass][btagStr]["widthM95"] = widthM95;
+  root[strMass][btagStr]["widthP95"] = widthP95;
 
   std::ofstream ofile;
   ofile.open("expected_limits.json", std::ios::out | std::ios::trunc);
@@ -62,7 +66,7 @@ void saveToyLimits(const int mass, const double mean, const double rms, const do
 }
 
 
-void treatToyStuff(bool writeTxtFile, bool savePsGifFiles, int massZprime) {
+void treatToyStuff(bool writeTxtFile, bool savePsGifFiles, int massZprime, int btag) {
 
 
   gROOT->Clear();  
@@ -172,7 +176,7 @@ void treatToyStuff(bool writeTxtFile, bool savePsGifFiles, int massZprime) {
     outParFileLimit.close();
   }
 
-  saveToyLimits(massZprime, hLimit_Z->GetMean(), hLimit_Z->GetRMS(), medianq, M68band, P68band, M95band, P95band);
+  saveToyLimits(massZprime, btag, hLimit_Z->GetMean(), hLimit_Z->GetRMS(), medianq, M68band, P68band, M95band, P95band);
 
   f0->Close();
   delete f0;
@@ -186,6 +190,7 @@ int main(int argc, char** argv) {
     TCLAP::SwitchArg saveArg("", "dont-save", "Don't save images", cmd, true);
     TCLAP::ValueArg<std::string> inputPathArg("", "input-path", "Where loading files", false, "./toys/results/", "string", cmd);
     TCLAP::MultiArg<int> massArg("m", "mass", "Zprime mass", false, "integer", cmd);
+    TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", true, 2, "int", cmd);
 
     cmd.parse(argc, argv);
 
@@ -201,7 +206,7 @@ int main(int argc, char** argv) {
 
     //FIXME: Parallelize
     for (std::vector<int>::iterator mass = masses.begin(); mass != masses.end(); ++mass) {
-      treatToyStuff(writeArg.getValue(), saveArg.getValue(), *mass);
+      treatToyStuff(writeArg.getValue(), saveArg.getValue(), *mass, btagArg.getValue());
     }
 
   } catch (TCLAP::ArgException& e) {
