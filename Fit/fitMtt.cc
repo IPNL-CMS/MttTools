@@ -567,7 +567,7 @@ void saveLikelihoodResults(const int mass, int btag, const LikelihoodResults& re
   fclose(lock);
 }
 
-void doLikelihoodScan(RooDataSet& dataset, RooAbsPdf& pdf, RooRealVar& observable, const double mass, const double minNLL, const int steps, const double systError, LikelihoodResults& results)
+void doLikelihoodScan(RooAbsData& dataset, RooAbsPdf& pdf, RooRealVar& observable, const double mass, const double minNLL, const int steps, const double systError, LikelihoodResults& results)
 {
 
   RooFitResult* fitResults = NULL;
@@ -828,7 +828,7 @@ std::string buildCutFormula(RooAbsCategoryLValue& categories) {
   return ss.str();
 }
 
-void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, int nBins, RooDataSet& dataset, RooSimultaneous& simPdfs, std::map<std::string, std::shared_ptr<BaseFunction>>& backgroundPdfs, int btag, bool savePlots, const std::string& prefix, const std::string& suffix, bool drawSignal, bool log, TFile* outputFile, bool drawOnlyData = false) {
+void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, int nBins, RooAbsData& dataset, RooSimultaneous& simPdfs, std::map<std::string, std::shared_ptr<BaseFunction>>& backgroundPdfs, int btag, bool savePlots, const std::string& prefix, const std::string& suffix, bool drawSignal, bool log, TFile* outputFile, bool drawOnlyData = false) {
 
   std::vector<std::shared_ptr<RooPlot>> plots;
 
@@ -976,6 +976,7 @@ std::map<std::string, float> computeChi2(RooRealVar& observable, const RooSimult
 
   const float resolution = 5.;
   const int nBinsForChi2 = (observable.getMax() - observable.getMin() + 0.5) / resolution;
+  const int oldBinning = observable.getBins();
   observable.setBins(nBinsForChi2);
   std::cout << "Binning dataset with " << nBinsForChi2 << " bins for chi2 computation (" << observable.getMin() << " -> " << observable.getMax() << " ; resolution: " << resolution << " GeV)" << std::endl;
 
@@ -1008,8 +1009,8 @@ std::map<std::string, float> computeChi2(RooRealVar& observable, const RooSimult
     categories = type->GetName();
     std::string cut = buildCutFormula(categories);
 
-    RooAbsData* reducedDataset = dataset.reduce(Cut(cut.c_str()));
-    RooDataHist* binnedDataset = new RooDataHist("binnedDataset", "binned dataset", RooArgSet(observable), *reducedDataset);
+    std::shared_ptr<RooAbsData> reducedDataset(dataset.reduce(Cut(cut.c_str())));
+    std::shared_ptr<RooDataHist> binnedDataset(new RooDataHist("binnedDataset", "binned dataset", RooArgSet(observable), *reducedDataset));
 
     float chi2 = RooChi2Var("chi2", "chi2", *pdf, *binnedDataset, DataError(RooAbsData::Poisson)).getVal();
     float chi2NDF = (chi2 / (observable.getBins() - numberOfFloatingParams / numberOfCategories));
@@ -1018,9 +1019,6 @@ std::map<std::string, float> computeChi2(RooRealVar& observable, const RooSimult
     results[type->GetName()] = chi2NDF;
 
     combinedChi2 += chi2;
-
-    delete binnedDataset;
-    delete reducedDataset;
   }
 
   std::cout << std::endl;
@@ -1029,6 +1027,8 @@ std::map<std::string, float> computeChi2(RooRealVar& observable, const RooSimult
   combinedChi2 /= (numberOfCategories * observable.getBins() - numberOfFloatingParams);
   std::cout << "Combined Chi2: " << combinedChi2 << std::endl;
   results["combined"] = combinedChi2;
+
+  observable.setBins(oldBinning);
 
   return results;
 }
@@ -1559,20 +1559,27 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
       dataOrig = RooDataSet::read(datafilename.Data(), RooArgList(Mtt_KF_reco, whichLepton));
     }
 
-    // Reduce data set
-    //TODO: This step is not needed, remove it
-    TString cutstr = TString::Format("Mtt_KF_reco>%d&&Mtt_KF_reco<%d", (int) minmTT, (int) maxmTT);
-    RooDataSet* RedData = (RooDataSet*) dataOrig->reduce(cutstr.Data());
-    std::cout << "Dataset entries: " << RedData->numEntries() << std::endl;
-
     Double_t minmTTFit = minmTT + 0.0;
     Double_t maxmTTFit = maxmTT - 0.0;
     Mtt_KF_reco.setRange(minmTTFit, maxmTTFit);
+
+    // Set binning to 1 GeV
+    Mtt_KF_reco.setBins(maxmTTFit - minmTTFit);
+
+    // Create a binned dataset
+    std::shared_ptr<RooDataHist> binnedDataset = std::shared_ptr<RooDataHist>(dataOrig->binnedClone());
+
+    std::shared_ptr<RooAbsData> datasetToFit = binnedDataset; // Binned likelihood
+    //std::shared_ptr<RooAbsData> datasetToFit(dataOrig); // Unbinned likelihood
+
+    std::cout << "Dataset entries: " << dataOrig->numEntries() << std::endl;
+    std::cout << "Fitting..." << std::endl;
+
     // RooFit::Optimize(1) is needed in RooFit 3.50, otherwise the fit
     // does NOT converge. It disables variable caching introduced by RooFit 3.50
     // Optimize(0) does also works, but it disable caching completely.
     // It seems fit does NOT converge when using NumCPU != 1. Awesome!
-    RooFitResult *fitResult = simPdf.fitTo(*RedData, Save(), Optimize(1));
+    RooFitResult *fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(1), Strategy(2));
     fitResult->Print("v");
     
     TFile* outputFile = nullptr;
@@ -1580,10 +1587,10 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
       outputFile = TFile::Open(OUTPUT_PATH + prefix + "_fitRes_" + suffix + ".root", "RECREATE");
     }
 
-    drawHistograms(mainCategory, Mtt_KF_reco, nBins, *RedData, simPdf, backgroundPdfs, btag, saveFigures, std::string(prefix), std::string(suffix), !bkgOnly, false, outputFile);
-    drawHistograms(mainCategory, Mtt_KF_reco, nBins, *RedData, simPdf, backgroundPdfs, btag, saveFigures, std::string(prefix), std::string(suffix), !bkgOnly, true, outputFile);
+    drawHistograms(mainCategory, Mtt_KF_reco, nBins, *datasetToFit, simPdf, backgroundPdfs, btag, saveFigures, std::string(prefix), std::string(suffix), !bkgOnly, false, outputFile);
+    drawHistograms(mainCategory, Mtt_KF_reco, nBins, *datasetToFit, simPdf, backgroundPdfs, btag, saveFigures, std::string(prefix), std::string(suffix), !bkgOnly, true, outputFile);
 
-    std::map<std::string, float> chi2 = computeChi2(Mtt_KF_reco, simPdf, mainCategory, *RedData, mainWorkspace);
+    std::map<std::string, float> chi2 = computeChi2(Mtt_KF_reco, simPdf, mainCategory, *dataOrig, mainWorkspace);
 
     if (outputFile) {
       outputFile->cd();
@@ -1625,7 +1632,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
 
       LikelihoodResults results;
       //FIXME. Steps is 2
-      doLikelihoodScan(*RedData, simPdf, nSig, massZprime, fitResult->minNll(), 2, err_sys_events, results);
+      doLikelihoodScan(*datasetToFit, simPdf, nSig, massZprime, fitResult->minNll(), 2, err_sys_events, results);
 
       TFile likelihoodFile(OUTPUT_PATH + prefix + "_likscan_" + suffix + ".root", "recreate");
       likelihoodFile.cd();
@@ -1693,7 +1700,6 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
     */
 
     SAFE_DELETE(fitResult);
-    SAFE_DELETE(RedData);
   }
 
   if (doLimitCurve)
@@ -1825,6 +1831,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
     double minmTTFit = minmTT + 0.0;
     double maxmTTFit = maxmTT - 0.0;
     Mtt_KF_reco.setRange(minmTTFit, maxmTTFit);
+    Mtt_KF_reco.setBins(maxmTT - minmTT);
 
     // NLL for fitting
     RooAbsReal* nll = NULL;
@@ -1850,7 +1857,9 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
           toyData->append(*toyDataForEachBTag[i]);
         }
       }
+      std::shared_ptr<RooDataHist> binnedDatasetForToys = std::shared_ptr<RooDataHist>(toyData->binnedClone());
       std::cout << "done." << std::endl;
+      std::cout << "Dataset entries: " << toyData->numEntries() << std::endl;
 
       /*
       TFile* myFile = TFile::Open(OUTPUT_PATH + prefix + "_toylimit_" + suffix + "_" + indexJob + "_" + (Long_t) i + ".root", "RECREATE");
@@ -1863,11 +1872,11 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
       if (nll == NULL)
       {
         // Only create the nll the first time
-        nll = simPdfToyFit.createNLL(*toyData, RooFit::Optimize(1));
+        nll = simPdfToyFit.createNLL(*binnedDatasetForToys, RooFit::Optimize(1));
       }
       else
       {
-        nll->setData(*toyData);
+        nll->setData(*binnedDatasetForToys);
       }
 
       //TODO: Maybe we need to reset all pdf parameters to their default values
@@ -1879,6 +1888,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
       RooMinuit* minimizer = new RooMinuit(*nll);
       minimizer->setEvalErrorWall(1);
       minimizer->optimizeConst(1);
+      minimizer->setStrategy(2);
       minimizer->migrad();
 
       // Only compute errors for nSig
@@ -1934,7 +1944,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
 
         LikelihoodResults results;
         //FIXME: It's 10 steps
-        doLikelihoodScan(*toyData, simPdfToyFit, nSig, massZprime, toyFitRes->minNll(), 10, err_sys_events, results);
+        doLikelihoodScan(*binnedDatasetForToys, simPdfToyFit, nSig, massZprime, toyFitRes->minNll(), 10, err_sys_events, results);
 
         TString dirName = TString::Format("likscans_%s_toy_%d", indexJob.Data(), i);
         toyResFile->mkdir(dirName);
