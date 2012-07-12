@@ -7,6 +7,7 @@
 *.gif
 *.root
 *.tex
+nohup.out
 
 computeBkgSyst
 computeSignalSyst
