@@ -7,11 +7,11 @@ ifdef CMSSW_RELEASE_BASE
 UNPATCHED_CMSSW_RELEASE_BASE=$(shell cat $(CMSSW_RELEASE_BASE)/config/toolbox/$(SCRAM_ARCH)/tools/selected/cmssw.xml | grep 'name=\"CMSSW_BASE\"' | awk -F' ' '{print $$3};' | awk -F'\"' '{print $$2;}')
 USERLIBDIRS= -L$(CMSSW_BASE)/lib/$(SCRAM_ARCH) \
 	-L$(CMSSW_RELEASE_BASE)/lib/$(SCRAM_ARCH) \
-	-L$(UNPATCHED_CMSSW_RELEASE_BASE)/lib/$(SCRAM_ARCH) -L$(ROOFITSYS)/lib
+	-L$(UNPATCHED_CMSSW_RELEASE_BASE)/lib/$(SCRAM_ARCH) -L$(ROOFITSYS)/lib -L.
 
 INCDIRS = -I$(shell root-config --incdir) -I$(ROOFITSYS)/include -I$(shell pwd)/include/
 else
-USERLIBDIRS = $(root-config --libdir)
+USERLIBDIRS = $(root-config --libdir) -L.
 
 # Where to search for the include files.
 INCDIRS = -I$(shell root-config --incdir) -I$(shell pwd)/include/
@@ -20,7 +20,7 @@ endif
 CC = gcc
 CXX = g++
 LD = g++
-CFLAGS = $(shell root-config --cflags)
+CFLAGS = -fPIC $(shell root-config --cflags)
 LDFLAGS = $(shell root-config --ldflags) -Wl,--as-needed
 #LDFLAGS = $(shell root-config --ldflags)
 
@@ -30,7 +30,7 @@ LDFLAGS = $(shell root-config --ldflags) -Wl,--as-needed
 CFLAGS += $(INCDIRS) -std=c++0x -g -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wunused-variable
 
 # Everything it needs to know about libraries
-LIBS =  $(USERLIBDIRS) $(USERLIBS) -lboost_regex
+LIBS =  $(USERLIBDIRS) $(USERLIBS) -lboost_regex -lUtils
 
 # Define what to compile as well as the necessary dependencies and
 # object names.
@@ -41,8 +41,8 @@ OBJS =  $(patsubst %.cc, %.o, $(wildcard *.cc))
 all: reduceDataset reduceDatasetFromData fritSignal fitMtt computeEff computeSignalSyst computeJECSyst computeBkgSyst computeSystPb computeSigmaRef runLikelihoodScan treatToyStuff extractLimits drawLimitCurve
 
 # Make the executable
-fitMtt: fitMtt.o lib/jsoncpp.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o fitMtt
+fitMtt: fitMtt.o lib/jsoncpp.o libUtils
+	$(LD) $(LDFLAGS) fitMtt.o lib/jsoncpp.o $(LIBS) $(EXPLLINKLIBS) -o fitMtt
 
 reduceDataset: reduceDataset.o lib/jsoncpp.o
 	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o reduceDataset
@@ -83,12 +83,17 @@ extractLimits: extractLimits.o lib/jsoncpp.o
 drawLimitCurve: drawLimitCurve.o lib/jsoncpp.o
 	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o drawLimitCurve
 
+libUtils: Utils.o lib/jsoncpp.o
+	$(LD) -shared -fvisibility=default $(LDFLAGS) $^ $(EXPLLINKLIBS) -o libUtils.so
+
 # Make the objects
 %.o: %.cc
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
 %.o: %.cpp
 	$(CXX) $(CFLAGS) -c -o $@ $<
+
+.PHONY: libUtils
 
 # Make the dependencies
 %.d: %.cc

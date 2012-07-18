@@ -9,93 +9,33 @@
 #include <string.h>
 #include <cstdarg>
 
-bool fileExists(const std::string& filename) {
-  struct stat buf;
-  if (stat(filename.c_str(), &buf) != -1)
-    return true;
+extern double b_tagging_correction;
+extern double b_tagging_corr_error_relative;
 
-  return false;
-}
+extern double trigger_correction_muons;
+extern double trigger_corr_muons_error_relative;
+extern double trigger_correction_ele;
+extern double trigger_corr_ele_error_relative;
 
-void getJsonRoot(const std::string& filename, Json::Value& root) {
-  std::ifstream file(filename.c_str());
-  Json::Reader reader;
-  if (! reader.parse(file, root)) {
-    std::cerr << "ERROR: Failed to parse " << filename << "." << std::endl;
-    exit(1);
-  }
-  file.close();
-}
+extern double muID_correction;
+extern double muID_correction_error_relative;
+extern double muIso_correction;
+extern double muIso_correction_error_relative;
+  //
+extern double eleID_correction;
+extern double eleID_correction_error_relative;
+extern double eleIso_correction;
+extern double eleIso_correction_error_relative;
 
-std::string formatPath(const std::string& base, const std::string& filename) {
-  std::stringstream ss;
-  ss << base << "/" << filename;
+extern bool fileExists(const std::string& filename);
+extern void getJsonRoot(const std::string& filename, Json::Value& root);
+extern std::string formatPath(const std::string& base, const std::string& filename);
+extern std::string getSignalPdfName(const std::string& base);
+extern std::string getSignalPdfName();
+extern std::string getFitBackgroundPdfName(const std::string& base);
+extern std::string getFitBackgroundPdfName();
+extern std::string getFritBackgroundPdfName(const std::string& base);
+extern std::string getFritBackgroundPdfName();
+extern char** getSystCLParameters(const std::string& mass, bool muonsOnly, int btag, ...);
 
-  return ss.str();
-}
-
-std::string getSignalPdfName(const std::string& base) {
-  Json::Value root;
-  getJsonRoot(formatPath(base, "parameters.json"), root);
-
-  //FIXME: Check
-  return root["parameters"]["pdf"]["signal"].asString();
-}
-
-std::string getSignalPdfName() {
-  return getSignalPdfName(".");
-}
-
-std::string getFitBackgroundPdfName(const std::string& base) {
-  Json::Value root;
-  getJsonRoot(formatPath(base, "parameters.json"), root);
-
-  //FIXME: Check
-  return root["parameters"]["pdf"]["background"]["fit"].asString();
-}
-
-std::string getFitBackgroundPdfName() {
-  return getFitBackgroundPdfName(".");
-}
-
-std::string getFritBackgroundPdfName(const std::string& base) {
-  Json::Value root;
-  getJsonRoot(formatPath(base, "parameters.json"), root);
-
-  //FIXME: Check
-  return root["parameters"]["pdf"]["background"]["frit"].asString();
-}
-
-std::string getFritBackgroundPdfName() {
-  return getFritBackgroundPdfName(".");
-}
-
-char** getSystCLParameters(const std::string& mass, bool muonsOnly, int btag, ...) {
- // fitMtt", "-m", ss.str().c_str(), "--syst", (*param).c_str(), "--syst-computation", "--no-figs", "--no-text-files", "--no-root-files", "--muons-only  
- 
-  va_list paramList;
-  va_start(paramList, btag);
-
-  std::vector<const char*> params = { "fitMtt", "-m", mass.c_str(), "--syst-computation", "--no-figs", "--no-text-files", "--no-root-files", "--b-tag" };
-
-  std::stringstream ss;
-  ss << btag;
-
-  params.push_back(strdup(ss.str().c_str()));
-
-  if (muonsOnly)
-    params.push_back("--muons-only");
-
-  char * arg = NULL;
-  while ((arg = va_arg(paramList, char*))) {
-    params.push_back(arg);
-  }
-  params.push_back(NULL);
-
-  char** array = new char*[params.size()];
-  for (size_t i = 0; i < params.size(); i++) {
-    array[i] = const_cast<char*>(params[i]);
-  }
-
-  return array;
-}
+extern "C" double computeEfficiency(double selEfficiency, double hltEfficiency);

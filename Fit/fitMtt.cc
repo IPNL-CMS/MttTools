@@ -205,6 +205,7 @@ int main(int argc, char** argv)
     VERBOSE = verboseArg.getValue();
     BATCH_MODE = batchArg.getValue();
 
+
     fitMtt(massArg.getValue(), fitArg.getValue(), fitNameArg.getValue(), doLikScanArg.getValue(), writeRootArg.getValue(), writeTxtArg.getValue(),
         saveFiguresArg.getValue(), doLimitCurveArg.getValue(), nToyArg.getValue(), doLikInToyArg.getValue(), indexArg.getValue(),
         doDiscCurveArg.getValue(), systArg.getValue(), systSignArg.getValue(), systCBArg.getValue(), bkgOnlyArg.getValue(), onlyMuonArg.getValue(), btagArg.getValue());
@@ -1122,24 +1123,6 @@ void fitMtt(int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool wr
 
   Double_t br_semil = 1.0; //0.14815; now included in the efficiency
 
-  Double_t b_tagging_correction = 0.90; // (0.95^2)
-  Double_t b_tagging_corr_error_relative = 0.08; //0.30; 2010
-
-  Double_t b_tagging_corr_error;
-  Double_t trigger_correction_muons = 1.; // PRELIMINRAY -- was 0.9946
-  Double_t trigger_corr_muons_error_relative = 0.0001;
-  Double_t trigger_correction_ele = 1.; //PRELIMINARY!!
-  Double_t trigger_corr_ele_error_relative = 0.0001;
-  //
-  Double_t muID_correction = 0.997;
-  Double_t muID_correction_error_relative = 0.0012;
-  Double_t muIso_correction = 0.998;
-  Double_t muIso_correction_error_relative = 0.0002;
-  //
-  Double_t eleID_correction = 1.002;
-  Double_t eleID_correction_error_relative = 0.0004;
-  Double_t eleIso_correction = 0.9999;
-  Double_t eleIso_correction_error_relative = 0.0004;
 
   /*
    * Load efficiencies.
@@ -1282,19 +1265,21 @@ void fitMtt(int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool wr
   
   if (! combine) {
 
-    eff_mu[btag] = trigger_correction_muons * muID_correction  * muIso_correction  * b_tagging_correction * sel_eff_mu[btag] * hlt_eff_mu[btag];
-    eff_e[btag]  = trigger_correction_ele   * eleID_correction * eleIso_correction * b_tagging_correction * sel_eff_e[btag]  * hlt_eff_e[btag];
+    eff_mu[btag] = computeEfficiency(sel_eff_mu[btag], hlt_eff_mu[btag]);
+    eff_e[btag]  = computeEfficiency(sel_eff_e[btag], hlt_eff_e[btag]);
     combined_efficiency = eff_mu[btag];
 
   } else {
 
     for (int i = 0; i < maxBTag; i++) {
-      eff_mu[i] = trigger_correction_muons * muID_correction  * muIso_correction  * b_tagging_correction * sel_eff_mu[i] * hlt_eff_mu[i];
-      eff_e[i]  = trigger_correction_ele   * eleID_correction * eleIso_correction * b_tagging_correction * sel_eff_e[i]  * hlt_eff_e[i];
+      eff_mu[i] = computeEfficiency(sel_eff_mu[i], hlt_eff_mu[i]);
+      eff_e[i]  = computeEfficiency(sel_eff_e[i], hlt_eff_e[i]);
     }
 
     combined_efficiency = eff_mu[2]; // Our parameters is nSig_mu for 2 btag. Use its efficiency for sigma computation
   }
+
+  std::cout << "Selection efficiency: " << combined_efficiency * 100 << " %" << std::endl;
 
   std::map<int, double> s_eff_mu_relative;
   std::map<int, double> s_eff_e_relative;
@@ -1579,7 +1564,7 @@ void fitMtt(int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool wr
     double s_yield = sigmaZ * s_yield_relative[btag];
     double s_eff_mu = sigmaZ * s_eff_mu_relative[btag];
     s_lumi_mu = sigmaZ * s_lumi_mu;
-    b_tagging_corr_error = sigmaZ * b_tagging_corr_error_relative;
+    double b_tagging_corr_error = sigmaZ * b_tagging_corr_error_relative;
 
     double errorqtot = errorqstat + s_yield * s_yield + b_tagging_corr_error * b_tagging_corr_error + s_eff_mu * s_eff_mu + s_lumi_mu * s_lumi_mu;
     double Limit_Z_obs = sigmaZ + 2. * sqrt(errorqtot);
