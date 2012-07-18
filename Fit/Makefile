@@ -30,7 +30,7 @@ LDFLAGS = $(shell root-config --ldflags) -Wl,--as-needed
 CFLAGS += $(INCDIRS) -std=c++0x -g -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wunused-variable
 
 # Everything it needs to know about libraries
-LIBS =  $(USERLIBDIRS) $(USERLIBS) -lboost_regex -lUtils
+LIBS =  $(USERLIBDIRS) $(USERLIBS) -lboost_regex
 
 # Define what to compile as well as the necessary dependencies and
 # object names.
@@ -42,7 +42,7 @@ all: reduceDataset reduceDatasetFromData fritSignal fitMtt computeEff computeSig
 
 # Make the executable
 fitMtt: fitMtt.o lib/jsoncpp.o libUtils
-	$(LD) $(LDFLAGS) fitMtt.o lib/jsoncpp.o $(LIBS) $(EXPLLINKLIBS) -o fitMtt
+	$(LD) $(LDFLAGS) fitMtt.o lib/jsoncpp.o -Wl,-Bstatic -lUtils -Wl,-Bdynamic $(LIBS) $(EXPLLINKLIBS) -o fitMtt
 
 reduceDataset: reduceDataset.o lib/jsoncpp.o
 	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o reduceDataset
@@ -85,6 +85,7 @@ drawLimitCurve: drawLimitCurve.o lib/jsoncpp.o
 
 libUtils: Utils.o lib/jsoncpp.o
 	$(LD) -shared -fvisibility=default $(LDFLAGS) $^ $(EXPLLINKLIBS) -o libUtils.so
+	ar -cq libUtils.a $^
 
 # Make the objects
 %.o: %.cc
@@ -92,8 +93,6 @@ libUtils: Utils.o lib/jsoncpp.o
 
 %.o: %.cpp
 	$(CXX) $(CFLAGS) -c -o $@ $<
-
-.PHONY: libUtils
 
 # Make the dependencies
 %.d: %.cc
