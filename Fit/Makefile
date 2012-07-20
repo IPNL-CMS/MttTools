@@ -30,7 +30,8 @@ LDFLAGS = $(shell root-config --ldflags) -Wl,--as-needed
 CFLAGS += $(INCDIRS) -std=c++0x -g -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wunused-variable
 
 # Everything it needs to know about libraries
-LIBS =  -Wl,-Bstatic -lUtils -Wl,-Bdynamic $(USERLIBDIRS) $(USERLIBS) -lboost_regex
+DYNAMIC_LIBS = $(USERLIBDIRS) $(USERLIBS) -lboost_regex
+LIBS =  -Wl,-Bstatic -lUtils -Wl,-Bdynamic $(DYNAMIC_LIBS)
 
 # Define what to compile as well as the necessary dependencies and
 # object names.
@@ -42,13 +43,13 @@ all: reduceDataset reduceDatasetFromData fritSignal fitMtt computeEff computeSig
 
 # Make the executable
 fitMtt: fitMtt.o lib/jsoncpp.o libUtils
-	$(LD) $(LDFLAGS) fitMtt.o lib/jsoncpp.o -Wl,-Bstatic -lUtils -Wl,-Bdynamic $(LIBS) $(EXPLLINKLIBS) -o fitMtt
+	$(LD) $(LDFLAGS) fitMtt.o $(LIBS) $(EXPLLINKLIBS) -o fitMtt
 
 reduceDataset: reduceDataset.o lib/jsoncpp.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o reduceDataset
+	$(LD) $(LDFLAGS) $^ $(DYNAMIC_LIBS) $(EXPLLINKLIBS) -o reduceDataset
 
 reduceDatasetFromData: reduceDatasetFromData.o lib/jsoncpp.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o reduceDatasetFromData
+	$(LD) $(LDFLAGS) $^ $(DYNAMIC_LIBS) $(EXPLLINKLIBS) -o reduceDatasetFromData
 
 fritSignal: fritSignal.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) fritSignal.o $(LIBS) $(EXPLLINKLIBS) -o fritSignal
@@ -66,25 +67,26 @@ computeBkgSyst: computeBkgSyst.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) computeBkgSyst.o $(LIBS) $(EXPLLINKLIBS) -o computeBkgSyst
 
 computeSystPb: computeSystPb.o lib/jsoncpp.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o computeSystPb
+	$(LD) $(LDFLAGS) $^ $(DYNAMIC_LIBS) $(EXPLLINKLIBS) -o computeSystPb
 
 computeSigmaRef: computeSigmaRef.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o computeSigmaRef
+	$(LD) $(LDFLAGS) $^ $(DYNAMIC_LIBS) $(EXPLLINKLIBS) -o computeSigmaRef
 
 runLikelihoodScan: runLikelihoodScan.o lib/jsoncpp.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o runLikelihoodScan
+	$(LD) $(LDFLAGS) $^ $(DYNAMIC_LIBS) $(EXPLLINKLIBS) -o runLikelihoodScan
 
 treatToyStuff: treatToyStuff.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) treatToyStuff.o $(LIBS) $(EXPLLINKLIBS) -o treatToyStuff
 
 extractLimits: extractLimits.o lib/jsoncpp.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o extractLimits
+	$(LD) $(LDFLAGS) $^ $(DYNAMIC_LIBS) $(EXPLLINKLIBS) -o extractLimits
 
 drawLimitCurve: drawLimitCurve.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) drawLimitCurve.o $(LIBS) $(EXPLLINKLIBS) -o drawLimitCurve
 
 libUtils: Utils.o lib/jsoncpp.o
 	$(LD) -shared -fvisibility=default $(LDFLAGS) $^ $(EXPLLINKLIBS) -o libUtils.so
+	-@rm libUtils.a 2>/dev/null || true
 	ar -cq libUtils.a $^
 
 # Make the objects
@@ -118,6 +120,7 @@ echo:
 # Clean everythingg
 clean:
 	@rm -f core* ${DEPS} ${OBJS} lib/*.o lib/*.d
+	@rm *.so *.a
 
 # If we aren't doing a 'gmake clean' then make the dependencies
 ifneq ($(MAKECMDGOALS), clean)
