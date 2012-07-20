@@ -1163,26 +1163,17 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
   std::map<int, double> s_sys_PDF; // Signal PDF systematic error for each b-tag
   std::map<int, double> s_sys_PDF_CB; // Background PDF systematic error for each b-tag
 
-  std::map<int, double> sigma_ref; // Reference cross-section, obtained when fitting once
+  double sigma_ref = 0;; // Reference cross-section, obtained when fitting once
+  loadSigmaRef(massZprime, btag, sigma_ref);
 
   if (! combine) {
     loadEfficiencies(massZprime, syst_str, btag, sel_eff_mu[btag], sel_eff_e[btag], hlt_eff_mu[btag], hlt_eff_e[btag], s_sel_eff_mu[btag], s_sel_eff_e[btag], s_hlt_eff_mu[btag], s_hlt_eff_e[btag]);
-
-    loadSigmaRef(massZprime, btag, sigma_ref[btag]);
-  
     loadSystematics(massZprime, btag, s_sys_JEC[btag], s_sys_PDF[btag], s_sys_PDF_CB[btag]);
-
-    std::cout << "[" << btag << " b-tag] Using sigma_ref = " << sigma_ref[btag] << std::endl;
   } else {
     // Load for 0, 1 and 2 btag
     for (int i = 0; i < maxBTag; i++) {
       loadEfficiencies(massZprime, syst_str, i, sel_eff_mu[i], sel_eff_e[i], hlt_eff_mu[i], hlt_eff_e[i], s_sel_eff_mu[i], s_sel_eff_e[i], s_hlt_eff_mu[i], s_hlt_eff_e[i]);
-
-      loadSigmaRef(massZprime, i, sigma_ref[i]);
-
       loadSystematics(massZprime, i, s_sys_JEC[i], s_sys_PDF[i], s_sys_PDF_CB[i]);
-
-      std::cout << "[" << i << " b-tag] Using sigma_ref = " << sigma_ref[i] << std::endl;
     }
   }
 
@@ -1305,12 +1296,15 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
   std::map<int, double> s_yield_percent;
   std::map<int, double> s_yield_pb;
 
-  std::map<int, double> s_lumi_mu_pb;
-  std::map<int, double> b_tagging_corr_error_pb;
+  double s_lumi_mu_pb                   = 0.;
+  double b_tagging_corr_error_pb        = 0.;
 
   double err_sys_pb                     = 0.;
   double err_sys_events                 = 0.;
-  std::map<int, double> err_sys_percent;
+  double err_sys_percent                = 0.;
+
+  s_lumi_mu_pb = sigma_ref * s_lumi_mu_percent;
+  b_tagging_corr_error_pb = sigma_ref * b_tagging_corr_error_relative;
 
   if (! combine) {
     s_eff_mu_percent[btag] = sqrt(s_sel_eff_mu[btag] * s_sel_eff_mu[btag]
@@ -1326,18 +1320,15 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
 
     s_yield_percent[btag] = sqrt(s_sys_JEC[btag] * s_sys_JEC[btag] + s_sys_PDF[btag] * s_sys_PDF[btag] + s_sys_PDF_CB[btag] * s_sys_PDF_CB[btag]);
 
-    s_yield_pb[btag] = sigma_ref[btag] * s_yield_percent[btag];
-    s_eff_mu_pb[btag] = sigma_ref[btag] * s_eff_mu_percent[btag];
-    s_eff_e_pb[btag] = sigma_ref[btag] * s_eff_e_percent[btag];
-
-    s_lumi_mu_pb[btag] = sigma_ref[btag] * s_lumi_mu_percent;
-    b_tagging_corr_error_pb[btag] = sigma_ref[btag] * b_tagging_corr_error_relative;
+    s_yield_pb[btag] = sigma_ref * s_yield_percent[btag];
+    s_eff_mu_pb[btag] = sigma_ref * s_eff_mu_percent[btag];
+    s_eff_e_pb[btag] = sigma_ref * s_eff_e_percent[btag];
 
     if (ONLY_LUMI_SYST) {
       std::cout << "WARNING: Using only luminosity error for systematics" << std::endl;
-      err_sys_percent[btag] = s_lumi_mu_percent;
+      err_sys_percent = s_lumi_mu_percent;
     } else {
-      err_sys_percent[btag] = sqrt(
+      err_sys_percent = sqrt(
           s_yield_percent[btag] * s_yield_percent[btag] +
           s_eff_mu_percent[btag] * s_eff_mu_percent[btag] +
           s_lumi_mu_percent * s_lumi_mu_percent +
@@ -1345,7 +1336,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
           s_eff_e_percent[btag] * s_eff_e_percent[btag]);
     }
 
-    err_sys_pb = sigma_ref[btag] * err_sys_percent[btag];
+    err_sys_pb = sigma_ref * err_sys_percent;
     err_sys_events = eff_mu[btag] * lumi_mu * br_semil * err_sys_pb;
 
   } else {
@@ -1369,17 +1360,14 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
 
       s_yield_percent[i] = sqrt(s_sys_JEC[i] * s_sys_JEC[i] + s_sys_PDF[i] * s_sys_PDF[i] + s_sys_PDF_CB[i] * s_sys_PDF_CB[i]);
 
-      s_yield_pb[i] = sigma_ref[i] * s_yield_percent[i];
-      s_eff_mu_pb[i] = sigma_ref[i] * s_eff_mu_percent[i];
-      s_eff_e_pb[i] = sigma_ref[i] * s_eff_e_percent[i];
-
-      s_lumi_mu_pb[i]            = sigma_ref[i] * s_lumi_mu_percent;
-      b_tagging_corr_error_pb[i] = sigma_ref[i] * b_tagging_corr_error_relative;
+      s_yield_pb[i] = sigma_ref * s_yield_percent[i];
+      s_eff_mu_pb[i] = sigma_ref * s_eff_mu_percent[i];
+      s_eff_e_pb[i] = sigma_ref * s_eff_e_percent[i];
 
       if (ONLY_LUMI_SYST) {
-        err_sys_percent[i] = s_lumi_mu_percent;
+        err_sys_percent += s_lumi_mu_percent;
       } else {
-        err_sys_percent[i] = sqrt(
+        err_sys_percent += sqrt(
             s_yield_percent[i] * s_yield_percent[i] +
             s_eff_mu_percent[i] * s_eff_mu_percent[i] +
             s_lumi_mu_percent * s_lumi_mu_percent +
@@ -1387,13 +1375,14 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
             s_eff_e_percent[i] * s_eff_e_percent[i]);
       }
 
-      err_sys_pb     += sigma_ref[i] * err_sys_percent[i];
-      err_sys_events += eff_mu[i] * lumi_mu * br_semil * (sigma_ref[i] * err_sys_percent[i]);
     }
+
+    err_sys_pb     = sigma_ref * err_sys_percent;
+    //err_sys_events = eff_mu[i] * lumi_mu * br_semil * err_sys_pb;
   }
 
 #ifdef NO_SYST
-  err_sys_percent[btag] = err_sys_pb = err_sys_events = 0.;
+  err_sys_percent = err_sys_pb = err_sys_events = 0.;
   std::cout << "WARNING: Systematics are set to 0. If it's not wanted, please undef NO_SYST." << std::endl;
 #endif
 
@@ -1402,7 +1391,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
     std::cout << std::endl;
 
     double err_base = eff_mu[btag] * lumi_mu * br_semil;
-    std::cout << "Reference cross-section: " << sigma_ref[btag] << " pb" << std::endl;
+    std::cout << "Reference cross-section: " << sigma_ref << " pb" << std::endl;
     std::cout << "Efficiencies: " << std::endl;
     std::cout << " - Eff: " << combined_efficiency * 100 << " %" << std::endl;
     std::cout << " - Lumi mu: " << lumi_mu << " /pb" << std::endl;
@@ -1411,19 +1400,19 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
 #ifdef NO_SYST
       Bash::set_color(Bash::Color::RED) <<
 #endif
-      err_sys_events << " events ; " << err_sys_pb << " pb ; " << err_sys_percent[btag] << " %" <<
+      err_sys_events << " events ; " << err_sys_pb << " pb ; " << err_sys_percent << " %" <<
 #ifdef NO_SYST
       Bash::set_color() <<
 #endif
       std::endl;
     std::cout << " - Eff mu: " << err_base * s_eff_mu_pb[btag] << " events ; " << s_eff_mu_pb[btag] << " pb ; " << s_eff_mu_percent[btag] << " %" << std::endl;
     std::cout << " - Eff e: " << err_base * s_eff_e_pb[btag] << " events ; " << s_eff_e_pb[btag] << " pb ; " << s_eff_e_percent[btag] << " %" << std::endl;
-    std::cout << " - Lumi mu: " << err_base * s_lumi_mu_pb[btag] << " events ; " << s_lumi_mu_pb[btag] << " pb ; " << s_lumi_mu_percent << " %" << std::endl;
-    std::cout << " - B-tagging: " << err_base * b_tagging_corr_error_pb[btag] << " events ; " << b_tagging_corr_error_pb[btag] << " pb ; " << b_tagging_corr_error_relative << " %" << std::endl;
+    std::cout << " - Lumi mu: " << err_base * s_lumi_mu_pb << " events ; " << s_lumi_mu_pb << " pb ; " << s_lumi_mu_percent << " %" << std::endl;
+    std::cout << " - B-tagging: " << err_base * b_tagging_corr_error_pb << " events ; " << b_tagging_corr_error_pb << " pb ; " << b_tagging_corr_error_relative << " %" << std::endl;
     std::cout << " - Yield: " << std::endl;
-    std::cout << "    - JEC: " << err_base * sigma_ref[btag] * s_sys_JEC[btag] << " events ; " << sigma_ref[btag] * s_sys_JEC[btag] << " pb ; " << s_sys_JEC[btag]  * 100 << " %" << std::endl;
-    std::cout << "    - Bkg PDF: " << err_base * sigma_ref[btag] * s_sys_PDF[btag] << " events ; " << sigma_ref[btag] * s_sys_PDF[btag] << " pb ; " << s_sys_PDF[btag] * 100 << " %" << std::endl;
-    std::cout << "    - Signal PDF: " << err_base * sigma_ref[btag] * s_sys_PDF_CB[btag] << " events ; " << sigma_ref[btag] * s_sys_PDF_CB[btag] << " pb ; " << s_sys_PDF_CB[btag] * 100 << " %" << std::endl;
+    std::cout << "    - JEC: " << err_base * sigma_ref * s_sys_JEC[btag] << " events ; " << sigma_ref * s_sys_JEC[btag] << " pb ; " << s_sys_JEC[btag]  * 100 << " %" << std::endl;
+    std::cout << "    - Bkg PDF: " << err_base * sigma_ref * s_sys_PDF[btag] << " events ; " << sigma_ref * s_sys_PDF[btag] << " pb ; " << s_sys_PDF[btag] * 100 << " %" << std::endl;
+    std::cout << "    - Signal PDF: " << err_base * sigma_ref * s_sys_PDF_CB[btag] << " events ; " << sigma_ref * s_sys_PDF_CB[btag] << " pb ; " << s_sys_PDF_CB[btag] * 100 << " %" << std::endl;
     std::cout << std::endl;
   } else {
     std::cout << std::endl << Bash::set_color(Bash::Color::RED) << "Systematics are not yet implemented for combined analysis !!" << Bash::set_color() << std::endl << std::endl;
@@ -1599,8 +1588,8 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
     double sigmaZ = nSig.getVal() / (combined_efficiency * lumi_mu * br_semil);
 
     double errorqstat = nSig.getError() * nSig.getError() / (combined_efficiency * lumi_mu * br_semil * combined_efficiency * lumi_mu * br_semil);
-    double errorqtot_pb = errorqstat + s_yield_pb[btag] * s_yield_pb[btag] + b_tagging_corr_error_pb[btag] * b_tagging_corr_error_pb[btag] + s_eff_mu_pb[btag] * s_eff_mu_pb[btag] + s_lumi_mu_pb[btag] * s_lumi_mu_pb[btag];
-    double Limit_Z_obs_pb = sigma_ref[btag] + 2. * sqrt(errorqtot_pb);
+    double errorqtot_pb = errorqstat + s_yield_pb[btag] * s_yield_pb[btag] + b_tagging_corr_error_pb * b_tagging_corr_error_pb + s_eff_mu_pb[btag] * s_eff_mu_pb[btag] + s_lumi_mu_pb * s_lumi_mu_pb;
+    double Limit_Z_obs_pb = sigma_ref + 2. * sqrt(errorqtot_pb);
 
     if (!doLikScan) {
       cout << "The Zprime cross section is " << sigmaZ << " +- " << sqrt(errorqtot_pb) << " pb" << endl;
@@ -1913,7 +1902,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
 
       double sigmaZl = nSigVal / (combined_efficiency * lumi_mu * br_semil);
       double errorqstatl_pb = nSigErrHi * nSigErrHi / (combined_efficiency * lumi_mu * br_semil * combined_efficiency * lumi_mu * br_semil);
-      double errorqtotl_pb = errorqstatl_pb + s_yield_pb[btag] * s_yield_pb[btag] + b_tagging_corr_error_pb[btag] * b_tagging_corr_error_pb[btag] + s_eff_mu_pb[btag] * s_eff_mu_pb[btag] + s_lumi_mu_pb[btag] * s_lumi_mu_pb[btag];
+      double errorqtotl_pb = errorqstatl_pb + s_yield_pb[btag] * s_yield_pb[btag] + b_tagging_corr_error_pb * b_tagging_corr_error_pb + s_eff_mu_pb[btag] * s_eff_mu_pb[btag] + s_lumi_mu_pb * s_lumi_mu_pb;
       double Limit_Z = sigmaZl + 2. * sqrt(errorqtotl_pb);
 
       hSigma->Fill(sigmaZl / sqrt(errorqstatl_pb));
