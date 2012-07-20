@@ -30,7 +30,7 @@ LDFLAGS = $(shell root-config --ldflags) -Wl,--as-needed
 CFLAGS += $(INCDIRS) -std=c++0x -g -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wunused-variable
 
 # Everything it needs to know about libraries
-LIBS =  $(USERLIBDIRS) $(USERLIBS) -lboost_regex
+LIBS =  -Wl,-Bstatic -lUtils -Wl,-Bdynamic $(USERLIBDIRS) $(USERLIBS) -lboost_regex
 
 # Define what to compile as well as the necessary dependencies and
 # object names.
@@ -50,20 +50,20 @@ reduceDataset: reduceDataset.o lib/jsoncpp.o
 reduceDatasetFromData: reduceDatasetFromData.o lib/jsoncpp.o
 	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o reduceDatasetFromData
 
-fritSignal: fritSignal.o lib/jsoncpp.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o fritSignal
+fritSignal: fritSignal.o lib/jsoncpp.o libUtils
+	$(LD) $(LDFLAGS) fritSignal.o $(LIBS) $(EXPLLINKLIBS) -o fritSignal
 
-computeEff: computeEff.o lib/jsoncpp.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o computeEff
+computeEff: computeEff.o lib/jsoncpp.o libUtils
+	$(LD) $(LDFLAGS) computeEff.o $(LIBS) $(EXPLLINKLIBS) -o computeEff
 
 computeSignalSyst: computeSignalSyst.o lib/jsoncpp.o libUtils
-	$(LD) $(LDFLAGS) computeSignalSyst.o -Wl,-Bstatic -lUtils -Wl,-Bdynamic $(LIBS) $(EXPLLINKLIBS) -o computeSignalSyst
+	$(LD) $(LDFLAGS) computeSignalSyst.o $(LIBS) $(EXPLLINKLIBS) -o computeSignalSyst
 
 computeJECSyst: computeJECSyst.o lib/jsoncpp.o libUtils
-	$(LD) $(LDFLAGS) computeJECSyst.o -Wl,-Bstatic -lUtils -Wl,-Bdynamic $(LIBS) $(EXPLLINKLIBS) -o computeJECSyst
+	$(LD) $(LDFLAGS) computeJECSyst.o $(LIBS) $(EXPLLINKLIBS) -o computeJECSyst
 
 computeBkgSyst: computeBkgSyst.o lib/jsoncpp.o libUtils
-	$(LD) $(LDFLAGS) computeBkgSyst.o -Wl,-Bstatic -lUtils -Wl,-Bdynamic $(LIBS) $(EXPLLINKLIBS) -o computeBkgSyst
+	$(LD) $(LDFLAGS) computeBkgSyst.o $(LIBS) $(EXPLLINKLIBS) -o computeBkgSyst
 
 computeSystPb: computeSystPb.o lib/jsoncpp.o
 	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o computeSystPb
@@ -74,14 +74,14 @@ computeSigmaRef: computeSigmaRef.o
 runLikelihoodScan: runLikelihoodScan.o lib/jsoncpp.o
 	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o runLikelihoodScan
 
-treatToyStuff: treatToyStuff.o lib/jsoncpp.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o treatToyStuff
+treatToyStuff: treatToyStuff.o lib/jsoncpp.o libUtils
+	$(LD) $(LDFLAGS) treatToyStuff.o $(LIBS) $(EXPLLINKLIBS) -o treatToyStuff
 
 extractLimits: extractLimits.o lib/jsoncpp.o
 	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o extractLimits
 
-drawLimitCurve: drawLimitCurve.o lib/jsoncpp.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o drawLimitCurve
+drawLimitCurve: drawLimitCurve.o lib/jsoncpp.o libUtils
+	$(LD) $(LDFLAGS) drawLimitCurve.o $(LIBS) $(EXPLLINKLIBS) -o drawLimitCurve
 
 libUtils: Utils.o lib/jsoncpp.o
 	$(LD) -shared -fvisibility=default $(LDFLAGS) $^ $(EXPLLINKLIBS) -o libUtils.so
