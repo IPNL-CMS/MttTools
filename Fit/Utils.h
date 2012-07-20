@@ -28,7 +28,7 @@ extern double eleIso_correction;
 extern double eleIso_correction_error_relative;
 
 extern bool fileExists(const std::string& filename);
-extern void getJsonRoot(const std::string& filename, Json::Value& root);
+extern void getJsonRoot(const std::string& filename, Json::Value& root, bool exitOnError = true);
 extern std::string formatPath(const std::string& base, const std::string& filename);
 extern std::string getSignalPdfName(const std::string& base);
 extern std::string getSignalPdfName();

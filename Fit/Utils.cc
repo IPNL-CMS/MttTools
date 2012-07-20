@@ -26,12 +26,15 @@ bool fileExists(const std::string& filename) {
   return false;
 }
 
-void getJsonRoot(const std::string& filename, Json::Value& root) {
+void getJsonRoot(const std::string& filename, Json::Value& root, bool exitOnError/* = true*/) {
   std::ifstream file(filename.c_str());
   Json::Reader reader;
   if (! reader.parse(file, root)) {
-    std::cerr << "ERROR: Failed to parse " << filename << "." << std::endl;
-    exit(1);
+    root.clear();
+    if (exitOnError) {
+      std::cerr << "ERROR: Failed to parse " << filename << "." << std::endl;
+      exit(1);
+    }
   }
   file.close();
 }

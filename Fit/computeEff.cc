@@ -193,7 +193,7 @@ int main(int argc, char** argv) {
     // nominal
 
     Json::Value root;
-    getJsonRoot("efficiencies.json", root);
+    getJsonRoot("efficiencies.json", root, false);
     for (int i=0 ; i<5 ; i++) {
 
       std::stringstream ss;
