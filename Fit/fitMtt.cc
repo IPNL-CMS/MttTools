@@ -625,7 +625,7 @@ void doLikelihoodScan(RooDataSet& dataset, RooAbsPdf& pdf, RooRealVar& observabl
     minimizer->migrad();
     fitResults = minimizer->save();
 
-    if ((fitResults->minNll() - minNLL) < -1. || (fitResults->minNll() - minNLL) > 10000.)
+    if ((fitResults->minNll() - minNLL) < -20. || (fitResults->minNll() - minNLL) > 10000.)
     {
       cout << "[M=" << mass << "] WARNING : Delta(NLL) = " << fitResults->minNll() - minNLL << endl;
       DNll = 0.;
@@ -685,7 +685,7 @@ void doLikelihoodScan(RooDataSet& dataset, RooAbsPdf& pdf, RooRealVar& observabl
     minimizer->migrad();
     fitResults = minimizer->save();
 
-    if ((fitResults->minNll() - minNLL) < -1. || (fitResults->minNll() - minNLL) > 10000.)
+    if ((fitResults->minNll() - minNLL) < -20. || (fitResults->minNll() - minNLL) > 10000.)
     {
       cout << "[M=" << mass << "] WARNING : Delta(NLL) = " << fitResults->minNll() - minNLL << endl;
       DNll = 0.;
@@ -725,26 +725,43 @@ void doLikelihoodScan(RooDataSet& dataset, RooAbsPdf& pdf, RooRealVar& observabl
 
   delete nll;
 
-  // A seed of 0 means a random one
-  TRandom3 *myRandom = new TRandom3(0);
+  // No systematic errors?
+  if (systError < 1e-10) {
 
-  for (double x = xLow; x < xHigh; x += steps)
-  {
-
-    for (int i = 0; i < 50000; i++)
-    {
-
-      double xvalue = myRandom->Gaus(x, systError);
-      results.pdfscan_wsyst->Fill(xvalue, results.pdfscan->GetBinContent(results.pdfscan->FindBin(x)));
-      if (xvalue >= 0)
-      {
-        results.pdfscan_wsyst_cut->Fill(xvalue, results.pdfscan->GetBinContent(results.pdfscan->FindBin(x)));
+    for (double x = xLow; x < xHigh; x += steps) {
+      double weight = results.pdfscan->GetBinContent(results.pdfscan->FindBin(x));
+      results.pdfscan_wsyst->SetBinContent(results.pdfscan_wsyst->FindBin(x), weight);
+      if (x >= 0) {
+        results.pdfscan_wsyst_cut->SetBinContent(results.pdfscan_wsyst_cut->FindBin(x), weight);
       }
-
     }
-  }
 
-  SAFE_DELETE(myRandom);
+  } else {
+    // Perform smearing of pdfscan histogram
+
+    // A seed of 0 means a random one
+    TRandom3 *myRandom = new TRandom3(0);
+
+    for (double x = xLow; x < xHigh; x += steps)
+    {
+      for (int i = 0; i < 50000; i++)
+      {
+        double xvalue = myRandom->Gaus(x, systError);
+        results.pdfscan_wsyst->Fill(xvalue, results.pdfscan->GetBinContent(results.pdfscan->FindBin(x)));
+      }
+    }
+
+    // Fill histogram with cut on x > 0. Don't do that when smearing, it'll cause weird effects around x = 0
+    for (double x = xLow; x < xHigh; x += steps) {
+      if (x >= 0) {
+        double weight = results.pdfscan->GetBinContent(results.pdfscan->FindBin(x));
+        results.pdfscan_wsyst_cut->SetBinContent(results.pdfscan_wsyst_cut->FindBin(x), weight);
+      }
+    }
+
+    SAFE_DELETE(myRandom);
+
+  }
 
   //calculate different 95% limits
   double areascan = 0.95;
