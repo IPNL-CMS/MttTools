@@ -8,6 +8,10 @@
 
 #include "Utils.h"
 
+std::string buildConfigFileName(const std::string& fctName) {
+  return "fit_pdf_" + fctName + ".json";
+}
+
 std::vector<std::string> BKG_FUNCTIONS;
 
 void process(std::vector<int>& masses, bool onlyMuons, int btag) {
@@ -23,7 +27,8 @@ void process(std::vector<int>& masses, bool onlyMuons, int btag) {
 
         pid_t child = fork();
         if (child == 0) {
-          char** params = getSystCLParameters(ss.str(), onlyMuons, btag, "--name", (*param).c_str(), NULL);
+          std::string fileName = buildConfigFileName(*param);
+          char** params = getSystCLParameters(ss.str(), onlyMuons, btag, "--config-file", fileName.c_str(), NULL);
           execv("./fitMtt", params);
 
           exit(0);

@@ -56,14 +56,14 @@ fritSignal: fritSignal.o lib/jsoncpp.o
 computeEff: computeEff.o lib/jsoncpp.o
 	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o computeEff
 
-computeSignalSyst: computeSignalSyst.o lib/jsoncpp.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o computeSignalSyst
+computeSignalSyst: computeSignalSyst.o lib/jsoncpp.o libUtils
+	$(LD) $(LDFLAGS) computeSignalSyst.o -Wl,-Bstatic -lUtils -Wl,-Bdynamic $(LIBS) $(EXPLLINKLIBS) -o computeSignalSyst
 
-computeJECSyst: computeJECSyst.o lib/jsoncpp.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o computeJECSyst
+computeJECSyst: computeJECSyst.o lib/jsoncpp.o libUtils
+	$(LD) $(LDFLAGS) computeJECSyst.o -Wl,-Bstatic -lUtils -Wl,-Bdynamic $(LIBS) $(EXPLLINKLIBS) -o computeJECSyst
 
-computeBkgSyst: computeBkgSyst.o lib/jsoncpp.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o computeBkgSyst
+computeBkgSyst: computeBkgSyst.o lib/jsoncpp.o libUtils
+	$(LD) $(LDFLAGS) computeBkgSyst.o -Wl,-Bstatic -lUtils -Wl,-Bdynamic $(LIBS) $(EXPLLINKLIBS) -o computeBkgSyst
 
 computeSystPb: computeSystPb.o lib/jsoncpp.o
 	$(LD) $(LDFLAGS) $^ $(LIBS) $(EXPLLINKLIBS) -o computeSystPb

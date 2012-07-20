@@ -50,14 +50,14 @@ void process(std::vector<int>& masses, bool muonsOnly, int btag) {
 }
 
 void fillParams(bool muonsOnly) {
-  CB_PARAMS.push_back("alphaCB_mu");
-  CB_PARAMS.push_back("sigma_MZ_mu");
+  CB_PARAMS.push_back("muon_alpha");
+  CB_PARAMS.push_back("muon_sigma");
+  CB_PARAMS.push_back("muon_mean");
   if (! muonsOnly) {
-    CB_PARAMS.push_back("alphaCB_e");
-    CB_PARAMS.push_back("sigma_MZ_e");
+    CB_PARAMS.push_back("electron_alpha");
+    CB_PARAMS.push_back("electron_sigma");
+    CB_PARAMS.push_back("electron_mean");
   }
-  CB_PARAMS.push_back("massShiftEMu");
-  CB_PARAMS.push_back("mZ_mu");
 }
 
 void saveSystematic(int mass, int btag, double syst) {

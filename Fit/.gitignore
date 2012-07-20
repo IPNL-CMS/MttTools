@@ -1,12 +1,14 @@
 *.json
 *.lock
 *.o
+*.a
 *.d
 *.pdf
 *.png
 *.gif
 *.root
 *.tex
+*.txt
 nohup.out
 
 computeBkgSyst
@@ -24,3 +26,6 @@ reduceDataset
 reduceDatasetFromData
 runLikelihoodScan
 treatToyStuff
+
+# Folders
+data_*_nominal_*_crystalball*/
