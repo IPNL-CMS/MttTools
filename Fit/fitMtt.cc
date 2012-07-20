@@ -1075,8 +1075,6 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
     RooMsgService::instance().addStream(RooFit::INFO); // DEBUG  INFO  PROGRESS  WARNING ERROR FATAL
   }
 
-  std::string pdfSignalName = getSignalPdfName(BASE_PATH);
-
   //fit region
   Float_t minmTT = 500;
   Float_t maxmTT = 2000;
@@ -1102,7 +1100,9 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
   // Create main workspace for global pdf
   RooWorkspace mainWorkspace("mainWorkspace", "main workspace");
 
-  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, Mtt_KF_reco, massZprime, "background", mainCategory);
+  std::string pdfSignalName;
+
+  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, Mtt_KF_reco, massZprime, "background", mainCategory, &pdfSignalName);
 
   for (auto& pdf: backgroundPdfs) {
     std::cout << "Background pdf: " << pdf.first << " ";
@@ -1685,7 +1685,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
     RooRandom::randomGenerator()->SetSeed(0);
 
     // Create PDF for toys generation
-    std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfsForToys = getCategoriesPdf(BASE_PATH, "fit_pdf.json", Mtt_KF_reco, massZprime, "background", mainCategory, "toy");
+    std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfsForToys = getCategoriesPdf(BASE_PATH, "fit_pdf.json", Mtt_KF_reco, massZprime, "background", mainCategory, nullptr, "toy");
 
     std::map<std::string, std::shared_ptr<RooAbsPdf>> globalPdfsForToys;
     std::map<int, std::shared_ptr<RooSimultaneous>> simPdfsForGeneration;

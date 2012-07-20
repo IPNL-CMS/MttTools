@@ -53,7 +53,7 @@ std::vector<std::string> JEC;
 bool FIT_WARNINGS = false;
 int FIT_ERROR_LEVEL = -1;
 
-void fritSignal(const std::string& file, const std::string& jecType, int massZprime, int btag);
+void fritSignal(const std::string& file, const std::string& jecType, const std::string& configFile, int massZprime, int btag);
 
 int main(int argc, char** argv) {
   try {
@@ -72,6 +72,8 @@ int main(int argc, char** argv) {
     cmd.add(jecArg);
     cmd.add(massArg);
     cmd.add(btagArg);
+
+    TCLAP::ValueArg<std::string> configFileArg("", "config-file", "Fit configuration file", false, "frit_pdf.json", "string", cmd);
 
     cmd.parse(argc, argv);
 
@@ -103,7 +105,7 @@ int main(int argc, char** argv) {
         pid_t pid = fork();
         if (pid == 0) {
           std::string file = TString::Format("%s/ds_Zprime%d-%s_all_%d_btag.txt", prefix.c_str(), *it, (*it2).c_str(), btagArg.getValue()).Data();
-          fritSignal(file, *it2, *it, btagArg.getValue());
+          fritSignal(file, *it2, configFileArg.getValue(), *it, btagArg.getValue());
           exit(0);
         } else {
           children.push_back(pid);
@@ -286,7 +288,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
   std::cout << std::endl;
 }
 
-void fritSignal(const std::string& file, const std::string& jecType, int massZprime, int btag) {
+void fritSignal(const std::string& file, const std::string& jecType, const std::string& configFile, int massZprime, int btag) {
 
   std::cout << "[" << getpid() << "] Processing " << file << " for " << jecType << std::endl;
 
@@ -312,11 +314,10 @@ void fritSignal(const std::string& file, const std::string& jecType, int massZpr
   whichLepton.defineType("electron", 11);
   whichLepton.defineType("muon", 13);
 
-  std::string pdfSignalName = getSignalPdfName();
-  std::string pdfBackgroundName = getFritBackgroundPdfName();
+  std::string configFileId;
 
-  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf(".", "frit_pdf.json", Mtt_KF_reco, massZprime, "background", whichLepton);
-  std::map<std::string, std::shared_ptr<BaseFunction>> signalPdfs = getCategoriesPdf(".", "/frit_pdf.json", Mtt_KF_reco, massZprime, "signal", whichLepton);
+  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf("./fit_configuration", configFile, Mtt_KF_reco, massZprime, "background", whichLepton, nullptr);
+  std::map<std::string, std::shared_ptr<BaseFunction>> signalPdfs = getCategoriesPdf("./fit_configuration", configFile, Mtt_KF_reco, massZprime, "signal", whichLepton, &configFileId);
 
   for (auto& pdf: backgroundPdfs) {
     std::cout << "Background Pdf: " << pdf.first << " -> ";
@@ -328,7 +329,7 @@ void fritSignal(const std::string& file, const std::string& jecType, int massZpr
     pdf.second->getPdf().Print();
   }
 
-  TString prefix = TString::Format("%s-Zprime%d_%s_%d_btag", jecType.c_str(), massZprime, pdfSignalName.c_str(), btag);
+  TString prefix = TString::Format("%s-Zprime%d_%s_%d_btag", jecType.c_str(), massZprime, configFileId.c_str(), btag);
 
   std::map<std::string, std::shared_ptr<RooAbsPdf>> globalPdfs;
   std::map<std::string, std::vector<std::shared_ptr<RooRealVar>>> globalPdfsParameters;

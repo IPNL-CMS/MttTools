@@ -68,12 +68,16 @@ std::shared_ptr<BaseFunction> jsonToPdf(const std::string& inputPath, RooRealVar
   return createPdf(root[type], inputPath, observable, mass, type, prefix);
 }
 
-std::map<std::string, std::shared_ptr<BaseFunction>> getCategoriesPdf(const std::string& inputPath, const std::string& inputFile, RooRealVar& observable, int mass, const std::string& type, const RooAbsCategory& categories, const std::string& prefix = "") {
+std::map<std::string, std::shared_ptr<BaseFunction>> getCategoriesPdf(const std::string& inputPath, const std::string& inputFile, RooRealVar& observable, int mass, const std::string& type, const RooAbsCategory& categories, std::string* id, const std::string& prefix = "") {
 
   std::map<std::string, std::shared_ptr<BaseFunction>> results;
 
   Json::Value root;
   getJsonRoot(inputPath + "/" + inputFile, root);
+
+  if (id) {
+    *id = root["id"].asString();
+  }
 
   TIterator* it = categories.typeIterator();
   const RooCatType* catType = nullptr;
