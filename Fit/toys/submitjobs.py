@@ -35,8 +35,6 @@ if printPython:
   print "num_toys_per_job = %d" % num_toys_per_job
   exit(0)
 
-pdfBackgroundName = "faltB"
-
 f = open("../parameters.json")
 params = json.load(f)
 pdfSignalName = params["parameters"]["pdf"]["signal"]
@@ -44,6 +42,10 @@ f.close()
 
 data = [
   'data/ds_data_2011-nominal_*.txt']
+
+fit_configuration_files = [
+    'fit_configuration/*'
+    ]
 
 input_files = [
   'efficiencies.json',
@@ -55,7 +57,7 @@ input_files = [
   '*.script']
 
 input_files_mass_dependant = [
-    "data_2011_nominal_750_%(signalPdf)s_%(bkgPdf)s_%(btag)d_btag/data_2011_nominal_%%(mass)d_fitRes_%(signalPdf)s_%(bkgPdf)s.root" % {'signalPdf': pdfSignalName, 'bkgPdf': pdfBackgroundName, 'btag': args.btag},
+    "data_2011_nominal_750_%(signalPdf)s_%(btag)d_btag/data_2011_nominal_%%(mass)d_fitRes_%(signalPdf)s.root" % {'signalPdf': pdfSignalName, 'btag': args.btag},
     "nominal-Zprime%%(mass)d_%(signalPdf)s_*_workspace.root" % {'signalPdf': pdfSignalName}
     ]
 
@@ -73,19 +75,27 @@ output_dir = os.getcwd() + "/results/"
 wrapper_dir = os.getcwd() + "/templates/wrapper.sh"
 
 os.path.exists(os.path.join(input_dir, "data")) or os.mkdir(os.path.join(input_dir, "data"))
+os.path.exists(os.path.join(input_dir, "fit_configuration")) or os.mkdir(os.path.join(input_dir, "fit_configuration"))
 
 def copy_file(files, dest):
   for file in glob.glob(files):
     if not os.path.isfile(file):
       print "ERROR: '%s' not found." % file
       sys.exit(1)
+    print("Copy %s to %s" % (file, dest))
     shutil.copy(file, dest)
 
 def copy_data():
-  global input_files, input_dir
+  global input_dir
   for input_file in data:
     correct_file = "../%s" % input_file
     copy_file(correct_file, os.path.join(input_dir, "data"))
+
+def copy_fit_configuration_files():
+  global input_dir
+  for input_file in fit_configuration_files:
+    correct_file = "../%s" % input_file
+    copy_file(correct_file, os.path.join(input_dir, "fit_configuration"))
 
 def copy_deps():
   global input_files, input_dir
@@ -120,6 +130,7 @@ def create_ipnl_job():
 # jobs.remove()
 
 copy_data()
+copy_fit_configuration_files()
 copy_deps()
 copy_works_files()
 
