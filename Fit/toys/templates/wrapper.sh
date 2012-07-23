@@ -6,6 +6,9 @@
 # GCC
 source /gridsoft/cmss/slc5_amd64_gcc462/external/gcc/4.6.2/etc/profile.d/init.sh
 
+# GDB
+source /gridsoft/cmss/slc5_amd64_gcc462/external/gdb/7.3.1/etc/profile.d/init.sh
+
 # cd to right directory
 cd $4
 

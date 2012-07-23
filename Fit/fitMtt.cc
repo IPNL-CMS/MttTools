@@ -1614,7 +1614,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
 
       LikelihoodResults results;
       //FIXME. Steps is 2
-      doLikelihoodScan(*RedData, simPdf, nSig, massZprime, fitResult->minNll(), 20, err_sys_events, results);
+      doLikelihoodScan(*RedData, simPdf, nSig, massZprime, fitResult->minNll(), 8, err_sys_events, results);
 
       TFile likelihoodFile(OUTPUT_PATH + prefix + "_likscan_" + suffix + ".root", "recreate");
       likelihoodFile.cd();
@@ -1691,7 +1691,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
     RooRandom::randomGenerator()->SetSeed(0);
 
     // Create PDF for toys generation
-    std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfsForToys = getCategoriesPdf(BASE_PATH, "fit_pdf.json", Mtt_KF_reco, massZprime, "background", mainCategory, nullptr, "toy");
+    std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfsForToys = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, Mtt_KF_reco, massZprime, "background", mainCategory, nullptr, "toy");
 
     std::map<std::string, std::shared_ptr<RooAbsPdf>> globalPdfsForToys;
     std::map<int, std::shared_ptr<RooSimultaneous>> simPdfsForGeneration;
@@ -1838,10 +1838,12 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
       }
       std::cout << "done." << std::endl;
 
+      /*
       TFile* myFile = TFile::Open(OUTPUT_PATH + prefix + "_toylimit_" + suffix + "_" + indexJob + "_" + (Long_t) i + ".root", "RECREATE");
       drawHistograms(mainCategory, Mtt_KF_reco, nBins, *toyData, simPdfToyFit, backgroundPdfsForToys, btag, false, std::string(prefix), std::string(suffix), false, false, myFile, true);
       myFile->Close();
       delete myFile;
+      */
 
       std::cout << "Fitting distribution ..." << std::endl;
       if (nll == NULL)
