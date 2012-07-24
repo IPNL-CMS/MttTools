@@ -1130,7 +1130,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
 
   std::string pdfSignalName;
 
-  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, Mtt_KF_reco, massZprime, "background", mainCategory, &pdfSignalName);
+  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, Mtt_KF_reco, NULL, massZprime, "background", mainCategory, &pdfSignalName);
 
   for (auto& pdf: backgroundPdfs) {
     std::cout << "Background pdf: " << pdf.first << " ";
@@ -1705,7 +1705,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
     RooRandom::randomGenerator()->SetSeed(0);
 
     // Create PDF for toys generation
-    std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfsForToys = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, Mtt_KF_reco, massZprime, "background", mainCategory, nullptr, "toy");
+    std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfsForToys = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, Mtt_KF_reco, NULL, massZprime, "background", mainCategory, nullptr, "toy");
 
     std::map<std::string, std::shared_ptr<RooAbsPdf>> globalPdfsForToys;
     std::map<int, std::shared_ptr<RooSimultaneous>> simPdfsForGeneration;

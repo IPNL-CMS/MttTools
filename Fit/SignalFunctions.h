@@ -5,6 +5,22 @@
 #include <RooCBShape.h>
 #include <RooBreitWigner.h>
 #include <RooFFTConvPdf.h>
+#include <RooKeysPdf.h>
+
+class KeysPdf : public BaseFunction {
+  public:
+    KeysPdf(const std::string& name)
+      : BaseFunction(name) {}
+
+    virtual bool createPdf(RooRealVar& observable) {
+      if (! mHasDataset)
+        return false;
+
+      mPdf.reset(new RooKeysPdf(mName.c_str(), "Keys pdf for signal", observable, *mDataset, RooKeysPdf::MirrorBoth, 2));
+      return true;
+    }
+
+};
 
 class CrystalBall : public BaseFunction {
   public:

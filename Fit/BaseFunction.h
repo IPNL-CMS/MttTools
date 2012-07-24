@@ -7,12 +7,13 @@
 #include <assert.h>
 
 #include <RooRealVar.h>
+#include <RooDataSet.h>
 
 class BaseFunction {
 
   public:
     BaseFunction(const std::string& name):
-      mName(name)
+      mName(name), mHasDataset(false), mHasParameters(false)
   {
   }
 
@@ -24,6 +25,12 @@ class BaseFunction {
 
     void setParameters(const std::map<std::string, std::shared_ptr<RooRealVar>>& parameters) {
       mParameters = parameters;
+      mHasParameters = true;
+    }
+
+    void setDataset(RooDataSet* dataset) {
+      mDataset.reset(dataset);
+      mHasDataset = true;
     }
 
     std::map<std::string, std::shared_ptr<RooRealVar>>& getParameters() {
@@ -33,7 +40,12 @@ class BaseFunction {
   protected:
     std::string mName;
     std::shared_ptr<RooAbsPdf> mPdf;
+
     std::map<std::string, std::shared_ptr<RooRealVar>> mParameters;
+    std::shared_ptr<RooDataSet> mDataset;
+
+    bool mHasDataset;
+    bool mHasParameters;
 
 };
 
