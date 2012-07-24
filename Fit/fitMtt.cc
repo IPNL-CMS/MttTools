@@ -808,26 +808,6 @@ void renameAndSetPdfParametersConst(const RooArgSet& observables, const RooAbsPd
   delete params;
 }
 
-std::string buildCutFormula(RooAbsCategoryLValue& categories) {
-
-  std::stringstream ss;
-  RooSuperCategory* foo = dynamic_cast<RooSuperCategory*>(&categories);
-  if (foo) {
-    const RooArgSet& parentCategories = foo->inputCatList();
-    TIterator *it2 = parentCategories.createIterator();
-    RooAbsCategory* parentCategory = nullptr;
-    bool first = true;
-    while ((parentCategory = static_cast<RooAbsCategory*>(it2->Next()))) {
-      ss << (first ? "" : " && ") << parentCategory->GetName() << "==" << parentCategory->getIndex();
-      first = false;
-    }
-  } else {
-    ss << categories.GetName() << "==" << categories.getIndex();
-  }
-
-  return ss.str();
-}
-
 void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, int nBins, RooDataSet& dataset, RooSimultaneous& simPdfs, std::map<std::string, std::shared_ptr<BaseFunction>>& backgroundPdfs, int btag, bool savePlots, const std::string& prefix, const std::string& suffix, bool drawSignal, bool log, TFile* outputFile, bool drawOnlyData = false) {
 
   std::vector<std::shared_ptr<RooPlot>> plots;
