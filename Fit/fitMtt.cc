@@ -605,7 +605,7 @@ void doLikelihoodScan(RooDataSet& dataset, RooAbsPdf& pdf, RooRealVar& observabl
   const double minExpNllValue = 3.72665e-06;
 
   // First, create the nLL. We only need to create it once, so do it right now
-  RooAbsReal* nll = pdf.createNLL(dataset, RooFit::Optimize(1)/*, RooFit::NumCPU(2)*/);
+  RooAbsReal* nll = pdf.createNLL(dataset, RooFit::Optimize(0)/*, RooFit::NumCPU(2)*/);
 
   std::cout << "[M=" << mass << "] Scanning negative values from " << center << " to " << getXForBin(-1 * nLHLowerBins, center, steps) << std::endl;
 
@@ -623,8 +623,8 @@ void doLikelihoodScan(RooDataSet& dataset, RooAbsPdf& pdf, RooRealVar& observabl
     observable.setConstant(true);
 
     RooMinuit* minimizer = new RooMinuit(*nll);
-    minimizer->setEvalErrorWall(1);
-    minimizer->optimizeConst(1);
+    minimizer->setEvalErrorWall(0);
+    minimizer->optimizeConst(0);
     minimizer->setStrategy(2);
     minimizer->migrad();
     fitResults = minimizer->save();
@@ -683,8 +683,8 @@ void doLikelihoodScan(RooDataSet& dataset, RooAbsPdf& pdf, RooRealVar& observabl
     observable.setConstant(true);
 
     RooMinuit* minimizer = new RooMinuit(*nll);
-    minimizer->setEvalErrorWall(1);
-    minimizer->optimizeConst(1);
+    minimizer->setEvalErrorWall(0);
+    minimizer->optimizeConst(0);
     minimizer->setStrategy(2);
     minimizer->migrad();
     fitResults = minimizer->save();
@@ -802,6 +802,20 @@ void renameAndSetPdfParametersConst(const RooArgSet& observables, const RooAbsPd
 
     var->setConstant(true);
     var->SetNameTitle(newName, newName);
+  }
+
+  delete iter;
+  delete params;
+}
+
+void setPdfParametersConst(const RooArgSet& observables, const RooAbsPdf& pdf)
+{
+  RooArgSet* params = pdf.getParameters(observables);
+  TIterator* iter = params->createIterator();
+  RooRealVar* var = NULL;
+  while ((var = static_cast<RooRealVar*>(iter->Next())))
+  {
+    var->setConstant(true);
   }
 
   delete iter;
@@ -1111,11 +1125,13 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
   std::string pdfSignalName;
 
   std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, Mtt_KF_reco, NULL, massZprime, "background", mainCategory, &pdfSignalName);
+  std::map<std::string, RooAbsPdf*> backgroundPdfsFromWorkspace;
 
   for (auto& pdf: backgroundPdfs) {
     std::cout << "Background pdf: " << pdf.first << " ";
     pdf.second->getPdf().Print();
     mainWorkspace.import(pdf.second->getPdf());
+    backgroundPdfsFromWorkspace[pdf.first] = mainWorkspace.pdf(pdf.second->getPdf().GetName());
   }
 
   TString prefix = TString::Format("data_2011_%s_%d", syst_str.c_str(), massZprime);
@@ -1552,7 +1568,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
     // does NOT converge. It disables variable caching introduced by RooFit 3.50
     // Optimize(0) does also works, but it disable caching completely.
     // It seems fit does NOT converge when using NumCPU != 1. Awesome!
-    RooFitResult *fitResult = simPdf.fitTo(*RedData, Save(), Optimize(1));
+    RooFitResult *fitResult = simPdf.fitTo(*RedData, Save(), Optimize(0));
     fitResult->Print("v");
     
     TFile* outputFile = nullptr;
@@ -1843,7 +1859,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
       if (nll == NULL)
       {
         // Only create the nll the first time
-        nll = simPdfToyFit.createNLL(*toyData, RooFit::Optimize(1));
+        nll = simPdfToyFit.createNLL(*toyData, RooFit::Optimize(0));
       }
       else
       {
@@ -1857,8 +1873,8 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
 
       // Fit
       RooMinuit* minimizer = new RooMinuit(*nll);
-      minimizer->setEvalErrorWall(1);
-      minimizer->optimizeConst(1);
+      minimizer->setEvalErrorWall(0);
+      minimizer->optimizeConst(0);
       minimizer->migrad();
 
       // Only compute errors for nSig
