@@ -57,7 +57,7 @@ input_files = [
   '*.script']
 
 input_files_mass_dependant = [
-    "data_2011_nominal_750_%(signalPdf)s_%(btag)d_btag/data_2011_nominal_%%(mass)d_fitRes_%(signalPdf)s.root" % {'signalPdf': pdfSignalName, 'btag': args.btag},
+    "data_2011_nominal_%%(mass)d_%(signalPdf)s_%(btag)d_btag/data_2011_nominal_%%(mass)d_fitRes_%(signalPdf)s.root" % {'signalPdf': pdfSignalName, 'btag': args.btag},
     "nominal-Zprime%%(mass)d_%(signalPdf)s_*_workspace.root" % {'signalPdf': pdfSignalName}
     ]
 

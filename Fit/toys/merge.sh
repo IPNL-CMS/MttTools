@@ -5,7 +5,6 @@ input_dir=`pwd`/inputs/
 output_dir=`pwd`/results/
 
 pdfSignalName=`cat ../parameters.json | grep "\"signal\"" | awk -F' ' '{print $2;}' | tr -d \",`
-pdfBackgroundName="faltB"
 
 function test_root_file()
 {
@@ -33,9 +32,9 @@ return $error
 
 echo "Merging..."
 for mass in $(cat liste_mass.txt); do
-  filename="${output_dir}data_2011_nominal_${mass}_toylimit_${pdfSignalName}_${pdfBackgroundName}_*.root"
-  merged_filename="${output_dir}data_2011_nominal_${mass}_toylimit_${pdfSignalName}_${pdfBackgroundName}.root"
-  hadd -f "${merged_filename}" ${filename}
+  filename="${output_dir}data_2011_nominal_${mass}_toylimit_${pdfSignalName}_*.root"
+  merged_filename="${output_dir}data_2011_nominal_${mass}_toylimit_${pdfSignalName}.root"
+  hadd "${merged_filename}" ${filename}
   error=$?
   if [ $error == 0 ]; then
     if [ -f "${merged_filename}" ]; then
