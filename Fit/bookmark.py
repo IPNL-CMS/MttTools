@@ -56,17 +56,17 @@ else:
 # First, frit
 
 template = Template(r"""\begin{minipage}{0.33\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/nominal-Zprime${mass}_${sig_pdf}_fitCB.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/nominal-Zprime${mass}_${sig_pdf}_${btag}_btag_fitCB.pdf}\\
 Nominal\\
 $$\chi^2 = ${chi2_nominal}$$
 \end{minipage}%
 \begin{minipage}{0.33\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/JECup-Zprime${mass}_${sig_pdf}_fitCB.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/JECup-Zprime${mass}_${sig_pdf}_${btag}_btag_fitCB.pdf}\\
 JEC Up\\
 $$\chi^2 = ${chi2_JECup}$$
 \end{minipage}%
 \begin{minipage}{0.33\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/JECdown-Zprime${mass}_${sig_pdf}_fitCB.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/JECdown-Zprime${mass}_${sig_pdf}_${btag}_btag_fitCB.pdf}\\
 JEC Down\\
 $$\chi^2 = ${chi2_JECdown}$$
 \end{minipage}""")
@@ -78,14 +78,14 @@ for mass in masses:
   jsonFile.close()
 
   for jec in jecs:
-    chi2["chi2_" + jec] = jsonValues[str(mass)][jec]["chi2"]
+    chi2["chi2_" + jec] = jsonValues[str(mass)][btag][jec]["chi2"]
 
   chi2.update(PARAMS)
   f = open(tmp + "/frit_%d.tex" % mass, "w")
   f.write(template.substitute(chi2, mass = mass))
   f.close()
 
-shutil.copy(pwd + "/efficiencies_table.tex", tmp)
+shutil.copy(pwd + ("/efficiencies_table_%s_btag.tex" % btag), tmp + "/efficiencies_table.tex")
 
 # Compute final efficiency
 
@@ -131,11 +131,11 @@ f.close()
 # data_2011_nominal_1000_crystalball_faltB_2_btag/
 # Second, sigma ref
 template = Template(ur"""\begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${bkg_pdf}_${btag}_btag/data_2011_nominal_${mass}_fitRes_${sig_pdf}_${bkg_pdf}.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2011_nominal_${mass}_fitRes_${sig_pdf}.pdf}\\
 Nominal\\
 \end{minipage}%
 \begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${bkg_pdf}_${btag}_btag/data_2011_nominal_${mass}_fitRes_${sig_pdf}_${bkg_pdf}_log.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2011_nominal_${mass}_fitRes_${sig_pdf}_log.pdf}\\
 Nominal, échelle log\\
 \end{minipage}
 
@@ -301,20 +301,20 @@ f.close()
 # Likelihood scan
 
 template = Template(ur"""\begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${bkg_pdf}_${btag}_btag/data_2011_nominal_${mass}_likscan_${sig_pdf}_${bkg_pdf}.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2011_nominal_${mass}_likscan_${sig_pdf}.pdf}\\
 Likelihood scan
 \end{minipage}%
 \begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${bkg_pdf}_${btag}_btag/data_2011_nominal_${mass}_pdfscan_${sig_pdf}_${bkg_pdf}.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2011_nominal_${mass}_pdfscan_${sig_pdf}.pdf}\\
 PDF scan
 \end{minipage}
 
 \begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${bkg_pdf}_${btag}_btag/data_2011_nominal_${mass}_pdfscan_wsyst_${sig_pdf}_${bkg_pdf}.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2011_nominal_${mass}_pdfscan_wsyst_${sig_pdf}.pdf}\\
 PDF scan + systématiques
 \end{minipage}%
 \begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${bkg_pdf}_${btag}_btag/data_2011_nominal_${mass}_pdfscan_wsyst_cut_${sig_pdf}_${bkg_pdf}.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2011_nominal_${mass}_pdfscan_wsyst_cut_${sig_pdf}.pdf}\\
 PDF scan + systématiques pour $$N_{sig} > 0$$
 \end{minipage}
 
@@ -366,23 +366,23 @@ f.write(template.substitute(num_jobs=num_jobs, num_toys = num_toys, num_toys_per
 f.close()
 
 template = Template(ur"""\begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_Zprime${mass}_${sig_pdf}_${bkg_pdf}_LimitNLLToyExp.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_Zprime${mass}_${sig_pdf}_LimitNLLToyExp.pdf}\\
 Nll Toy exp
 \end{minipage}%
 \begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_Zprime${mass}_${sig_pdf}_${bkg_pdf}_pull.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_Zprime${mass}_${sig_pdf}_pull.pdf}\\
 Pull
 \end{minipage}
 \begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_Zprime${mass}_${sig_pdf}_${bkg_pdf}_LimitPlotZ.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_Zprime${mass}_${sig_pdf}_LimitPlotZ.pdf}\\
 Limite Z'
 \end{minipage}%
 \begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_Zprime${mass}_${sig_pdf}_${bkg_pdf}_LimitErrors.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_Zprime${mass}_${sig_pdf}_LimitErrors.pdf}\\
 Erreur sur limite
 \end{minipage}
 \begin{center}
-  \includegraphics[width=0.50\textwidth]{${pwd}/data_2011_Zprime${mass}_${sig_pdf}_${bkg_pdf}_LimitPlotsEMu.pdf}\\
+  \includegraphics[width=0.50\textwidth]{${pwd}/data_2011_Zprime${mass}_${sig_pdf}_LimitPlotsEMu.pdf}\\
   Plots $$e$$ $$\mu$$
 \end{center}
 """)

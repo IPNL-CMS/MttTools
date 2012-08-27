@@ -69,11 +69,11 @@ void loadExpectedLimits(const std::vector<double>& masses, std::vector<double>& 
       exit(1);
     }
 
-    double expectedLimit = root[strMass]["median"].asDouble();
-    double eyl68 = root[strMass]["widthM68"].asDouble();
-    double eyh68 = root[strMass]["widthP68"].asDouble();
-    double eyl95 = root[strMass]["widthM95"].asDouble();
-    double eyh95 = root[strMass]["widthP95"].asDouble();
+    double expectedLimit = root[strMass]["2"]["median"].asDouble();
+    double eyl68 = root[strMass]["2"]["widthM68"].asDouble();
+    double eyh68 = root[strMass]["2"]["widthP68"].asDouble();
+    double eyl95 = root[strMass]["2"]["widthM95"].asDouble();
+    double eyh95 = root[strMass]["2"]["widthP95"].asDouble();
 
     exp.push_back(expectedLimit);
     error_h_95.push_back(eyh95);
@@ -140,13 +140,13 @@ void drawLimitCurve() {
   gra2->SetMarkerSize(1.2);
   gra2->Draw("P,same");
 
-  TGraph* gra3 = new TGraph(4, &masses[0], xsections); //
+  /*TGraph* gra3 = new TGraph(4, &masses[0], xsections); //
   gra3->SetMarkerStyle(20);
   gra3->SetMarkerSize(1.2);
   gra3->SetMarkerColor(6);
   gra3->SetLineWidth(3);
   gra3->SetLineColor(6);
-  gra3->Draw("C,same");
+  gra3->Draw("C,same");*/
 
   TGraphErrors* graobs = new TGraphErrors(4, &masses[0], &observed[0], no_error, no_error);//the observed limits
   graobs->SetMarkerStyle(20);
@@ -159,7 +159,7 @@ void drawLimitCurve() {
   legendLimit->AddEntry(graobs,"Observed Upper  Limit (95% CL)","p");
   legendLimit->AddEntry(gra,"95% CL exclusion: 68% band","f");
   legendLimit->AddEntry(gra95,"95% CL exclusion: 95% band","f");
-  legendLimit->AddEntry(gra3, "Z' leptophobic", "l");
+  //legendLimit->AddEntry(gra3, "Z' leptophobic", "l");
   legendLimit->SetFillStyle(0);
   legendLimit->Draw("SAME");
 

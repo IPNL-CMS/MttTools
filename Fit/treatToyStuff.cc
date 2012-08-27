@@ -73,9 +73,8 @@ void treatToyStuff(bool writeTxtFile, bool savePsGifFiles, int massZprime, int b
   setTDRStyle();
 
   std::string pdfSignalName = getSignalPdfName();
-  std::string pdfBackgroundName = getFitBackgroundPdfName();
 
-  TString str = TString::Format("%s/data_2011_nominal_%d_toylimit_%s_%s.root", INPUT_PATH.c_str(), massZprime, pdfSignalName.c_str(), pdfBackgroundName.c_str());
+  TString str = TString::Format("%s/data_2011_nominal_%d_toylimit_%s.root", INPUT_PATH.c_str(), massZprime, pdfSignalName.c_str());
   TFile* f0 = TFile::Open(str);
 
   TCanvas* cToy = new TCanvas("cToy", "Toy MC pulls", 800, 800);
@@ -151,7 +150,7 @@ void treatToyStuff(bool writeTxtFile, bool savePsGifFiles, int massZprime, int b
 
 
   if (savePsGifFiles) {
-    TString prefix = TString::Format("data_2011_Zprime%d_%s_%s", massZprime, pdfSignalName.c_str(), pdfBackgroundName.c_str());
+    TString prefix = TString::Format("data_2011_Zprime%d_%s", massZprime, pdfSignalName.c_str());
     cToy->Print(TString::Format("%s_LimitPlotsEMu.gif", prefix.Data()));
     cToy2->Print(TString::Format("%s_LimitPlotsSigma.gif", prefix.Data()));
     cZ->Print(TString::Format("%s_LimitPlotZ.gif", prefix.Data()));
@@ -164,7 +163,7 @@ void treatToyStuff(bool writeTxtFile, bool savePsGifFiles, int massZprime, int b
     cLik->Print(TString::Format("%s_LimitNLLToyExp.pdf", prefix.Data()));
   }
   if (writeTxtFile) {
-    ofstream outParFileLimit(TString::Format("data_2011_Zprime%d_fitRes_ToyLimit_median_%s_%s.txt", massZprime, pdfSignalName.c_str(), pdfBackgroundName.c_str()));
+    ofstream outParFileLimit(TString::Format("data_2011_Zprime%d_fitRes_ToyLimit_median_%s.txt", massZprime, pdfSignalName.c_str()));
     outParFileLimit << "Mean of the Z limit distribution " << hLimit_Z->GetMean() << std::endl;
     outParFileLimit << "RMS of the Z limit distribution " << hLimit_Z->GetRMS() << std::endl;
     outParFileLimit << "Median of the Z limit distribution " << medianq << std::endl;
