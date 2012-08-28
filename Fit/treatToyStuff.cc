@@ -74,7 +74,7 @@ void treatToyStuff(bool writeTxtFile, bool savePsGifFiles, int massZprime, int b
 
   std::string pdfSignalName = getSignalPdfName();
 
-  TString str = TString::Format("%s/data_2011_nominal_%d_toylimit_%s.root", INPUT_PATH.c_str(), massZprime, pdfSignalName.c_str());
+  TString str = TString::Format("%s/%d-btag/data_2011_nominal_%d_toylimit_%s.root", INPUT_PATH.c_str(), btag, massZprime, pdfSignalName.c_str());
   TFile* f0 = TFile::Open(str);
 
   TCanvas* cToy = new TCanvas("cToy", "Toy MC pulls", 800, 800);

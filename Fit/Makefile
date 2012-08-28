@@ -27,7 +27,7 @@ LDFLAGS = $(shell root-config --ldflags) -Wl,--as-needed
 # Here's where you'd want to define any #define with -DVariableName
 # (which means you can now use '#ifdef VariableName' preprocessor
 # lines in your source code).
-CFLAGS += $(INCDIRS) -std=c++0x -g -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wunused-variable
+CFLAGS += $(INCDIRS) -std=c++0x -g -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wunused-variable -Wextra
 
 # Everything it needs to know about libraries
 DYNAMIC_LIBS = $(USERLIBDIRS) $(USERLIBS) -lboost_regex
