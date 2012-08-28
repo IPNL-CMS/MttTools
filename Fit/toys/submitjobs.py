@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import division
-import os, math, subprocess, shutil, sys, glob
+import os, math, subprocess, shutil, sys, glob, stat
 
 if sys.version_info<(2,7,0):
   sys.stderr.write("You need python 2.7 or later to run this script\n")
@@ -57,25 +57,32 @@ input_files = [
   '*.script']
 
 input_files_mass_dependant = [
-    "data_2011_nominal_%%(mass)d_%(signalPdf)s_%(btag)d_btag/data_2011_nominal_%%(mass)d_fitRes_%(signalPdf)s.root" % {'signalPdf': pdfSignalName, 'btag': args.btag},
-    "nominal-Zprime%%(mass)d_%(signalPdf)s_*_workspace.root" % {'signalPdf': pdfSignalName}
+    "data_2011_nominal_%%(mass)d_%(signalPdf)s_%(btag)d_btag/data_2011_nominal_%%(mass)d_fitRes_%(signalPdf)s.root" % {'signalPdf': pdfSignalName, 'btag': args.btag}
     ]
+
+frit_files = [
+    "frit/nominal-Zprime%%(mass)d_%(signalPdf)s_*_workspace.root" % {'signalPdf': pdfSignalName}
+    ]
+
 
 works_files = [
     "../fitMtt",
     "templates/wrapper.sh"
     ]
 
-
 print "Submitting %d jobs with %d toys per job: Total: %d toys for each mass" % (num_jobs, num_toys_per_job, num_toys)
 
 working_dir = os.getcwd() + "/works/"
 input_dir = os.getcwd() + "/inputs/"
-output_dir = os.getcwd() + "/results/"
+output_dir = os.getcwd() + "/results/%d-btag/" % args.btag
 wrapper_dir = os.getcwd() + "/templates/wrapper.sh"
 
 os.path.exists(os.path.join(input_dir, "data")) or os.mkdir(os.path.join(input_dir, "data"))
+os.path.exists(os.path.join(input_dir, "frit")) or os.mkdir(os.path.join(input_dir, "frit"))
 os.path.exists(os.path.join(input_dir, "fit_configuration")) or os.mkdir(os.path.join(input_dir, "fit_configuration"))
+os.path.exists(output_dir) or os.mkdir(output_dir)
+
+os.chmod(output_dir, 0777)
 
 def copy_file(files, dest):
   for file in glob.glob(files):
@@ -108,6 +115,10 @@ def copy_mass_deps(mass):
   for input_file in input_files_mass_dependant:
     correct_file = "../%s" % (input_file % {'mass': mass})
     copy_file(correct_file, input_dir)
+
+  for input_file in frit_files:
+    correct_file = "../%s" % (input_file % {'mass': mass})
+    copy_file(correct_file, os.path.join(input_dir, "frit"))
 
 def copy_works_files():
   global works_files, working_dir

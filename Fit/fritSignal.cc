@@ -399,8 +399,8 @@ void fritSignal(const std::string& file, const std::string& jecType, const std::
 
   } while (! fitIsGood && fitIterations > 0);
 
-  drawHistograms(whichLepton, Mtt_KF_reco, nBins, *RedData, simPdf, backgroundPdfs, btag, std::string(prefix), false);
-  drawHistograms(whichLepton, Mtt_KF_reco, nBins, *RedData, simPdf, backgroundPdfs, btag, std::string(prefix), true);
+  drawHistograms(whichLepton, Mtt_KF_reco, nBins, *RedData, simPdf, backgroundPdfs, btag, std::string("frit/" + prefix), false);
+  drawHistograms(whichLepton, Mtt_KF_reco, nBins, *RedData, simPdf, backgroundPdfs, btag, std::string("frit/" + prefix), true);
 
   RooPlot* MttPlot_mu = Mtt_KF_reco.frame(minmTT, maxmTT, nBins);
   MttPlot_mu->SetTitle("Semi-mu channel");
@@ -516,7 +516,7 @@ void fritSignal(const std::string& file, const std::string& jecType, const std::
 
   // Save our signal functions into the workspace
   // We will need it for the fit on data
-  TString workspaceFile = prefix + "_workspace.root";
+  TString workspaceFile = "frit/" + prefix + "_workspace.root";
   RooWorkspace workspace("w", "Frit signal workspace");
 
   for (auto& pdf: signalPdfs) {

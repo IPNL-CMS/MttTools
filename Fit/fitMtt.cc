@@ -1211,7 +1211,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
 
     std::string pdfName = "signal_" + std::string((TString(type->GetName()).Contains("muon", TString::kIgnoreCase) ? "muon" : "electron"));
 
-    TString workspaceFile = TString::Format("%s/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), syst_str.c_str(), massZprime, pdfSignalName.c_str(), categoryBTag);
+    TString workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), syst_str.c_str(), massZprime, pdfSignalName.c_str(), categoryBTag);
 
     std::shared_ptr<TFile> file(TFile::Open(workspaceFile));
     if (! file.get()) {
@@ -1614,7 +1614,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
 
       LikelihoodResults results;
       //FIXME. Steps is 2
-      doLikelihoodScan(*RedData, simPdf, nSig, massZprime, fitResult->minNll(), 8, err_sys_events, results);
+      doLikelihoodScan(*RedData, simPdf, nSig, massZprime, fitResult->minNll(), 2, err_sys_events, results);
 
       TFile likelihoodFile(OUTPUT_PATH + prefix + "_likscan_" + suffix + ".root", "recreate");
       likelihoodFile.cd();
@@ -1920,7 +1920,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
 
         LikelihoodResults results;
         //FIXME: It's 10 steps
-        doLikelihoodScan(*toyData, simPdfToyFit, nSig, massZprime, toyFitRes->minNll(), 20, err_sys_events, results);
+        doLikelihoodScan(*toyData, simPdfToyFit, nSig, massZprime, toyFitRes->minNll(), 10, err_sys_events, results);
 
         TString dirName = TString::Format("likscans_%s_toy_%d", indexJob.Data(), i);
         toyResFile->mkdir(dirName);
