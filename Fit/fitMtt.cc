@@ -64,7 +64,7 @@
 
 using namespace RooFit;
 
-#define NO_SYST // No systematics
+//#define NO_SYST // No systematics
 
 /**
  * Profiling method
@@ -506,22 +506,25 @@ struct LikelihoodResults
 {
   TH1* likscan;
   TH1* pdfscan;
+  TH1* pdfscan_cut;
   TH1* pdfscan_wsyst;
   TH1* pdfscan_wsyst_cut;
 
   double scan_limit;
+  double scan_cut_limit;
   double scan_wsyst_limit;
   double scan_wsyst_cut_limit;
 
   LikelihoodResults():
-    likscan(NULL), pdfscan(NULL), pdfscan_wsyst(NULL), pdfscan_wsyst_cut(NULL),
-    scan_limit(0.), scan_wsyst_limit(0.), scan_wsyst_cut_limit(0.)
+    likscan(NULL), pdfscan(NULL), pdfscan_cut(NULL), pdfscan_wsyst(NULL), pdfscan_wsyst_cut(NULL),
+    scan_limit(0.), scan_cut_limit(0.), scan_wsyst_limit(0.), scan_wsyst_cut_limit(0.)
   {}
 
   void release()
   {
     SAFE_DELETE(likscan);
     SAFE_DELETE(pdfscan);
+    SAFE_DELETE(pdfscan_cut);
     SAFE_DELETE(pdfscan_wsyst);
     SAFE_DELETE(pdfscan_wsyst_cut);
   }
@@ -584,6 +587,7 @@ void doLikelihoodScan(RooDataSet& dataset, RooAbsPdf& pdf, RooRealVar& observabl
   int nLHCuttedBins = (int) xSmearedHigh / steps;
   std::cout << "Likehood smearing from " << xLow << " to " << xSmearedHigh << "; bins: " << nLHSmearedBins << std::endl;
   results.pdfscan_wsyst = new TH1D("pdfscan_wsyst", "pdfscan_wsyst", nLHSmearedBins, xLow, xSmearedHigh);
+  results.pdfscan_cut = new TH1D("pdfscan_cut", "pdfscan_cut", nLHCuttedBins, 0, xSmearedHigh);
   results.pdfscan_wsyst_cut = new TH1D("pdfscan_wsyst_cut", "pdfscan_wsyst_cut", nLHCuttedBins, 0, xSmearedHigh);
 
   double center = observable.getVal();
@@ -754,8 +758,11 @@ void doLikelihoodScan(RooDataSet& dataset, RooAbsPdf& pdf, RooRealVar& observabl
     // Fill histogram with cut on x > 0. Don't do that when smearing, it'll cause weird effects around x = 0
     for (double x = xLow; x < xHigh; x += steps) {
       if (x >= 0) {
-        double weight = results.pdfscan->GetBinContent(results.pdfscan->FindBin(x));
+        double weight = results.pdfscan_wsyst->GetBinContent(results.pdfscan_wsyst->FindBin(x));
         results.pdfscan_wsyst_cut->SetBinContent(results.pdfscan_wsyst_cut->FindBin(x), weight);
+
+        weight = results.pdfscan->GetBinContent(results.pdfscan->FindBin(x));
+        results.pdfscan_cut->SetBinContent(results.pdfscan_cut->FindBin(x), weight);
       }
     }
 
@@ -773,6 +780,10 @@ void doLikelihoodScan(RooDataSet& dataset, RooAbsPdf& pdf, RooRealVar& observabl
   results.pdfscan_wsyst->ComputeIntegral();
   results.pdfscan_wsyst->Scale(1. / results.pdfscan_wsyst->Integral());
   results.pdfscan_wsyst->GetQuantiles(1, &results.scan_wsyst_limit, &areascan);
+
+  results.pdfscan_cut->ComputeIntegral();
+  results.pdfscan_cut->Scale(1. / results.pdfscan_cut->Integral());
+  results.pdfscan_cut->GetQuantiles(1, &results.scan_cut_limit, &areascan);
 
   results.pdfscan_wsyst_cut->ComputeIntegral();
   results.pdfscan_wsyst_cut->Scale(1. / results.pdfscan_wsyst_cut->Integral());
@@ -1620,6 +1631,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
       likelihoodFile.cd();
       results.likscan->Write();
       results.pdfscan->Write();
+      results.pdfscan_cut->Write();
       results.pdfscan_wsyst->Write();
       results.pdfscan_wsyst_cut->Write();
       likelihoodFile.Close();
@@ -1647,7 +1659,9 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
       cout << "The 95% C.L. upper limit on the Zprime cross section is " << Limit_Z_obs_pb << " pb" << endl;
       cout << "95% prob. limit from scan " << results.scan_limit / (combined_efficiency * lumi_mu * br_semil) << endl;
       cout << "95% prob. limit from scan with systematics " << results.scan_wsyst_limit / (combined_efficiency * lumi_mu * br_semil) << endl;
+      cout << "95% prob. limit from scan without systematics and prior sigma>0. " << results.scan_cut_limit / (combined_efficiency * lumi_mu * br_semil) << endl;
       cout << "95% prob. limit from scan with systematics and prior sigma>0. " << results.scan_wsyst_cut_limit / (combined_efficiency * lumi_mu * br_semil) << endl;
+
       ofstream outlikscan(OUTPUT_PATH + prefix + "_likscan.txt");
       outlikscan << "The Zprime cross section is " << sigmaZ << " +- " << sqrt(errorqtot_pb) << " pb" << endl;
       outlikscan << "The 95% C.L. upper limit on the Zprime cross section is " << Limit_Z_obs_pb << " pb" << endl;
