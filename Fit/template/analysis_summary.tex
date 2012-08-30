@@ -69,26 +69,26 @@
 
 
 \subsection{$m = 750$ GeV}
-\input{frit_750.tex}
+\IfFileExists{frit_750.tex}{\input{frit_750.tex}}{}
 
 \subsection{$m = 1000$ GeV}
-\input{frit_1000.tex}
+\IfFileExists{frit_1000.tex}{\input{frit_1000.tex}}{}
 
 \subsection{$m = 1250$ GeV}
-\input{frit_1250.tex}
+\IfFileExists{frit_1250.tex}{\input{frit_1250.tex}}{}
 
 \subsection{$m = 1500$ GeV}
-\input{frit_1500.tex}
+\IfFileExists{frit_1500.tex}{\input{frit_1500.tex}}{}
 
 \subsection{Efficacités}
 \subsubsection{Efficacités de sélection}
 
 \begin{tabular}{|c|c|c|c|c|}
-  \input{efficiencies_table.tex}
+  \IfFileExists{efficiencies_table.tex}{\input{efficiencies_table.tex}}{}
 \end{tabular}
 
 \subsubsection{Efficacité totales}
-\input{total_eff.tex}
+\IfFileExists{total_eff.tex}{\input{total_eff.tex}}{}
 
 \section{$\sigma_{ref}$}
 \subsection{$m = 750$ GeV}
@@ -108,13 +108,13 @@
 
 \section{Erreurs systématiques}
 \subsection{JEC}
-\input{syst_jec.tex}
+\IfFileExists{syst_jec.tex}{\input{syst_jec.tex}}{}
 
 \subsection{Signal}
-\input{syst_signal.tex}
+\IfFileExists{syst_signal.tex}{\input{syst_signal.tex}}{}
 
 \subsection{Background}
-\input{syst_bkg.tex}
+\IfFileExists{syst_bkg.tex}{\input{syst_bkg.tex}}{}
 
 \section{Likelihood scan}
 

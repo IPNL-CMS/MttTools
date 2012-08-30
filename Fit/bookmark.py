@@ -55,78 +55,79 @@ else:
 
 # First, frit
 
-template = Template(r"""\begin{minipage}{0.33\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/nominal-Zprime${mass}_${sig_pdf}_${btag}_btag_fitCB.pdf}\\
-Nominal\\
-$$\chi^2 = ${chi2_nominal}$$
-\end{minipage}%
-\begin{minipage}{0.33\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/JECup-Zprime${mass}_${sig_pdf}_${btag}_btag_fitCB.pdf}\\
-JEC Up\\
-$$\chi^2 = ${chi2_JECup}$$
-\end{minipage}%
-\begin{minipage}{0.33\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/JECdown-Zprime${mass}_${sig_pdf}_${btag}_btag_fitCB.pdf}\\
-JEC Down\\
-$$\chi^2 = ${chi2_JECdown}$$
-\end{minipage}""")
+if btag != "3":
+  template = Template(r"""\begin{minipage}{0.33\textwidth} \centering
+  \includegraphics[width=0.99\textwidth]{${pwd}/frit/nominal-Zprime${mass}_${sig_pdf}_${btag}_btag_fitCB.pdf}\\
+  Nominal\\
+  $$\chi^2 = ${chi2_nominal}$$
+  \end{minipage}%
+  \begin{minipage}{0.33\textwidth} \centering
+  \includegraphics[width=0.99\textwidth]{${pwd}/frit/JECup-Zprime${mass}_${sig_pdf}_${btag}_btag_fitCB.pdf}\\
+  JEC Up\\
+  $$\chi^2 = ${chi2_JECup}$$
+  \end{minipage}%
+  \begin{minipage}{0.33\textwidth} \centering
+  \includegraphics[width=0.99\textwidth]{${pwd}/frit/JECdown-Zprime${mass}_${sig_pdf}_${btag}_btag_fitCB.pdf}\\
+  JEC Down\\
+  $$\chi^2 = ${chi2_JECdown}$$
+  \end{minipage}""")
+  
+  for mass in masses:
+    jsonFile = open("frit_efficiencies.json")
+    chi2 = {}
+    jsonValues = json.load(jsonFile)
+    jsonFile.close()
+  
+    for jec in jecs:
+      chi2["chi2_" + jec] = jsonValues[str(mass)][btag][jec]["chi2"]
+  
+    chi2.update(PARAMS)
+    f = open(tmp + "/frit_%d.tex" % mass, "w")
+    f.write(template.substitute(chi2, mass = mass))
+    f.close()
 
-for mass in masses:
-  jsonFile = open("frit_efficiencies.json")
-  chi2 = {}
-  jsonValues = json.load(jsonFile)
-  jsonFile.close()
+  shutil.copy(pwd + ("/efficiencies_table_%s_btag.tex" % btag), tmp + "/efficiencies_table.tex")
 
-  for jec in jecs:
-    chi2["chi2_" + jec] = jsonValues[str(mass)][btag][jec]["chi2"]
+  # Compute final efficiency
 
-  chi2.update(PARAMS)
-  f = open(tmp + "/frit_%d.tex" % mass, "w")
-  f.write(template.substitute(chi2, mass = mass))
+  template = Template(r"""\begin{tabular}{|c|c|c|c|c|}
+  \hline
+  \mtt & 750 GeV & 1000 GeV & 1250 GeV & 1500 GeV\\
+  \hline
+  $$\epsilon(Z^{\prime})$$, semi-mu & $eff_mu_750 & $eff_mu_1000 & $eff_mu_1250 & $eff_mu_1500\\
+  $$\epsilon(Z^{\prime})$$, semi-e & $eff_e_750 & $eff_e_1000 & $eff_e_1250 & $eff_e_1500\\
+  \hline
+  \end{tabular}""")
+
+  selEff_mu = {}
+  selEff_e = {}
+  hltEff_mu = {}
+  hltEff_e = {}
+  eff = {}
+  for mass in masses:
+    jsonFile = open("efficiencies.json")
+    jsonValues = json.load(jsonFile)
+    jsonFile.close()
+  
+    strMass = str(mass)
+    selEff_mu[strMass] = jsonValues[strMass][btag]["nominal"][0]
+    selEff_e[strMass] = jsonValues[strMass][btag]["nominal"][1]
+    hltEff_mu[strMass] = jsonValues[strMass][btag]["nominal"][2]
+    hltEff_e[strMass] = jsonValues[strMass][btag]["nominal"][3]
+  
+  from ctypes import cdll, c_double
+  lib = cdll.LoadLibrary("./libUtils.so")
+  
+  lib.computeEfficiency.restype = c_double
+  for mass in masses:
+    strMass = str(mass)
+  
+    eff["eff_mu_" + strMass] = round(lib.computeEfficiency(c_double(selEff_mu[strMass]), c_double(hltEff_mu[strMass])) * 100, 2) 
+    eff["eff_e_" + strMass] = round(lib.computeEfficiency(c_double(selEff_e[strMass]), c_double(hltEff_e[strMass])) * 100, 2)
+  
+  f = open(tmp + "/total_eff.tex", "w")
+  f.write(template.substitute(eff))
   f.close()
-
-shutil.copy(pwd + ("/efficiencies_table_%s_btag.tex" % btag), tmp + "/efficiencies_table.tex")
-
-# Compute final efficiency
-
-template = Template(r"""\begin{tabular}{|c|c|c|c|c|}
-\hline
-\mtt & 750 GeV & 1000 GeV & 1250 GeV & 1500 GeV\\
-\hline
-$$\epsilon(Z^{\prime})$$, semi-mu & $eff_mu_750 & $eff_mu_1000 & $eff_mu_1250 & $eff_mu_1500\\
-$$\epsilon(Z^{\prime})$$, semi-e & $eff_e_750 & $eff_e_1000 & $eff_e_1250 & $eff_e_1500\\
-\hline
-\end{tabular}""")
-
-selEff_mu = {}
-selEff_e = {}
-hltEff_mu = {}
-hltEff_e = {}
-eff = {}
-for mass in masses:
-  jsonFile = open("efficiencies.json")
-  jsonValues = json.load(jsonFile)
-  jsonFile.close()
-
-  strMass = str(mass)
-  selEff_mu[strMass] = jsonValues[strMass][btag]["nominal"][0]
-  selEff_e[strMass] = jsonValues[strMass][btag]["nominal"][1]
-  hltEff_mu[strMass] = jsonValues[strMass][btag]["nominal"][2]
-  hltEff_e[strMass] = jsonValues[strMass][btag]["nominal"][3]
-
-from ctypes import cdll, c_double
-lib = cdll.LoadLibrary("./libUtils.so")
-
-lib.computeEfficiency.restype = c_double
-for mass in masses:
-  strMass = str(mass)
-
-  eff["eff_mu_" + strMass] = round(lib.computeEfficiency(c_double(selEff_mu[strMass]), c_double(hltEff_mu[strMass])) * 100, 2) 
-  eff["eff_e_" + strMass] = round(lib.computeEfficiency(c_double(selEff_e[strMass]), c_double(hltEff_e[strMass])) * 100, 2)
-
-f = open(tmp + "/total_eff.tex", "w")
-f.write(template.substitute(eff))
-f.close()
 
 # data_2011_nominal_1000_crystalball_faltB_2_btag/
 # Second, sigma ref
@@ -177,124 +178,126 @@ f.close()
 
 # Third, systematics
 
-# JEC
-template = Template(r"""
-\begin{adjustwidth}{-2cm}{-2cm}
-\begin{center}
-\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
-\hline
-\mtt & \multicolumn{2}{|c|}{750 GeV} & \multicolumn{2}{|c|}{1000 GeV} & \multicolumn{2}{|c|}{1250 GeV} & \multicolumn{2}{|c|}{1500 GeV}\\
-\hline
- & JEC up & JEC down & JEC up & JEC down & JEC up & JEC down & JEC up & JEC down\\
-\hline
-\hline
-$$\chi^2$$ & $c_750_up & $c_750_down & $c_1000_up & $c_1000_down & $c_1250_up & $c_1250_down & $c_1500_up & $c_1500_down\\
-Fit & $f_750_up & $f_750_down & $f_1000_up & $f_1000_down & $f_1250_up & $f_1250_down & $f_1500_up & $f_1500_down\\
-$$\sigma$$ (pb) & $s_750_up & $s_750_down & $s_1000_up & $s_1000_down & $s_1250_up & $s_1250_down & $s_1500_up & $s_1500_down\\
-\hline
-$$\sigma_{syst}$$ (pb) & \multicolumn{2}{|c|}{$s_750} & \multicolumn{2}{|c|}{$s_1000} & \multicolumn{2}{|c|}{$s_1250} & \multicolumn{2}{|c|}{$s_1500}\\
-\hline
-\end{tabular}
-\end{center}
-\end{adjustwidth}""")
+if btag != "3":
 
-datas = {}
-jsonFile = open("systematics_parameters.json")
-jsonValues = json.load(jsonFile)
-jsonFile.close()
-jsonFile = open("systematics.json")
-jsonSyst = json.load(jsonFile)
-jsonFile.close()
+  # JEC
+  template = Template(r"""
+  \begin{adjustwidth}{-2cm}{-2cm}
+  \begin{center}
+  \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+  \hline
+  \mtt & \multicolumn{2}{|c|}{750 GeV} & \multicolumn{2}{|c|}{1000 GeV} & \multicolumn{2}{|c|}{1250 GeV} & \multicolumn{2}{|c|}{1500 GeV}\\
+  \hline
+   & JEC up & JEC down & JEC up & JEC down & JEC up & JEC down & JEC up & JEC down\\
+  \hline
+  \hline
+  $$\chi^2$$ & $c_750_up & $c_750_down & $c_1000_up & $c_1000_down & $c_1250_up & $c_1250_down & $c_1500_up & $c_1500_down\\
+  Fit & $f_750_up & $f_750_down & $f_1000_up & $f_1000_down & $f_1250_up & $f_1250_down & $f_1500_up & $f_1500_down\\
+  $$\sigma$$ (pb) & $s_750_up & $s_750_down & $s_1000_up & $s_1000_down & $s_1250_up & $s_1250_down & $s_1500_up & $s_1500_down\\
+  \hline
+  $$\sigma_{syst}$$ (pb) & \multicolumn{2}{|c|}{$s_750} & \multicolumn{2}{|c|}{$s_1000} & \multicolumn{2}{|c|}{$s_1250} & \multicolumn{2}{|c|}{$s_1500}\\
+  \hline
+  \end{tabular}
+  \end{center}
+  \end{adjustwidth}""")
+  
+  datas = {}
+  jsonFile = open("systematics_parameters.json")
+  jsonValues = json.load(jsonFile)
+  jsonFile.close()
+  jsonFile = open("systematics.json")
+  jsonSyst = json.load(jsonFile)
+  jsonFile.close()
+  
+  reducedJEC = ["up", "down"]
+  for mass in masses:
+    for jec in reducedJEC:
+      datas["c_" + str(mass) + "_" + jec] = round(jsonValues[str(mass)][btag]["jec"]["JEC" + jec]["chi2"], 4)
+      datas["s_" + str(mass) + "_" + jec] = round(jsonValues[str(mass)][btag]["jec"]["JEC" + jec]["sigma"], 4)
+      datas["f_" + str(mass) + "_" + jec] = "OK" if (jsonValues[str(mass)][btag]["jec"]["JEC" + jec]["fit_status"] == 0 and jsonValues[str(mass)][btag]["jec"]["JEC" + jec]["fit_covQual"] == 3) else "Echec"
+      
+    datas["s_" + str(mass)] = round(jsonSyst[str(mass)][btag]["jec"], 4)
 
-reducedJEC = ["up", "down"]
-for mass in masses:
-  for jec in reducedJEC:
-    datas["c_" + str(mass) + "_" + jec] = round(jsonValues[str(mass)][btag]["jec"]["JEC" + jec]["chi2"], 4)
-    datas["s_" + str(mass) + "_" + jec] = round(jsonValues[str(mass)][btag]["jec"]["JEC" + jec]["sigma"], 4)
-    datas["f_" + str(mass) + "_" + jec] = "OK" if (jsonValues[str(mass)][btag]["jec"]["JEC" + jec]["fit_status"] == 0 and jsonValues[str(mass)][btag]["jec"]["JEC" + jec]["fit_covQual"] == 3) else "Echec"
-    
-  datas["s_" + str(mass)] = round(jsonSyst[str(mass)][btag]["jec"], 4)
-
-f = open(tmp + "/syst_jec.tex", "w")
-f.write(template.substitute(datas))
-f.close()
-
-# Signal
-template = Template(ur"""
-\begin{center}
-\begin{longtable}{|c|c|c|c|c|}
-\hline Paramètre & Variation & $$\chi^2$$ & $$\sigma$$ (pb) & Statut du fit \\ \hline \hline
-\endfirsthead
-
-\hline Paramètre & Variation & $$\chi^2$$ & $$\sigma$$ (pb) & Statut du fit \\ \hline
-\endhead
-
-\hline \multicolumn{5}{|r|}{La suite page suivante} \\ \hline
-\endfoot
-
-\endlastfoot
-
-$content
-\end{longtable}
-\end{center}""")
-
-arrayLine = ""
-for mass in masses:
-  arrayLine = arrayLine + "\multicolumn{5}{|l|}{$m = %d$ GeV}\\\\\n\\hline" % mass
-  for param, values in jsonValues[str(mass)][btag]["signal"].items():
-    arrayLine = arrayLine + "\multirow{2}{*}{%s}" % param.replace("_", r"\_")
-    for var in reducedJEC:
-      chi2 = round(values["chi2"][var], 4)
-      sigma = round(values["sigma"][var], 4)
-      fit = "OK" if (values["fit_status"][var] == 0 and values["fit_covQual"][var] == 3) else "Echec"
-      arrayLine = arrayLine + " & %s & %.04f & %.04f & %s\\\\\n" % (var, chi2, sigma, fit)
-      if var == "up":
-        arrayLine = arrayLine + "\\cline{2-5}"
-    
-    arrayLine = arrayLine + "\\hline\\hline\n"
-  arrayLine = arrayLine + "\multicolumn{5}{|l|}{$\sigma_{syst} = %.04f$ pb}\\\\ \\hline\\hline" % jsonSyst[str(mass)][btag]["signal_pdf"]
-
-
-f = open(tmp + "/syst_signal.tex", "w")
-f.write(template.substitute(content = arrayLine).encode("utf-8"))
-f.close()
-
-# Background
-template = Template(ur"""
-\begin{center}
-\begin{longtable}{|c|c|c|c|}
-\hline Fonction de bkg & $$\chi^2$$ & $$\sigma$$ (pb) & Statut du fit \\ \hline \hline
-\endfirsthead
-
-\hline Fonction de bkg & $$\chi^2$$ & $$\sigma$$ (pb) & Statut du fit \\ \hline
-\endhead
-
-\hline \multicolumn{4}{|r|}{La suite page suivante} \\ \hline
-\endfoot
-
-\endlastfoot
-
-$content
-\end{longtable}
-\end{center}""")
-
-arrayLine = ""
-for mass in masses:
-  arrayLine = arrayLine + "\multicolumn{4}{|l|}{$m = %d$ GeV}\\\\\n\\hline\n" % mass
-  for param, values in jsonValues[str(mass)][btag]["background"].items():
-    arrayLine = arrayLine + param.replace("_", r"\_")
-    chi2 = round(values["chi2"], 4)
-    sigma = round(values["sigma"], 4)
-    fit = "OK" if (values["fit_status"] == 0 and values["fit_covQual"] == 3) else "Echec"
-    arrayLine = arrayLine + " & %.04f & %.04f & %s\\\\\n" % (chi2, sigma, fit)
-
-    arrayLine = arrayLine + "\\hline\\hline\n"
-  arrayLine = arrayLine + "\multicolumn{4}{|l|}{$\sigma_{syst} = %.04f$ pb}\\\\ \\hline\\hline\n" % jsonSyst[str(mass)][btag]["background_pdf"]
-
-f = open(tmp + "/syst_bkg.tex", "w")
-f.write(template.substitute(content = arrayLine).encode("utf-8"))
-f.close()
-
+  f = open(tmp + "/syst_jec.tex", "w")
+  f.write(template.substitute(datas))
+  f.close()
+  
+  # Signal
+  template = Template(ur"""
+  \begin{center}
+  \begin{longtable}{|c|c|c|c|c|}
+  \hline Paramètre & Variation & $$\chi^2$$ & $$\sigma$$ (pb) & Statut du fit \\ \hline \hline
+  \endfirsthead
+  
+  \hline Paramètre & Variation & $$\chi^2$$ & $$\sigma$$ (pb) & Statut du fit \\ \hline
+  \endhead
+  
+  \hline \multicolumn{5}{|r|}{La suite page suivante} \\ \hline
+  \endfoot
+  
+  \endlastfoot
+  
+  $content
+  \end{longtable}
+  \end{center}""")
+  
+  arrayLine = ""
+  for mass in masses:
+    arrayLine = arrayLine + "\multicolumn{5}{|l|}{$m = %d$ GeV}\\\\\n\\hline" % mass
+    for param, values in jsonValues[str(mass)][btag]["signal"].items():
+      arrayLine = arrayLine + "\multirow{2}{*}{%s}" % param.replace("_", r"\_")
+      for var in reducedJEC:
+        chi2 = round(values["chi2"][var], 4)
+        sigma = round(values["sigma"][var], 4)
+        fit = "OK" if (values["fit_status"][var] == 0 and values["fit_covQual"][var] == 3) else "Echec"
+        arrayLine = arrayLine + " & %s & %.04f & %.04f & %s\\\\\n" % (var, chi2, sigma, fit)
+        if var == "up":
+          arrayLine = arrayLine + "\\cline{2-5}"
+      
+      arrayLine = arrayLine + "\\hline\\hline\n"
+    arrayLine = arrayLine + "\multicolumn{5}{|l|}{$\sigma_{syst} = %.04f$ pb}\\\\ \\hline\\hline" % jsonSyst[str(mass)][btag]["signal_pdf"]
+  
+  
+  f = open(tmp + "/syst_signal.tex", "w")
+  f.write(template.substitute(content = arrayLine).encode("utf-8"))
+  f.close()
+  
+  # Background
+  template = Template(ur"""
+  \begin{center}
+  \begin{longtable}{|c|c|c|c|}
+  \hline Fonction de bkg & $$\chi^2$$ & $$\sigma$$ (pb) & Statut du fit \\ \hline \hline
+  \endfirsthead
+  
+  \hline Fonction de bkg & $$\chi^2$$ & $$\sigma$$ (pb) & Statut du fit \\ \hline
+  \endhead
+  
+  \hline \multicolumn{4}{|r|}{La suite page suivante} \\ \hline
+  \endfoot
+  
+  \endlastfoot
+  
+  $content
+  \end{longtable}
+  \end{center}""")
+  
+  arrayLine = ""
+  for mass in masses:
+    arrayLine = arrayLine + "\multicolumn{4}{|l|}{$m = %d$ GeV}\\\\\n\\hline\n" % mass
+    for param, values in jsonValues[str(mass)][btag]["background"].items():
+      arrayLine = arrayLine + param.replace("_", r"\_")
+      chi2 = round(values["chi2"], 4)
+      sigma = round(values["sigma"], 4)
+      fit = "OK" if (values["fit_status"] == 0 and values["fit_covQual"] == 3) else "Echec"
+      arrayLine = arrayLine + " & %.04f & %.04f & %s\\\\\n" % (chi2, sigma, fit)
+  
+      arrayLine = arrayLine + "\\hline\\hline\n"
+    arrayLine = arrayLine + "\multicolumn{4}{|l|}{$\sigma_{syst} = %.04f$ pb}\\\\ \\hline\\hline\n" % jsonSyst[str(mass)][btag]["background_pdf"]
+  
+  f = open(tmp + "/syst_bkg.tex", "w")
+  f.write(template.substitute(content = arrayLine).encode("utf-8"))
+  f.close()
+  
 ##################################################################################
 ##################################################################################
 ##################################################################################
@@ -366,23 +369,23 @@ f.write(template.substitute(num_jobs=num_jobs, num_toys = num_toys, num_toys_per
 f.close()
 
 template = Template(ur"""\begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_Zprime${mass}_${sig_pdf}_LimitNLLToyExp.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/toys/plots/${btag}-btag/data_2011_Zprime${mass}_${sig_pdf}_LimitNLLToyExp.pdf}\\
 Nll Toy exp
 \end{minipage}%
 \begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_Zprime${mass}_${sig_pdf}_pull.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/toys/plots/${btag}-btag/data_2011_Zprime${mass}_${sig_pdf}_pull.pdf}\\
 Pull
 \end{minipage}
 \begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_Zprime${mass}_${sig_pdf}_LimitPlotZ.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/toys/plots/${btag}-btag/data_2011_Zprime${mass}_${sig_pdf}_LimitPlotZ.pdf}\\
 Limite Z'
 \end{minipage}%
 \begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_Zprime${mass}_${sig_pdf}_LimitErrors.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/toys/plots/${btag}-btag/data_2011_Zprime${mass}_${sig_pdf}_LimitErrors.pdf}\\
 Erreur sur limite
 \end{minipage}
 \begin{center}
-  \includegraphics[width=0.50\textwidth]{${pwd}/data_2011_Zprime${mass}_${sig_pdf}_LimitPlotsEMu.pdf}\\
+  \includegraphics[width=0.50\textwidth]{${pwd}/toys/plots/${btag}-btag/data_2011_Zprime${mass}_${sig_pdf}_LimitPlotsEMu.pdf}\\
   Plots $$e$$ $$\mu$$
 \end{center}
 """)
@@ -443,7 +446,7 @@ Bande d'exclusion (95\%) (pb) & $$^{+${p95_750}}_{-${m95_750}}$$ & $$^{+${p95_10
 \end{tabular}
 
 \begin{center}
-  \includegraphics[width=0.70\textwidth]{${pwd}/limitCurve_2011_${sig_pdf}_${bkg_pdf}.pdf}
+  \includegraphics[width=0.70\textwidth]{${pwd}/limitCurve_2011_${sig_pdf}_${bkg_pdf}_${btag}btag.pdf}
 \end{center}
 }""")
 

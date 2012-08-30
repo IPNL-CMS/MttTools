@@ -18,9 +18,10 @@
 
 #include "Utils.h"
 
+#include <tclap/CmdLine.h>
 #include <json/json.h>
 
-void loadObservedLimits(const std::vector<double>& masses, std::vector<double>& obs) {
+void loadObservedLimits(int btag, const std::vector<double>& masses, std::vector<double>& obs) {
   Json::Reader reader;
   Json::Value root;
   std::ifstream file("likelihood_scan.json");
@@ -32,6 +33,10 @@ void loadObservedLimits(const std::vector<double>& masses, std::vector<double>& 
     exit(1);
   }
 
+  std::stringstream ss2;
+  ss2 << btag;
+  std::string btagStr = ss2.str();
+
   for (std::vector<double>::const_iterator it = masses.begin(); it != masses.end(); ++it) {
     std::stringstream ss;
     ss << (int) *it;
@@ -42,12 +47,12 @@ void loadObservedLimits(const std::vector<double>& masses, std::vector<double>& 
       exit(1);
     }
 
-    double observedLimit = root[strMass]["2"]["scan_wsyst_cut_limit"].asDouble();
+    double observedLimit = root[strMass][btagStr]["scan_wsyst_cut_limit"].asDouble();
     obs.push_back(observedLimit);
   }
 }
 
-void loadExpectedLimits(const std::vector<double>& masses, std::vector<double>& exp, std::vector<double>& error_h_95, std::vector<double>& error_l_95, std::vector<double>& error_h_68, std::vector<double>& error_l_68) {
+void loadExpectedLimits(int btag, const std::vector<double>& masses, std::vector<double>& exp, std::vector<double>& error_h_95, std::vector<double>& error_l_95, std::vector<double>& error_h_68, std::vector<double>& error_l_68) {
   Json::Reader reader;
   Json::Value root;
   std::ifstream file("expected_limits.json");
@@ -59,6 +64,10 @@ void loadExpectedLimits(const std::vector<double>& masses, std::vector<double>& 
     exit(1);
   }
 
+  std::stringstream ss2;
+  ss2 << btag;
+  std::string btagStr = ss2.str();
+
   for (std::vector<double>::const_iterator it = masses.begin(); it != masses.end(); ++it) {
     std::stringstream ss;
     ss << (int) *it;
@@ -69,11 +78,11 @@ void loadExpectedLimits(const std::vector<double>& masses, std::vector<double>& 
       exit(1);
     }
 
-    double expectedLimit = root[strMass]["2"]["median"].asDouble();
-    double eyl68 = root[strMass]["2"]["widthM68"].asDouble();
-    double eyh68 = root[strMass]["2"]["widthP68"].asDouble();
-    double eyl95 = root[strMass]["2"]["widthM95"].asDouble();
-    double eyh95 = root[strMass]["2"]["widthP95"].asDouble();
+    double expectedLimit = root[strMass][btagStr]["median"].asDouble();
+    double eyl68 = root[strMass][btagStr]["widthM68"].asDouble();
+    double eyh68 = root[strMass][btagStr]["widthP68"].asDouble();
+    double eyl95 = root[strMass][btagStr]["widthM95"].asDouble();
+    double eyh95 = root[strMass][btagStr]["widthP95"].asDouble();
 
     exp.push_back(expectedLimit);
     error_h_95.push_back(eyh95);
@@ -83,7 +92,7 @@ void loadExpectedLimits(const std::vector<double>& masses, std::vector<double>& 
   }
 }
 
-void drawLimitCurve() {
+void drawLimitCurve(int btag) {
 
   gROOT->Clear();
   gStyle->SetOptStat(0);
@@ -112,8 +121,8 @@ void drawLimitCurve() {
     0.236 * 1.3,
     0.082 * 1.3};
 
-  loadObservedLimits(masses, observed);
-  loadExpectedLimits(masses, expected, error_high_95, error_low_95, error_high_68, error_low_68);
+  loadObservedLimits(btag, masses, observed);
+  loadExpectedLimits(btag, masses, expected, error_high_95, error_low_95, error_high_68, error_low_68);
 
   TCanvas* c1 = new TCanvas("canvas", "canvas", 600, 600);
 
@@ -169,7 +178,7 @@ void drawLimitCurve() {
   t.DrawLatex(0.63, 0.67, "#font[42]{CMS preliminary}");
   t.DrawLatex(0.63, 0.62, "#font[42]{5 fb^{-1} at #sqrt{s}=7 TeV}");
 
-  TString prefix = TString::Format("limitCurve_2011_%s_%s", getSignalPdfName().c_str(), getFitBackgroundPdfName().c_str());
+  TString prefix = TString::Format("limitCurve_2011_%s_%s_%dbtag", getSignalPdfName().c_str(), getFitBackgroundPdfName().c_str(), btag);
 
   c1->Print(prefix + ".png");
   c1->SaveAs(prefix + ".pdf");
@@ -178,5 +187,16 @@ void drawLimitCurve() {
 }
 
 int main(int argc, char** argv) {
-  drawLimitCurve();
+  try {
+    TCLAP::CmdLine cmd("Draw limit curve", ' ', "0.1");
+
+    TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", true, 2, "int", cmd);
+
+    cmd.parse(argc, argv);
+
+    drawLimitCurve(btagArg.getValue());
+
+  } catch (TCLAP::ArgException& e) {
+    std::cerr << e.error() << std::endl;
+  }
 }

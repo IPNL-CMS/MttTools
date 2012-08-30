@@ -2,7 +2,7 @@
 
 working_dir=`pwd`/works/
 input_dir=`pwd`/inputs/
-output_dir=`pwd`/results/
+output_dir=$1
 
 pdfSignalName=`cat ../parameters.json | grep "\"signal\"" | awk -F' ' '{print $2;}' | tr -d \",`
 

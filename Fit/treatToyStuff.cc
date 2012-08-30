@@ -17,6 +17,9 @@
 #include <tclap/CmdLine.h>
 #include <json/json.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 std::string INPUT_PATH;
 
 void saveToyLimits(const int mass, const int btag, const double mean, const double rms, const double median, const double m68, const double p68,
@@ -150,7 +153,10 @@ void treatToyStuff(bool writeTxtFile, bool savePsGifFiles, int massZprime, int b
 
 
   if (savePsGifFiles) {
-    TString prefix = TString::Format("data_2011_Zprime%d_%s", massZprime, pdfSignalName.c_str());
+    mkdir(TString::Format("toys/plots/%d-btag", btag).Data(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+    TString prefix = TString::Format("toys/plots/%d-btag/data_2011_Zprime%d_%s", btag, massZprime, pdfSignalName.c_str());
+
     cToy->Print(TString::Format("%s_LimitPlotsEMu.gif", prefix.Data()));
     cToy2->Print(TString::Format("%s_LimitPlotsSigma.gif", prefix.Data()));
     cZ->Print(TString::Format("%s_LimitPlotZ.gif", prefix.Data()));
@@ -162,6 +168,8 @@ void treatToyStuff(bool writeTxtFile, bool savePsGifFiles, int massZprime, int b
     cerr->Print(TString::Format("%s_LimitErrors.pdf", prefix.Data()));
     cLik->Print(TString::Format("%s_LimitNLLToyExp.pdf", prefix.Data()));
   }
+
+  /*
   if (writeTxtFile) {
     ofstream outParFileLimit(TString::Format("data_2011_Zprime%d_fitRes_ToyLimit_median_%s.txt", massZprime, pdfSignalName.c_str()));
     outParFileLimit << "Mean of the Z limit distribution " << hLimit_Z->GetMean() << std::endl;
@@ -174,6 +182,7 @@ void treatToyStuff(bool writeTxtFile, bool savePsGifFiles, int massZprime, int b
 
     outParFileLimit.close();
   }
+  */
 
   saveToyLimits(massZprime, btag, hLimit_Z->GetMean(), hLimit_Z->GetRMS(), medianq, M68band, P68band, M95band, P95band);
 
