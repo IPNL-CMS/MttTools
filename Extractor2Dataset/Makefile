@@ -18,7 +18,7 @@ ROOTCFLAGS = $(shell root-config --cflags)
 ROOTLIBS   = $(shell root-config --libs) -lMinuit -lRooFitCore -lRooFit
 
 CXX           = g++
-CXXFLAGS	    = -O2 -Wall -Werror -fPIC
+CXXFLAGS	    = -O2 -Wall -Werror -fPIC -std=c++0x
 #CXXFLAGS	    = -g -Wall -Werror -fPIC
 LD			      = g++
 LDFLAGS		    = -O2 $(shell root-config --ldflags) -Wl,--as-needed
@@ -29,7 +29,7 @@ ARFLAGS       = -cq
 LDDIR         = $(shell echo "-L" $$LD_LIBRARY_PATH | sed -e 's/:/ -L/g') -L$(ROOFIT_LIBDIR)/ -L../lib/
 
 CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/
-LIBS  		    = $(LDDIR) $(ROOTLIBS)# -lAnalysis -lTreeAnalyzer_PhotonJet
+LIBS  		    = $(LDDIR) $(ROOTLIBS) -lboost_regex# -lAnalysis -lTreeAnalyzer_PhotonJet
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
 SOURCES		= $(wildcard *.$(SrcSuf))
@@ -41,13 +41,12 @@ SOBJECTS	= $(SOURCES:.$(SrcSuf)=.$(DllSuf))
 
 ###
 
-#all: drawPhotonJet_2bkg drawPhotonJetExtrap draw_all_methods_vs_pt draw_all_methods_vs_npv draw_crosschecks
-all: process_all
+all: extractor2Dataset
 
 clean:
 	@rm *.o;
 
-process_all: Extractor2Histos.o ../PUReweighting/PUReweighter.o  process_all.o
+extractor2Dataset: extractor2Dataset.o ../PUReweighting/PUReweighter.o
 	$(LD) $(LIBS) $(SOFLAGS) $(LDFLAGS) $+ -o $@
 
 %.o: %.cpp
