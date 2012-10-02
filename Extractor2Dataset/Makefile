@@ -18,10 +18,10 @@ ROOTCFLAGS = $(shell root-config --cflags)
 ROOTLIBS   = $(shell root-config --libs) -lMinuit -lRooFitCore -lRooFit
 
 CXX           = g++
-CXXFLAGS	    = -O2 -Wall -Werror -fPIC -std=c++0x
-#CXXFLAGS	    = -g -Wall -Werror -fPIC
+#CXXFLAGS	    = -O2 -Wall -Werror -fPIC -std=c++0x
+CXXFLAGS	    = -g -Wall -Werror -fPIC -std=c++0x
 LD			      = g++
-LDFLAGS		    = -O2 $(shell root-config --ldflags) -Wl,--as-needed
+LDFLAGS		    = $(shell root-config --ldflags) -Wl,--as-needed
 SOFLAGS		    = 
 AR            = ar
 ARFLAGS       = -cq
@@ -29,7 +29,7 @@ ARFLAGS       = -cq
 LDDIR         = $(shell echo "-L" $$LD_LIBRARY_PATH | sed -e 's/:/ -L/g') -L$(ROOFIT_LIBDIR)/ -L../lib/
 
 CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/
-LIBS  		    = $(LDDIR) $(ROOTLIBS) -lboost_regex# -lAnalysis -lTreeAnalyzer_PhotonJet
+LIBS  		    = $(LDDIR) $(ROOTLIBS) 
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
 SOURCES		= $(wildcard *.$(SrcSuf))

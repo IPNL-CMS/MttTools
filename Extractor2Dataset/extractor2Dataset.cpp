@@ -6,18 +6,11 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include <list>
+#include <algorithm>
+#include <string>
 
 #include <TChain.h>
 #include <TFile.h>
-
-#include <RooRealVar.h>
-#include <RooArgSet.h>
-#include <RooDataSet.h>
-#include <RooMsgService.h>
-using namespace RooFit;
-
-#include <boost/regex.hpp>
 
 #include <tclap/CmdLine.h>
 
@@ -25,22 +18,12 @@ using namespace RooFit;
 
 bool OVERRIDE_TYPE;
 std::string OVERRIDED_TYPE;
+PUProfile puProfile;
 
 void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isData, const std::string& type) {
 
   TString outputFileFormated = OVERRIDE_TYPE ? outputFile : TString::Format(outputFile.c_str(), (isData) ? "" : type.c_str());
-
-  // Extract dataset name
-  static const boost::regex e("^MTT_(.*)_\\d{4}.*$");
-  boost::cmatch matches;
-
-  if (! boost::regex_search(outputFileFormated.Data(), matches, e)) {
-    std::cerr << "Error: can't extract datasetname from outputfile. Pattern expected: ^MTT_(.*)_\\d{4}_.*$" << std::endl;
-    exit(1);
-  }
-
-  std::string datasetName = matches[1];
-  std::cout << "Dataset name: " << datasetName << std::endl;
+  std::cout << outputFileFormated << std::endl;
 
   std::map<int, TTree*> outputTrees {
     {0, new TTree("dataset_0btag", "dataset for 0 b-tagged jet") },
@@ -56,7 +39,10 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
   mtt->SetBranchAddress("2ndjetpt", &pt_2ndJet, NULL);
   mtt->SetBranchAddress("bestSolChi2", &bestSolChi2, NULL);
   mtt->SetBranchAddress("isSel", &isSel, NULL);
-  mtt->SetBranchAddress("nBtaggedJets_CSVM", &nBtaggedJets_CSVM, NULL);
+  if (puProfile == PUProfile::S6)
+    mtt->SetBranchAddress("nBtaggedJets_TCHET", &nBtaggedJets_CSVM, NULL);
+  else
+    mtt->SetBranchAddress("nBtaggedJets_CSVM", &nBtaggedJets_CSVM, NULL);
 
   mtt->SetBranchStatus("*", 0);
   mtt->SetBranchStatus("mtt_AfterChi2", 1);
@@ -64,7 +50,10 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
   mtt->SetBranchStatus("2ndjetpt", 1);
   mtt->SetBranchStatus("bestSolChi2", 1);
   mtt->SetBranchStatus("isSel", 1);
-  mtt->SetBranchStatus("nBtaggedJets_CSVM", 1);
+  if (puProfile == PUProfile::S6)
+    mtt->SetBranchStatus("nBtaggedJets_TCHET", 1);
+  else
+    mtt->SetBranchStatus("nBtaggedJets_CSVM", 1);
 
   float n_trueInteractions;
 
@@ -83,7 +72,7 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
 
   PUReweighter* puReweigher = NULL;
   if (! isData) {
-    puReweigher = new PUReweighter(type == "semimu", datasetName);
+    puReweigher = new PUReweighter(type == "semimu", puProfile);
   }
 
   int64_t entries = mtt->GetEntries();
@@ -180,7 +169,7 @@ void reduce(const std::vector<std::string>& inputFiles, const std::string& outpu
 void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {
 
   ifstream ifs(filename.c_str());
-  string line;
+  std::string line;
 
   while (getline(ifs, line))
     files.push_back(line);
@@ -206,6 +195,7 @@ int main(int argc, char** argv)
     cmd.xorAdd(dataArg, mcArg);
 
     TCLAP::ValueArg<std::string> typeArg("", "type", "current inputfile type (semie or semimu)", false, "", "string", cmd);
+    TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S7", "string", cmd);
 
     cmd.parse(argc, argv);
 
@@ -213,6 +203,13 @@ int main(int argc, char** argv)
       OVERRIDE_TYPE = true;
       OVERRIDED_TYPE = typeArg.getValue();
     }
+
+    std::string p = pileupArg.getValue();
+    std::transform(p.begin(), p.end(), p.begin(), ::tolower);
+    if (p == "s6")
+      puProfile = PUProfile::S6;
+    else
+      puProfile = PUProfile::S7;
     
     bool isData = dataArg.isSet();
 
@@ -222,11 +219,6 @@ int main(int argc, char** argv)
     } else {
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
-
-    // Set RooFit verbosity
-    RooMsgService::instance().setStreamStatus(0, false);
-    RooMsgService::instance().setStreamStatus(1, false);
-    RooMsgService::instance().addStream(RooFit::ERROR);
 
     reduce(inputFiles, outputFileArg.getValue(), isData);    
 

@@ -3,17 +3,22 @@
 import os, subprocess, tempfile
 
 files = [
-    "MTT_DYJetsToLL_M-50_2012_v1_%s.root",
-    "MTT_QCD_Pt_20_30_EMEnriched_2012_v1_semie.root",
-    "MTT_QCD_Pt_20_MuEnriched_2012_v1_semimu.root",
-    "MTT_QCD_Pt_30_80_EMEnriched_2012_v1_semie.root",
-    "MTT_QCD_Pt_80_170_EMEnriched_2012_v1_semie.root",
-    "MTT_Tbar_s-channel_2012_v1_%s.root",
-    "MTT_Tbar_t-channel_2012_v1_%s.root",
-    "MTT_Tbar_tW-channel_2012_v1_%s.root",
-    "MTT_TTJets_2012_v1_%s.root",
-    "MTT_T_tW-channel_2012_v1_%s.root",
-    "MTT_WJetsToLNu_2012_v1_%s.root",
+    "MTT_Zprime_M750_2012_v1_%s.root",
+    "MTT_Zprime_M1000_2012_v1_%s.root",
+    "MTT_Zprime_M1250_2012_v1_%s.root",
+    "MTT_Zprime_M1500_2012_v1_%s.root",
+
+#    "MTT_DYJetsToLL_M-50_2012_v1_%s.root",
+#    "MTT_QCD_Pt_20_30_EMEnriched_2012_v1_semie.root",
+#    "MTT_QCD_Pt_20_MuEnriched_2012_v1_semimu.root",
+#    "MTT_QCD_Pt_30_80_EMEnriched_2012_v1_semie.root",
+#    "MTT_QCD_Pt_80_170_EMEnriched_2012_v1_semie.root",
+#    "MTT_Tbar_s-channel_2012_v1_%s.root",
+#    "MTT_Tbar_t-channel_2012_v1_%s.root",
+#    "MTT_Tbar_tW-channel_2012_v1_%s.root",
+#    "MTT_TTJets_2012_v1_%s.root",
+#    "MTT_T_tW-channel_2012_v1_%s.root",
+#    "MTT_WJetsToLNu_2012_v1_%s.root",
   ]
 
 def launch(input, output):
@@ -23,6 +28,8 @@ def launch(input, output):
   elif "semimu" in input:
     args.append("--type semimu")
 
+  if "Zprime" in input:
+    args.append("--pileup s6")
 
   return " ".join(args)
 
