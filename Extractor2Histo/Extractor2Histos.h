@@ -69,6 +69,8 @@ class Extractor2Histos {
     Float_t         mHadTop_AfterChi2andKF;
     Float_t         mtt_AfterChi2andKF;
 
+    bool            m_triggerPassed;
+
     // List of branches
     TBranch        *b_MC_channel;   //!
     TBranch        *b_MC_mtt;   //!

@@ -8,31 +8,36 @@
 
 void Extractor2Histos::Loop()
 {
+
+  TH1::SetDefaultSumw2(true);
+
+  TH1D *hNVtx_noweight = new TH1D("hNVtx_noweight", "", 70, 0., 70);
   TH1D *hNVtx = new TH1D("hNVtx", "", 70, 0., 70);
-  TH1D *hNVtx_finalsel = new TH1D("hNVtx_finalsel", "", 70, 0., 70);
+  TH1D *hNVtx_beforesel = new TH1D("hNVtx_beforesel", "", 70, 0., 70);
 
   TH1D *hNTrueInt = new TH1D("hNTrueInt", "", 70, 0., 70);
+  TH1D *hNTrueInt_nosel = new TH1D("hNTrueInt_nosel", "", 70, 0., 70);
 
   TH1D *hLeptonPt = new TH1D("hLeptonPt", "", 50, 20., 200.);
-  TH1D *hLeptonPt_finalsel = new TH1D("hLeptonPt_finalsel", "", 50, 20., 200.);
+  TH1D *hLeptonPt_beforesel = new TH1D("hLeptonPt_beforesel", "", 50, 20., 200.);
 
   TH1D *hMuRelIso = new TH1D("hMuRelIso", "", 50, 0., 0.15);
-  TH1D *hMuRelIso_finalsel = new TH1D("hMuRelIso_finalsel", "", 50, 0., 0.15);
+  TH1D *hMuRelIso_beforesel = new TH1D("hMuRelIso_beforesel", "", 50, 0., 0.15);
 
   TH1D *h1stjetpt = new TH1D("h1stjetpt", "", 100, 70., 640.);
-  TH1D *h1stjetpt_finalsel = new TH1D("h1stjetpt_finalsel", "", 100, 70., 640.);
+  TH1D *h1stjetpt_beforesel = new TH1D("h1stjetpt_beforesel", "", 100, 70., 640.);
 
   TH1D *h2ndjetpt = new TH1D("h2ndjetpt", "", 100, 50., 620.);
-  TH1D *h2ndjetpt_finalsel = new TH1D("h2ndjetpt_finalsel", "", 100, 50., 620.);
+  TH1D *h2ndjetpt_beforesel = new TH1D("h2ndjetpt_beforesel", "", 100, 50., 620.);
 
   TH1D *h3rdjetpt = new TH1D("h3rdjetpt", "", 50, 30., 300.);
-  TH1D *h3rdjetpt_finalsel = new TH1D("h3rdjetpt_finalsel", "", 50, 30., 300.);
+  TH1D *h3rdjetpt_beforesel = new TH1D("h3rdjetpt_beforesel", "", 50, 30., 300.);
 
   TH1D *h4thjetpt = new TH1D("h4thjetpt", "", 50, 30., 300.);
-  TH1D *h4thjetpt_finalsel = new TH1D("h4thjetpt_finalsel", "", 50, 30., 300.);
+  TH1D *h4thjetpt_beforesel = new TH1D("h4thjetpt_beforesel", "", 50, 30., 300.);
 
   TH1D *hMET = new TH1D("hMET", "", 100, 20., 400.);
-  TH1D *hMET_finalsel = new TH1D("hMET_finalsel", "", 100, 20., 400.);
+  TH1D *hMET_beforesel = new TH1D("hMET_beforesel", "", 100, 20., 400.);
 
   TH1D *hmtlep = new TH1D("hmtlep", "", 100, 120., 240.);
   TH1D *hmthad = new TH1D("hmthad", "", 150, 120., 300.);
@@ -44,35 +49,35 @@ void Extractor2Histos::Loop()
   TH1D *hmttSelected2bMtt500 = new TH1D("hmttSelected2bMtt500", "", 100, 300., 1300.);
   TH1D *hmtt_all = new TH1D("hmtt_all", "", 100, 300., 1300.);
   TH1D *hmtt_bestchi2 = new TH1D("hmtt_bestchi2", "", 100, 300., 1300.);
-  //TH1D *hNGoodMuons = new TH1D("hNGoodMuons", "", 5, -0.5, 4.5);
+  TH1D *hNGoodMuons = new TH1D("hNGoodMuons", "", 5, -0.5, 4.5);
 
   TH1D *hNGoodJets = new TH1D("hNGoodJets", "", 6, 3.5, 9.5);
-  TH1D *hNGoodJets_finalsel = new TH1D("hNGoodJets_finalsel", "", 6, 3.5, 9.5);
+  TH1D *hNGoodJets_beforesel = new TH1D("hNGoodJets_beforesel", "", 6, 3.5, 9.5);
 
   TH1D *hNBtaggedJets = new TH1D("hNBtaggedJets", "", 5, -0.5, 4.5);
-  TH1D *hNBtaggedJets_finalsel = new TH1D("hNBtaggedJets_finalsel", "", 5, -0.5, 4.5);
+  TH1D *hNBtaggedJets_beforesel = new TH1D("hNBtaggedJets_beforesel", "", 5, -0.5, 4.5);
 
   if (mIsSemiMu) {
     hLeptonPt->SetXTitle("#mu p_{T} [GeV/c]");
-    hLeptonPt_finalsel->SetXTitle("#mu p_{T} [GeV/c]");
+    hLeptonPt_beforesel->SetXTitle("#mu p_{T} [GeV/c]");
   } else {
-    hLeptonPt_finalsel->SetXTitle("e p_{T} [GeV/c]");
+    hLeptonPt_beforesel->SetXTitle("e p_{T} [GeV/c]");
     hLeptonPt->SetXTitle("e p_{T} [GeV/c]");
   }
 
   h1stjetpt->SetXTitle("1^{st} jet p_{T} [GeV/c]");
-  h1stjetpt_finalsel->SetXTitle("1^{st} jet p_{T} [GeV/c]");
+  h1stjetpt_beforesel->SetXTitle("1^{st} jet p_{T} [GeV/c]");
 
   h2ndjetpt->SetXTitle("2^{nd} jet p_{T} [GeV/c]");
-  h2ndjetpt_finalsel->SetXTitle("2^{nd} jet p_{T} [GeV/c]");
+  h2ndjetpt_beforesel->SetXTitle("2^{nd} jet p_{T} [GeV/c]");
 
   h3rdjetpt->SetXTitle("3^{rd} jet p_{T} [GeV/c]");
-  h3rdjetpt_finalsel->SetXTitle("3^{rd} jet p_{T} [GeV/c]");
+  h3rdjetpt_beforesel->SetXTitle("3^{rd} jet p_{T} [GeV/c]");
 
-  h4thjetpt_finalsel->SetXTitle("4^{th} jet p_{T} [GeV/c]");
+  h4thjetpt_beforesel->SetXTitle("4^{th} jet p_{T} [GeV/c]");
 
   hMET->SetXTitle("MET [GeV]");
-  hMET_finalsel->SetXTitle("MET [GeV]");
+  hMET_beforesel->SetXTitle("MET [GeV]");
 
   hmtlep->SetXTitle("leptonic m_{t} [GeV/c^{2}]");
   hmthad->SetXTitle("hadronic m_{t} [GeV/c^{2}]");
@@ -84,16 +89,17 @@ void Extractor2Histos::Loop()
   hmttSelected2bMtt500->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
   hmtt_all->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
   hmtt_bestchi2->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
-  //hNGoodMuons->SetXTitle("Num good #mu");
+  hNGoodMuons->SetXTitle("Num good #mu");
   hNGoodJets->SetXTitle("Num good jets");
-  hNGoodJets_finalsel->SetXTitle("Num good jets");
+  hNGoodJets_beforesel->SetXTitle("Num good jets");
 
   hNBtaggedJets->SetXTitle("Num TCHEL jets");
-  hNBtaggedJets_finalsel->SetXTitle("Num TCHEL jets");
+  hNBtaggedJets_beforesel->SetXTitle("Num TCHEL jets");
 
   Long64_t nentries = fMTT->GetEntries();
 
-  PUReweighter puReweighter(mIsSemiMu, mDataset);
+  //PUReweighter puReweighter(mIsSemiMu, mDataset);
+  PUReweighter puReweighter(mIsSemiMu);
 
   std::cout << "Processing " << mInputFile << " ..." << std::endl;
 
@@ -103,6 +109,18 @@ void Extractor2Histos::Loop()
       std::cout << "Processing entry #" << (jentry + 1) << " over " << nentries << " (" << (float) jentry / nentries * 100 << "%)" << std::endl;
 
     GetEntry(jentry);
+
+    double eventWeight = 1.;
+    if (mIsMC)
+    {
+      eventWeight *= puReweighter.weight(n_trueInteractions);
+    }
+
+    hNTrueInt_nosel->Fill(n_trueInteractions, eventWeight);
+
+    if (!m_triggerPassed) {
+      continue;
+    }
 
     double ptLepton = -1;
     double ptLeptonCut = -1;
@@ -123,36 +141,24 @@ void Extractor2Histos::Loop()
       ptLeptonCut = 30.;
     }
 
-    //FIXME: PU reweighting
-    double eventWeight = 1.;
-    if (mIsMC)
-    {
-      eventWeight *= puReweighter.weight(n_trueInteractions);
-    }
-
-    if (ptLepton > ptLeptonCut && nJets >= 4 && nBtaggedJets_CSVM >= 2) {
-      hNGoodJets_finalsel->Fill(nJets, eventWeight);
-      hNBtaggedJets_finalsel->Fill(nBtaggedJets_CSVM, eventWeight);
-
-      hLeptonPt_finalsel->Fill(ptLepton, eventWeight);
-      hMuRelIso_finalsel->Fill(muRelIso[0], eventWeight);
-      
-      hMET_finalsel->Fill(MET, eventWeight);
-
-      h1stjetpt_finalsel->Fill(p_1stjetpt, eventWeight);
-      h2ndjetpt_finalsel->Fill(p_2ndjetpt, eventWeight);
-      h3rdjetpt_finalsel->Fill(p_3rdjetpt, eventWeight);
-      h4thjetpt_finalsel->Fill(p_4thjetpt, eventWeight);
-
-      hNVtx_finalsel->Fill(n_vertices, eventWeight);
-    }
-
     if (ptLepton > ptLeptonCut && isSel == 1)
     {
-      hNGoodJets->Fill(nJets, eventWeight);
-      hNBtaggedJets->Fill(nBtaggedJets_CSVM, eventWeight);
-      hNVtx->Fill(n_vertices, eventWeight);
-      hNTrueInt->Fill(n_trueInteractions, eventWeight);
+
+      hNGoodJets_beforesel->Fill(nJets, eventWeight);
+      hNBtaggedJets_beforesel->Fill(nBtaggedJets_CSVM, eventWeight);
+
+      hLeptonPt_beforesel->Fill(ptLepton, eventWeight);
+      hMuRelIso_beforesel->Fill(muRelIso[0], eventWeight);
+      
+      hMET_beforesel->Fill(MET, eventWeight);
+
+      h1stjetpt_beforesel->Fill(p_1stjetpt, eventWeight);
+      h2ndjetpt_beforesel->Fill(p_2ndjetpt, eventWeight);
+      h3rdjetpt_beforesel->Fill(p_3rdjetpt, eventWeight);
+      h4thjetpt_beforesel->Fill(p_4thjetpt, eventWeight);
+
+      hNVtx_beforesel->Fill(n_vertices, eventWeight);
+
       if (nBtaggedJets_CSVM > 1 && p_1stjetpt > 70. && p_2ndjetpt > 50)
       {
         hLeptonPt->Fill(ptLepton, eventWeight);
@@ -161,6 +167,15 @@ void Extractor2Histos::Loop()
         h3rdjetpt->Fill(p_3rdjetpt, eventWeight);
         h4thjetpt->Fill(p_4thjetpt, eventWeight);
         hMET->Fill(MET, eventWeight);
+
+        hNGoodJets->Fill(nJets, eventWeight);
+        hNBtaggedJets->Fill(nBtaggedJets_CSVM, eventWeight);
+
+        hNVtx_noweight->Fill(n_vertices);
+        hNVtx->Fill(n_vertices, eventWeight);
+        hNTrueInt->Fill(n_trueInteractions, eventWeight);
+
+        hMuRelIso->Fill(muRelIso[0], eventWeight);
       }
 
       if (mtt_AfterChi2 > 0. && mtt_AfterChi2 < 998)
@@ -170,20 +185,15 @@ void Extractor2Histos::Loop()
 
       if (mtt_AfterChi2 > 0. && bestSolChi2 < 500)
       {
+
         hmtlep->Fill(mLepTop_AfterChi2andKF, eventWeight);
         hmthad->Fill(mHadTop_AfterChi2andKF, eventWeight);
         hmtt->Fill(mtt_AfterChi2andKF, eventWeight);
+
         if (p_1stjetpt > 70. && p_2ndjetpt > 50)
         {
-          //if (mtt_NBtaggedJets_TCHEL>1) hmttSelected2b->Fill(mtt_AfterChi2andKF,eventWeight);
-          //if (mtt_NBtaggedJets_TCHEL==1) hmttSelected1b->Fill(mtt_AfterChi2andKF,eventWeight);
-          //if (mtt_NBtaggedJets_TCHEL<1) hmttSelected0b->Fill(mtt_AfterChi2andKF,eventWeight);
-          //hmttSelectedall->Fill(mtt_AfterChi2andKF,eventWeight);
           if (nBtaggedJets_CSVM > 1)
-          {
-            hMuRelIso->Fill(muRelIso[0], eventWeight);
             hmttSelected2b->Fill(mtt_AfterChi2, eventWeight);
-          }
 
           if (nBtaggedJets_CSVM > 1 && mtt_AfterChi2 > 500)
             hmttSelected2bMtt500->Fill(mtt_AfterChi2, eventWeight);
@@ -203,30 +213,32 @@ void Extractor2Histos::Loop()
   TFile * output = TFile::Open(mOutputFile, "recreate");
   output->cd();
 
+  hNVtx_noweight->Write();
   hNVtx->Write();
-  hNVtx_finalsel->Write();
+  hNVtx_beforesel->Write();
 
+  hNTrueInt_nosel->Write();
   hNTrueInt->Write();
 
   hLeptonPt->Write();
-  hLeptonPt_finalsel->Write();
+  hLeptonPt_beforesel->Write();
 
   hMuRelIso->Write();
-  hMuRelIso_finalsel->Write();
+  hMuRelIso_beforesel->Write();
 
   h1stjetpt->Write();
-  h1stjetpt_finalsel->Write();
+  h1stjetpt_beforesel->Write();
 
   h2ndjetpt->Write();
-  h2ndjetpt_finalsel->Write();
+  h2ndjetpt_beforesel->Write();
 
   h3rdjetpt->Write();
-  h3rdjetpt_finalsel->Write();
+  h3rdjetpt_beforesel->Write();
 
   h4thjetpt->Write();
-  h4thjetpt_finalsel->Write();
+  h4thjetpt_beforesel->Write();
 
-  hMET_finalsel->Write();
+  hMET_beforesel->Write();
   hMET->Write();
 
   hmtlep->Write();
@@ -239,12 +251,12 @@ void Extractor2Histos::Loop()
   hmttSelected2bMtt500->Write();
   hmtt_all->Write();
   hmtt_bestchi2->Write();
-  //hNGoodMuons->Write();
+  hNGoodMuons->Write();
   hNGoodJets->Write();
-  hNGoodJets_finalsel->Write();
+  hNGoodJets_beforesel->Write();
 
   hNBtaggedJets->Write();
-  hNBtaggedJets_finalsel->Write();
+  hNBtaggedJets_beforesel->Write();
 
   output->Close();
   delete output;
@@ -359,6 +371,13 @@ void Extractor2Histos::Init()
   SetBranchAddress(fMTT, "mLepTop_AfterChi2andKF", &mLepTop_AfterChi2andKF, &b_mLepTop_AfterChi2andKF);
   SetBranchAddress(fMTT, "mHadTop_AfterChi2andKF", &mHadTop_AfterChi2andKF, &b_mHadTop_AfterChi2andKF);
   SetBranchAddress(fMTT, "mtt_AfterChi2andKF", &mtt_AfterChi2andKF, &b_mtt_AfterChi2andKF);
+
+  if (fMTT->GetBranch("trigger_passed")) {
+    SetBranchAddress(fMTT, "trigger_passed", &m_triggerPassed, NULL);
+  } else {
+    // Backward compatibilty
+    m_triggerPassed = true;
+  }
 
   fVertices->SetMakeClass(1);
   fVertices->SetBranchAddress("n_vertices", &n_vertices, NULL);

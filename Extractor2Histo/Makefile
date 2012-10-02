@@ -18,10 +18,9 @@ ROOTCFLAGS = $(shell root-config --cflags)
 ROOTLIBS   = $(shell root-config --libs) -lMinuit -lRooFitCore -lRooFit
 
 CXX           = g++
-CXXFLAGS	    = -O2 -Wall -Werror -fPIC
-#CXXFLAGS	    = -g -Wall -Werror -fPIC
+CXXFLAGS	    = -O2 -Wall -Werror -fPIC --std=c++0x
 LD			      = g++
-LDFLAGS		    = -O2 $(shell root-config --ldflags) -Wl,--as-needed
+LDFLAGS		    = $(shell root-config --ldflags) -Wl,--as-needed
 SOFLAGS		    = 
 AR            = ar
 ARFLAGS       = -cq
@@ -46,6 +45,8 @@ all: process_all
 
 clean:
 	@rm *.o;
+	@rm *.d;
+	@rm ../PUReweighting/*.o;
 
 process_all: Extractor2Histos.o ../PUReweighting/PUReweighter.o  process_all.o
 	$(LD) $(LIBS) $(SOFLAGS) $(LDFLAGS) $+ -o $@
