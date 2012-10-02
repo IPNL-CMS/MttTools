@@ -2,10 +2,19 @@
 
 from __future__ import division
 import argparse, os, array
+
+# Batch mode
+import sys
+sys.argv.append('-b')
+
 from ROOT import TChain, TH1F, TFile
+
+from ROOT import gROOT
+gDirectory = gROOT.GetGlobal("gDirectory")
 
 parser = argparse.ArgumentParser(description='Submit jobs on the grid.')
 parser.add_argument('dataset', nargs=1)
+parser.add_argument('-b', action = "store_true")
 args = parser.parse_args()
 
 dataset = args.dataset[0]
@@ -19,22 +28,15 @@ files = [line.strip() for line in open(inputList)]
 
 chain = TChain("event", "event")
 for file in files:
-  chain.AddFile(file)
+  print("Adding file '%s'" % file)
+  chain.Add(file)
 
-#chain.SetBranchStatus("*", 0)
-#chain.SetBranchStatus("nTrueInteractions", 1);
-branch = chain.GetBranch("nTrueInteractions")
+chain.SetBranchStatus("*", 0)
+chain.SetBranchStatus("nTrueInteractions", 1);
 
-pu = TH1F("pileup", "MC Pileup truth", 70, 0, 70);
+chain.Draw("nTrueInteractions>>pileup(70, 0, 70)")
 
-entries = chain.GetEntries()
-for i in xrange(entries):
-  branch.GetEntry(i)
-  
-  if i % 1000000 == 0:
-     print("Iteration %d over %d; %f %%" % (i + 1, entries, (i + 1) / entries * 100))
-
-  pu.Fill(chain.nTrueInteractions, 1)
+pu = gDirectory.Get("pileup");
 
 scale = 1 / pu.Integral();
 pu.Scale(scale);
