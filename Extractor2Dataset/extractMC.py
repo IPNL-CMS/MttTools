@@ -43,3 +43,9 @@ tmpfile.flush()
 
 args = ["parallel", "-u", "-a", tmpfile.name, "-j", "6"] 
 subprocess.call(args)
+
+# Merge files
+for file in files:
+  merged_file = file.replace("_%s", "_merged")
+  args = ["hadd", merged_file, file % "semimu", file % "semie"]
+  subprocess.call(args)
