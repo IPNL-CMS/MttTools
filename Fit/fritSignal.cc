@@ -16,6 +16,7 @@
 #include <TCanvas.h>
 #include <TFile.h>
 #include <TLatex.h>
+#include <TChain.h>
 
 #include <RooRealVar.h>
 #include <RooCategory.h>
@@ -53,22 +54,42 @@ std::vector<std::string> JEC;
 bool FIT_WARNINGS = false;
 int FIT_ERROR_LEVEL = -1;
 
-void fritSignal(const std::string& file, const std::string& jecType, const std::string& configFile, int massZprime, int btag);
+void fritSignal(TChain* chain, const std::string& jecType, const std::string& configFile, int massZprime, int btag);
+
+void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {
+
+  ifstream ifs(filename.c_str());
+  std::string line;
+
+  while (getline(ifs, line))
+    files.push_back(line);
+
+  ifs.close();
+}
+
+TChain* loadChain(const std::vector<std::string>& files, const std::string& name) {
+  TChain* c = new TChain(name.c_str());
+
+  for (const std::string& file: files) {
+    c->Add(file.c_str());
+  }
+
+  return c;
+}
 
 int main(int argc, char** argv) {
   try {
     TCLAP::CmdLine cmd("Frit Zprime Signal", ' ', "0.1");
 
-    TCLAP::ValueArg<std::string> prefixArg("p", "path", "Where to read the Mtt files", false, "./data/", "string");
-    TCLAP::ValueArg<int> levelArg("l", "level", "RooFit fit error level", false, -1, "integer");
-    TCLAP::SwitchArg warningArg("w", "warning", "Show RooFit fit warnings", false);
-    TCLAP::ValueArg<std::string> jecArg("", "jec", "Run the frit for this specific jec.", false, "", "string");
-    TCLAP::MultiArg<int> massArg("m", "mass", "Zprime mass", false, "integer");
-    TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", false, 2, "int");
+    TCLAP::ValueArg<std::string> inputListArg("", "input-list", "A text file containing a list of input files", true, "", "string");
+    TCLAP::ValueArg<std::string> inputFileArg("i", "input-file", "The input file", true, "", "string");
 
-    cmd.add(prefixArg);
-    cmd.add(levelArg);
-    cmd.add(warningArg);
+    cmd.xorAdd(inputListArg, inputFileArg);
+
+    TCLAP::ValueArg<std::string> jecArg("", "jec", "Run the frit for this specific jec.", false, "", "string");
+    TCLAP::ValueArg<int> massArg("m", "mass", "Zprime mass", true, 750, "integer");
+    TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", true, 2, "int");
+
     cmd.add(jecArg);
     cmd.add(massArg);
     cmd.add(btagArg);
@@ -77,46 +98,23 @@ int main(int argc, char** argv) {
 
     cmd.parse(argc, argv);
 
-    std::string prefix = prefixArg.getValue();
-    FIT_WARNINGS = warningArg.getValue();
-    FIT_ERROR_LEVEL = levelArg.getValue();
-    std::vector<int> masses = massArg.getValue();
-    if (masses.size() == 0) {
-      masses.push_back(500);
-      masses.push_back(750);
-      masses.push_back(1000);
-      masses.push_back(1250);
-      masses.push_back(1500);
-    } 
+    std::vector<std::string> inputFiles;
+    if (inputFileArg.isSet()) {
+      inputFiles.push_back(inputFileArg.getValue());
+    } else {
+      loadInputFiles(inputListArg.getValue(), inputFiles);
+    }
+
+    // Format tree name
+    TString treeName = TString::Format("dataset_%dbtag", btagArg.getValue());
+
+    TChain * chain = loadChain(inputFiles, treeName.Data());
 
     std::string jec = jecArg.getValue();
-    if (jec.length() > 0) {
-      JEC.push_back(jec);
-    } else {
-      JEC.push_back("nominal");
-      JEC.push_back("JECup");
-      JEC.push_back("JECdown");
-    }
 
-    for (std::vector<int>::const_iterator it = masses.begin(); it != masses.end(); ++it) {
-      std::vector<pid_t> children;
-      // fork() for every JEC
-      for (std::vector<std::string>::const_iterator it2 = JEC.begin(); it2 != JEC.end(); ++it2) {
-        pid_t pid = fork();
-        if (pid == 0) {
-          std::string file = TString::Format("%s/ds_Zprime%d-%s_all_%d_btag.txt", prefix.c_str(), *it, (*it2).c_str(), btagArg.getValue()).Data();
-          fritSignal(file, *it2, configFileArg.getValue(), *it, btagArg.getValue());
-          exit(0);
-        } else {
-          children.push_back(pid);
-        }
-      }
+    fritSignal(chain, jec, configFileArg.getValue(), massArg.getValue(), btagArg.getValue());
 
-      // wait for all children before processing next mass
-      for (std::vector<pid_t>::const_iterator child = children.begin(); child != children.end(); ++child) {
-        waitpid(*child, NULL, 0);
-      }
-    }
+    delete chain;
 
   } catch (TCLAP::ArgException& e) {
   }
@@ -288,9 +286,9 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
   std::cout << std::endl;
 }
 
-void fritSignal(const std::string& file, const std::string& jecType, const std::string& configFile, int massZprime, int btag) {
+void fritSignal(TChain* chain, const std::string& jecType, const std::string& configFile, int massZprime, int btag) {
 
-  std::cout << "[" << getpid() << "] Processing " << file << " for " << jecType << std::endl;
+  std::cout << "[" << getpid() << "] Processing for " << jecType << std::endl;
 
   // configure root
   gROOT->Clear();
@@ -309,15 +307,17 @@ void fritSignal(const std::string& file, const std::string& jecType, const std::
   Float_t maxmTT = 2000;
   Int_t nBins = 50;
 
-  RooRealVar Mtt_KF_reco("Mtt_KF_reco", "Mtt_KF_reco", minmTT, maxmTT, "GeV/c^2");
-  RooCategory whichLepton("whichLepton", "whichLepton");
+  RooRealVar mtt("mtt", "mtt", minmTT, maxmTT, "GeV/c^2");
+  RooRealVar weight("weight", "weight", 0, 10000);
+
+  RooCategory whichLepton("lepton_type", "lepton_type");
   whichLepton.defineType("electron", 11);
   whichLepton.defineType("muon", 13);
 
   std::string configFileId;
 
-  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf("./fit_configuration", configFile, Mtt_KF_reco, massZprime, "background", whichLepton, nullptr);
-  std::map<std::string, std::shared_ptr<BaseFunction>> signalPdfs = getCategoriesPdf("./fit_configuration", configFile, Mtt_KF_reco, massZprime, "signal", whichLepton, &configFileId);
+  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf("./fit_configuration", configFile, mtt, massZprime, "background", whichLepton, nullptr);
+  std::map<std::string, std::shared_ptr<BaseFunction>> signalPdfs = getCategoriesPdf("./fit_configuration", configFile, mtt, massZprime, "signal", whichLepton, &configFileId);
 
   for (auto& pdf: backgroundPdfs) {
     std::cout << "Background Pdf: " << pdf.first << " -> ";
@@ -365,13 +365,14 @@ void fritSignal(const std::string& file, const std::string& jecType, const std::
   }
 
   // Get dataset from external file
-  RooDataSet *dataOrig= RooDataSet::read(file.c_str(), RooArgList(Mtt_KF_reco,whichLepton));
+  //RooDataSet *dataOrig = RooDataSet::read(file.c_str(), RooArgList(Mtt_KF_reco,whichLepton));
+  RooDataSet *dataOrig = new RooDataSet("dataset", "dataset", RooArgSet(mtt, whichLepton, weight), Import(*chain)/*, WeightVar(weight)*/);
 
   // Reduce data set
-  RooDataSet* RedData = static_cast<RooDataSet*>(dataOrig->reduce("Mtt_KF_reco > 500 && Mtt_KF_reco < 2045"));
+  RooDataSet* RedData = static_cast<RooDataSet*>(dataOrig->reduce("mtt > 500 && mtt < 2045"));
 
   if (RedData->numEntries() == 0) {
-    std::cerr << "[" << getpid() << "] ERROR: No entry in dataset '" << file << "'" << std::endl;
+    std::cerr << "[" << getpid() << "] ERROR: No entry in dataset" << std::endl;
     return;
   } else {
     std::cout << "[" << getpid() << "] " << RedData->numEntries() << " entries loaded" << std::endl;
@@ -380,7 +381,7 @@ void fritSignal(const std::string& file, const std::string& jecType, const std::
 
   Double_t minmTTFit = minmTT + 0.0;
   Double_t maxmTTFit = maxmTT - 0.0;
-  Mtt_KF_reco.setRange(minmTTFit, maxmTTFit);
+  mtt.setRange(minmTTFit, maxmTTFit);
 
   RooFitResult* fitResult = NULL;
   bool fitIsGood = false;
@@ -399,19 +400,19 @@ void fritSignal(const std::string& file, const std::string& jecType, const std::
 
   } while (! fitIsGood && fitIterations > 0);
 
-  drawHistograms(whichLepton, Mtt_KF_reco, nBins, *RedData, simPdf, backgroundPdfs, btag, std::string("frit/" + prefix), false);
-  drawHistograms(whichLepton, Mtt_KF_reco, nBins, *RedData, simPdf, backgroundPdfs, btag, std::string("frit/" + prefix), true);
+  drawHistograms(whichLepton, mtt, nBins, *RedData, simPdf, backgroundPdfs, btag, std::string("frit/" + prefix), false);
+  drawHistograms(whichLepton, mtt, nBins, *RedData, simPdf, backgroundPdfs, btag, std::string("frit/" + prefix), true);
 
-  RooPlot* MttPlot_mu = Mtt_KF_reco.frame(minmTT, maxmTT, nBins);
+  RooPlot* MttPlot_mu = mtt.frame(minmTT, maxmTT, nBins);
   MttPlot_mu->SetTitle("Semi-mu channel");
-  RedData->plotOn(MttPlot_mu,Cut("whichLepton==whichLepton::muon"));
-  simPdf.plotOn(MttPlot_mu,Slice(whichLepton,"muon"), ProjWData(whichLepton,*RedData), LineColor(kBlue));
+  RedData->plotOn(MttPlot_mu,Cut("lepton_type == lepton_type::muon"));
+  simPdf.plotOn(MttPlot_mu,Slice(whichLepton, "muon"), ProjWData(whichLepton,*RedData), LineColor(kBlue));
   //simPdf.plotOn(MttPlot_mu,Slice(whichLepton,"muon"), ProjWData(whichLepton,*RedData), Components(bkgFct->getMuPdf()), LineStyle(2), LineColor(kRed));
   //simPdf.plotOn(MttPlot_mu,Slice(whichLepton,"muon"),ProjWData(whichLepton,*RedData),Components(sigPdf_mu),LineStyle(2),LineColor(kRed));
 
-  RooPlot* MttPlot_e = Mtt_KF_reco.frame(minmTT, maxmTT, nBins);
+  RooPlot* MttPlot_e = mtt.frame(minmTT, maxmTT, nBins);
   MttPlot_e->SetTitle("Semi-e channel");
-  RedData->plotOn(MttPlot_e,Cut("whichLepton==whichLepton::electron"));
+  RedData->plotOn(MttPlot_e,Cut("lepton_type == lepton_type::electron"));
   simPdf.plotOn(MttPlot_e, Slice(whichLepton,"electron"), ProjWData(whichLepton,*RedData), LineColor(kBlue));
   //simPdf.plotOn(MttPlot_e, Slice(whichLepton,"electron"), ProjWData(whichLepton,*RedData), Components(bkgFct->getEPdf()), LineStyle(2), LineColor(kRed));
   //simPdf.plotOn(MttPlot_e,Slice(whichLepton,"electron"),ProjWData(whichLepton,*RedData),Components(sigPdf_e),LineStyle(2),LineColor(kRed));
@@ -423,8 +424,8 @@ void fritSignal(const std::string& file, const std::string& jecType, const std::
   MttPlot_e->SetYTitle("#font[132]{Events/(55 GeV/#font[12]{c}^{2})}");
   MttPlot_e->SetTitleOffset(1.42, "Y");
 
-  RooDataSet* RedData_mu = static_cast<RooDataSet*>(dataOrig->reduce("Mtt_KF_reco>500&&Mtt_KF_reco<2045&&whichLepton==13"));
-  RooDataSet* RedData_e = static_cast<RooDataSet*>(dataOrig->reduce("Mtt_KF_reco>500&&Mtt_KF_reco<2045&&whichLepton==11"));
+  RooDataSet* RedData_mu = static_cast<RooDataSet*>(dataOrig->reduce("mtt > 500 && mtt < 2045 && lepton_type == 13"));
+  RooDataSet* RedData_e = static_cast<RooDataSet*>(dataOrig->reduce("mtt > 500 && mtt < 2045 && lepton_type == 11"));
   RooRealVar nEventsRed_mu("nEventsRed_mu", "Number of events in mu dataset", RedData_mu->numEntries());
   RooRealVar nEventsRed_e("nEventsRed_e", "Number of events in e dataset", RedData_e->numEntries());
   delete RedData_mu;
@@ -443,11 +444,11 @@ void fritSignal(const std::string& file, const std::string& jecType, const std::
   // We need to transform our unbinned dataset to a binned one
   // Set a resolution of 10 GeV, which is much greater than our detector resolution
   const float resolution = 5.;
-  const int nBinsForChi2 = (Mtt_KF_reco.getMax() - Mtt_KF_reco.getMin() + 0.5) / resolution;
-  Mtt_KF_reco.setBins(nBinsForChi2);
-  std::cout << "Binning dataset with " << nBinsForChi2 << " bins for chi2 computation (" << Mtt_KF_reco.getMin() << " -> " << Mtt_KF_reco.getMax() << " ; resolution: " << resolution << " GeV)" << std::endl;
+  const int nBinsForChi2 = (mtt.getMax() - mtt.getMin() + 0.5) / resolution;
+  mtt.setBins(nBinsForChi2);
+  std::cout << "Binning dataset with " << nBinsForChi2 << " bins for chi2 computation (" << mtt.getMin() << " -> " << mtt.getMax() << " ; resolution: " << resolution << " GeV)" << std::endl;
 
-  RooArgSet* floatingParameters = static_cast<RooArgSet*>(simPdf.getParameters(RooArgSet(Mtt_KF_reco))->selectByAttrib("Constant", false));
+  RooArgSet* floatingParameters = static_cast<RooArgSet*>(simPdf.getParameters(RooArgSet(mtt))->selectByAttrib("Constant", false));
   int numberOfFloatingParams = floatingParameters->getSize() - 1;
   delete floatingParameters;
 
@@ -466,10 +467,10 @@ void fritSignal(const std::string& file, const std::string& jecType, const std::
     std::stringstream cut;
     cut << whichLepton.GetName() << " == " << type->getVal();
 
-    RooDataHist* binnedDataset = new RooDataHist("binnedDataset", "binned dataset", RooArgSet(Mtt_KF_reco), *RedData->reduce(Cut(cut.str().c_str())));
+    RooDataHist* binnedDataset = new RooDataHist("binnedDataset", "binned dataset", RooArgSet(mtt), *RedData->reduce(Cut(cut.str().c_str())));
 
     float chi2 = RooChi2Var("chi2", "chi2", *globalPdfs[type->GetName()], *binnedDataset, DataError(RooAbsData::Poisson)).getVal();
-    std::cout << "\tChi2: " << (chi2 / (Mtt_KF_reco.getBins() - numberOfFloatingParams * .5)) << std::endl;
+    std::cout << "\tChi2: " << (chi2 / (mtt.getBins() - numberOfFloatingParams * .5)) << std::endl;
 
     combinedChi2 += chi2;
 
@@ -480,7 +481,7 @@ void fritSignal(const std::string& file, const std::string& jecType, const std::
 
   delete table;
 
-  combinedChi2 /= (2 * Mtt_KF_reco.getBins() - numberOfFloatingParams);
+  combinedChi2 /= (2 * mtt.getBins() - numberOfFloatingParams);
   std::cout << "Combined Chi2: " << combinedChi2 << std::endl;
 
   //

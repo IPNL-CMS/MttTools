@@ -26,8 +26,8 @@ class LaurentPdf : public RooAbsPdf {
         RooAbsArg* coef;
         while((coef = (RooAbsArg*)coefIter->Next())) {
           if (!dynamic_cast<RooAbsReal*>(coef)) {
-            cout << "Laurent::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName() 
-              << " is not of type RooAbsReal" << endl;
+            std::cout << "Laurent::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName() 
+              << " is not of type RooAbsReal" << std::endl;
             assert(0);
           }
           coefList.add(*coef);

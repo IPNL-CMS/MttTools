@@ -37,6 +37,7 @@ PUReweighter::PUReweighter(bool isSemiMu, const std::string& mcName):
     puHisto->Divide(mcHisto);
     puHisto->SetDirectory(0); // "detach" the histo from the file
 
+    /*
     std::cout << " Lumi/Pileup Reweighting: Computed Weights per In-Time Nint " << std::endl;
 
     int NBins = puHisto->GetNbinsX();
@@ -44,6 +45,7 @@ PUReweighter::PUReweighter(bool isSemiMu, const std::string& mcName):
     for (int ibin = 1; ibin < NBins + 1; ++ibin) {
       std::cout << "   " << ibin - 1 << " " << puHisto->GetBinContent(ibin) << std::endl;
     }
+    */
 
     dataFile->Close();
     mcFile->Close();
@@ -91,13 +93,16 @@ PUReweighter::PUReweighter(bool isSemiMu, PUProfile profile/* = PUProfile::S7*/)
     puHisto->Divide(mcHisto);
     puHisto->SetDirectory(NULL); // "detach" the histo from the file
 
+    /*
     std::cout << " Lumi/Pileup Reweighting: Computed Weights per In-Time Nint " << std::endl;
 
     int NBins = puHisto->GetNbinsX();
 
+    
     for (int ibin = 1; ibin < NBins + 1; ++ibin) {
       std::cout << "   " << ibin - 1 << " " << puHisto->GetBinContent(ibin) << std::endl;
     }
+    */
 
     dataFile->Close();
 
