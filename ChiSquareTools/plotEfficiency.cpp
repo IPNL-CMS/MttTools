@@ -39,7 +39,7 @@ void plotEfficiency() {
   g_eff_jets->SetMarkerColor(kBlue - 3);
   g_eff_jets->SetTitle("taking the four leading jets");
 
-  mg->Add(g_eff_btag/*, "#chi^{2} method with b-tags"*/);
+  //mg->Add(g_eff_btag/*, "#chi^{2} method with b-tags"*/);
   mg->Add(g_eff_nobtag/*, "#chi^{2} method"*/);
   mg->Add(g_eff_jets/*, "taking four leading jets"*/);
 
@@ -47,9 +47,11 @@ void plotEfficiency() {
   mg->SetMaximum(1.);
 
   mg->Draw("ap");
-  mg->GetXaxis()->SetTitle("Generated m_{tt}");
+  mg->GetXaxis()->SetTitle("Generated m_{tt} (GeV)");
   mg->GetYaxis()->SetTitle("Jet selection efficiency");
 
   float height = 0.88 - 0.67;
   c1->BuildLegend(0.5, 0.15, 0.88, height + 0.15);
+
+  c1->Print("jet_selection_efficiency.pdf");
 }
