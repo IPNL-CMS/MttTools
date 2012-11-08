@@ -1,4 +1,12 @@
-{
+TLegend* createLegend(TH1* a, TH1* b) {
+  TLegend* l = new TLegend(0.5, 0.67, 0.88, 0.88);
+  l->AddEntry(a, "", "p");
+  l->AddEntry(b, "", "f");
+
+  return l;
+}
+
+void plotGoodWrongCombinaison() {
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
 
@@ -93,42 +101,42 @@
   w_mass->DrawNormalized("hist P");
   w_mass_wrong->DrawNormalized("hist same");
   w_mass->DrawNormalized("P same");
-  TLegend* l = c1->BuildLegend();
+  createLegend(w_mass, w_mass_wrong)->Draw();
 
   c1->Print("good_wrong_combinaisons_w_mass.pdf");
 
   h_top_mass->DrawNormalized("hist P");
   h_top_mass_wrong->DrawNormalized("hist same");
   h_top_mass->DrawNormalized("P same");
-  c1->BuildLegend();
+  createLegend(h_top_mass, h_top_mass_wrong)->Draw();
 
   c1->Print("good_wrong_combinaisons_hadronic_top_mass.pdf");
 
   l_e_top_mass->DrawNormalized("hist P");
   l_e_top_mass_wrong->DrawNormalized("hist same");
   l_e_top_mass->DrawNormalized("P same");
-  c1->BuildLegend();
+  createLegend(l_e_top_mass, l_e_top_mass_wrong)->Draw();
 
   c1->Print("good_wrong_combinaisons_leptonic_top_mass_e.pdf");
 
   l_mu_top_mass->DrawNormalized("hist P");
   l_mu_top_mass_wrong->DrawNormalized("hist same");
   l_mu_top_mass->DrawNormalized("P same");
-  c1->BuildLegend();
+  createLegend(l_mu_top_mass, l_mu_top_mass_wrong)->Draw();
 
   c1->Print("good_wrong_combinaisons_leptonic_top_mass_mu.pdf");
 
   pt_syst->DrawNormalized("hist P");
   pt_syst_wrong->DrawNormalized("hist same");
   pt_syst->DrawNormalized("P same");
-  c1->BuildLegend();
+  createLegend(pt_syst, pt_syst_wrong)->Draw();
 
   c1->Print("good_wrong_combinaisons_pt_syst.pdf");
 
   ht_frac->DrawNormalized("hist P");
   ht_frac_wrong->DrawNormalized("hist same");
   ht_frac->DrawNormalized("P same");
-  c1->BuildLegend();
+  createLegend(ht_frac, ht_frac_wrong)->Draw();
 
   c1->Print("good_wrong_combinaisons_ht_frac.pdf");
 }
