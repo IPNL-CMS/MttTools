@@ -110,7 +110,7 @@ bool isMatched(int index, int jetsMcIndex[], TClonesArray* p4s, int nJets) {
   for (int i = 0; i < nJets; i++) {
     if (jetsMcIndex[i] == index) {
       TLorentzVector* p4 = static_cast<TLorentzVector*>((*p4s)[i]);
-      return p4->Pt() > 30 && p4->Eta() < 2.4;
+      return p4->Pt() > 30 && fabs(p4->Eta()) < 2.4;
     }
   }
 
@@ -322,7 +322,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
   std::cout << "Number of selected entries: " << chi2_selectedEntries << std::endl << std::endl;
 
   std::cout << "Matchable efficiency" << std::endl;
-  printEff((double) matchableEntries / (2 * possibleMatchableEntries), 2 * possibleMatchableEntries);
+  printEff((double) matchableEntries / (possibleMatchableEntries), possibleMatchableEntries);
 
   std::cout << std::endl << "Chi square" << std::endl;
   std::cout << "Matched and well placed: 1 / 2 / 3 / 4 jets" << std::endl;

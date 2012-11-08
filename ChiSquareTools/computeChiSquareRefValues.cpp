@@ -225,7 +225,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
 
     int leptonicBIndex = -1;
     int hadronicBIndex = -1;
-    int leptonicWIndex = -1;
+    int leptonicTopIndex = -1;
 
     int firstJetIndex = -1;
     int secondJetIndex = -1;
@@ -286,7 +286,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
             }
             neutrinoIndex = i;
 
-            leptonicWIndex = m_MC_imot1[i];
+            leptonicTopIndex = m_MC_imot1[m_MC_imot1[i]];
             break;
 
           case ID_B:
@@ -326,7 +326,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
       continue;
 
     // Reorder B jet indexes
-    if (m_MC_imot1[leptonicBIndex] != leptonicWIndex) {
+    if (m_MC_imot1[leptonicBIndex] != leptonicTopIndex) {
       // Wrong combinaison, swap
       std::swap(leptonicBIndex, hadronicBIndex);
     }
@@ -381,7 +381,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
       ptLeptonCut = 30;
     }
 
-    if (leptonP4->Pt() < ptLeptonCut || leptonP4->Eta() > 2.1)
+    if (leptonP4->Pt() < ptLeptonCut || fabs(leptonP4->Eta()) > 2.1)
       continue;
 
     selectedEntriesBeforeMatching++;
@@ -513,7 +513,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
     if (pts[3] < 70 || pts[2] < 50 || pts[1] < 30 || pts[0] < 30)
       continue;
 
-    if (firstJetP4->Eta() > 2.4 || secondJetP4->Eta() > 2.4 || hadronicBP4->Eta() > 2.4 || leptonicBP4->Eta() > 2.4)
+    if (fabs(firstJetP4->Eta()) > 2.4 || fabs(secondJetP4->Eta()) > 2.4 || fabs(hadronicBP4->Eta()) > 2.4 || fabs(leptonicBP4->Eta()) > 2.4)
       continue;
 
     h_deltaPtFirstJet->Fill((firstJetP4->Pt() - genFirstJetP4->Pt()) / firstJetP4->Pt());
