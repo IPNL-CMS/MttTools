@@ -25,6 +25,7 @@
 #include <TMath.h>
 #include <TApplication.h>
 #include <TLatex.h>
+#include <TChain.h>
 
 #include <RooGlobalFunc.h>
 #include <RooMsgService.h>
@@ -115,7 +116,7 @@ namespace Bash {
 
 }
 
-void fitMtt(int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool writeRootFile, bool writeTxtFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, bool doDiscCurve, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag);
+void fitMtt(std::map<int, TChain*> chains, int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool writeRootFile, bool writeTxtFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, bool doDiscCurve, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag);
 
 std::string BASE_PATH;
 std::string OUTPUT_PATH;
@@ -125,6 +126,27 @@ bool SAVE_SIGMA = false;
 bool ONLY_LUMI_SYST = false;
 bool VERBOSE = false;
 bool BATCH_MODE = false;
+
+void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {
+
+  ifstream ifs(filename.c_str());
+  std::string line;
+
+  while (getline(ifs, line))
+    files.push_back(line);
+
+  ifs.close();
+}
+
+TChain* loadChain(const std::vector<std::string>& files, const std::string& name) {
+  TChain* c = new TChain(name.c_str());
+
+  for (const std::string& file: files) {
+    c->Add(file.c_str());
+  }
+
+  return c;
+}
 
 int main(int argc, char** argv)
 {
@@ -174,6 +196,11 @@ int main(int argc, char** argv)
     cmd.add(systSignArg);
     cmd.add(systCBArg);
 
+    TCLAP::ValueArg<std::string> inputListArg("", "input-list", "A text file containing a list of input files", true, "", "string");
+    TCLAP::ValueArg<std::string> inputFileArg("i", "input-file", "The input file", true, "", "string");
+
+    cmd.xorAdd(inputListArg, inputFileArg);
+
     TCLAP::ValueArg<std::string> pathArg("", "path", "Folder where to load files", false, "./", "string", cmd);
     TCLAP::ValueArg<std::string> outputPathArg("", "output-path", "Folder where output files are stored", false, "./", "string", cmd);
     TCLAP::ValueArg<std::string> effArg("", "eff-file", "File where efficiences are stored (JSON format)", false, "efficiencies.json", "string", cmd);
@@ -204,10 +231,33 @@ int main(int argc, char** argv)
     VERBOSE = verboseArg.getValue();
     BATCH_MODE = batchArg.getValue();
 
+    std::vector<std::string> inputFiles;
+    if (inputFileArg.isSet()) {
+      inputFiles.push_back(inputFileArg.getValue());
+    } else {
+      loadInputFiles(inputListArg.getValue(), inputFiles);
+    }
 
-    fitMtt(massArg.getValue(), fitArg.getValue(), fitConfigFileArg.getValue(), doLikScanArg.getValue(), writeRootArg.getValue(), writeTxtArg.getValue(),
+    std::map<int, TChain*> chains;
+    if (btagArg.getValue() == 3) {
+      for (int i = 0; i < 2; i++) {
+        // Format tree name
+        TString treeName = TString::Format("dataset_%dbtag", i);
+        chains[btagArg.getValue()] = loadChain(inputFiles, treeName.Data());
+      }
+
+    } else {
+      // Format tree name
+      TString treeName = TString::Format("dataset_%dbtag", btagArg.getValue());
+      chains[btagArg.getValue()] = loadChain(inputFiles, treeName.Data());
+    }
+
+    fitMtt(chains, massArg.getValue(), fitArg.getValue(), fitConfigFileArg.getValue(), doLikScanArg.getValue(), writeRootArg.getValue(), writeTxtArg.getValue(),
         saveFiguresArg.getValue(), doLimitCurveArg.getValue(), nToyArg.getValue(), doLikInToyArg.getValue(), indexArg.getValue(),
         doDiscCurveArg.getValue(), systArg.getValue(), systSignArg.getValue(), systCBArg.getValue(), bkgOnlyArg.getValue(), onlyMuonArg.getValue(), btagArg.getValue());
+
+    for (auto& chain: chains)
+      delete chain.second;
 
   }
   catch (TCLAP::ArgException& e)
@@ -1063,7 +1113,7 @@ void parseConfigFile(const std::string& filename, RooAbsCategoryLValue& categori
   workspace.Print("v");
 }
 
-void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikScan, bool writeRootFile, bool writeTxtFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, bool doDiscCurve, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag)
+void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string fitConfigurationFile, bool doLikScan, bool writeRootFile, bool writeTxtFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, bool doDiscCurve, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag)
 {
 
   if ((syst_str != "nominal") && (syst_str != "JECup") && (syst_str != "JECdown"))
@@ -1108,12 +1158,13 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
   Float_t maxmTT = 2000;
   Int_t nBins = 29;
 
-  RooRealVar Mtt_KF_reco("Mtt_KF_reco", "Mtt_KF_reco", minmTT, maxmTT, "GeV/c^2");
+  RooRealVar mtt("mtt", "mtt", minmTT, maxmTT, "GeV/c^2");
+  RooRealVar weight("weight", "weight", 0, 100000);
 
-  RooCategory whichLepton("whichLepton", "whichLepton");
-  whichLepton.defineType("muon", 13);
+  RooCategory lepton_type("lepton_type", "lepton_type");
+  lepton_type.defineType("muon", 13);
   if (! muonsOnly) {
-    whichLepton.defineType("electron", 11);
+    lepton_type.defineType("electron", 11);
   }
 
   RooCategory btagCategory("btag", "btag");
@@ -1121,16 +1172,16 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
   btagCategory.defineType("1-btag");
   btagCategory.defineType("2-btag");
 
-  RooSuperCategory superCategory("superCat", "superCat", RooArgList(whichLepton, btagCategory));
+  RooSuperCategory superCategory("superCat", "superCat", RooArgList(lepton_type, btagCategory));
 
-  RooAbsCategoryLValue& mainCategory = combine ? static_cast<RooAbsCategoryLValue&>(superCategory) : static_cast<RooAbsCategoryLValue&>(whichLepton);
+  RooAbsCategoryLValue& mainCategory = combine ? static_cast<RooAbsCategoryLValue&>(superCategory) : static_cast<RooAbsCategoryLValue&>(lepton_type);
   
   // Create main workspace for global pdf
   RooWorkspace mainWorkspace("mainWorkspace", "main workspace");
 
   std::string pdfSignalName;
 
-  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, Mtt_KF_reco, massZprime, "background", mainCategory, &pdfSignalName);
+  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, mtt, massZprime, "background", mainCategory, &pdfSignalName);
 
   for (auto& pdf: backgroundPdfs) {
     std::cout << "Background pdf: " << pdf.first << " ";
@@ -1243,7 +1294,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
     }    
 
     pdf->SetName(std::string("signal_" + std::string(type->GetName())).c_str());
-    renameAndSetPdfParametersConst(RooArgSet(Mtt_KF_reco), *pdf, type->GetName());
+    renameAndSetPdfParametersConst(RooArgSet(mtt), *pdf, type->GetName());
     signalPdfs[category] = std::make_pair(file, pdf);
     mainWorkspace.import(*pdf);
   }
@@ -1456,7 +1507,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
   }
   */
 
-  //Background::Function* bkgFct = Background::createFunction(bkgfit_str, Mtt_KF_reco);
+  //Background::Function* bkgFct = Background::createFunction(bkgfit_str, mtt);
 
   if (combine) {
     mixEfficiencies(eff_e, eff_mu, "e", "mu", mainWorkspace);
@@ -1477,7 +1528,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
 
   RooRealVar& nSig = *mainWorkspace.var("nSig");
 
-  // Mtt_KF_reco global PDFs
+  // mtt global PDFs
   /*RooRealVar nSig_mu("nSig_mu", "number of sig events", 0., -1000., 2000.);
   RooFormulaVar nSig_e("nSig_e", "number of sig events", "nSig_mu*effRatio*lumiRatio", RooArgList(nSig_mu, effRatio, lumiRatio));
   RooRealVar nBkg_mu("nBkg_mu", "number of bkg events", 2000., 0., 50000);
@@ -1536,38 +1587,31 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
     RooDataSet *dataOrig = NULL;
     if (combine) {
       // Combine b-tags
-      TString datafilename_0btag = TString::Format("%s/data/ds_data_2011-%s_0_btag.txt", BASE_PATH.c_str(), syst_str.c_str());
-      TString datafilename_1btag = TString::Format("%s/data/ds_data_2011-%s_1_btag.txt", BASE_PATH.c_str(), syst_str.c_str());
-      TString datafilename_2btag = TString::Format("%s/data/ds_data_2011-%s_2_btag.txt", BASE_PATH.c_str(), syst_str.c_str());
+      std::cout << "Combining b-tag dataset" << std::endl;
 
-      std::cout << "Combining b-tag from " << datafilename_0btag << ", " << datafilename_1btag << " and " << datafilename_2btag << std::endl;
+      RooDataSet* dataset_0b = new RooDataSet("dataset", "dataset", RooArgSet(mtt, lepton_type, weight), Import(*(eventChain[0])));
+      RooDataSet* dataset_1b = new RooDataSet("dataset", "dataset", RooArgSet(mtt, lepton_type, weight), Import(*(eventChain[1])));
+      RooDataSet* dataset_2b = new RooDataSet("dataset", "dataset", RooArgSet(mtt, lepton_type, weight), Import(*(eventChain[2])));
 
-      RooDataSet* dataset_0btag = RooDataSet::read(datafilename_0btag, RooArgList(Mtt_KF_reco, whichLepton));
-
-      RooDataSet* dataset_1btag = RooDataSet::read(datafilename_1btag, RooArgList(Mtt_KF_reco, whichLepton));
-
-      RooDataSet* dataset_2btag = RooDataSet::read(datafilename_2btag, RooArgList(Mtt_KF_reco, whichLepton));
-
-      dataOrig = new RooDataSet("combData", "combined data", RooArgSet(Mtt_KF_reco, whichLepton), Index(btagCategory), Import("0-btag", *dataset_0btag), Import("1-btag", *dataset_1btag), Import("2-btag", *dataset_2btag));
+      dataOrig = new RooDataSet("combData", "combined data", RooArgSet(mtt, lepton_type, weight), Index(btagCategory), Import("0-btag", *dataset_0b), Import("1-btag", *dataset_1b), Import("2-btag", *dataset_2b)/*, WeightVar(weight)*/);
 
       dataOrig->table(superCategory)->Print("v");
 
     } else {
-      // Get dataset from external file
-      TString datafilename = TString::Format("%s/data/ds_data_2011-%s_%d_btag.txt", BASE_PATH.c_str(), syst_str.c_str(), btag);
-      cout << "Using data from " << datafilename << endl;
-      dataOrig = RooDataSet::read(datafilename.Data(), RooArgList(Mtt_KF_reco, whichLepton));
+      // Dataset is inside eventChain. Load RooDataSet from tree
+      dataOrig = new RooDataSet("dataset", "dataset", RooArgSet(mtt, lepton_type, weight), Import(*(eventChain[btag]))/*, WeightVar(weight)*/);
+      dataOrig->table(lepton_type)->Print("v");
     }
 
     // Reduce data set
     //TODO: This step is not needed, remove it
-    TString cutstr = TString::Format("Mtt_KF_reco>%d&&Mtt_KF_reco<%d", (int) minmTT, (int) maxmTT);
+    TString cutstr = TString::Format("mtt>%d&&mtt<%d", (int) minmTT, (int) maxmTT);
     RooDataSet* RedData = (RooDataSet*) dataOrig->reduce(cutstr.Data());
     std::cout << "Dataset entries: " << RedData->numEntries() << std::endl;
 
     Double_t minmTTFit = minmTT + 0.0;
     Double_t maxmTTFit = maxmTT - 0.0;
-    Mtt_KF_reco.setRange(minmTTFit, maxmTTFit);
+    mtt.setRange(minmTTFit, maxmTTFit);
     // RooFit::Optimize(1) is needed in RooFit 3.50, otherwise the fit
     // does NOT converge. It disables variable caching introduced by RooFit 3.50
     // Optimize(0) does also works, but it disable caching completely.
@@ -1580,10 +1624,10 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
       outputFile = TFile::Open(OUTPUT_PATH + prefix + "_fitRes_" + suffix + ".root", "RECREATE");
     }
 
-    drawHistograms(mainCategory, Mtt_KF_reco, nBins, *RedData, simPdf, backgroundPdfs, btag, saveFigures, std::string(prefix), std::string(suffix), !bkgOnly, false, outputFile);
-    drawHistograms(mainCategory, Mtt_KF_reco, nBins, *RedData, simPdf, backgroundPdfs, btag, saveFigures, std::string(prefix), std::string(suffix), !bkgOnly, true, outputFile);
+    drawHistograms(mainCategory, mtt, nBins, *RedData, simPdf, backgroundPdfs, btag, saveFigures, std::string(prefix), std::string(suffix), !bkgOnly, false, outputFile);
+    drawHistograms(mainCategory, mtt, nBins, *RedData, simPdf, backgroundPdfs, btag, saveFigures, std::string(prefix), std::string(suffix), !bkgOnly, true, outputFile);
 
-    std::map<std::string, float> chi2 = computeChi2(Mtt_KF_reco, simPdf, mainCategory, *RedData, mainWorkspace);
+    std::map<std::string, float> chi2 = computeChi2(mtt, simPdf, mainCategory, *RedData, mainWorkspace);
 
     if (outputFile) {
       outputFile->cd();
@@ -1705,17 +1749,17 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
     RooRandom::randomGenerator()->SetSeed(0);
 
     // Create PDF for toys generation
-    std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfsForToys = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, Mtt_KF_reco, massZprime, "background", mainCategory, nullptr, "toy");
+    std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfsForToys = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, mtt, massZprime, "background", mainCategory, nullptr, "toy");
 
     std::map<std::string, std::shared_ptr<RooAbsPdf>> globalPdfsForToys;
     std::map<int, std::shared_ptr<RooSimultaneous>> simPdfsForGeneration;
     if (combine) {
       for (int i = 0; i < maxBTag; i++) {
         TString name = TString::Format("simPdfToyForGeneration_%d_btag", i);
-        simPdfsForGeneration[i] = std::shared_ptr<RooSimultaneous>(new RooSimultaneous(name, "simultaneous pdf for toys generation", whichLepton));
+        simPdfsForGeneration[i] = std::shared_ptr<RooSimultaneous>(new RooSimultaneous(name, "simultaneous pdf for toys generation", lepton_type));
       }
     } else {
-      simPdfsForGeneration[btag] = std::shared_ptr<RooSimultaneous>(new RooSimultaneous("simPdfToyForGeneration", "simultaneous pdf for toys generation", whichLepton));
+      simPdfsForGeneration[btag] = std::shared_ptr<RooSimultaneous>(new RooSimultaneous("simPdfToyForGeneration", "simultaneous pdf for toys generation", lepton_type));
     }
     
     // Create PDF for fitting
@@ -1815,16 +1859,16 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
     std::map<int, std::shared_ptr<RooAbsPdf::GenSpec>> genSpecs;
 
     if (! combine) {
-      genSpecs[btag] = std::shared_ptr<RooAbsPdf::GenSpec>(simPdfsForGeneration[btag]->prepareMultiGen(RooArgSet(Mtt_KF_reco, whichLepton), NumEvents(nEventsToy), Extended(true)/*, Verbose(true)*/));
+      genSpecs[btag] = std::shared_ptr<RooAbsPdf::GenSpec>(simPdfsForGeneration[btag]->prepareMultiGen(RooArgSet(mtt, lepton_type), NumEvents(nEventsToy), Extended(true)/*, Verbose(true)*/));
     } else {
       for (int i = 0; i < maxBTag; i++) {
-        genSpecs[i] = std::shared_ptr<RooAbsPdf::GenSpec>(simPdfsForGeneration[i]->prepareMultiGen(RooArgSet(Mtt_KF_reco, whichLepton, btagCategory), /*NumEvents(nEventsToy),*/ Extended(true)/*, Verbose(true)*/));
+        genSpecs[i] = std::shared_ptr<RooAbsPdf::GenSpec>(simPdfsForGeneration[i]->prepareMultiGen(RooArgSet(mtt, lepton_type, btagCategory), /*NumEvents(nEventsToy),*/ Extended(true)/*, Verbose(true)*/));
       }
     }
 
     double minmTTFit = minmTT + 0.0;
     double maxmTTFit = maxmTT - 0.0;
-    Mtt_KF_reco.setRange(minmTTFit, maxmTTFit);
+    mtt.setRange(minmTTFit, maxmTTFit);
 
     // NLL for fitting
     RooAbsReal* nll = NULL;
@@ -1843,7 +1887,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
       if (! combine) {
         toyData = simPdfsForGeneration[btag]->generate(*genSpecs[btag]);
       } else {
-        toyData = new RooDataSet("toy_dataset", "toy dataset", RooArgSet(Mtt_KF_reco, whichLepton, btagCategory));
+        toyData = new RooDataSet("toy_dataset", "toy dataset", RooArgSet(mtt, lepton_type, btagCategory));
         for (int j = 0; j < maxBTag; j++) {
           btagCategory.setIndex(j);
           toyDataForEachBTag[i] =  simPdfsForGeneration[j]->generate(*genSpecs[j]);
@@ -1854,7 +1898,7 @@ void fitMtt(int massZprime, bool fit, string fitConfigurationFile, bool doLikSca
 
       /*
       TFile* myFile = TFile::Open(OUTPUT_PATH + prefix + "_toylimit_" + suffix + "_" + indexJob + "_" + (Long_t) i + ".root", "RECREATE");
-      drawHistograms(mainCategory, Mtt_KF_reco, nBins, *toyData, simPdfToyFit, backgroundPdfsForToys, btag, false, std::string(prefix), std::string(suffix), false, false, myFile, true);
+      drawHistograms(mainCategory, mtt, nBins, *toyData, simPdfToyFit, backgroundPdfsForToys, btag, false, std::string(prefix), std::string(suffix), false, false, myFile, true);
       myFile->Close();
       delete myFile;
       */
