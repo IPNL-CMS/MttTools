@@ -340,7 +340,7 @@ int main(int argc, char** argv)
 
     TCLAP::ValueArg<std::string> fileArg("f", "file", "The parameter file", false, "reduce_dataset_data.txt", "string");
     TCLAP::ValueArg<std::string> rfiopathArg("p", "path", "Path where root file are located on rfio", false, "rfio:///dpm/in2p3.fr/home/cms/data/store/user/beaupere/Extractor_428_03jan12/", "string");
-    TCLAP::ValueArg<std::string> prefixArg("o", "prefix", "Output file prefix", false, "ds_data_2011", "string");
+    TCLAP::ValueArg<std::string> prefixArg("o", "prefix", "Output file prefix", false, "ds_data_2012", "string");
 
     cmd.add(fileArg);
     cmd.add(rfiopathArg);

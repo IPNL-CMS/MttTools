@@ -265,7 +265,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
     TString legendLabel = TString::Format("#font[42]{%s, #geq 4 jets, %s}", leptonShortcutName.c_str(), btagLabel.Data());
 
     t.DrawLatex(0.53, 0.88, "#font[42]{CMS preliminary}");
-    t.DrawLatex(0.53, 0.84, TString::Format("#font[42]{%0.2f fb^{-1} at #sqrt{s}=7 TeV}", LUMI));
+    t.DrawLatex(0.53, 0.84, TString::Format("#font[42]{%0.2f fb^{-1} at #sqrt{s}=8 TeV}", LUMI));
     t.DrawLatex(0.53, 0.80, legendLabel);
 
     plots.push_back(std::shared_ptr<RooPlot>(plot));

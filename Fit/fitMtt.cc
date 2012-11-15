@@ -970,7 +970,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
     TString legendLabel = TString::Format("#font[42]{%s, #geq 4 jets, %s}", leptonShortcutName.c_str(), btagLabel.Data());
 
     t.DrawLatex(0.53, 0.88, "#font[42]{CMS preliminary}");
-    t.DrawLatex(0.53, 0.84, TString::Format("#font[42]{%0.2f fb^{-1} at #sqrt{s}=7 TeV}", LUMI));
+    t.DrawLatex(0.53, 0.84, TString::Format("#font[42]{%0.2f fb^{-1} at #sqrt{s}=8 TeV}", LUMI));
     t.DrawLatex(0.53, 0.80, legendLabel);
 
     if (outputFile && !log) {
@@ -1189,7 +1189,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     mainWorkspace.import(pdf.second->getPdf());
   }
 
-  TString prefix = TString::Format("data_2011_%s_%d", syst_str.c_str(), massZprime);
+  TString prefix = TString::Format("data_2012_%s_%d", syst_str.c_str(), massZprime);
   //TString suffix = TString::Format("%s_%s", pdfSignalName.c_str(), bkgfit_str.c_str());
   TString suffix = TString::Format("%s", pdfSignalName.c_str());
   TString indexJob = TString::Format("job%d", index);
