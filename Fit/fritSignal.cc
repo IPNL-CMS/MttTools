@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
 
     cmd.xorAdd(inputListArg, inputFileArg);
 
-    TCLAP::ValueArg<std::string> jecArg("", "jec", "Run the frit for this specific jec.", false, "", "string");
+    TCLAP::ValueArg<std::string> jecArg("", "jec", "Run the frit for this specific jec.", false, "nominal", "string");
     TCLAP::ValueArg<int> massArg("m", "mass", "Zprime mass", true, 750, "integer");
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", true, 2, "int");
 
