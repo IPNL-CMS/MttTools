@@ -98,7 +98,7 @@ class FAltPdf : public RooAbsPdf {
     RooRealProxy c;
 
     double evaluate() const {
-      return pow((1. - (x / 7000.)), a) / pow((x / 7000.), (b + c * log(x / 7000.)));
+      return pow((1. - (x / 8000.)), a) / pow((x / 8000.), (b + c * log(x / 8000.)));
     };
 };
 
@@ -130,7 +130,7 @@ class FAltBPdf : public RooAbsPdf {
     RooRealProxy c;
 
     double evaluate() const {
-      double xover = x / 7000.;
+      double xover = x / 8000.;
       double up = pow(((1. - xover + c * pow(xover, 2.))), a);
       double down = pow(x, b);
 
@@ -169,7 +169,7 @@ class FAltCPdf : public RooAbsPdf {
     RooRealProxy b;
 
     double evaluate() const {
-      return pow(1. - (x / 7000), a) / pow(x, b);
+      return pow(1. - (x / 8000), a) / pow(x, b);
     };
 };
 
