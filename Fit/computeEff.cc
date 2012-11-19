@@ -113,17 +113,19 @@ int main(int argc, char** argv) {
     std::cout << "---- HLT efficiencies ----" << std::endl;
     for (int i=0 ; i < 5 ; i++)
     {
-      eff_trg_mu[i]= ( (lumimu_A1 + lumimu_A2) * eff_IsoMu17[i] 
-          + (lumimu_A3 + lumimu_A4) * eff_IsoMu17_DiCentralJet30[i] 
-          + (lumimu_A5 + lumimu_B6) * eff_IsoMu17_TriCentralJet30[i] 
-          + lumimu_B7 * eff_IsoMu17_TriCentralPFJet30[i] 
-          ) / lumimu_tot / 100;
-      eff_trg_e[i]= ( lumie_A1 * eff_Ele27_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT[i] 
-          + lumie_A2 * eff_Ele32_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT[i] 
-          + lumie_A3 * eff_Ele25_CaloIdVT_TrkIdT_TriCentralJet30[i] 
-          + (lumie_A4 + lumie_A5 + lumie_B6) * eff_Ele25_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_TriCentralJet30[i] 
-          + lumie_B7 * eff_Ele25_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_TriCentralPFJet30[i] 
-          ) /lumie_tot / 100;
+      //eff_trg_mu[i]= ( (lumimu_A1 + lumimu_A2) * eff_IsoMu17[i] 
+          //+ (lumimu_A3 + lumimu_A4) * eff_IsoMu17_DiCentralJet30[i] 
+          //+ (lumimu_A5 + lumimu_B6) * eff_IsoMu17_TriCentralJet30[i] 
+          //+ lumimu_B7 * eff_IsoMu17_TriCentralPFJet30[i] 
+          //) / lumimu_tot / 100;
+      eff_trg_mu[i] = 1.; //FIXME
+      //eff_trg_e[i]= ( lumie_A1 * eff_Ele27_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT[i] 
+          //+ lumie_A2 * eff_Ele32_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT[i] 
+          //+ lumie_A3 * eff_Ele25_CaloIdVT_TrkIdT_TriCentralJet30[i] 
+          //+ (lumie_A4 + lumie_A5 + lumie_B6) * eff_Ele25_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_TriCentralJet30[i] 
+          //+ lumie_B7 * eff_Ele25_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_TriCentralPFJet30[i] 
+          //) /lumie_tot / 100;
+      eff_trg_e[i] = 1.; //FIXME
       std::cout << "M_Z' = " << M[i] 
         << '\t' << "eff_muon = " << eff_trg_mu[i]  
         << '\t' << "eff_electron = " << eff_trg_e[i] << std::endl;
@@ -131,7 +133,7 @@ int main(int argc, char** argv) {
     std::cout << std::endl;
 
     //--- selection efficiencies
-    const float N0[5] = {232074, 206525, 209447, 191559, 170783};
+    const float N0[5] = {118733, 108827, 102411, 96994, 96194};
 
     float Nsel_mu_nominal[5];
     float ErrNsel_mu_nominal[5];

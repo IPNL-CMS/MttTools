@@ -65,7 +65,7 @@
 
 using namespace RooFit;
 
-//#define NO_SYST // No systematics
+#define NO_SYST // No systematics
 
 /**
  * Profiling method
@@ -888,7 +888,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
 
   const int padWidth = 900;
   const int padHeight = 900;
-  const float LUMI = 5.1;
+  const float LUMI = 14.8;
 
   const int canvasWidth = padWidth * x;
   const int canvasHeight = padHeight * y;
@@ -1197,8 +1197,12 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
   // Updated 2012-3-20
   // See https://hypernews.cern.ch/HyperNews/CMS/get/physics-announcements/1531.html
-  double lumi_mu            = 4678. * 1.066; // Original: 4678; +6.6%
-  double lumi_e             = 4682. * 1.066; // Original: 4682; +6.6%
+  //double lumi_mu            = 4678. * 1.066; // Original: 4678; +6.6%
+  //double lumi_e             = 4682. * 1.066; // Original: 4682; +6.6%
+
+  double lumi_mu = 14825.0;
+  double lumi_e  = 14668.82;
+
   double s_lumi_mu_percent  = 2.2 / 100.; // 2.2%
 
   Double_t br_semil = 1.0; //0.14815; now included in the efficiency

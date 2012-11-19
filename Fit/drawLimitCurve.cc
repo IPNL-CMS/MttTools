@@ -132,6 +132,7 @@ void drawLimitCurve(int btag) {
   gra95->SetTitle("95% C.L. upper limit on the cross section");
   gra95->GetXaxis()->SetTitle("m(t#bar{t}) (GeV/c^{2})")	  ;
   gra95->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z') #times BR(Z' #rightarrow t#bar{t}) (pb)");
+  gra95->GetXaxis()->SetNdivisions(505);
   gra95->SetFillColor(15);
   gra95->Draw("AE3");
 
@@ -176,12 +177,13 @@ void drawLimitCurve(int btag) {
   t.SetTextSize(0.04);
   t.SetNDC();
   t.DrawLatex(0.63, 0.67, "#font[42]{CMS preliminary}");
-  t.DrawLatex(0.63, 0.62, "#font[42]{5 fb^{-1} at #sqrt{s}=8 TeV}");
+  t.DrawLatex(0.63, 0.62, "#font[42]{14.8 fb^{-1} at #sqrt{s}=8 TeV}");
 
   TString prefix = TString::Format("limitCurve_2012_%s_%s_%dbtag", getSignalPdfName().c_str(), getFitBackgroundPdfName().c_str(), btag);
 
   c1->Print(prefix + ".png");
   c1->SaveAs(prefix + ".pdf");
+  c1->SaveAs(prefix + ".root");
 
   delete c1;
 }
