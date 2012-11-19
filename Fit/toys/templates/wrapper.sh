@@ -10,16 +10,16 @@ source /gridsoft/cmss/slc5_amd64_gcc462/external/gcc/4.6.2/etc/profile.d/init.sh
 source /gridsoft/cmss/slc5_amd64_gcc462/external/gdb/7.3.1/etc/profile.d/init.sh
 
 # cd to right directory
-cd $4
+cd $5
 
 # define variables
-mass=$1
-num_exp=$2
-job_index=$3
-btag=$7
+mass=$2
+num_exp=$3
+job_index=$4
+btag=$8
 
 # launch analysis
-./fitMtt -m $mass --limit-curve --toys ${num_exp} --index ${job_index} --path \"$5\" --output-path \"$6\" --no-text-files --no-figs --no-root-files --b-tag $7 --batch
+./fitMtt -i $1 -m $mass --limit-curve --toys ${num_exp} --index ${job_index} --path \"$6\" --output-path \"$7\" --no-text-files --no-figs --no-root-files --b-tag $8 --batch
 
 error=$?
 

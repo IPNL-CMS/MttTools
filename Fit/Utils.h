@@ -36,6 +36,6 @@ extern std::string getFitBackgroundPdfName(const std::string& base);
 extern std::string getFitBackgroundPdfName();
 extern std::string getFritBackgroundPdfName(const std::string& base);
 extern std::string getFritBackgroundPdfName();
-extern char** getSystCLParameters(const std::string& mass, bool muonsOnly, int btag, ...);
+extern char** getSystCLParameters(const std::string& mass, const std::string& file, bool singleFile, bool muonsOnly, int btag, ...);
 
 extern "C" double computeEfficiency(double selEfficiency, double hltEfficiency);

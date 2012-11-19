@@ -2,12 +2,11 @@
 
 from __future__ import division
 import os, math, subprocess, shutil, sys, glob, stat
+from optparse import OptionParser
 
-if sys.version_info<(2,7,0):
-  sys.stderr.write("You need python 2.7 or later to run this script\n")
-  sys.exit(1)
-
-import json, argparse
+#if sys.version_info<(2,7,0):
+  #sys.stderr.write("You need python 2.7 or later to run this script\n")
+  #sys.exit(1)
 
 masses = [
     750,
@@ -16,10 +15,18 @@ masses = [
     1500
     ]
 
-parser = argparse.ArgumentParser(description='Submit jobs on the grid.')
-parser.add_argument('--python', dest='print_python', action='store_true')
-parser.add_argument('--b-tag', dest='btag', type=int, required=True)
-args = parser.parse_args()
+#parser = argparse.ArgumentParser(description='Submit jobs on the grid.')
+#parser.add_argument('--python', dest='print_python', action='store_true')
+#parser.add_argument('--b-tag', dest='btag', type=int, required=True)
+#parser.add_argument('-i', dest='inputfile', required=True)
+#args = parser.parse_args()
+
+parser = OptionParser()
+parser.add_option("--python", dest="print_python", action="store_true")
+parser.add_option("--b-tag", dest="btag", type="int")
+parser.add_option("-i", dest="inputfile")
+
+(args, other) = parser.parse_args()
 
 printPython = args.print_python
 
@@ -35,13 +42,14 @@ if printPython:
   print "num_toys_per_job = %d" % num_toys_per_job
   exit(0)
 
-f = open("../parameters.json")
-params = json.load(f)
-pdfSignalName = params["parameters"]["pdf"]["signal"]
-f.close()
+if not args.btag:
+  parser.error("No b-tag given")
 
-data = [
-  'data/ds_data_2011-nominal_*.txt']
+if not args.inputfile:
+  parser.error("No input file given")
+
+pdfSignalName = "crystalball"
+data = args.inputfile
 
 fit_configuration_files = [
     'fit_configuration/*'
@@ -57,7 +65,7 @@ input_files = [
   '*.script']
 
 input_files_mass_dependant = [
-    "data_2011_nominal_%%(mass)d_%(signalPdf)s_%(btag)d_btag/data_2011_nominal_%%(mass)d_fitRes_%(signalPdf)s.root" % {'signalPdf': pdfSignalName, 'btag': args.btag}
+    "data_2012_nominal_%%(mass)d_%(signalPdf)s_%(btag)d_btag/data_2012_nominal_%%(mass)d_fitRes_%(signalPdf)s.root" % {'signalPdf': pdfSignalName, 'btag': args.btag}
     ]
 
 frit_files = [
@@ -94,9 +102,7 @@ def copy_file(files, dest):
 
 def copy_data():
   global input_dir
-  for input_file in data:
-    correct_file = "../%s" % input_file
-    copy_file(correct_file, os.path.join(input_dir, "data"))
+  copy_file(data, os.path.join(input_dir, "data"))
 
 def copy_fit_configuration_files():
   global input_dir
@@ -125,13 +131,14 @@ def copy_works_files():
   for file in works_files:
     copy_file(file, working_dir)
 
-def build_parameter(mass, index):
+def build_parameter(input_file, mass, index):
   global num_toys_per_job, input_dir, working_dir, output_dir, args
-  return [mass, num_toys_per_job, index, working_dir, input_dir, output_dir, args.btag]
+  return [input_file, mass, num_toys_per_job, index, working_dir, input_dir, output_dir, args.btag]
 
 def create_ipnl_job():
   global working_dir
-  j = Job()
+  j = Job(do_auto_resubmit=True)
+  j.do_auto_resubmit = True
   j.application = Executable(exe=File(wrapper_dir))
   j.backend = 'CREAM'
   j.backend.CE = 'lyogrid07.in2p3.fr:8443/cream-pbs-cms'
@@ -145,6 +152,9 @@ copy_fit_configuration_files()
 copy_deps()
 copy_works_files()
 
+data_file_name = os.path.basename(data)
+remote_data = os.path.join(input_dir, os.path.join("data", data_file_name))
+
 for mass in masses:
 
   print "Submitting for M=%d" % mass
@@ -154,7 +164,7 @@ for mass in masses:
   parameters = []
   for i in range(0, num_jobs):
   #for i in range(0, 2):
-    parameters.append(build_parameter(mass, i))
+    parameters.append(build_parameter(remote_data, mass, i))
 
   j = create_ipnl_job()
   j.name = "Zprime_%d" % mass
@@ -162,6 +172,7 @@ for mass in masses:
   s = ArgSplitter(args = parameters)
   j.splitter = s
 
+  #j.submit(keep_going = True)
   j.submit()
 
 print "All done!"

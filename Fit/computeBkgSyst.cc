@@ -14,7 +14,7 @@ std::string buildConfigFileName(const std::string& fctName) {
 
 std::vector<std::string> BKG_FUNCTIONS;
 
-void process(std::vector<int>& masses, bool onlyMuons, int btag) {
+void process(std::vector<int>& masses, bool onlyMuons, int btag, const std::string& file, bool singleFile) {
   std::vector<pid_t> children; // For fork()
 
   for (std::vector<int>::iterator it = masses.begin(); it != masses.end(); ++it) {
@@ -28,7 +28,7 @@ void process(std::vector<int>& masses, bool onlyMuons, int btag) {
         pid_t child = fork();
         if (child == 0) {
           std::string fileName = buildConfigFileName(*param);
-          char** params = getSystCLParameters(ss.str(), onlyMuons, btag, "--config-file", fileName.c_str(), NULL);
+          char** params = getSystCLParameters(ss.str(), file, singleFile, onlyMuons, btag, "--config-file", fileName.c_str(), NULL);
           execv("./fitMtt", params);
 
           exit(0);
@@ -155,6 +155,11 @@ int main(int argc, char** argv) {
   try {
     TCLAP::CmdLine cmd("Compute bkg PDF systematic", ' ', "0.1");
 
+    TCLAP::ValueArg<std::string> inputListArg("", "input-list", "A text file containing a list of input files", true, "", "string");
+    TCLAP::ValueArg<std::string> inputFileArg("i", "input-file", "The input file", true, "", "string");
+
+    cmd.xorAdd(inputListArg, inputFileArg);
+
     TCLAP::SwitchArg muonsOnlyArg("", "muons-only", "Compute sigmaref using only semi-mu data", cmd);
     TCLAP::SwitchArg extractArg("", "dont-extract", "Don't run fitMtt. Only compute systematic with previous results", cmd);
     TCLAP::MultiArg<int> massArg("m", "mass", "Zprime mass", false, "integer", cmd);
@@ -173,7 +178,7 @@ int main(int argc, char** argv) {
     fillParams();
 
     if (! extractArg.getValue())
-      process(masses, muonsOnlyArg.getValue(), btagArg.getValue());
+      process(masses, muonsOnlyArg.getValue(), btagArg.getValue(), inputFileArg.isSet() ? inputFileArg.getValue() : inputListArg.getValue(), inputFileArg.isSet());
 
     computeSyst(masses, btagArg.getValue());
 

@@ -82,13 +82,14 @@ std::string getFritBackgroundPdfName() {
   return getFritBackgroundPdfName(".");
 }
 
-char** getSystCLParameters(const std::string& mass, bool muonsOnly, int btag, ...) {
+char** getSystCLParameters(const std::string& mass, const std::string& file, bool singleFile, bool muonsOnly, int btag, ...) {
  // fitMtt", "-m", ss.str().c_str(), "--syst", (*param).c_str(), "--syst-computation", "--no-figs", "--no-text-files", "--no-root-files", "--muons-only  
  
   va_list paramList;
   va_start(paramList, btag);
 
-  std::vector<const char*> params = { "fitMtt", "-m", mass.c_str(), "--syst-computation", "--no-figs", "--no-text-files", "--no-root-files", "--b-tag" };
+  const std::string parameter = singleFile ? "-i" : "--input-list";
+  std::vector<const char*> params = { "fitMtt", parameter.c_str(), file.c_str(), "-m", mass.c_str(), "--syst-computation", "--no-figs", "--no-text-files", "--no-root-files", "--b-tag" };
 
   std::stringstream ss;
   ss << btag;
