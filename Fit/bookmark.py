@@ -40,6 +40,12 @@ PARAMS = {
     'btag': btag
 }
 
+# Check if we are using systematics or not
+if subprocess.call(["grep", "^#define NO_SYST", os.path.join(pwd, "fitMtt.cc")]) == 0:
+  NO_SYST = True
+else:
+  NO_SYST = False
+
 def run(program, *args):
   pid = os.fork()
   if not pid:
@@ -53,10 +59,15 @@ if doIntro:
 else:
   open(tmp + "/intro.tex", "w").close()
 
+if NO_SYST:
+  f = open(tmp + "/intro.tex", "w+")
+  f.write(r"\begin{center}\textcolor{red}{WARNING: Analysis ran without systematics!}\end{center}")
+  f.close()
+
 # First, frit
 
 if btag != "3":
-  template = Template(r"""\begin{minipage}{0.33\textwidth} \centering
+  template_full = Template(r"""\begin{minipage}{0.33\textwidth} \centering
   \includegraphics[width=0.99\textwidth]{${pwd}/frit/nominal-Zprime${mass}_${sig_pdf}_${btag}_btag_fitCB.pdf}\\
   Nominal\\
   $$\chi^2 = ${chi2_nominal}$$
@@ -71,6 +82,12 @@ if btag != "3":
   JEC Down\\
   $$\chi^2 = ${chi2_JECdown}$$
   \end{minipage}""")
+
+  template_reduced = Template(r"""\begin{center}\begin{minipage}{0.50\textwidth} \centering
+  \includegraphics[width=0.99\textwidth]{${pwd}/frit/nominal-Zprime${mass}_${sig_pdf}_${btag}_btag_fitCB.pdf}\\
+  Nominal\\
+  $$\chi^2 = ${chi2_nominal}$$
+  \end{minipage}\end{center}""")
   
   for mass in masses:
     jsonFile = open("frit_efficiencies.json")
@@ -83,7 +100,12 @@ if btag != "3":
   
     chi2.update(PARAMS)
     f = open(tmp + "/frit_%d.tex" % mass, "w")
-    f.write(template.substitute(chi2, mass = mass))
+
+    if (not NO_SYST) and (os.path.exists("${pwd}/frit/JECup-Zprime${mass}_${sig_pdf}_${btag}_btag_fitCB.pdf" % (chi2))):
+      f.write(template_full.substitute(chi2, mass = mass))
+    else:
+      f.write(template_reduced.substitute(chi2, mass = mass))
+
     f.close()
 
   shutil.copy(pwd + ("/efficiencies_table_%s_btag.tex" % btag), tmp + "/efficiencies_table.tex")
@@ -129,14 +151,14 @@ if btag != "3":
   f.write(template.substitute(eff))
   f.close()
 
-# data_2011_nominal_1000_crystalball_faltB_2_btag/
+# data_2012_nominal_1000_crystalball_faltB_2_btag/
 # Second, sigma ref
 template = Template(ur"""\begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2011_nominal_${mass}_fitRes_${sig_pdf}.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/data_2012_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2012_nominal_${mass}_fitRes_${sig_pdf}.pdf}\\
 Nominal\\
 \end{minipage}%
 \begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2011_nominal_${mass}_fitRes_${sig_pdf}_log.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/data_2012_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2012_nominal_${mass}_fitRes_${sig_pdf}_log.pdf}\\
 Nominal, échelle log\\
 \end{minipage}
 
@@ -178,7 +200,7 @@ f.close()
 
 # Third, systematics
 
-if btag != "3":
+if (not NO_SYST) and (btag != "3"):
 
   # JEC
   template = Template(r"""
@@ -304,20 +326,20 @@ if btag != "3":
 # Likelihood scan
 
 template = Template(ur"""\begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2011_nominal_${mass}_likscan_${sig_pdf}.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/data_2012_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2012_nominal_${mass}_likscan_${sig_pdf}.pdf}\\
 Likelihood scan
 \end{minipage}%
 \begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2011_nominal_${mass}_pdfscan_${sig_pdf}.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/data_2012_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2012_nominal_${mass}_pdfscan_${sig_pdf}.pdf}\\
 PDF scan
 \end{minipage}
 
 \begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2011_nominal_${mass}_pdfscan_wsyst_${sig_pdf}.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/data_2012_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2012_nominal_${mass}_pdfscan_wsyst_${sig_pdf}.pdf}\\
 PDF scan + systématiques
 \end{minipage}%
 \begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/data_2011_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2011_nominal_${mass}_pdfscan_wsyst_cut_${sig_pdf}.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/data_2012_nominal_${mass}_${sig_pdf}_${btag}_btag/data_2012_nominal_${mass}_pdfscan_wsyst_cut_${sig_pdf}.pdf}\\
 PDF scan + systématiques pour $$N_{sig} > 0$$
 \end{minipage}
 
@@ -369,23 +391,23 @@ f.write(template.substitute(num_jobs=num_jobs, num_toys = num_toys, num_toys_per
 f.close()
 
 template = Template(ur"""\begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/toys/plots/${btag}-btag/data_2011_Zprime${mass}_${sig_pdf}_LimitNLLToyExp.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/toys/plots/${btag}-btag/data_2012_Zprime${mass}_${sig_pdf}_LimitNLLToyExp.pdf}\\
 Nll Toy exp
 \end{minipage}%
 \begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/toys/plots/${btag}-btag/data_2011_Zprime${mass}_${sig_pdf}_pull.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/toys/plots/${btag}-btag/data_2012_Zprime${mass}_${sig_pdf}_pull.pdf}\\
 Pull
 \end{minipage}
 \begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/toys/plots/${btag}-btag/data_2011_Zprime${mass}_${sig_pdf}_LimitPlotZ.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/toys/plots/${btag}-btag/data_2012_Zprime${mass}_${sig_pdf}_LimitPlotZ.pdf}\\
 Limite Z'
 \end{minipage}%
 \begin{minipage}{0.49\textwidth} \centering
-\includegraphics[width=0.99\textwidth]{${pwd}/toys/plots/${btag}-btag/data_2011_Zprime${mass}_${sig_pdf}_LimitErrors.pdf}\\
+\includegraphics[width=0.99\textwidth]{${pwd}/toys/plots/${btag}-btag/data_2012_Zprime${mass}_${sig_pdf}_LimitErrors.pdf}\\
 Erreur sur limite
 \end{minipage}
 \begin{center}
-  \includegraphics[width=0.50\textwidth]{${pwd}/toys/plots/${btag}-btag/data_2011_Zprime${mass}_${sig_pdf}_LimitPlotsEMu.pdf}\\
+  \includegraphics[width=0.50\textwidth]{${pwd}/toys/plots/${btag}-btag/data_2012_Zprime${mass}_${sig_pdf}_LimitPlotsEMu.pdf}\\
   Plots $$e$$ $$\mu$$
 \end{center}
 """)
@@ -446,7 +468,7 @@ Bande d'exclusion (95\%) (pb) & $$^{+${p95_750}}_{-${m95_750}}$$ & $$^{+${p95_10
 \end{tabular}
 
 \begin{center}
-  \includegraphics[width=0.70\textwidth]{${pwd}/limitCurve_2011_${sig_pdf}_${bkg_pdf}_${btag}btag.pdf}
+  \includegraphics[width=0.70\textwidth]{${pwd}/limitCurve_2012_${sig_pdf}_${bkg_pdf}_${btag}btag.pdf}
 \end{center}
 }""")
 
