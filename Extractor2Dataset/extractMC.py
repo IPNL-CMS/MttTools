@@ -3,10 +3,12 @@
 import os, subprocess, tempfile
 
 files = [
-    "MTT_Zprime_M750_2012_v1_%s.root",
-    "MTT_Zprime_M1000_2012_v1_%s.root",
-    "MTT_Zprime_M1250_2012_v1_%s.root",
-    "MTT_Zprime_M1500_2012_v1_%s.root",
+    "MTT_Zprime_500_Narrow_2012_08Nov_%s.root",
+    "MTT_Zprime_750_Narrow_2012_08Nov_%s.root",
+    "MTT_Zprime_1000_Narrow_2012_08Nov_%s.root",
+    "MTT_Zprime_1250_Narrow_2012_08Nov_%s.root",
+    "MTT_Zprime_1500_Narrow_2012_08Nov_%s.root",
+    "MTT_Zprime_2000_Narrow_2012_08Nov_%s.root"
 
 #    "MTT_DYJetsToLL_M-50_2012_v1_%s.root",
 #    "MTT_QCD_Pt_20_30_EMEnriched_2012_v1_semie.root",
@@ -27,9 +29,6 @@ def launch(input, output):
     args.append("--type semie")
   elif "semimu" in input:
     args.append("--type semimu")
-
-  if "Zprime" in input:
-    args.append("--pileup s6")
 
   return " ".join(args)
 

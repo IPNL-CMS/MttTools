@@ -3,6 +3,7 @@
 #include <TStyle.h>
 #include <TCanvas.h>
 #include <vector>
+#include <TProfile.h>
 
 #include "../PUReweighting/PUReweighter.h"
 
@@ -41,14 +42,15 @@ void Extractor2Histos::Loop()
 
   TH1D *hmtlep = new TH1D("hmtlep", "", 100, 120., 240.);
   TH1D *hmthad = new TH1D("hmthad", "", 150, 120., 300.);
-  TH1D *hmtt = new TH1D("hmtt", "", 100, 300., 1300.);
-  TH1D *hmttSelectedall = new TH1D("hmttSelectedall", "", 100, 300., 1300.);
-  TH1D *hmttSelected0b = new TH1D("hmttSelected0b", "", 100, 300., 1300.);
-  TH1D *hmttSelected1b = new TH1D("hmttSelected1b", "", 100, 300., 1300.);
-  TH1D *hmttSelected2b = new TH1D("hmttSelected2b", "", 100, 300., 1300.);
-  TH1D *hmttSelected2bMtt500 = new TH1D("hmttSelected2bMtt500", "", 100, 300., 1300.);
-  TH1D *hmtt_all = new TH1D("hmtt_all", "", 100, 300., 1300.);
-  TH1D *hmtt_bestchi2 = new TH1D("hmtt_bestchi2", "", 100, 300., 1300.);
+  TH1D *hmtt = new TH1D("hmtt", "", 250, 0., 2500.);
+  TH1D *hmtt_MC = new TH1D("hmtt_MC", "", 250, 0., 2500.);
+  TH1D *hmttSelectedall = new TH1D("hmttSelectedall", "", 250, 0., 2500.);
+  TH1D *hmttSelected0b = new TH1D("hmttSelected0b", "", 250, 0., 2500.);
+  TH1D *hmttSelected1b = new TH1D("hmttSelected1b", "", 250, 0., 2500.);
+  TH1D *hmttSelected2b = new TH1D("hmttSelected2b", "", 250, 0., 2500.);
+  TH1D *hmttSelected2bMtt500 = new TH1D("hmttSelected2bMtt500", "", 250, 0., 2500.);
+  TH1D *hmtt_all = new TH1D("hmtt_all", "", 250, 300., 2500.);
+  TH1D *hmtt_bestchi2 = new TH1D("hmtt_bestchi2", "", 250, 0., 2500.);
   TH1D *hNGoodMuons = new TH1D("hNGoodMuons", "", 5, -0.5, 4.5);
 
   TH1D *hNGoodJets = new TH1D("hNGoodJets", "", 6, 3.5, 9.5);
@@ -56,6 +58,16 @@ void Extractor2Histos::Loop()
 
   TH1D *hNBtaggedJets = new TH1D("hNBtaggedJets", "", 5, -0.5, 4.5);
   TH1D *hNBtaggedJets_beforesel = new TH1D("hNBtaggedJets_beforesel", "", 5, -0.5, 4.5);
+
+  TProfile *pMttResolutionAll = new TProfile("pMttResolutionAll", "", 250, 0., 2500.);
+  TProfile *pMttResolution0b = new TProfile("pMttResolution0b", "", 250, 0., 2500.);
+  TProfile *pMttResolution1b = new TProfile("pMttResolution1b", "", 250, 0., 2500.);
+  TProfile *pMttResolution2b = new TProfile("pMttResolution2b", "", 250, 0., 2500.);
+  pMttResolutionAll->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
+  pMttResolution0b->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
+  pMttResolution1b->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
+  pMttResolution2b->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
+
 
   if (mIsSemiMu) {
     hLeptonPt->SetXTitle("#mu p_{T} [GeV/c]");
@@ -82,6 +94,7 @@ void Extractor2Histos::Loop()
   hmtlep->SetXTitle("leptonic m_{t} [GeV/c^{2}]");
   hmthad->SetXTitle("hadronic m_{t} [GeV/c^{2}]");
   hmtt ->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
+  hmtt_MC ->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
   hmttSelectedall->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
   hmttSelected0b->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
   hmttSelected1b->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
@@ -192,19 +205,32 @@ void Extractor2Histos::Loop()
 
         if (p_1stjetpt > 70. && p_2ndjetpt > 50)
         {
+          hmtt_MC->Fill(MC_mtt, eventWeight);
           if (nBtaggedJets_CSVM > 1)
+          {
             hmttSelected2b->Fill(mtt_AfterChi2, eventWeight);
+            pMttResolution2b->Fill(MC_mtt , TMath::Abs(MC_mtt-mtt_AfterChi2), eventWeight);
+          }
 
           if (nBtaggedJets_CSVM > 1 && mtt_AfterChi2 > 500)
+          {
             hmttSelected2bMtt500->Fill(mtt_AfterChi2, eventWeight);
+          }
 
           if (nBtaggedJets_CSVM == 1)
+          {
             hmttSelected1b->Fill(mtt_AfterChi2, eventWeight);
+            pMttResolution1b->Fill(MC_mtt , TMath::Abs(MC_mtt-mtt_AfterChi2), eventWeight);
+          }
 
           if (nBtaggedJets_CSVM < 1)
+          {
             hmttSelected0b->Fill(mtt_AfterChi2, eventWeight);
+            pMttResolution0b->Fill(MC_mtt , TMath::Abs(MC_mtt-mtt_AfterChi2), eventWeight);
+          }
 
           hmttSelectedall->Fill(mtt_AfterChi2, eventWeight);
+          pMttResolutionAll->Fill(MC_mtt , TMath::Abs(MC_mtt-mtt_AfterChi2), eventWeight);
         }
       }
     }
@@ -244,6 +270,7 @@ void Extractor2Histos::Loop()
   hmtlep->Write();
   hmthad->Write();
   hmtt->Write();
+  hmtt_MC->Write();
   hmttSelectedall->Write();
   hmttSelected0b->Write();
   hmttSelected1b->Write();
@@ -257,6 +284,11 @@ void Extractor2Histos::Loop()
 
   hNBtaggedJets->Write();
   hNBtaggedJets_beforesel->Write();
+
+  pMttResolutionAll->Write();
+  pMttResolution0b->Write();
+  pMttResolution1b->Write();
+  pMttResolution2b->Write();
 
   output->Close();
   delete output;
@@ -327,7 +359,7 @@ void Extractor2Histos::Init()
 
   fMTT->SetBranchStatus("*", 0);
   //SetBranchAddress(fMTT, "MC_channel", &MC_channel, &b_MC_channel);
-  //SetBranchAddress(fMTT, "MC_mtt", &MC_mtt, &b_MC_mtt);
+  SetBranchAddress(fMTT, "MC_mtt", &MC_mtt, &b_MC_mtt);
   //SetBranchAddress(fMTT, "MC_nPU", &MC_nPU, &b_m_nPU);
   SetBranchAddress(fMTT, "nGoodMuons", &nGoodMuons, &b_nGoodMuons);
   //SetBranchAddress(fMTT, "nLooseGoodMuons", &nLooseGoodMuons, &b_nLooseGoodMuons);

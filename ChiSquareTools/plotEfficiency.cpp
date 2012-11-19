@@ -16,25 +16,25 @@ void histoToGraph(TH1* histo, TGraphErrors* graph) {
 
 void plotEfficiency() {
 
-  TFile* no_btag = TFile::Open("efficiency_no_htfrac_nobtag.root");
-  TFile* with_btag = TFile::Open("efficiency_no_htfrac_with_btag.root");
+  TFile* no_btag = TFile::Open("selection_efficiency_no_htfrac_nobtag.root");
+  //TFile* with_btag = TFile::Open("efficiency_no_htfrac_with_btag.root");
 
-  TH1* eff_btag = (TH1*) with_btag->Get("chi2_efficiency_vs_mtt");
+  //TH1* eff_btag = (TH1*) with_btag->Get("chi2_efficiency_vs_mtt");
   TH1* eff_nobtag = (TH1*) no_btag->Get("chi2_efficiency_vs_mtt");
   TH1* eff_jets = (TH1*) no_btag->Get("jets_efficiency_vs_mtt");
 
   TMultiGraph* mg = new TMultiGraph();
 
-  TGraphErrors* g_eff_btag = new TGraphErrors();
+  //TGraphErrors* g_eff_btag = new TGraphErrors();
   TGraphErrors* g_eff_nobtag = new TGraphErrors();
   TGraphErrors* g_eff_jets = new TGraphErrors();
 
-  histoToGraph(eff_btag, g_eff_btag);
+  //histoToGraph(eff_btag, g_eff_btag);
   histoToGraph(eff_nobtag, g_eff_nobtag);
   histoToGraph(eff_jets, g_eff_jets);
 
-  g_eff_btag->SetMarkerColor(kRed);
-  g_eff_btag->SetTitle("#chi^{2} method with b-tags");
+  //g_eff_btag->SetMarkerColor(kRed);
+  //g_eff_btag->SetTitle("#chi^{2} method with b-tags");
   g_eff_nobtag->SetTitle("#chi^{2} method");
   g_eff_jets->SetMarkerColor(kBlue - 3);
   g_eff_jets->SetTitle("taking the four leading jets");

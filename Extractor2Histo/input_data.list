@@ -1,12 +1,15 @@
 # Input_file  Output_file semimu?
-MTT_ElectronHad_Run2012A_26Sept.root            MTT_Histos_ElectronHad_Run2012A.root              0
-MTT_SingleElectron_Run2012B_part0_26Sept.root   MTT_Histos_SingleElectron_Run2012B_part0.root     0
-MTT_SingleElectron_Run2012B_26Sept.root         MTT_Histos_SingleElectron_Run2012B.root           0
-MTT_SingleElectron_Run2012B_part2_26Sept.root   MTT_Histos_SingleElectron_Run2012B_part2.root     0
-MTT_SingleElectron_Run2012B_part3_26Sept.root   MTT_Histos_SingleElectron_Run2012B_part3.root     0
-MTT_MuHad_Run2012A_26Sept.root                  MTT_Histos_MuHad_Run2012A.root                    1
-MTT_SingleMu_Run2012B_part0_26Sept.root         MTT_Histos_SingleMu_Run2012B_part0.root           1
-MTT_SingleMu_Run2012B_26Sept.root               MTT_Histos_SingleMu_Run2012B.root                 1
-MTT_SingleMu_Run2012B_part2_26Sept.root         MTT_Histos_SingleMu_Run2012B_part2.root           1
-MTT_SingleMu_Run2012B_part3_26Sept.root         MTT_Histos_SingleMu_Run2012B_part3.root           1
+MTT_MuHad_Run2012A-13Jul2012_06Nov.root                 MTT_Histos_MuHad_Run2012A-rereco.root           1
+MTT_MuHad_Run2012A-recover-06Aug2012_06Nov.root         MTT_Histos_MuHad_Run2012A-recover.root          1
+MTT_SingleMu_Run2012B_06Nov.root                        MTT_Histos_SingleMu_Run2012B-rereco.root        1
+MTT_SingleMu_Run2012C-24Aug2012_06Nov.root              MTT_Histos_SingleMu_Run2012C-rereco.root        1
+MTT_SingleMu_Run2012C-PromptSkim_06Nov.root             MTT_Histos_SingleMu_Run2012C-prompt.root        1
+MTT_SingleMu_Run2012D_06Nov.root                        MTT_Histos_SingleMu_Run2012D-prompt.root        1
+MTT_ElectronHad_Run2012A-13Jul2012_06Nov.root           MTT_Histos_ElectronHad_Run2012A-rereco.root     0
+MTT_ElectronHad_Run2012A-recover-06Aug2012_06Nov.root   MTT_Histos_ElectronHad_Run2012A-recover.root    0
+MTT_SingleElectron_Run2012B_06Nov.root                  MTT_Histos_SingleElectron_Run2012B-rereco.root  0
+MTT_SingleElectron_Run2012C-24Aug2012_06Nov.root        MTT_Histos_SingleElectron_Run2012C-rereco.root  0
+MTT_SingleElectron_Run2012C-PromptSkim_06Nov.root       MTT_Histos_SingleElectron_Run2012C-prompt.root  0
+MTT_SingleElectron_Run2012D_06Nov.root                  MTT_Histos_SingleElectron_Run2012D-prompt.root  0
 end
+
