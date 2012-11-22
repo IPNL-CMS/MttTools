@@ -30,12 +30,7 @@ extern double eleIso_correction_error_relative;
 extern bool fileExists(const std::string& filename);
 extern void getJsonRoot(const std::string& filename, Json::Value& root, bool exitOnError = true);
 extern std::string formatPath(const std::string& base, const std::string& filename);
-extern std::string getSignalPdfName(const std::string& base);
-extern std::string getSignalPdfName();
-extern std::string getFitBackgroundPdfName(const std::string& base);
-extern std::string getFitBackgroundPdfName();
-extern std::string getFritBackgroundPdfName(const std::string& base);
-extern std::string getFritBackgroundPdfName();
 extern char** getSystCLParameters(const std::string& mass, const std::string& file, bool singleFile, bool muonsOnly, int btag, ...);
+extern std::string getAnalysisName(const std::string& base = ".");
 
 extern "C" double computeEfficiency(double selEfficiency, double hltEfficiency);

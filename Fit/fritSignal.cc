@@ -228,6 +228,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
     plot->SetXTitle(TString::Format("#font[132]{#font[12]{m_{TT}} (GeV/#font[12]{c}^{2}), %s}", leptonName.c_str()));
     plot->SetYTitle(TString::Format("#font[132]{Events/(%0.2f GeV/#font[12]{c}^{2})}", binningSize));
     plot->SetTitleOffset(1.42, "Y");
+    plot->SetNdivisions(505);
 
     TLatex t;
     t.SetNDC();
@@ -323,19 +324,19 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
   //RooDataSet* RedData = static_cast<RooDataSet*>(dataOrig->reduce("Mtt_KF_reco > 500 && Mtt_KF_reco < 2045"));
 
   if (dataset->numEntries() == 0) {
-    std::cerr << "[" << getpid() << "] ERROR: No entry in dataset '" << file << "'" << std::endl;
+    std::cerr << "[" << getpid() << "] ERROR: No entry in dataset" << std::endl;
     return;
   } else {
     std::cout << "[" << getpid() << "] " << dataset->numEntries() << " entries loaded" << std::endl;
   }
 
-  std::string configFileId;
+  std::string analysisName = getAnalysisName();
 
   std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf("./fit_configuration", configFile, mtt, NULL, massZprime, "background", whichLepton, nullptr);
 
   // It takes some time, inform the user of what's going on
   std::cout << "Loading signal pdfs... (may takes some time)" << std::endl;
-  std::map<std::string, std::shared_ptr<BaseFunction>> signalPdfs = getCategoriesPdf("./fit_configuration", configFile, mtt, dataset, massZprime, "signal", whichLepton, &configFileId);
+  std::map<std::string, std::shared_ptr<BaseFunction>> signalPdfs = getCategoriesPdf("./fit_configuration", configFile, mtt, dataset, massZprime, "signal", whichLepton, NULL);
   std::cout << "Done." << std::endl;
 
   for (auto& pdf: backgroundPdfs) {
@@ -348,7 +349,7 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
     pdf.second->getPdf().Print();
   }
 
-  TString prefix = TString::Format("%s-Zprime%d_%s_%d_btag", jecType.c_str(), massZprime, configFileId.c_str(), btag);
+  TString prefix = TString::Format("%s-Zprime%d_%s_%d_btag", jecType.c_str(), massZprime, analysisName.c_str(), btag);
 
   std::map<std::string, std::shared_ptr<RooAbsPdf>> globalPdfs;
   std::map<std::string, std::shared_ptr<RooRealVar>> globalPdfsEvents;

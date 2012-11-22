@@ -179,7 +179,8 @@ void drawLimitCurve(int btag) {
   t.DrawLatex(0.63, 0.67, "#font[42]{CMS preliminary}");
   t.DrawLatex(0.63, 0.62, "#font[42]{14.8 fb^{-1} at #sqrt{s}=8 TeV}");
 
-  TString prefix = TString::Format("limitCurve_2012_%s_%s_%dbtag", getSignalPdfName().c_str(), getFitBackgroundPdfName().c_str(), btag);
+  std::string analysisName = getAnalysisName();
+  TString prefix = TString::Format("limitCurve_2012_%s_%dbtag", analysisName.c_str(), btag);
 
   c1->Print(prefix + ".png");
   c1->SaveAs(prefix + ".pdf");

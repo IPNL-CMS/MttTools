@@ -1117,10 +1117,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   }
 
   if (fitConfigurationFile == "auto" || fitConfigurationFile.empty())
-  {
-    // Use pdf function name from parameters.json
     fitConfigurationFile = "fit_pdf_faltb.json";
-  }
 
   std::cout << "Loading fit configuration from '" << fitConfigurationFile << "'" << std::endl;
 
@@ -1173,9 +1170,9 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   // Create main workspace for global pdf
   RooWorkspace mainWorkspace("mainWorkspace", "main workspace");
 
-  std::string pdfSignalName;
+  std::string analysisName = getAnalysisName(BASE_PATH);
 
-  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, mtt, NULL, massZprime, "background", mainCategory, &pdfSignalName);
+  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, mtt, NULL, massZprime, "background", mainCategory, NULL);
   std::map<std::string, RooAbsPdf*> backgroundPdfsFromWorkspace;
 
   for (auto& pdf: backgroundPdfs) {
@@ -1187,7 +1184,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
   TString prefix = TString::Format("data_2012_%s_%d", syst_str.c_str(), massZprime);
   //TString suffix = TString::Format("%s_%s", pdfSignalName.c_str(), bkgfit_str.c_str());
-  TString suffix = TString::Format("%s", pdfSignalName.c_str());
+  TString suffix = TString::Format("%s", analysisName.c_str());
   TString indexJob = TString::Format("job%d", index);
 
 
@@ -1273,7 +1270,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
     std::string pdfName = "signal_" + std::string((TString(type->GetName()).Contains("muon", TString::kIgnoreCase) ? "muon" : "electron"));
 
-    TString workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), syst_str.c_str(), massZprime, pdfSignalName.c_str(), categoryBTag);
+    TString workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), syst_str.c_str(), massZprime, analysisName.c_str(), categoryBTag);
 
     std::shared_ptr<TFile> file(TFile::Open(workspaceFile));
     if (! file.get()) {

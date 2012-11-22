@@ -46,42 +46,6 @@ std::string formatPath(const std::string& base, const std::string& filename) {
   return ss.str();
 }
 
-std::string getSignalPdfName(const std::string& base) {
-  Json::Value root;
-  getJsonRoot(formatPath(base, "parameters.json"), root);
-
-  //FIXME: Check
-  return root["parameters"]["pdf"]["signal"].asString();
-}
-
-std::string getSignalPdfName() {
-  return getSignalPdfName(".");
-}
-
-std::string getFitBackgroundPdfName(const std::string& base) {
-  Json::Value root;
-  getJsonRoot(formatPath(base, "parameters.json"), root);
-
-  //FIXME: Check
-  return root["parameters"]["pdf"]["background"]["fit"].asString();
-}
-
-std::string getFitBackgroundPdfName() {
-  return getFitBackgroundPdfName(".");
-}
-
-std::string getFritBackgroundPdfName(const std::string& base) {
-  Json::Value root;
-  getJsonRoot(formatPath(base, "parameters.json"), root);
-
-  //FIXME: Check
-  return root["parameters"]["pdf"]["background"]["frit"].asString();
-}
-
-std::string getFritBackgroundPdfName() {
-  return getFritBackgroundPdfName(".");
-}
-
 char** getSystCLParameters(const std::string& mass, const std::string& file, bool singleFile, bool muonsOnly, int btag, ...) {
  // fitMtt", "-m", ss.str().c_str(), "--syst", (*param).c_str(), "--syst-computation", "--no-figs", "--no-text-files", "--no-root-files", "--muons-only  
  
@@ -115,4 +79,12 @@ char** getSystCLParameters(const std::string& mass, const std::string& file, boo
 
 double computeEfficiency(double selEfficiency, double hltEfficiency) {
   return trigger_correction_muons * muID_correction  * muIso_correction  * b_tagging_correction * selEfficiency * hltEfficiency;
+}
+
+std::string getAnalysisName(const std::string& base/* = "."*/) {
+
+  Json::Value root;
+  getJsonRoot(formatPath(base, "analysis.json"), root);
+
+  return root["name"].asString();
 }

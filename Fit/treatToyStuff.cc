@@ -75,9 +75,9 @@ void treatToyStuff(bool writeTxtFile, bool savePsGifFiles, int massZprime, int b
   gROOT->Clear();  
   setTDRStyle();
 
-  std::string pdfSignalName = getSignalPdfName();
+  std::string analysisName = getAnalysisName();
 
-  TString str = TString::Format("%s/%d-btag/data_2012_nominal_%d_toylimit_%s.root", INPUT_PATH.c_str(), btag, massZprime, pdfSignalName.c_str());
+  TString str = TString::Format("%s/%d-btag/data_2012_nominal_%d_toylimit_%s.root", INPUT_PATH.c_str(), btag, massZprime, analysisName.c_str());
   TFile* f0 = TFile::Open(str);
 
   TCanvas* cToy = new TCanvas("cToy", "Toy MC pulls", 800, 800);
@@ -155,7 +155,7 @@ void treatToyStuff(bool writeTxtFile, bool savePsGifFiles, int massZprime, int b
   if (savePsGifFiles) {
     mkdir(TString::Format("toys/plots/%d-btag", btag).Data(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
-    TString prefix = TString::Format("toys/plots/%d-btag/data_2012_Zprime%d_%s", btag, massZprime, pdfSignalName.c_str());
+    TString prefix = TString::Format("toys/plots/%d-btag/data_2012_Zprime%d_%s", btag, massZprime, analysisName.c_str());
 
     cToy->Print(TString::Format("%s_LimitPlotsEMu.gif", prefix.Data()));
     cToy2->Print(TString::Format("%s_LimitPlotsSigma.gif", prefix.Data()));
