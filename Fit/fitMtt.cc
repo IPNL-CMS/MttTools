@@ -655,7 +655,7 @@ void doLikelihoodScan(RooAbsData& dataset, RooAbsPdf& pdf, RooRealVar& observabl
   const double minExpNllValue = 3.72665e-06;
 
   // First, create the nLL. We only need to create it once, so do it right now
-  RooAbsReal* nll = pdf.createNLL(dataset, RooFit::Optimize(1)/*, RooFit::NumCPU(2)*/);
+  RooAbsReal* nll = pdf.createNLL(dataset, RooFit::Optimize(0)/*, RooFit::NumCPU(2)*/);
 
   std::cout << "[M=" << mass << "] Scanning negative values from " << center << " to " << getXForBin(-1 * nLHLowerBins, center, steps) << std::endl;
 
@@ -673,8 +673,8 @@ void doLikelihoodScan(RooAbsData& dataset, RooAbsPdf& pdf, RooRealVar& observabl
     observable.setConstant(true);
 
     RooMinuit* minimizer = new RooMinuit(*nll);
-    minimizer->setEvalErrorWall(1);
-    minimizer->optimizeConst(1);
+    minimizer->setEvalErrorWall(0);
+    minimizer->optimizeConst(0);
     minimizer->setStrategy(2);
     minimizer->migrad();
     fitResults = minimizer->save();
@@ -733,8 +733,8 @@ void doLikelihoodScan(RooAbsData& dataset, RooAbsPdf& pdf, RooRealVar& observabl
     observable.setConstant(true);
 
     RooMinuit* minimizer = new RooMinuit(*nll);
-    minimizer->setEvalErrorWall(1);
-    minimizer->optimizeConst(1);
+    minimizer->setEvalErrorWall(0);
+    minimizer->optimizeConst(0);
     minimizer->setStrategy(2);
     minimizer->migrad();
     fitResults = minimizer->save();
@@ -858,24 +858,18 @@ void renameAndSetPdfParametersConst(const RooArgSet& observables, const RooAbsPd
   delete params;
 }
 
-std::string buildCutFormula(RooAbsCategoryLValue& categories) {
-
-  std::stringstream ss;
-  RooSuperCategory* foo = dynamic_cast<RooSuperCategory*>(&categories);
-  if (foo) {
-    const RooArgSet& parentCategories = foo->inputCatList();
-    TIterator *it2 = parentCategories.createIterator();
-    RooAbsCategory* parentCategory = nullptr;
-    bool first = true;
-    while ((parentCategory = static_cast<RooAbsCategory*>(it2->Next()))) {
-      ss << (first ? "" : " && ") << parentCategory->GetName() << "==" << parentCategory->getIndex();
-      first = false;
-    }
-  } else {
-    ss << categories.GetName() << "==" << categories.getIndex();
+void setPdfParametersConst(const RooArgSet& observables, const RooAbsPdf& pdf)
+{
+  RooArgSet* params = pdf.getParameters(observables);
+  TIterator* iter = params->createIterator();
+  RooRealVar* var = NULL;
+  while ((var = static_cast<RooRealVar*>(iter->Next())))
+  {
+    var->setConstant(true);
   }
 
-  return ss.str();
+  delete iter;
+  delete params;
 }
 
 void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, int nBins, RooAbsData& dataset, RooSimultaneous& simPdfs, std::map<std::string, std::shared_ptr<BaseFunction>>& backgroundPdfs, int btag, bool savePlots, const std::string& prefix, const std::string& suffix, bool drawSignal, bool log, TFile* outputFile, bool drawOnlyData = false) {
@@ -1181,12 +1175,14 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
   std::string pdfSignalName;
 
-  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, mtt, massZprime, "background", mainCategory, &pdfSignalName);
+  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, mtt, NULL, massZprime, "background", mainCategory, &pdfSignalName);
+  std::map<std::string, RooAbsPdf*> backgroundPdfsFromWorkspace;
 
   for (auto& pdf: backgroundPdfs) {
     std::cout << "Background pdf: " << pdf.first << " ";
     pdf.second->getPdf().Print();
     mainWorkspace.import(pdf.second->getPdf());
+    backgroundPdfsFromWorkspace[pdf.first] = mainWorkspace.pdf(pdf.second->getPdf().GetName());
   }
 
   TString prefix = TString::Format("data_2012_%s_%d", syst_str.c_str(), massZprime);
@@ -1623,11 +1619,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     std::cout << "Dataset entries: " << dataOrig->numEntries() << std::endl;
     std::cout << "Fitting..." << std::endl;
 
-    // RooFit::Optimize(1) is needed in RooFit 3.50, otherwise the fit
-    // does NOT converge. It disables variable caching introduced by RooFit 3.50
-    // Optimize(0) does also works, but it disable caching completely.
-    // It seems fit does NOT converge when using NumCPU != 1. Awesome!
-    RooFitResult *fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(1), Strategy(2));
+    RooFitResult *fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(0));
     fitResult->Print("v");
     
     TFile* outputFile = nullptr;
@@ -1759,7 +1751,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     RooRandom::randomGenerator()->SetSeed(0);
 
     // Create PDF for toys generation
-    std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfsForToys = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, mtt, massZprime, "background", mainCategory, nullptr, "toy");
+    std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfsForToys = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, mtt, NULL, massZprime, "background", mainCategory, nullptr, "toy");
 
     std::map<std::string, std::shared_ptr<RooAbsPdf>> globalPdfsForToys;
     std::map<int, std::shared_ptr<RooSimultaneous>> simPdfsForGeneration;
@@ -1920,7 +1912,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       if (nll == NULL)
       {
         // Only create the nll the first time
-        nll = simPdfToyFit.createNLL(*binnedDatasetForToys, RooFit::Optimize(1));
+        nll = simPdfToyFit.createNLL(*binnedDatasetForToys, RooFit::Optimize(0));
       }
       else
       {
@@ -1934,9 +1926,8 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
       // Fit
       RooMinuit* minimizer = new RooMinuit(*nll);
-      minimizer->setEvalErrorWall(1);
-      minimizer->optimizeConst(1);
-      minimizer->setStrategy(2);
+      minimizer->setEvalErrorWall(0);
+      minimizer->optimizeConst(0);
       minimizer->migrad();
 
       // Only compute errors for nSig

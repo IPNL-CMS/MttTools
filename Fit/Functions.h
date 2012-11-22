@@ -4,6 +4,7 @@
 
 #include <RooAbsCategory.h>
 #include <RooCatType.h>
+#include <RooAbsCategoryLValue.h>
 
 #include "BaseFunction.h"
 
@@ -17,6 +18,9 @@ std::shared_ptr<BaseFunction> getPdf(const std::string& name, const std::string&
   if (name == "crystalball")
     return std::shared_ptr<BaseFunction>(new CrystalBall(pdfName));
 
+  if (name == "keyspdf")
+    return std::shared_ptr<BaseFunction>(new KeysPdf(pdfName));
+
   if (name == "faltB")
     return std::shared_ptr<BaseFunction>(new FAltB(pdfName));
 
@@ -29,7 +33,32 @@ std::shared_ptr<BaseFunction> getPdf(const std::string& name, const std::string&
   return nullptr;
 }
 
-std::shared_ptr<BaseFunction> createPdf(const Json::Value& value, const std::string& inputPath, RooRealVar& observable, int mass, const std::string& type, const std::string& prefix) {
+/**
+ * Build a cut formula for all categories
+ *
+ * @return A cut formula like "whichLepton == 11 && btag == 2"
+ */
+std::string buildCutFormula(RooAbsCategoryLValue& categories) {
+
+  std::stringstream ss;
+  RooSuperCategory* foo = dynamic_cast<RooSuperCategory*>(&categories);
+  if (foo) {
+    const RooArgSet& parentCategories = foo->inputCatList();
+    TIterator *it2 = parentCategories.createIterator();
+    RooAbsCategory* parentCategory = nullptr;
+    bool first = true;
+    while ((parentCategory = static_cast<RooAbsCategory*>(it2->Next()))) {
+      ss << (first ? "" : " && ") << parentCategory->GetName() << "==" << parentCategory->getIndex();
+      first = false;
+    }
+  } else {
+    ss << categories.GetName() << "==" << categories.getIndex();
+  }
+
+  return ss.str();
+}
+
+std::shared_ptr<BaseFunction> createPdf(const Json::Value& value, const std::string& inputPath, RooRealVar& observable, RooDataSet* dataset, int mass, const std::string& type, const std::string& prefix) {
   if (! value.isMember("name") || ! value.isMember("parameters"))
     assert(false);
 
@@ -43,32 +72,54 @@ std::shared_ptr<BaseFunction> createPdf(const Json::Value& value, const std::str
     return nullptr;
   }
 
-  Json::Value parametersRoot;
-  getJsonRoot(inputPath + "/pdf_parameters.json", parametersRoot);
+  if (parameters != "none") {
+    Json::Value parametersRoot;
+    getJsonRoot(inputPath + "/pdf_parameters.json", parametersRoot);
 
-  if (! parametersRoot.isMember(parameters)) {
-    std::cout << "Error: Parameters set '" << parameters << "' not found." << std::endl;
-    assert(false);
-    return nullptr;
+    if (! parametersRoot.isMember(parameters)) {
+      std::cout << "Error: Parameters set '" << parameters << "' not found." << std::endl;
+      assert(false);
+      return nullptr;
+    }
+
+    pdf->setParameters(jsonToRealVars(observable, mass, prefix, parametersRoot[parameters]));
   }
 
-  pdf->setParameters(jsonToRealVars(observable, mass, prefix, parametersRoot[parameters]));
+  if (dataset) {
+    pdf->setDataset(dataset);
+  }
+
   assert(pdf->createPdf(observable));
 
   return pdf;
 }
 
-std::shared_ptr<BaseFunction> jsonToPdf(const std::string& inputPath, RooRealVar& observable, int mass, const std::string& prefix, const std::string& type, const Json::Value& root) {
+std::shared_ptr<BaseFunction> jsonToPdf(const std::string& inputPath, RooRealVar& observable, RooDataSet* dataset, int mass, const std::string& prefix, const std::string& type, const Json::Value& root) {
 
   if (! root.isMember(type)) {
     std::cout << "Error: '" << type << "' node not found" << std::endl;
     assert(false);
   }
 
-  return createPdf(root[type], inputPath, observable, mass, type, prefix);
+  return createPdf(root[type], inputPath, observable, dataset, mass, type, prefix);
 }
 
-std::map<std::string, std::shared_ptr<BaseFunction>> getCategoriesPdf(const std::string& inputPath, const std::string& inputFile, RooRealVar& observable, int mass, const std::string& type, const RooAbsCategory& categories, std::string* id, const std::string& prefix = "") {
+/**
+ * Parse a config file and create PDFs, one for each category of the analysis
+ *
+ * @param inputPath Where is the inputFile located
+ * @param inputFile The config file (JSON format) containing informations about which pdf use for a given category
+ * @param observable The main observable of the analysis
+ * @param dataset The dataset of the analysis. Can be NULL if not needed by any PDF.
+ * @param mass The current Zprime mass
+ * @param type The PDF type you want to retrieve (signal or background)
+ * @param categories List of possible category for this analysis
+ * @param[out] id If not NULL, the id of the inputFile is stored
+ * @param prefix A string to use as a prefix for each variable name created
+ *
+ * @return A map containing the PDF for each categories
+ */
+std::map<std::string, std::shared_ptr<BaseFunction>> getCategoriesPdf(const std::string& inputPath, const std::string& inputFile, RooRealVar& observable, RooDataSet* dataset, int mass, const std::string& type, RooAbsCategoryLValue& categories, std::string* id, const std::string& prefix = "") {
 
   std::map<std::string, std::shared_ptr<BaseFunction>> results;
 
@@ -99,7 +150,15 @@ std::map<std::string, std::shared_ptr<BaseFunction>> getCategoriesPdf(const std:
     else
       pdfsPrefix += name;
 
-    auto pdf = jsonToPdf(inputPath, observable, mass, pdfsPrefix, type, root[name]);
+    RooDataSet* reducedDataset = nullptr;
+    if (dataset) {
+      // Reduce dataset to keep only data for this category
+      categories = name.c_str();
+      std::string cutFormula = buildCutFormula(categories);
+      reducedDataset = static_cast<RooDataSet*>(dataset->reduce(cutFormula.c_str()));
+    }
+
+    auto pdf = jsonToPdf(inputPath, observable, reducedDataset, mass, pdfsPrefix, type, root[name]);
     assert(pdf.get());
 
     results[name] = pdf;

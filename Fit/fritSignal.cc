@@ -36,6 +36,7 @@
 #include <Roo1DTable.h>
 #include <RooDataHist.h>
 #include <RooChi2Var.h>
+#include <RooExtendPdf.h>
 
 using namespace RooFit;
 
@@ -215,7 +216,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
 
     dataset.plotOn(plot, Cut(cut.c_str()));
 
-    simPdfs.plotOn(plot, Slice(categories), ProjWData(categories, dataset), Components(backgroundPdfs[category]->getPdf()), LineStyle(kDashed), LineColor(kRed), LineWidth(2));
+    //simPdfs.plotOn(plot, Slice(categories), ProjWData(categories, dataset), Components(backgroundPdfs[category]->getPdf()), LineStyle(kDashed), LineColor(kRed), LineWidth(2));
     simPdfs.plotOn(plot, Slice(categories), ProjWData(categories, dataset), LineColor(kBlue), LineWidth(2));
 
     //simPdfs.plotOn(plot, Slice(categories, category.c_str()), ProjWData(categories, dataset), Components(backgroundPdfs[category]->getPdf()), LineStyle(kDashed), LineColor(kRed), LineWidth(2));
@@ -314,10 +315,28 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
   whichLepton.defineType("electron", 11);
   whichLepton.defineType("muon", 13);
 
+  // Get dataset from external file
+  //RooDataSet *dataset = RooDataSet::read(file.c_str(), RooArgList(Mtt_KF_reco, whichLepton));
+  RooDataSet *dataset = new RooDataSet("dataset", "dataset", RooArgSet(mtt, whichLepton, weight), Import(*chain)/*, WeightVar(weight)*/);
+
+  // Reduce data set
+  //RooDataSet* RedData = static_cast<RooDataSet*>(dataOrig->reduce("Mtt_KF_reco > 500 && Mtt_KF_reco < 2045"));
+
+  if (dataset->numEntries() == 0) {
+    std::cerr << "[" << getpid() << "] ERROR: No entry in dataset '" << file << "'" << std::endl;
+    return;
+  } else {
+    std::cout << "[" << getpid() << "] " << dataset->numEntries() << " entries loaded" << std::endl;
+  }
+
   std::string configFileId;
 
-  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf("./fit_configuration", configFile, mtt, massZprime, "background", whichLepton, nullptr);
-  std::map<std::string, std::shared_ptr<BaseFunction>> signalPdfs = getCategoriesPdf("./fit_configuration", configFile, mtt, massZprime, "signal", whichLepton, &configFileId);
+  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf("./fit_configuration", configFile, mtt, NULL, massZprime, "background", whichLepton, nullptr);
+
+  // It takes some time, inform the user of what's going on
+  std::cout << "Loading signal pdfs... (may takes some time)" << std::endl;
+  std::map<std::string, std::shared_ptr<BaseFunction>> signalPdfs = getCategoriesPdf("./fit_configuration", configFile, mtt, dataset, massZprime, "signal", whichLepton, &configFileId);
+  std::cout << "Done." << std::endl;
 
   for (auto& pdf: backgroundPdfs) {
     std::cout << "Background Pdf: " << pdf.first << " -> ";
@@ -332,7 +351,7 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
   TString prefix = TString::Format("%s-Zprime%d_%s_%d_btag", jecType.c_str(), massZprime, configFileId.c_str(), btag);
 
   std::map<std::string, std::shared_ptr<RooAbsPdf>> globalPdfs;
-  std::map<std::string, std::vector<std::shared_ptr<RooRealVar>>> globalPdfsParameters;
+  std::map<std::string, std::shared_ptr<RooRealVar>> globalPdfsEvents;
 
   TIterator* it = whichLepton.typeIterator();
   RooCatType * type = nullptr;
@@ -340,13 +359,14 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
 
     // Create parameters
     std::string name = type->GetName();
-    std::vector<std::shared_ptr<RooRealVar>> parameters {
-      std::shared_ptr<RooRealVar>(new RooRealVar((name + "_nSig").c_str(), "number of sig events", 5000., -100., 20000.)),
-      std::shared_ptr<RooRealVar>(new RooRealVar((name + "_nBkg").c_str(), "number of bkg events", 300., 0., 50000))
-    };
 
-    globalPdfsParameters[name] = parameters;
-    globalPdfs[name] = std::shared_ptr<RooAbsPdf>(new RooAddPdf((name + "_global_pdf").c_str(), "signal + background", RooArgList(signalPdfs[name]->getPdf(), backgroundPdfs[name]->getPdf()), RooArgList(*parameters[0], *parameters[1])));
+    std::shared_ptr<RooRealVar> numberOfEvents { std::shared_ptr<RooRealVar>(new RooRealVar((name + "_nSig").c_str(), "number of sig events", 5000., 0, 200000.)) };
+
+    globalPdfsEvents[name] = numberOfEvents;
+    //globalPdfs[name] = std::shared_ptr<RooAbsPdf>(new RooAddPdf((name + "_global_pdf").c_str(), "signal + background", RooArgList(signalPdfs[name]->getPdf(), backgroundPdfs[name]->getPdf()), RooArgList(*parameters[0], *parameters[1])));
+
+    // Create Extended pdf for fit
+   globalPdfs[name] = std::shared_ptr<RooAbsPdf>(new RooExtendPdf((name + "_global_pdf").c_str(), "extended signal pdf", signalPdfs[name]->getPdf(), *numberOfEvents));
   }
 
   RooSimultaneous simPdf("simPdf","simultaneous pdf",whichLepton) ;
@@ -357,27 +377,13 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
     std::string name = type->GetName();
 
     const RooAbsPdf& pdf = *globalPdfs[name];
+    //const RooAbsPdf& pdf = signalPdfs[name]->getPdf();
     std::cout << "Adding pdf ";
     pdf.Print();
     std::cout << " for category " << name << std::endl;
       
     simPdf.addPdf(pdf, name.c_str());
   }
-
-  // Get dataset from external file
-  //RooDataSet *dataOrig = RooDataSet::read(file.c_str(), RooArgList(Mtt_KF_reco,whichLepton));
-  RooDataSet *dataOrig = new RooDataSet("dataset", "dataset", RooArgSet(mtt, whichLepton, weight), Import(*chain)/*, WeightVar(weight)*/);
-
-  // Reduce data set
-  RooDataSet* RedData = static_cast<RooDataSet*>(dataOrig->reduce("mtt > 500 && mtt < 2045"));
-
-  if (RedData->numEntries() == 0) {
-    std::cerr << "[" << getpid() << "] ERROR: No entry in dataset" << std::endl;
-    return;
-  } else {
-    std::cout << "[" << getpid() << "] " << RedData->numEntries() << " entries loaded" << std::endl;
-  }
-
 
   Double_t minmTTFit = minmTT + 0.0;
   Double_t maxmTTFit = maxmTT - 0.0;
@@ -389,7 +395,7 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
   do {
     delete fitResult;
 
-    fitResult = simPdf.fitTo(*RedData, Save(), Optimize(1), RooFit::Strategy(1));
+    fitResult = simPdf.fitTo(*dataset, Save(), Optimize(1), RooFit::Strategy(1));
 
     fitIsGood = !std::isnan(fitResult->edm());
     fitIterations--;
@@ -400,45 +406,10 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
 
   } while (! fitIsGood && fitIterations > 0);
 
-  drawHistograms(whichLepton, mtt, nBins, *RedData, simPdf, backgroundPdfs, btag, std::string("frit/" + prefix), false);
-  drawHistograms(whichLepton, mtt, nBins, *RedData, simPdf, backgroundPdfs, btag, std::string("frit/" + prefix), true);
-
-  RooPlot* MttPlot_mu = mtt.frame(minmTT, maxmTT, nBins);
-  MttPlot_mu->SetTitle("Semi-mu channel");
-  RedData->plotOn(MttPlot_mu,Cut("lepton_type == lepton_type::muon"));
-  simPdf.plotOn(MttPlot_mu,Slice(whichLepton, "muon"), ProjWData(whichLepton,*RedData), LineColor(kBlue));
-  //simPdf.plotOn(MttPlot_mu,Slice(whichLepton,"muon"), ProjWData(whichLepton,*RedData), Components(bkgFct->getMuPdf()), LineStyle(2), LineColor(kRed));
-  //simPdf.plotOn(MttPlot_mu,Slice(whichLepton,"muon"),ProjWData(whichLepton,*RedData),Components(sigPdf_mu),LineStyle(2),LineColor(kRed));
-
-  RooPlot* MttPlot_e = mtt.frame(minmTT, maxmTT, nBins);
-  MttPlot_e->SetTitle("Semi-e channel");
-  RedData->plotOn(MttPlot_e,Cut("lepton_type == lepton_type::electron"));
-  simPdf.plotOn(MttPlot_e, Slice(whichLepton,"electron"), ProjWData(whichLepton,*RedData), LineColor(kBlue));
-  //simPdf.plotOn(MttPlot_e, Slice(whichLepton,"electron"), ProjWData(whichLepton,*RedData), Components(bkgFct->getEPdf()), LineStyle(2), LineColor(kRed));
-  //simPdf.plotOn(MttPlot_e,Slice(whichLepton,"electron"),ProjWData(whichLepton,*RedData),Components(sigPdf_e),LineStyle(2),LineColor(kRed));
-
-  MttPlot_mu->SetXTitle("#font[132]{#font[12]{m_{TT}} (GeV/#font[12]{c}^{2}), muons}");
-  MttPlot_mu->SetYTitle("#font[132]{Events/(55 GeV/#font[12]{c}^{2})}");
-  MttPlot_mu->SetTitleOffset(1.42, "Y");
-  MttPlot_e->SetXTitle("#font[132]{#font[12]{m_{TT}} (GeV/#font[12]{c}^{2}), electrons}");
-  MttPlot_e->SetYTitle("#font[132]{Events/(55 GeV/#font[12]{c}^{2})}");
-  MttPlot_e->SetTitleOffset(1.42, "Y");
-
-  RooDataSet* RedData_mu = static_cast<RooDataSet*>(dataOrig->reduce("mtt > 500 && mtt < 2045 && lepton_type == 13"));
-  RooDataSet* RedData_e = static_cast<RooDataSet*>(dataOrig->reduce("mtt > 500 && mtt < 2045 && lepton_type == 11"));
-  RooRealVar nEventsRed_mu("nEventsRed_mu", "Number of events in mu dataset", RedData_mu->numEntries());
-  RooRealVar nEventsRed_e("nEventsRed_e", "Number of events in e dataset", RedData_e->numEntries());
-  delete RedData_mu;
-  delete RedData_e;
+  drawHistograms(whichLepton, mtt, nBins, *dataset, simPdf, backgroundPdfs, btag, std::string("frit/" + prefix), false);
+  drawHistograms(whichLepton, mtt, nBins, *dataset, simPdf, backgroundPdfs, btag, std::string("frit/" + prefix), true);
 
   fitResult->Print("v");
-
-/*
-  cout << "[" << getpid() << "] Found nZprime, semi-mu " << nSig_mu.getVal() 
-    << " +- " << nSig_mu.getError() << " out of n.mu = " << nEventsRed_mu.getVal() << endl;
-  cout << "[" << getpid() << "] Found nZprime, semi-e  " << nSig_e.getVal() 
-    << " +- " << nSig_e.getError() << " out of n.e = " << nEventsRed_e.getVal() << endl;
-    */
 
   // Compute Chi2
   // We need to transform our unbinned dataset to a binned one
@@ -452,7 +423,7 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
   int numberOfFloatingParams = floatingParameters->getSize() - 1;
   delete floatingParameters;
 
-  Roo1DTable * table = dataOrig->table(whichLepton);
+  Roo1DTable * table = dataset->table(whichLepton);
 
   // Chi2 computation inspired from http://cmssdt.cern.ch/SDT/doxygen/CMSSW_5_1_1/doc/html/d4/d3a/GenericTnPFitter_8h_source.html, line 291
 
@@ -461,13 +432,12 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
   type = nullptr;
   while ((type = static_cast<RooCatType*>(it->Next()))) {
     std::cout << "For category '" << type->GetName() << "':" << std::endl;
-    std::cout << "\tNumber of signal events: " << globalPdfsParameters[type->GetName()][0]->getVal() << " out of " << table->get(type->GetName()) << std::endl;
-    std::cout << "\tNumber of background events: " << globalPdfsParameters[type->GetName()][1]->getVal() << " out of " << table->get(type->GetName()) << std::endl;
+    std::cout << "\tNumber of signal events: " << globalPdfsEvents[type->GetName()]->getVal() << " out of " << table->get(type->GetName()) << std::endl;
 
     std::stringstream cut;
     cut << whichLepton.GetName() << " == " << type->getVal();
 
-    RooDataHist* binnedDataset = new RooDataHist("binnedDataset", "binned dataset", RooArgSet(mtt), *RedData->reduce(Cut(cut.str().c_str())));
+    RooDataHist* binnedDataset = new RooDataHist("binnedDataset", "binned dataset", RooArgSet(mtt), *dataset->reduce(Cut(cut.str().c_str())));
 
     float chi2 = RooChi2Var("chi2", "chi2", *globalPdfs[type->GetName()], *binnedDataset, DataError(RooAbsData::Poisson)).getVal();
     std::cout << "\tChi2: " << (chi2 / (mtt.getBins() - numberOfFloatingParams * .5)) << std::endl;
@@ -513,7 +483,7 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
   */
 
   //FIXME
-  saveParameters(massZprime, jecType, btag, globalPdfsParameters["muon"][0]->getVal(), globalPdfsParameters["muon"][0]->getError(), globalPdfsParameters["electron"][0]->getVal(), globalPdfsParameters["electron"][0]->getError(), 0, 0, combinedChi2);
+  saveParameters(massZprime, jecType, btag, globalPdfsEvents["muon"]->getVal(), globalPdfsEvents["muon"]->getError(), globalPdfsEvents["electron"]->getVal(), globalPdfsEvents["electron"]->getError(), 0, 0, combinedChi2);
 
   // Save our signal functions into the workspace
   // We will need it for the fit on data
