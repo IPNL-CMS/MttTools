@@ -1597,13 +1597,13 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       RooDataSet* dataset_1b = new RooDataSet("dataset", "dataset", RooArgSet(mtt, lepton_type, weight), Import(*(eventChain[1])));
       RooDataSet* dataset_2b = new RooDataSet("dataset", "dataset", RooArgSet(mtt, lepton_type, weight), Import(*(eventChain[2])));
 
-      dataOrig = new RooDataSet("combData", "combined data", RooArgSet(mtt, lepton_type, weight), Index(btagCategory), Import("0-btag", *dataset_0b), Import("1-btag", *dataset_1b), Import("2-btag", *dataset_2b)/*, WeightVar(weight)*/);
+      dataOrig = new RooDataSet("combData", "combined data", RooArgSet(mtt, lepton_type/*, weight*/), Index(btagCategory), Import("0-btag", *dataset_0b), Import("1-btag", *dataset_1b), Import("2-btag", *dataset_2b)/*, WeightVar(weight)*/);
 
       dataOrig->table(superCategory)->Print("v");
 
     } else {
       // Dataset is inside eventChain. Load RooDataSet from tree
-      dataOrig = new RooDataSet("dataset", "dataset", RooArgSet(mtt, lepton_type, weight), Import(*(eventChain[btag]))/*, WeightVar(weight)*/);
+      dataOrig = new RooDataSet("dataset", "dataset", RooArgSet(mtt, lepton_type/*, weight*/), Import(*(eventChain[btag]))/*, WeightVar(weight)*/);
       dataOrig->table(lepton_type)->Print("v");
     }
 
