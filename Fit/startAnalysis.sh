@@ -7,7 +7,7 @@ date=`LANG=C date +%d%b%y`
 
 cat > analysis.json <<EOL
 {
-  "analysis": "${ANALYSIS_NAME}",
+  "name": "${ANALYSIS_NAME}",
   "date": "${date}"
 }
 EOL

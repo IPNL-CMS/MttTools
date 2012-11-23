@@ -4,7 +4,7 @@ working_dir=`pwd`/works/
 input_dir=`pwd`/inputs/
 output_dir=$1
 
-pdfSignalName=`cat ../parameters.json | grep "\"signal\"" | awk -F' ' '{print $2;}' | tr -d \",`
+analysisName=`cat ../analysis.json | grep "\"name\"" | awk -F' ' '{print $2;}' | tr -d \",`
 
 function test_root_file()
 {
@@ -32,8 +32,8 @@ return $error
 
 echo "Merging..."
 for mass in $(cat liste_mass.txt); do
-  filename="${output_dir}data_2011_nominal_${mass}_toylimit_${pdfSignalName}_*.root"
-  merged_filename="${output_dir}data_2011_nominal_${mass}_toylimit_${pdfSignalName}.root"
+  filename="${output_dir}data_2012_nominal_${mass}_toylimit_${analysisName}_*.root"
+  merged_filename="${output_dir}data_2012_nominal_${mass}_toylimit_${analysisName}.root"
   hadd "${merged_filename}" ${filename}
   error=$?
   if [ $error == 0 ]; then
