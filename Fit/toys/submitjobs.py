@@ -36,6 +36,11 @@ num_jobs = 100
 num_toys_per_job = int(math.ceil(num_toys / num_jobs))
 num_toys = num_jobs * num_toys_per_job
 
+import socket
+isLXPLUS = False
+if "lxplus" in socket.gethostname():
+  isLXPLUS = True
+
 if printPython:
   print "num_toys = %d" % num_toys
   print "num_jobs = %d" % num_jobs
@@ -104,7 +109,10 @@ print "Submitting %d jobs with %d toys per job: Total: %d toys for each mass" % 
 working_dir = os.getcwd() + "/works/"
 input_dir = os.getcwd() + "/inputs/"
 output_dir = os.getcwd() + "/results/%d-btag/" % args.btag
-wrapper_dir = os.getcwd() + "/templates/wrapper.sh"
+
+wrapper = os.getcwd() + "/templates/wrapper.sh"
+if isLXPLUS:
+  wrapper = os.getcwd() + "/templates/wrapper_lxplus.sh"
 
 os.path.exists(os.path.join(input_dir, "data")) or os.mkdir(os.path.join(input_dir, "data"))
 os.path.exists(os.path.join(input_dir, "frit")) or os.mkdir(os.path.join(input_dir, "frit"))
@@ -160,9 +168,15 @@ def create_ipnl_job():
   global working_dir
   j = Job(do_auto_resubmit=True)
   j.do_auto_resubmit = True
-  j.application = Executable(exe=File(wrapper_dir))
-  j.backend = 'CREAM'
-  j.backend.CE = 'lyogrid07.in2p3.fr:8443/cream-pbs-cms'
+  j.application = Executable(exe=File(wrapper))
+
+  if not isLXPLUS:
+    j.backend = 'CREAM'
+    j.backend.CE = 'lyogrid07.in2p3.fr:8443/cream-pbs-cms'
+  else:
+    j.backend = LSF()
+    j.backend.queue = '8nh
+
   return j
 
 # Remove all jobs
