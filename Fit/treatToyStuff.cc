@@ -49,17 +49,19 @@ void saveToyLimits(const int mass, const int btag, const double mean, const doub
   ss << btag;
   std::string btagStr = ss.str();
 
-  root[strMass][btagStr]["mean"] = mean;
-  root[strMass][btagStr]["rms"] = rms;
-  root[strMass][btagStr]["median"] = median;
-  root[strMass][btagStr]["m68"] = m68;
-  root[strMass][btagStr]["p68"] = p68;
-  root[strMass][btagStr]["m95"] = m95;
-  root[strMass][btagStr]["p95"] = p95;
-  root[strMass][btagStr]["widthM68"] = widthM68;
-  root[strMass][btagStr]["widthP68"] = widthP68;
-  root[strMass][btagStr]["widthM95"] = widthM95;
-  root[strMass][btagStr]["widthP95"] = widthP95;
+  std::string uuid = getAnalysisUUID();
+  
+  root[uuid][strMass][btagStr]["mean"] = mean;
+  root[uuid][strMass][btagStr]["rms"] = rms;
+  root[uuid][strMass][btagStr]["median"] = median;
+  root[uuid][strMass][btagStr]["m68"] = m68;
+  root[uuid][strMass][btagStr]["p68"] = p68;
+  root[uuid][strMass][btagStr]["m95"] = m95;
+  root[uuid][strMass][btagStr]["p95"] = p95;
+  root[uuid][strMass][btagStr]["widthM68"] = widthM68;
+  root[uuid][strMass][btagStr]["widthP68"] = widthP68;
+  root[uuid][strMass][btagStr]["widthM95"] = widthM95;
+  root[uuid][strMass][btagStr]["widthP95"] = widthP95;
 
   std::ofstream ofile;
   ofile.open("expected_limits.json", std::ios::out | std::ios::trunc);

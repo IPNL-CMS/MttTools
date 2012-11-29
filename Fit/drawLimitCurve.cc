@@ -37,6 +37,8 @@ void loadObservedLimits(int btag, const std::vector<double>& masses, std::vector
   ss2 << btag;
   std::string btagStr = ss2.str();
 
+  root = root[getAnalysisUUID()];
+
   for (std::vector<double>::const_iterator it = masses.begin(); it != masses.end(); ++it) {
     std::stringstream ss;
     ss << (int) *it;
@@ -67,6 +69,8 @@ void loadExpectedLimits(int btag, const std::vector<double>& masses, std::vector
   std::stringstream ss2;
   ss2 << btag;
   std::string btagStr = ss2.str();
+
+  root = root[getAnalysisUUID()];
 
   for (std::vector<double>::const_iterator it = masses.begin(); it != masses.end(); ++it) {
     std::stringstream ss;

@@ -9,6 +9,10 @@
 #include <sys/stat.h>
 #include <boost/regex.hpp>
 
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
 #include "tdrstyle.C"
 
 #include <TStyle.h>
@@ -65,7 +69,7 @@
 
 using namespace RooFit;
 
-#define NO_SYST // No systematics
+//#define NO_SYST // No systematics
 
 /**
  * Profiling method
@@ -116,7 +120,7 @@ namespace Bash {
 
 }
 
-void fitMtt(std::map<int, TChain*> chains, int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool writeRootFile, bool writeTxtFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, bool doDiscCurve, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag);
+void fitMtt(std::map<int, TChain*> chains, int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool writeRootFile, bool writeTxtFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, bool doDiscCurve, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile);
 
 std::string BASE_PATH;
 std::string OUTPUT_PATH;
@@ -213,6 +217,14 @@ int main(int argc, char** argv)
     TCLAP::SwitchArg verboseArg("v", "verbose", "Verbose mode", cmd);
     TCLAP::SwitchArg batchArg("", "batch", "Run in batch mode", cmd);
     TCLAP::ValueArg<std::string> fitConfigFileArg("", "config-file", "Configuration file name containing fit parameters", false, "fit_pdf_faltb.json", "string", cmd);
+    
+    // Shared memory management
+    TCLAP::SwitchArg useSharedMemoryArg("", "shared-memory", "Save fit results into a shared memory area. The shm key must be specified", cmd);
+    TCLAP::ValueArg<key_t> sharedMemoryKeyArg("", "shm-key", "The shm key used to create the shm", false, 0, "integer", cmd);
+
+    // Workspace
+    TCLAP::ValueArg<std::string> workspaceArg("", "workspace", "Use a custom workspace containing the signal pdf to use", false, "", "string", cmd);
+
 
     cmd.parse(argc, argv);
 
@@ -254,7 +266,7 @@ int main(int argc, char** argv)
 
     fitMtt(chains, massArg.getValue(), fitArg.getValue(), fitConfigFileArg.getValue(), doLikScanArg.getValue(), writeRootArg.getValue(), writeTxtArg.getValue(),
         saveFiguresArg.getValue(), doLimitCurveArg.getValue(), nToyArg.getValue(), doLikInToyArg.getValue(), indexArg.getValue(),
-        doDiscCurveArg.getValue(), systArg.getValue(), systSignArg.getValue(), systCBArg.getValue(), bkgOnlyArg.getValue(), onlyMuonArg.getValue(), btagArg.getValue());
+        doDiscCurveArg.getValue(), systArg.getValue(), systSignArg.getValue(), systCBArg.getValue(), bkgOnlyArg.getValue(), onlyMuonArg.getValue(), btagArg.getValue(), useSharedMemoryArg.getValue(), sharedMemoryKeyArg.getValue(), workspaceArg.getValue());
 
     for (auto& chain: chains)
       delete chain.second;
@@ -289,6 +301,8 @@ void loadEfficiencies(int mass, const std::string& jecType, int btag, double& a,
   ss.clear(); ss.str(std::string());
   ss << btag;
   std::string btagStr = ss.str();
+
+  root = root[getAnalysisUUID(BASE_PATH)];
 
   if (! root.isMember(strMass))
   {
@@ -350,6 +364,8 @@ void loadSigmaRef(int mass, int btag, double& sigma)
   ss << btag;
   std::string btagStr = ss.str();
 
+  root = root[getAnalysisUUID(BASE_PATH)];
+
   if (! root.isMember(strMass))
   {
     //std::cerr << "ERROR: mass '" << mass << "' not found in JSON file. Exiting." << std::endl;
@@ -398,6 +414,8 @@ void loadSystematics(int mass, int btag, double& jec, double& pdf, double& pdf_c
   ss.clear(); ss.str(std::string());
   ss << btag;
   std::string btagStr = ss.str();
+
+  root = root[getAnalysisUUID(BASE_PATH)];
 
   if (! root.isMember(strMass))
   {
@@ -466,11 +484,12 @@ void saveSigma(int mass, int btag, double sigma, double chi, double events, RooF
   ss << btag;
   std::string btagStr = ss.str();
 
-  root[strMass][btagStr]["sigma"] = sigma;
-  root[strMass][btagStr]["chi2"] = chi;
-  root[strMass][btagStr]["events"] = events;
-  root[strMass][btagStr]["fit_covQual"] = fitRes->covQual();
-  root[strMass][btagStr]["fit_status"] = fitRes->status();
+  const std::string uuid = getAnalysisUUID(BASE_PATH);
+  root[uuid][strMass][btagStr]["sigma"] = sigma;
+  root[uuid][strMass][btagStr]["chi2"] = chi;
+  root[uuid][strMass][btagStr]["events"] = events;
+  root[uuid][strMass][btagStr]["fit_covQual"] = fitRes->covQual();
+  root[uuid][strMass][btagStr]["fit_status"] = fitRes->status();
 
 
   std::ofstream ofile;
@@ -502,21 +521,23 @@ void saveSystematicParameter(int mass, int btag, const std::string& type, const 
   ss << btag;
   std::string btagStr = ss.str();
 
+  const std::string uuid = getAnalysisUUID(BASE_PATH);
+
   if (subparam.length() > 0)
   {
-    root[strMass][btagStr][type][param]["sigma"][subparam] = sigma;
-    root[strMass][btagStr][type][param]["events"][subparam] = nEvents;
-    root[strMass][btagStr][type][param]["chi2"][subparam] = chi2;
-    root[strMass][btagStr][type][param]["fit_covQual"][subparam] = fitRes->covQual();
-    root[strMass][btagStr][type][param]["fit_status"][subparam] = fitRes->status();
+    root[uuid][strMass][btagStr][type][param]["sigma"][subparam] = sigma;
+    root[uuid][strMass][btagStr][type][param]["events"][subparam] = nEvents;
+    root[uuid][strMass][btagStr][type][param]["chi2"][subparam] = chi2;
+    root[uuid][strMass][btagStr][type][param]["fit_covQual"][subparam] = fitRes->covQual();
+    root[uuid][strMass][btagStr][type][param]["fit_status"][subparam] = fitRes->status();
   }
   else
   {
-    root[strMass][btagStr][type][param]["sigma"] = sigma;
-    root[strMass][btagStr][type][param]["events"] = nEvents;
-    root[strMass][btagStr][type][param]["chi2"] = chi2;
-    root[strMass][btagStr][type][param]["fit_covQual"] = fitRes->covQual();
-    root[strMass][btagStr][type][param]["fit_status"] = fitRes->status();
+    root[uuid][strMass][btagStr][type][param]["sigma"] = sigma;
+    root[uuid][strMass][btagStr][type][param]["events"] = nEvents;
+    root[uuid][strMass][btagStr][type][param]["chi2"] = chi2;
+    root[uuid][strMass][btagStr][type][param]["fit_covQual"] = fitRes->covQual();
+    root[uuid][strMass][btagStr][type][param]["fit_status"] = fitRes->status();
   }
 
   //TODO: reswitch to ofstream
@@ -604,9 +625,10 @@ void saveLikelihoodResults(const int mass, int btag, const LikelihoodResults& re
   ss << btag;
   std::string btagStr = ss.str();
 
-  root[strMass][btagStr]["scan_limit"] = results.scan_limit / denominator;
-  root[strMass][btagStr]["scan_wsyst_limit"] = results.scan_wsyst_limit / denominator;
-  root[strMass][btagStr]["scan_wsyst_cut_limit"] = results.scan_wsyst_cut_limit / denominator;
+  const std::string uuid = getAnalysisUUID(BASE_PATH);
+  root[uuid][strMass][btagStr]["scan_limit"] = results.scan_limit / denominator;
+  root[uuid][strMass][btagStr]["scan_wsyst_limit"] = results.scan_wsyst_limit / denominator;
+  root[uuid][strMass][btagStr]["scan_wsyst_cut_limit"] = results.scan_wsyst_cut_limit / denominator;
 
   std::ofstream ofile;
   ofile.open("likelihood_scan.json", std::ios::out | std::ios::trunc);
@@ -1107,7 +1129,7 @@ void parseConfigFile(const std::string& filename, RooAbsCategoryLValue& categori
   workspace.Print("v");
 }
 
-void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string fitConfigurationFile, bool doLikScan, bool writeRootFile, bool writeTxtFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, bool doDiscCurve, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag)
+void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string fitConfigurationFile, bool doLikScan, bool writeRootFile, bool writeTxtFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, bool doDiscCurve, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile)
 {
 
   if ((syst_str != "nominal") && (syst_str != "JECup") && (syst_str != "JECdown"))
@@ -1271,6 +1293,10 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     std::string pdfName = "signal_" + std::string((TString(type->GetName()).Contains("muon", TString::kIgnoreCase) ? "muon" : "electron"));
 
     TString workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), syst_str.c_str(), massZprime, analysisName.c_str(), categoryBTag);
+    if (customWorkspaceFile.length() > 0) {
+      workspaceFile = customWorkspaceFile;
+      std::cout << Bash::set_color(Bash::Color::BLUE) << "Using custom workspace '" << workspaceFile << "'" << Bash::set_color() << std::endl;
+    }
 
     std::shared_ptr<TFile> file(TFile::Open(workspaceFile));
     if (! file.get()) {
@@ -1665,6 +1691,28 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       if (SAVE_SIGMA) {
         saveSigma(massZprime, btag, sigmaZ, chi2["combined"], nSig.getVal(), fitResult);
       }
+
+      if (useSharedMemory) {
+
+        SHMFitResults results = {nSig.getVal(), nSig.getError(), sigmaZ, sqrt(errorqtot_pb), chi2["combined"], fitResult->covQual(), fitResult->status()};
+
+        int shmid;
+        if ((shmid = shmget(shm_key, sizeof(SHMFitResults) * 8, 0666)) < 0) {
+          perror("shmget");
+          exit(1);
+        }
+
+        void* shm = NULL;
+        if ((shm = shmat(shmid, NULL, 0)) == (void *) -1) {
+          perror("Can't map shared memory to local memory");
+          exit(1);
+        }
+
+        memcpy(shm, (void*) &results, sizeof(SHMFitResults));
+
+        shmdt(shm);
+      }
+
     } else {
 
       LikelihoodResults results;

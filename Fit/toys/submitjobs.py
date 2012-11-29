@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 from __future__ import division
-import os, math, subprocess, shutil, sys, glob, stat
+import os, math, subprocess, shutil, sys, glob, stat, json
 from optparse import OptionParser
 
-#if sys.version_info<(2,7,0):
-  #sys.stderr.write("You need python 2.7 or later to run this script\n")
-  #sys.exit(1)
+if sys.version_info<(2,7,0):
+  sys.stderr.write("You need python 2.7 or later to run this script\n")
+  sys.exit(1)
 
 masses = [
     750,
@@ -48,7 +48,27 @@ if not args.btag:
 if not args.inputfile:
   parser.error("No input file given")
 
-pdfSignalName = "crystalball"
+
+if not os.path.exists("../analysis.json"):
+  print("No analysis currently defined. Please use startAnalysis first")
+  sys.exit(1)
+
+json_data = open("../analysis.json")
+
+try:
+  data = json.load(json_data)
+except:
+  print("No analysis currently defined. Please use startAnalysis first")
+  sys.exit(1)
+
+json_data.close()
+
+current_analysis = data["current_analysis"]
+uuid = data["analysis"][current_analysis].keys()[0]
+analysisTuple = data["analysis"][current_analysis][uuid]
+
+analysisName = analysisTuple["name"]
+
 data = args.inputfile
 
 fit_configuration_files = [
@@ -56,6 +76,7 @@ fit_configuration_files = [
     ]
 
 input_files = [
+  'analysis.json',
   'efficiencies.json',
   'sigma_reference.json',
   'systematics.json',
@@ -65,11 +86,11 @@ input_files = [
   '*.script']
 
 input_files_mass_dependant = [
-    "data_2012_nominal_%%(mass)d_%(signalPdf)s_%(btag)d_btag/data_2012_nominal_%%(mass)d_fitRes_%(signalPdf)s.root" % {'signalPdf': pdfSignalName, 'btag': args.btag}
+    "data_2012_nominal_%%(mass)d_%(name)s_%(btag)d_btag/data_2012_nominal_%%(mass)d_fitRes_%(name)s.root" % {'name': analysisName, 'btag': args.btag}
     ]
 
 frit_files = [
-    "frit/nominal-Zprime%%(mass)d_%(signalPdf)s_*_workspace.root" % {'signalPdf': pdfSignalName}
+    "frit/nominal-Zprime%%(mass)d_%(name)s_*_workspace.root" % {'name': analysisName}
     ]
 
 

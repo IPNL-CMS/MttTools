@@ -75,7 +75,7 @@ void saveSystematic(int mass, int btag, double syst) {
   ss << btag;
   std::string btagStr = ss.str();
 
-  root[strMass][btagStr]["background_pdf"] = syst;
+  root[getAnalysisUUID()][strMass][btagStr]["background_pdf"] = syst;
 
   FILE* fd = fopen("systematics.json", "w+");
   Json::StyledWriter writer;
@@ -102,6 +102,8 @@ void computeSyst(std::vector<int> masses, int btag) {
     exit(1);
   }
 
+  root = root[getAnalysisUUID()];
+
   Json::Value refRoot;
   file.open("sigma_reference.json");
   success = reader.parse(file, refRoot);
@@ -111,6 +113,8 @@ void computeSyst(std::vector<int> masses, int btag) {
     std::cerr << "You may need to run fitMtt first." << std::endl;
     exit(1);
   }
+
+  refRoot = refRoot[getAnalysisUUID()];
 
   for (std::vector<int>::iterator it = masses.begin(); it != masses.end(); ++it) {
     std::stringstream ss;

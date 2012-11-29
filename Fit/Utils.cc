@@ -81,10 +81,28 @@ double computeEfficiency(double selEfficiency, double hltEfficiency) {
   return trigger_correction_muons * muID_correction  * muIso_correction  * b_tagging_correction * selEfficiency * hltEfficiency;
 }
 
+uint32_t getAnalysisIndex(const std::string& base/* = "."*/) {
+
+  Json::Value root;
+  getJsonRoot(formatPath(base, "analysis.json"), root);
+
+  return root["current_analysis"].asInt();
+}
+
+std::string getAnalysisUUID(const std::string& base/* = "."*/) {
+
+  Json::Value root;
+  getJsonRoot(formatPath(base, "analysis.json"), root);
+
+  return root["analysis"][root["current_analysis"].asInt()].getMemberNames()[0];
+}
+
 std::string getAnalysisName(const std::string& base/* = "."*/) {
 
   Json::Value root;
   getJsonRoot(formatPath(base, "analysis.json"), root);
 
-  return root["name"].asString();
+  const std::string uuid = getAnalysisUUID(base);
+
+  return root["analysis"][getAnalysisIndex(base)][uuid]["name"].asString();
 }
