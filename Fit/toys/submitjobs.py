@@ -175,7 +175,7 @@ def create_ipnl_job():
     j.backend.CE = 'lyogrid07.in2p3.fr:8443/cream-pbs-cms'
   else:
     j.backend = LSF()
-    j.backend.queue = '8nh
+    j.backend.queue = '8nh'
 
   return j
 
