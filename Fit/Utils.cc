@@ -106,3 +106,39 @@ std::string getAnalysisName(const std::string& base/* = "."*/) {
 
   return root["analysis"][getAnalysisIndex(base)][uuid]["name"].asString();
 }
+
+bool analysisUseSignalSyst(const std::string& base/* = "."*/) {
+  Json::Value root;
+  getJsonRoot(formatPath(base, "analysis.json"), root);
+
+  const std::string uuid = getAnalysisUUID(base);
+
+  return root["analysis"][getAnalysisIndex(base)][uuid]["signal_syst"].asBool();
+}
+
+bool analysisUseJECSyst(const std::string& base/* = "."*/) {
+  Json::Value root;
+  getJsonRoot(formatPath(base, "analysis.json"), root);
+
+  const std::string uuid = getAnalysisUUID(base);
+
+  return root["analysis"][getAnalysisIndex(base)][uuid]["jec_syst"].asBool();
+}
+
+bool analysisUseBkgSyst(const std::string& base/* = "."*/) {
+  Json::Value root;
+  getJsonRoot(formatPath(base, "analysis.json"), root);
+
+  const std::string uuid = getAnalysisUUID(base);
+
+  return root["analysis"][getAnalysisIndex(base)][uuid]["bkg_syst"].asBool();
+}
+
+bool analysisUseSystematics(const std::string& base/* = "."*/) {
+  Json::Value root;
+  getJsonRoot(formatPath(base, "analysis.json"), root);
+
+  const std::string uuid = getAnalysisUUID(base);
+
+  return root["analysis"][getAnalysisIndex(base)][uuid]["systematics"].asBool();
+}

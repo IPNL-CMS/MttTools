@@ -69,8 +69,6 @@
 
 using namespace RooFit;
 
-//#define NO_SYST // No systematics
-
 /**
  * Profiling method
  */
@@ -426,41 +424,53 @@ void loadSystematics(int mass, int btag, double& jec, double& pdf, double& pdf_c
   }
 
   Json::Value massNode = root[strMass][btagStr];
-  if (! massNode.isMember("jec"))
-  {
-    //std::cerr << "ERROR: malformated JSON file, JEC systematic not found. Exiting." << std::endl;
-    //exit(1);
-    std::cout << "WARNING: JEC systematics error not found. Setting to 0" << std::endl;
-    jec = 0.;
-  }
-  else
-  {
-    jec = fabs(massNode["jec"].asDouble());
+  if (! analysisUseJECSyst(BASE_PATH)) {
+    jec = 0;
+  } else {
+    if (! massNode.isMember("jec"))
+    {
+      //std::cerr << "ERROR: malformated JSON file, JEC systematic not found. Exiting." << std::endl;
+      //exit(1);
+      std::cout << "WARNING: JEC systematics error not found. Setting to 0" << std::endl;
+      jec = 0.;
+    }
+    else
+    {
+      jec = fabs(massNode["jec"].asDouble());
+    }
   }
 
-  if (! massNode.isMember("background_pdf"))
-  {
-    //std::cerr << "ERROR: malformated JSON file, PDF background systematic not found. Exiting." << std::endl;
-    //exit(1);
-    std::cout << "WARNING: Background PDF systematic error not found. Setting to 0" << std::endl;
+  if (! analysisUseBkgSyst(BASE_PATH)) {
     pdf = 0;
-  }
-  else
-  {
-    pdf = fabs(massNode["background_pdf"].asDouble());
+  } else {
+    if (! massNode.isMember("background_pdf"))
+    {
+      //std::cerr << "ERROR: malformated JSON file, PDF background systematic not found. Exiting." << std::endl;
+      //exit(1);
+      std::cout << "WARNING: Background PDF systematic error not found. Setting to 0" << std::endl;
+      pdf = 0;
+    }
+    else
+    {
+      pdf = fabs(massNode["background_pdf"].asDouble());
+    }
   }
 
-  if (! massNode.isMember("signal_pdf"))
-  {
-    //std::cerr << "ERROR: malformated JSON file, PDF CB systematic not found. Exiting." << std::endl;
-    //std::cerr << "Maybe you just need to run <nom_utilitaire> first?" << std::endl;
-    //exit(1);
-    std::cout << "WARNING: Signal PDF systematic error not found. Setting to 0" << std::endl;
-    pdf_cb = 0.;
-  }
-  else
-  {
-    pdf_cb = fabs(massNode["signal_pdf"].asDouble());
+  if (! analysisUseSignalSyst(BASE_PATH)) {
+    pdf_cb = 0;
+  } else {
+    if (! massNode.isMember("signal_pdf"))
+    {
+      //std::cerr << "ERROR: malformated JSON file, PDF CB systematic not found. Exiting." << std::endl;
+      //std::cerr << "Maybe you just need to run <nom_utilitaire> first?" << std::endl;
+      //exit(1);
+      std::cout << "WARNING: Signal PDF systematic error not found. Setting to 0" << std::endl;
+      pdf_cb = 0.;
+    }
+    else
+    {
+      pdf_cb = fabs(massNode["signal_pdf"].asDouble());
+    }
   }
 }
 
@@ -1143,6 +1153,9 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
   std::cout << "Loading fit configuration from '" << fitConfigurationFile << "'" << std::endl;
 
+  // Systematics?
+  bool useSystematics = analysisUseSystematics(BASE_PATH);
+
   const int maxBTag = 3;
 
   const bool combine = (btag == maxBTag);
@@ -1466,10 +1479,10 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     //err_sys_events = eff_mu[i] * lumi_mu * br_semil * err_sys_pb;
   }
 
-#ifdef NO_SYST
-  err_sys_percent = err_sys_pb = err_sys_events = 0.;
-  std::cout << "WARNING: Systematics are set to 0. If it's not wanted, please undef NO_SYST." << std::endl;
-#endif
+  if (! useSystematics) {
+    err_sys_percent = err_sys_pb = err_sys_events = 0.;
+    std::cout << "WARNING: Systematics are set to 0." << std::endl;
+  }
 
   // Output systematics error
   if (! combine) {
@@ -1481,15 +1494,18 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     std::cout << " - Eff: " << combined_efficiency * 100 << " %" << std::endl;
     std::cout << " - Lumi mu: " << lumi_mu << " /pb" << std::endl;
     std::cout << std::endl;
-    std::cout << "Total syst errors: " <<
-#ifdef NO_SYST
-      Bash::set_color(Bash::Color::RED) <<
-#endif
-      err_sys_events << " events ; " << err_sys_pb << " pb ; " << err_sys_percent << " %" <<
-#ifdef NO_SYST
-      Bash::set_color() <<
-#endif
-      std::endl;
+    std::cout << "Total syst errors: ";
+
+    if (! useSystematics)
+      std::cout << Bash::set_color(Bash::Color::RED);
+      
+    std::cout << err_sys_events << " events ; " << err_sys_pb << " pb ; " << err_sys_percent << " %";
+
+    if (! useSystematics)
+      std::cout << Bash::set_color();
+
+    std::cout << std::endl;
+
     std::cout << " - Eff mu: " << err_base * s_eff_mu_pb[btag] << " events ; " << s_eff_mu_pb[btag] << " pb ; " << s_eff_mu_percent[btag] * 100 << " %" << std::endl;
     std::cout << " - Eff e: " << err_base * s_eff_e_pb[btag] << " events ; " << s_eff_e_pb[btag] << " pb ; " << s_eff_e_percent[btag] * 100 << " %" << std::endl;
     std::cout << " - Lumi mu: " << err_base * s_lumi_mu_pb << " events ; " << s_lumi_mu_pb << " pb ; " << s_lumi_mu_percent * 100 << " %" << std::endl;

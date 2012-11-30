@@ -49,4 +49,9 @@ extern int         getAnalysisId  (const std::string& base = ".");
 extern std::string getAnalysisUUID(const std::string& base = ".");
 extern std::string getAnalysisName(const std::string& base = ".");
 
+extern bool        analysisUseSystematics (const std::string& base = ".");
+extern bool        analysisUseSignalSyst  (const std::string& base = ".");
+extern bool        analysisUseBkgSyst     (const std::string& base = ".");
+extern bool        analysisUseJECSyst     (const std::string& base = ".");
+
 extern "C" double computeEfficiency(double selEfficiency, double hltEfficiency);

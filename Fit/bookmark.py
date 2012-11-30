@@ -20,8 +20,20 @@ doIntro = args.do_intro
 
 f = open("analysis.json")
 params = json.load(f)
-analysisName = params["name"]
 f.close()
+
+current_analysis = params["current_analysis"]
+analysisUUID = params["analysis"][current_analysis].keys()[0]
+analysisTuple = params["analysis"][current_analysis][analysisUUID]
+
+analysisName = analysisTuple["name"]
+analysisDescription = analysisTuple["description"]
+analysisDate = analysisTuple["date"]
+
+useSystematics = analysisTuple["systematics"]
+useJECSyst = analysisTuple["jec_syst"]
+useSignalSyst = analysisTuple["signal_syst"]
+useBkgSyst = analysisTuple["bkg_syst"]
 
 masses = [750, 1000, 1250, 1500]
 jecs = ["nominal", "JECup", "JECdown"]
@@ -37,26 +49,32 @@ PARAMS = {
     'btag': btag
 }
 
-# Check if we are using systematics or not
-if subprocess.call(["grep", "^#define NO_SYST", os.path.join(pwd, "fitMtt.cc")]) == 0:
-  NO_SYST = True
-else:
-  NO_SYST = False
-
 def run(program, *args):
   pid = os.fork()
   if not pid:
     os.execvp(program, (program,) + args)
   return os.wait()[1]
 
-if doIntro:
-  intro_file = tempfile.mkstemp(dir="/scratch/")
-  run("vim", intro_file[1])
-  shutil.copy(intro_file[1], tmp + "/intro.tex")
-else:
-  open(tmp + "/intro.tex", "w").close()
+#if doIntro:
+  #intro_file = tempfile.mkstemp(dir="/scratch/")
+  #run("vim", intro_file[1])
+  #shutil.copy(intro_file[1], tmp + "/intro.tex")
+#else:
+  #open(tmp + "/intro.tex", "w").close()
 
-if NO_SYST:
+intro = open(tmp + "/intro.tex", "w")
+template = Template(r"""\begin{itemize}
+    \item Analysis UUID: ${uuid}
+    \item Analysis name: ${name}
+    \item Analysis description: ${description}
+    \item Analysis date: {$date}
+\end{itemize}""")
+
+intro.write(template.substitute(uuid = analysisUUID, name = analysisName, description = analysisDescription, date = analysisDate))
+
+intro.close()
+
+if not useSystematics:
   f = open(tmp + "/intro.tex", "w+")
   f.write(r"\begin{center}\textcolor{red}{WARNING: Analysis ran without systematics!}\end{center}")
   f.close()
@@ -91,14 +109,17 @@ if btag != "3":
     chi2 = {}
     jsonValues = json.load(jsonFile)
     jsonFile.close()
-  
+
     for jec in jecs:
-      chi2["chi2_" + jec] = jsonValues[str(mass)][btag][jec]["chi2"]
-  
+      if jec in jsonValues[analysisUUID][str(mass)][btag]:
+        chi2["chi2_" + jec] = jsonValues[analysisUUID][str(mass)][btag][jec]["chi2"]
+      else:
+        chi2["chi2_" + jec] = "Not computed"
+
     chi2.update(PARAMS)
     f = open(tmp + "/frit_%d.tex" % mass, "w")
 
-    if (not NO_SYST) and (os.path.exists("${pwd}/frit/JECup-Zprime${mass}_${analysis_name}_${btag}_btag_fitCB.pdf" % (chi2))):
+    if useJECSyst:
       f.write(template_full.substitute(chi2, mass = mass))
     else:
       f.write(template_reduced.substitute(chi2, mass = mass))
@@ -129,10 +150,10 @@ if btag != "3":
     jsonFile.close()
   
     strMass = str(mass)
-    selEff_mu[strMass] = jsonValues[strMass][btag]["nominal"][0]
-    selEff_e[strMass] = jsonValues[strMass][btag]["nominal"][1]
-    hltEff_mu[strMass] = jsonValues[strMass][btag]["nominal"][2]
-    hltEff_e[strMass] = jsonValues[strMass][btag]["nominal"][3]
+    selEff_mu[strMass] = jsonValues[analysisUUID][strMass][btag]["nominal"][0]
+    selEff_e[strMass] = jsonValues[analysisUUID][strMass][btag]["nominal"][1]
+    hltEff_mu[strMass] = jsonValues[analysisUUID][strMass][btag]["nominal"][2]
+    hltEff_e[strMass] = jsonValues[analysisUUID][strMass][btag]["nominal"][3]
   
   from ctypes import cdll, c_double
   lib = cdll.LoadLibrary("./libUtils.so")
@@ -168,8 +189,8 @@ for mass in masses:
   jsonValues = json.load(jsonFile)
   jsonFile.close()
 
-  chi2 = jsonValues[str(mass)][btag]["chi2"]
-  fit = "OK" if (jsonValues[str(mass)][btag]["fit_status"] == 0 and jsonValues[str(mass)][btag]["fit_covQual"] == 3) else "Echec"
+  chi2 = jsonValues[analysisUUID][str(mass)][btag]["chi2"]
+  fit = "OK" if (jsonValues[analysisUUID][str(mass)][btag]["fit_status"] == 0 and jsonValues[analysisUUID][str(mass)][btag]["fit_covQual"] == 3) else "Echec"
 
   f = open(tmp + "/sigma_ref_%d.tex" % mass, "w")
   f.write(template.substitute(PARAMS, mass = mass, chi2 = chi2, fit = fit).encode("utf-8"))
@@ -188,17 +209,24 @@ jsonFile = open("sigma_reference.json")
 jsonValues = json.load(jsonFile)
 jsonFile.close()
 for mass in masses:
-  datas["chi2_" + str(mass)] = jsonValues[str(mass)][btag]["chi2"]
-  datas["sigma_" + str(mass)] = jsonValues[str(mass)][btag]["sigma"]
+  datas["chi2_" + str(mass)] = jsonValues[analysisUUID][str(mass)][btag]["chi2"]
+  datas["sigma_" + str(mass)] = jsonValues[analysisUUID][str(mass)][btag]["sigma"]
 
 f = open(tmp + "/sigma_ref.tex", "w")
 f.write(template.substitute(datas))
 f.close()
 
 # Third, systematics
+datas = {}
+if useSystematics:
+  jsonFile = open("systematics_parameters.json")
+  jsonValues = json.load(jsonFile)
+  jsonFile.close()
+  jsonFile = open("systematics.json")
+  jsonSyst = json.load(jsonFile)
+  jsonFile.close()
 
-if (not NO_SYST) and (btag != "3"):
-
+if useJECSyst:
   # JEC
   template = Template(r"""
   \begin{adjustwidth}{-2cm}{-2cm}
@@ -220,27 +248,38 @@ if (not NO_SYST) and (btag != "3"):
   \end{center}
   \end{adjustwidth}""")
   
-  datas = {}
-  jsonFile = open("systematics_parameters.json")
-  jsonValues = json.load(jsonFile)
-  jsonFile.close()
-  jsonFile = open("systematics.json")
-  jsonSyst = json.load(jsonFile)
-  jsonFile.close()
-  
   reducedJEC = ["up", "down"]
   for mass in masses:
-    for jec in reducedJEC:
-      datas["c_" + str(mass) + "_" + jec] = round(jsonValues[str(mass)][btag]["jec"]["JEC" + jec]["chi2"], 4)
-      datas["s_" + str(mass) + "_" + jec] = round(jsonValues[str(mass)][btag]["jec"]["JEC" + jec]["sigma"], 4)
-      datas["f_" + str(mass) + "_" + jec] = "OK" if (jsonValues[str(mass)][btag]["jec"]["JEC" + jec]["fit_status"] == 0 and jsonValues[str(mass)][btag]["jec"]["JEC" + jec]["fit_covQual"] == 3) else "Echec"
-      
-    datas["s_" + str(mass)] = round(jsonSyst[str(mass)][btag]["jec"], 4)
+    if "jec" in jsonValues[analysisUUID][str(mass)][btag]:
+      for jec in reducedJEC:
+        if jec in jsonValues[analysisUUID][str(mass)][btag]["jec"]:
+          datas["c_" + str(mass) + "_" + jec] = round(jsonValues[analysisUUID][str(mass)][btag]["jec"]["JEC" + jec]["chi2"], 4)
+          datas["s_" + str(mass) + "_" + jec] = round(jsonValues[analysisUUID][str(mass)][btag]["jec"]["JEC" + jec]["sigma"], 4)
+          datas["f_" + str(mass) + "_" + jec] = "OK" if (jsonValues[analysisUUID][str(mass)][btag]["jec"]["JEC" + jec]["fit_status"] == 0 and jsonValues[analysisUUID][str(mass)][btag]["jec"]["JEC" + jec]["fit_covQual"] == 3) else "Echec"
+        else:
+          datas["c_" + str(mass) + "_" + jec] = "N/A"
+          datas["s_" + str(mass) + "_" + jec] = "N/A"
+          datas["f_" + str(mass) + "_" + jec] = "N/A"
+
+
+      datas["s_" + str(mass)] = round(jsonSyst[str(mass)][btag]["jec"], 4)
+    else:
+      for jec in reducedJEC:
+        datas["c_" + str(mass) + "_" + jec] = "N/A"
+        datas["s_" + str(mass) + "_" + jec] = "N/A"
+        datas["f_" + str(mass) + "_" + jec] = "N/A"
+
+      datas["s_" + str(mass)] = "N/A"
 
   f = open(tmp + "/syst_jec.tex", "w")
   f.write(template.substitute(datas))
   f.close()
+else:
+  f = open(tmp + "/syst_jec.tex", "w")
+  f.write(r"\textbf{No JEC systematics for this analysis}")
+  f.close()
   
+if useSignalSyst:
   # Signal
   template = Template(ur"""
   \begin{center}
@@ -263,24 +302,31 @@ if (not NO_SYST) and (btag != "3"):
   arrayLine = ""
   for mass in masses:
     arrayLine = arrayLine + "\multicolumn{5}{|l|}{$m = %d$ GeV}\\\\\n\\hline" % mass
-    for param, values in jsonValues[str(mass)][btag]["signal"].items():
-      arrayLine = arrayLine + "\multirow{2}{*}{%s}" % param.replace("_", r"\_")
-      for var in reducedJEC:
-        chi2 = round(values["chi2"][var], 4)
-        sigma = round(values["sigma"][var], 4)
-        fit = "OK" if (values["fit_status"][var] == 0 and values["fit_covQual"][var] == 3) else "Echec"
-        arrayLine = arrayLine + " & %s & %.04f & %.04f & %s\\\\\n" % (var, chi2, sigma, fit)
-        if var == "up":
-          arrayLine = arrayLine + "\\cline{2-5}"
-      
-      arrayLine = arrayLine + "\\hline\\hline\n"
-    arrayLine = arrayLine + "\multicolumn{5}{|l|}{$\sigma_{syst} = %.04f$ pb}\\\\ \\hline\\hline" % jsonSyst[str(mass)][btag]["signal_pdf"]
-  
+    if "signal" in jsonValues[analysisUUID][str(mass)][btag]:
+      for param, values in jsonValues[analysisUUID][str(mass)][btag]["signal"].items():
+        arrayLine = arrayLine + "\multirow{2}{*}{%s}" % param.replace("_", r"\_")
+        for var in reducedJEC:
+          chi2 = round(values["chi2"][var], 4)
+          sigma = round(values["sigma"][var], 4)
+          fit = "OK" if (values["fit_status"][var] == 0 and values["fit_covQual"][var] == 3) else "Echec"
+          arrayLine = arrayLine + " & %s & %.04f & %.04f & %s\\\\\n" % (var, chi2, sigma, fit)
+          if var == "up":
+            arrayLine = arrayLine + "\\cline{2-5}"
+        
+        arrayLine = arrayLine + "\\hline\\hline\n"
+      arrayLine = arrayLine + "\multicolumn{5}{|l|}{$\sigma_{syst} = %.04f$ pb}\\\\ \\hline\\hline" % jsonSyst[analysisUUID][str(mass)][btag]["signal_pdf"]  
+    elif "signal_pdf" in jsonSyst[analysisUUID][str(mass)][btag]:
+      arrayLine = "\multicolumn{5}{|l|}{$\sigma_{syst} = %.04f$ pb}\\\\ \\hline\\hline" % jsonSyst[analysisUUID][str(mass)][btag]["signal_pdf"]
   
   f = open(tmp + "/syst_signal.tex", "w")
   f.write(template.substitute(content = arrayLine).encode("utf-8"))
   f.close()
+else:
+  f = open(tmp + "/syst_signal.tex", "w")
+  f.write(r"\textbf{No signal systematics for this analysis}")
+  f.close()
   
+if useBkgSyst:
   # Background
   template = Template(ur"""
   \begin{center}
@@ -315,6 +361,10 @@ if (not NO_SYST) and (btag != "3"):
   
   f = open(tmp + "/syst_bkg.tex", "w")
   f.write(template.substitute(content = arrayLine).encode("utf-8"))
+  f.close()
+else:
+  f = open(tmp + "/syst_bkg.tex", "w")
+  f.write(r"\textbf{No background systematics for this analysis}")
   f.close()
   
 ##################################################################################
@@ -352,7 +402,7 @@ for mass in masses:
   f.write(template.substitute(PARAMS, mass = mass).encode("utf-8"))
   f.close()
 
-  values["limit_" + str(mass)] = round(jsonValues[str(mass)][btag]["scan_wsyst_cut_limit"], 4)
+  values["limit_" + str(mass)] = round(jsonValues[analysisUUID][str(mass)][btag]["scan_wsyst_cut_limit"], 4)
   
 template = Template(ur"""\begin{tabular}{|c|c|c|c|c|}
 \hline
@@ -419,11 +469,11 @@ for mass in masses:
   f.write(template.substitute(PARAMS, mass = mass).encode("utf-8"))
   f.close()
 
-  values["elimit_" + str(mass)] = round(jsonValues[str(mass)][btag]["median"], 4)
-  values["m68_" + str(mass)] = round(jsonValues[str(mass)][btag]["widthM68"], 4)
-  values["p68_" + str(mass)] = round(jsonValues[str(mass)][btag]["widthP68"], 4)
-  values["m95_" + str(mass)] = round(jsonValues[str(mass)][btag]["widthM95"], 4)
-  values["p95_" + str(mass)] = round(jsonValues[str(mass)][btag]["widthP95"], 4)
+  values["elimit_" + str(mass)] = round(jsonValues[analysisUUID][str(mass)][btag]["median"], 4)
+  values["m68_" + str(mass)] = round(jsonValues[analysisUUID][str(mass)][btag]["widthM68"], 4)
+  values["p68_" + str(mass)] = round(jsonValues[analysisUUID][str(mass)][btag]["widthP68"], 4)
+  values["m95_" + str(mass)] = round(jsonValues[analysisUUID][str(mass)][btag]["widthM95"], 4)
+  values["p95_" + str(mass)] = round(jsonValues[analysisUUID][str(mass)][btag]["widthP95"], 4)
 
 template = Template(ur"""{
 \renewcommand{\arraystretch}{2}
