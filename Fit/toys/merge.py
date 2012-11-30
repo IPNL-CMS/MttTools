@@ -24,8 +24,7 @@ def test_root_file(root_file):
     returncode = subprocess.call(['root', '-b', '-q', '-l', '-n', 'root_file_test.C'], stdout = fnull, stderr = fnull)
 
   os.remove("root_file_test.C")
-
-  print(returncode)
+  return returncode
 
 working_dir = os.getcwd() + "/works/"
 input_dir = os.getcwd() + "/inputs/"
@@ -66,15 +65,14 @@ for mass in masses:
     print("No files found for %d, continuing." % mass)
     continue
 
-  filenames = ' '.join(x)
-
   with open(os.devnull, "w") as fnull:
-    errorcode = subprocess.call(['hadd', merged_filename, filenames], stdout = fnull, stderr = fnull)
+    errorcode = subprocess.call(['hadd', merged_filename] + filenames, stdout = fnull, stderr = fnull)
 
   if errorcode == 0 and os.path.exists(merged_filename):
     if test_root_file(merged_filename) == 0:
       # We can safely remove the files
-      print("Would have deleted: %s" % filenames)
+      for file in filenames:
+        os.path.remove(file)
       print("Done.")
 
 print("All done!")
