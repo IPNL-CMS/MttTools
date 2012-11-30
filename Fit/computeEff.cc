@@ -23,6 +23,8 @@ void loadSelection(const std::string& jecType, int btag, const int (&masses)[4],
     exit(1);
   }
 
+  root = root[getAnalysisUUID()];
+
   for (int i = 0; i < 4; i++) {
     const int& mass = masses[i];
 
@@ -39,7 +41,7 @@ void loadSelection(const std::string& jecType, int btag, const int (&masses)[4],
       exit(1);
     }
 
-    Json::Value massNode = root[getAnalysisUUID()][strMass][btagStr];
+    Json::Value massNode = root[strMass][btagStr];
 
     if (! massNode.isMember(jecType)) {
       std::cerr << "ERROR: '" << jecType << "' not found for m=" << mass << " in JSON file. Setting to 0." << std::endl;
@@ -54,11 +56,11 @@ void loadSelection(const std::string& jecType, int btag, const int (&masses)[4],
 
     Json::Value jecNode = massNode[jecType];
 
-    nSelectionMu[i] = jecNode["mu"]["events"].asDouble();
-    errNSelectionMu[i] = jecNode["mu"]["error"].asDouble();
+    nSelectionMu[i] = jecNode["muon"]["events"].asDouble();
+    errNSelectionMu[i] = jecNode["muon"]["error"].asDouble();
 
-    nSelectionE[i] = jecNode["e"]["events"].asDouble();
-    errNSelectionE[i] = jecNode["e"]["error"].asDouble();
+    nSelectionE[i] = jecNode["electron"]["events"].asDouble();
+    errNSelectionE[i] = jecNode["electron"]["error"].asDouble();
   }
 }
 

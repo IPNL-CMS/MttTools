@@ -10,7 +10,9 @@
 class KeysPdf : public BaseFunction {
   public:
     KeysPdf(const std::string& name)
-      : BaseFunction(name) {}
+      : BaseFunction(name) {
+        mIsExtended = true;
+      }
 
     virtual bool createPdf(RooRealVar& observable) {
       if (! mHasDataset)

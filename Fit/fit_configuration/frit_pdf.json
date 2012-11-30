@@ -1,69 +1,8 @@
 {
-  "{muon;2-btag}": {
-    "signal": {
-      "name": "crystalball",
-      "parameters": "crystalball_mu"
-    },
-    "background": {
-      "name": "exp",
-      "parameters": "exp"
-    }
-  },
-  "{electron;2-btag}": {
-    "signal": {
-      "name": "crystalball",
-      "parameters": "crystalball_e"
-    },
-    "background": {
-      "name": "exp",
-      "parameters": "exp"
-    }
-  },
-  "{muon;1-btag}": {
-    "signal": {
-      "name": "crystalball",
-      "parameters": "crystalball_mu"
-    },
-    "background": {
-      "name": "exp",
-      "parameters": "exp"
-    }
-  },
-  "{electron;1-btag}": {
-    "signal": {
-      "name": "crystalball",
-      "parameters": "crystalball_e"
-    },
-    "background": {
-      "name": "exp",
-      "parameters": "exp"
-    }
-  },
-  "{muon;0-btag}": {
-    "signal": {
-      "name": "crystalball",
-      "parameters": "crystalball_mu"
-    },
-    "background": {
-      "name": "exp",
-      "parameters": "exp"
-    }
-  },
-  "{electron;0-btag}": {
-    "signal": {
-      "name": "crystalball",
-      "parameters": "crystalball_e"
-    },
-    "background": {
-      "name": "exp",
-      "parameters": "exp"
-    }
-  },
-
   "muon": {
     "signal": {
-      "name": "keyspdf",
-      "parameters": "none"
+      "name": "crystalball",
+      "parameters": "crystalball_mu"
     },
     "background": {
       "name": "exp",
@@ -72,8 +11,8 @@
   },
   "electron": {
     "signal": {
-      "name": "keyspdf",
-      "parameters": "none"
+      "name": "crystalball",
+      "parameters": "crystalball_e"
     },
     "background": {
       "name": "exp",

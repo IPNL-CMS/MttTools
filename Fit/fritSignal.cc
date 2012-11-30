@@ -121,7 +121,42 @@ int main(int argc, char** argv) {
   }
 }
 
-void saveParameters(int mass, const std::string& jecType, int btag, double sig_mu, double err_sig_mu, double sig_e, double err_sig_e, double chi2_e, double chi2_mu, double chi2) {
+void saveParameter(int mass, const std::string& jecType, int btag, const std::string& name, double nSig, double nSig_err, double chi2) {
+
+  FILE* lock = fopen("frit_efficiencies.lock", "w+");
+  lockf(fileno(lock), F_LOCK, 0); // This will block until we have the right to write in the file
+
+  Json::Reader reader;
+  Json::Value root;
+  if (fileExists("frit_efficiencies.json")) {
+    std::ifstream file("frit_efficiencies.json");
+    reader.parse(file, root);
+    file.close();
+  }
+
+  std::stringstream ss;
+  ss << mass;
+  std::string strMass = ss.str();
+
+  ss.clear(); ss.str(std::string());
+  ss << btag;
+  std::string btagStr = ss.str();
+
+  Json::Value& node = root[getAnalysisUUID()][strMass][btagStr][jecType][name];
+  node["events"] = nSig;
+  node["error"] = nSig_err;
+  node["chi2"] = chi2;
+
+  FILE* fd = fopen("frit_efficiencies.json", "w+");
+  Json::StyledWriter writer;
+  const std::string json = writer.write(root);
+  fwrite(json.c_str(), json.length(), 1, fd);
+  fclose(fd);
+
+  fclose(lock);
+}
+
+void saveCombinedChiSquare(int mass, const std::string& jecType, int btag, double chi2) {
 
   FILE* lock = fopen("frit_efficiencies.lock", "w+");
   lockf(fileno(lock), F_LOCK, 0); // This will block until we have the right to write in the file
@@ -143,12 +178,6 @@ void saveParameters(int mass, const std::string& jecType, int btag, double sig_m
   std::string btagStr = ss.str();
 
   Json::Value& node = root[getAnalysisUUID()][strMass][btagStr][jecType];
-  node["mu"]["events"] = sig_mu;
-  node["mu"]["error"] = err_sig_mu;
-  node["mu"]["chi2"] = chi2_mu;
-  node["e"]["events"] = sig_e;
-  node["e"]["error"] = err_sig_e;
-  node["e"]["chi2"] = chi2_e;
   node["chi2"] = chi2;
 
 
@@ -216,7 +245,8 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
 
     dataset.plotOn(plot, Cut(cut.c_str()));
 
-    //simPdfs.plotOn(plot, Slice(categories), ProjWData(categories, dataset), Components(backgroundPdfs[category]->getPdf()), LineStyle(kDashed), LineColor(kRed), LineWidth(2));
+    if (backgroundPdfs[category].get())
+      simPdfs.plotOn(plot, Slice(categories), ProjWData(categories, dataset), Components(backgroundPdfs[category]->getPdf()), LineStyle(kDashed), LineColor(kRed), LineWidth(2));
     simPdfs.plotOn(plot, Slice(categories), ProjWData(categories, dataset), LineColor(kBlue), LineWidth(2));
 
     //simPdfs.plotOn(plot, Slice(categories, category.c_str()), ProjWData(categories, dataset), Components(backgroundPdfs[category]->getPdf()), LineStyle(kDashed), LineColor(kRed), LineWidth(2));
@@ -353,6 +383,7 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
 
   std::map<std::string, std::shared_ptr<RooAbsPdf>> globalPdfs;
   std::map<std::string, std::shared_ptr<RooRealVar>> globalPdfsEvents;
+  std::map<std::string, std::vector<std::shared_ptr<RooRealVar>>> globalPdfsParameters;
 
   TIterator* it = whichLepton.typeIterator();
   RooCatType * type = nullptr;
@@ -364,10 +395,20 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
     std::shared_ptr<RooRealVar> numberOfEvents { std::shared_ptr<RooRealVar>(new RooRealVar((name + "_nSig").c_str(), "number of sig events", 5000., 0, 200000.)) };
 
     globalPdfsEvents[name] = numberOfEvents;
-    //globalPdfs[name] = std::shared_ptr<RooAbsPdf>(new RooAddPdf((name + "_global_pdf").c_str(), "signal + background", RooArgList(signalPdfs[name]->getPdf(), backgroundPdfs[name]->getPdf()), RooArgList(*parameters[0], *parameters[1])));
 
-    // Create Extended pdf for fit
-   globalPdfs[name] = std::shared_ptr<RooAbsPdf>(new RooExtendPdf((name + "_global_pdf").c_str(), "extended signal pdf", signalPdfs[name]->getPdf(), *numberOfEvents));
+    if (signalPdfs[name]->isExtended()) {
+      // Create Extended pdf for fit
+      globalPdfs[name] = std::shared_ptr<RooAbsPdf>(new RooExtendPdf((name + "_global_pdf").c_str(), "extended signal pdf", signalPdfs[name]->getPdf(), *numberOfEvents));
+      backgroundPdfs[name].reset();
+    } else {
+      std::vector<std::shared_ptr<RooRealVar>> parameters {
+        std::shared_ptr<RooRealVar>(new RooRealVar((name + "_nSig").c_str(), "number of sig events", 5000., -100., 20000.)),
+        std::shared_ptr<RooRealVar>(new RooRealVar((name + "_nBkg").c_str(), "number of bkg events", 300., 0., 50000))
+      };
+
+      globalPdfsParameters[name] = parameters;
+      globalPdfs[name] = std::shared_ptr<RooAbsPdf>(new RooAddPdf((name + "_global_pdf").c_str(), "signal + background", RooArgList(signalPdfs[name]->getPdf(), backgroundPdfs[name]->getPdf()), RooArgList(*parameters[0], *parameters[1])));
+    }
   }
 
   RooSimultaneous simPdf("simPdf","simultaneous pdf",whichLepton) ;
@@ -428,12 +469,19 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
 
   // Chi2 computation inspired from http://cmssdt.cern.ch/SDT/doxygen/CMSSW_5_1_1/doc/html/d4/d3a/GenericTnPFitter_8h_source.html, line 291
 
+  std::map<std::string, float> chiSquares;
   float combinedChi2 = 0.;
   it = whichLepton.typeIterator();
   type = nullptr;
   while ((type = static_cast<RooCatType*>(it->Next()))) {
     std::cout << "For category '" << type->GetName() << "':" << std::endl;
-    std::cout << "\tNumber of signal events: " << globalPdfsEvents[type->GetName()]->getVal() << " out of " << table->get(type->GetName()) << std::endl;
+    if (signalPdfs[type->GetName()]->isExtended()) {
+      std::cout << "\tNumber of signal events: " << globalPdfsEvents[type->GetName()]->getVal() << " out of " << table->get(type->GetName()) << std::endl;
+    } else {
+      std::cout << "\tNumber of signal events: " << globalPdfsParameters[type->GetName()][0]->getVal() << " out of " << table->get(type->GetName()) << std::endl;
+      std::cout << "\tNumber of background events: " << globalPdfsParameters[type->GetName()][1]->getVal() << " out of " << table->get(type->GetName()) << std::endl;
+
+    }
 
     std::stringstream cut;
     cut << whichLepton.GetName() << " == " << type->getVal();
@@ -442,6 +490,7 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
 
     float chi2 = RooChi2Var("chi2", "chi2", *globalPdfs[type->GetName()], *binnedDataset, DataError(RooAbsData::Poisson)).getVal();
     std::cout << "\tChi2: " << (chi2 / (mtt.getBins() - numberOfFloatingParams * .5)) << std::endl;
+    chiSquares[type->GetName()] = (chi2 / (mtt.getBins() - numberOfFloatingParams * .5));
 
     combinedChi2 += chi2;
 
@@ -484,7 +533,18 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
   */
 
   //FIXME
-  saveParameters(massZprime, jecType, btag, globalPdfsEvents["muon"]->getVal(), globalPdfsEvents["muon"]->getError(), globalPdfsEvents["electron"]->getVal(), globalPdfsEvents["electron"]->getError(), 0, 0, combinedChi2);
+  it = whichLepton.typeIterator();
+  type = nullptr;
+  while ((type = static_cast<RooCatType*>(it->Next()))) {
+    std::string name = type->GetName();
+    
+    if (signalPdfs[name]->isExtended()) {
+      saveParameter(massZprime, jecType, btag, name, globalPdfsEvents[name]->getVal(), globalPdfsEvents[name]->getError(), chiSquares[name]);
+    } else {
+      saveParameter(massZprime, jecType, btag, name, globalPdfsParameters[name][0]->getVal(), globalPdfsParameters[name][0]->getError(), chiSquares[name]);
+    }
+  }
+  saveCombinedChiSquare(massZprime, jecType, btag, combinedChi2);
 
   // Save our signal functions into the workspace
   // We will need it for the fit on data

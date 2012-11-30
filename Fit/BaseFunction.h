@@ -13,7 +13,7 @@ class BaseFunction {
 
   public:
     BaseFunction(const std::string& name):
-      mName(name), mHasDataset(false), mHasParameters(false)
+      mName(name), mHasDataset(false), mHasParameters(false), mIsExtended(false)
   {
   }
 
@@ -37,6 +37,10 @@ class BaseFunction {
       return mParameters;
     }
 
+    bool isExtended() const {
+      return mIsExtended;
+    }
+
   protected:
     std::string mName;
     std::shared_ptr<RooAbsPdf> mPdf;
@@ -46,7 +50,7 @@ class BaseFunction {
 
     bool mHasDataset;
     bool mHasParameters;
-
+    bool mIsExtended;
 };
 
 float jsonValueToFloat(const RooRealVar& observable, int mass, const Json::Value& value) {
