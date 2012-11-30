@@ -33,7 +33,7 @@ analysisDate = analysisTuple["date"]
 useSystematics = analysisTuple["systematics"]
 useJECSyst = analysisTuple["jec_syst"]
 useSignalSyst = analysisTuple["signal_syst"]
-useBkgSyst = analysisTuple["bkg_syst"]
+useBkgSyst = analysisTuple["background_syst"]
 
 masses = [750, 1000, 1250, 1500]
 jecs = ["nominal", "JECup", "JECdown"]
@@ -226,6 +226,8 @@ if useSystematics:
   jsonSyst = json.load(jsonFile)
   jsonFile.close()
 
+reducedJEC = ["up", "down"]
+
 if useJECSyst:
   # JEC
   template = Template(r"""
@@ -248,7 +250,6 @@ if useJECSyst:
   \end{center}
   \end{adjustwidth}""")
   
-  reducedJEC = ["up", "down"]
   for mass in masses:
     if "jec" in jsonValues[analysisUUID][str(mass)][btag]:
       for jec in reducedJEC:

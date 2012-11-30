@@ -65,6 +65,7 @@ for mass in masses:
     print("No files found for %d, continuing." % mass)
     continue
 
+  print("Processing m=%d" % mass)
   with open(os.devnull, "w") as fnull:
     errorcode = subprocess.call(['hadd', merged_filename] + filenames, stdout = fnull, stderr = fnull)
 
@@ -72,7 +73,7 @@ for mass in masses:
     if test_root_file(merged_filename) == 0:
       # We can safely remove the files
       for file in filenames:
-        os.path.remove(file)
+        os.remove(file)
       print("Done.")
 
 print("All done!")

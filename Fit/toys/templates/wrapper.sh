@@ -27,6 +27,6 @@ if [ $error != 0 ]; then
   exit $error
 fi
 
-chmod a+rw $6/*job$3.root
+chmod a+rw $7/*job$3.root
 
 exit $error
