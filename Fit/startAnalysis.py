@@ -41,6 +41,16 @@ open("analysis.json", "a").close() # "touch" file
 
 analysisName = raw_input("Enter analysis name: ")
 analysisDescription = raw_input("Enter analysis description: ")
+analysisHasSyst = query_yes_no("Use systematics in this analysis?")
+if analysisHasSyst:
+  analysisSignalSyst = query_yes_no("\tSignal systematics?")
+  analysisBkgSyst = query_yes_no("\tBackground systematics?")
+  analysisJECSyst = query_yes_no("\tJEC systematics?")
+else:
+  analysisSignalSyst = False
+  analysisBkgSyst = False
+  analysisJECSyst = False
+
 useAsCurrentAnalysis = query_yes_no("Set this new analysis as the current one?")
 
 analysisUUID = str(uuid.uuid1())
@@ -63,7 +73,11 @@ new_analysis = {
     analysisUUID: {
       "name": analysisName,
       "description": analysisDescription,
-      "date": date
+      "date": date,
+      "systematics": analysisHasSyst,
+      "signal_syst": analysisSignalSyst,
+      "background_syst": analysisBkgSyst,
+      "jec_syst": analysisJECSyst
       }
     }
 
