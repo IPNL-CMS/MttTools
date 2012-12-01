@@ -6,6 +6,8 @@
 #include <tclap/CmdLine.h>
 #include <json/json.h>
 
+#include "Utils.h"
+
 void loadObservedLimits(const std::vector<int>& masses, int btag, std::vector<double>& obs) {
   Json::Reader reader;
   Json::Value root;
@@ -17,6 +19,8 @@ void loadObservedLimits(const std::vector<int>& masses, int btag, std::vector<do
     std::cerr << "Please run the likelihood scan using 'runLikelihoodScan'" << std::endl;
     exit(1);
   }
+
+  root = root[getAnalysisUUID()];
 
   for (std::vector<int>::const_iterator it = masses.begin(); it != masses.end(); ++it) {
     std::stringstream ss;
@@ -48,6 +52,8 @@ void loadExpectedLimits(const std::vector<int>& masses, int btag, std::vector<do
     std::cerr << "Please run 'treatToyStuff'" << std::endl;
     exit(1);
   }
+
+  root = root[getAnalysisUUID()];
 
   for (std::vector<int>::const_iterator it = masses.begin(); it != masses.end(); ++it) {
     std::stringstream ss;
@@ -116,8 +122,8 @@ int main(int argc, char** argv) {
   try {
     TCLAP::CmdLine cmd("Extract observed and expected limits", ' ', "0.1");
 
-    TCLAP::SwitchArg observedArg("", "observed", "Extract observed limit", cmd, true);
-    TCLAP::SwitchArg expectedArg("", "expected", "Extract expected limit", cmd, true);
+    TCLAP::SwitchArg observedArg("", "observed", "Extract observed limit", cmd);
+    TCLAP::SwitchArg expectedArg("", "expected", "Extract expected limit", cmd);
 
     TCLAP::MultiArg<int> massArg("m", "mass", "Zprime mass", false, "integer", cmd);
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", false, 2, "integer", cmd);

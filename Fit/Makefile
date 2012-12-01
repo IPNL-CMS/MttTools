@@ -81,8 +81,8 @@ runLikelihoodScan: runLikelihoodScan.o lib/jsoncpp.o
 treatToyStuff: treatToyStuff.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) treatToyStuff.o $(LIBS) $(EXPLLINKLIBS) -o treatToyStuff
 
-extractLimits: extractLimits.o lib/jsoncpp.o
-	$(LD) $(LDFLAGS) $^ $(DYNAMIC_LIBS) $(EXPLLINKLIBS) -o extractLimits
+extractLimits: extractLimits.o lib/jsoncpp.o libUtils
+	$(LD) $(LDFLAGS) extractLimits.o $(LIBS) $(EXPLLINKLIBS) -o extractLimits
 
 drawLimitCurve: drawLimitCurve.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) drawLimitCurve.o $(LIBS) $(EXPLLINKLIBS) -o drawLimitCurve
