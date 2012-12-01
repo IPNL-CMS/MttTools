@@ -395,6 +395,9 @@ void saveSystematic(int mass, int btag, double syst) {
 }
 
 void computeSyst(int mass, int btag) {
+
+  double sigma_ref = getSigmaReference(mass, btag);
+
   std::cout << std::endl << std::endl;
 
   TString filename = TString::Format("keyspdf_systematics_%d_%d_btag.root", mass, btag);
@@ -404,7 +407,7 @@ void computeSyst(int mass, int btag) {
   TF1* gaussian = new TF1("g", "gaus", -3, 3);
   sigma->Fit(gaussian, "Q");
 
-  double syst = gaussian->GetParameter(2);
+  double syst = gaussian->GetParameter(2) / sigma_ref;
   saveSystematic(mass, btag, syst);
 
   TH1* pull = static_cast<TH1*>(f->Get("pull"));
