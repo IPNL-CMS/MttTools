@@ -1,0 +1,444 @@
+Z' limit extraction toolchain
+=============================
+Sébastien Brochet <s.brochet@ipnl.in2p3.fr>
+30 novembre 2012
+
+Cette documentation devrait vous permettre d'utiliser la toolchain pour extraire les limites pour l'analyse Z'
+
+Extractor2Dataset
+-----------------
+La première étape consiste à transformer la sortir d'+Extractor+ en +TTree+. Pour cela, il suffit d'utiliser l'utilitaire +Extractor2Dataset+ (dans le dossier +Extractor2Dataset+) 
+
+.Usage
+----
+./extractor2Dataset  {--input-list <string>|-i <string>} {--data|--mc}
+                     [--pileup <string>] [--type <string>] -o <string>
+                     [--] [--version] [-h]
+----
+Deux helpers sont disponibles, +extractData.py+ et +extractMC.py+. Pour les utiliser, il suffit de mettre les fichiers mergés qui sortient d'+Extractor+ dans le dossier +input+, d'éditer les scripts pour vérifier les noms de fichiers, et de lancer.
+
+[NOTE]
+====
+Dans +extractMC.py+, les noms de fichiers doivent comporter un *%s*, qui sera automatiquement remplacé par *semie* et *semimu*
+====
+
+[NOTE]
+====
+Dans +extractData.py+, chaque input pointe vers un fichier texte qui doit contenir une liste de fichier (une liste pour les data semi-mu, et une liste pour les data semi-e)
+====
+
+Les fichiers root obtenus comportent trois +TTree+, +dataset_0btag+, +dataset_1btag+ et +dataset_2btag+. Dans chaque tree, il y a trois branches :
+
+* +mtt+: la masse latexmath:[$t\bar{t}$] reconstruite
+* +weight+: le poids associé à chaque événements (pileup reweighting, etc.)
+* +lepton_type+: 11 pour électrons, 13 pour muons
+
+Commencer une nouvelle analyse
+------------------------------
+Afin de pouvoir tourner plusieurs analyses en parallèle, il est nécessaire avant toute chose de commencer une nouvelle analyse.
+
+.startAnalysis.py
+Cet utilitaire permet de démarrer une nouvelle analyse. Plusieurs questions vous seront posées, auquelles il faudra répondre (nom, systématiques, etc.). Un identifiant unique (+UUID+) sera généré par l'utilitaire. Cet identifiant permettra d'identifier l'analyse en cours par la suite.
+
+Toutes les valeurs calculées par la suite seront liées à cette analyse.
+
+NOTE: Les analyses sont stockées dans le fichier +analysis.json+
+
+.setCurrentAnalysis.py
+Cet utilitaire permet de définir l'analyse en cours. Une liste de toutes les analyses disponibles est affichée à l'écran, et l'utilisateur est invité a choisir quelle analysis définir comme active.
+
+Une fois une nouvelle analyse créée, il est temps de passer au fit du signal.
+
+Avant propos
+------------
+Tous les utilitaires dans les sections à venir partagent certaines propriétés en commun:
+
+* Un flag +-h+ est disponible, qui liste les options disponible
+* *Tous* les utilitaires attendent en entrée le flag +-i+, qui permet d'indiquer quel dataset (fichier root) utiliser.
+* *Tous* les utilitaires possèdent un flag +--b-tag+, qui permet de choisir pour quel b-tag calculer les valeurs.
+
+NOTE: Pour le moment, indiquer comme valeur de b-tag 3 permet de lancer l'analyse combinée (0 + 1 + 2 b-tag) (uniquement pour +fitMtt+)
+
+Configurer l'environnement
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Afin d'avoir les bonnes versions de root, gcc et python, il est nécessaire de sourcer un script bash:
+
+[source,bash]
+----
+source setup_lyoserv_env.sh
+----
+
+************************************************
+Sous +lxplus+
+[source,bash]
+source setup_lxplus_env.sh
+************************************************
+
+[[fit-signal]]
+Fit du signal
+-------------
+Cet utilitaire permet de fitter le signal par une PDF choisie par l'utilisateur. Le choix de la PDF se fait dans le fichier +fit_configuration/frit_pdf.json+ (peut être changé à l'aide du flag +--config-file+)
+
+.fritSignal
+----
+./fritSignal  {--input-list <string>|-i <string>} [--config-file
+              <string>] --b-tag <int> -m <integer> [--jec <string>] [--]
+              [--version] [-h]
+----
+
+Le fit est automatique. La configuration est lue depuis le fichier +fit_configuration/frit_pdf.json+ par défaut, dont voici un exemple de contenu :
+
+----
+{
+  "muon": {
+    "signal": {
+      "name": "crystalball",
+      "parameters": "crystalball_mu"
+    },
+    "background": {
+      "name": "exp",
+      "parameters": "exp_mu"
+    }
+  },
+  "electron": {
+    "signal": {
+      "name": "keyspdf",
+      "parameters": "none"
+    },
+    "background": {
+      "name": "exp",
+      "parameters": "exp_e"
+    }
+  }
+}
+----
+
+Pour chaque catégorie (+muon+ ou +electron+), la PDF à utiliser est spécifiée dans la catégorie +signal+ ou +background+. Pour chaque PDF, il faut spécifier:
+
+* +name+: le nom de la PDF à utiliser. La liste des PDF disponible peut être trouver dans le fichier +Functions.h+, dans la fonction +getPdf()+. Pour ajouter une PDF, voir la section <<create-pdf,Ajouter votre propre PDF>>
+
+* +parameters+: le nom du set de paramètres à utiliser pour la PDF. Les paramètres sont spécifiés dans le fichier +fit_configuration/pdf_parameters.json+.
+
+.fit pour un Z' à 750 GeV, pour 1 jet b-taggué et la configuration par défaut
+----
+./fritSignal -m 750 --b-tag 1 \
+    -i ../Extractor2Dataset/MTT_Zprime_750_Narrow_2012_08Nov_merged.root
+----
+
+NOTE: Le nombre d'événements de signal, le chi2 et les erreurs sont sauvegardés dans le fichier +frit_efficiencies.json+
+
+NOTE: Les PDF fittées sont sauvegardées sous forme de +RooWorkspace+ (nommé +w+), dans des fichiers root à l'intérieur du dossier +frit/+ (+frit/*_workspace.root+)
+
+NOTE: Il est nécessaire de lancer le fit sur le signal pour tous les points de masses, pour chaque b-tag et pour chaque JEC.
+
+Efficacités
+-----------
+
+Avant de pouvoir extraire les sections efficaces, il faut calculer les efficacités de sélection. Pour cela, il y a l'utilitaire +computeEff+
+
+.computeEff
+----
+./computeEff  [--b-tag <int>] [--] [--version] [-h]
+----
+
+WARNING: Les efficacités HLT, et le nombre d'événements dans chaque dataset Z' sont hard-codés dans le code.
+
+[NOTE]
+====
+Les efficacités sont sauvegardés dans le fichier +efficiencies.json+, sous la forme:
+----
+"JEC" : [
+               Efficacité de selection semi-mu,
+               Efficacité de selection semi-e,
+               Efficacité de trigger semi-mu,
+               Efficacité de trigger semi-e,
+               Erreur sur efficacité de selection semi-mu,
+               Erreur sur efficacité de selection semi-e,
+               Erreur sur efficacité de trigger semi-mu,
+               Erreur sur efficacité de trigger semi-e
+            ]
+----
+====
+
+Extraction des sections efficaces de référence (nominale)
+---------------------------------------------------------
+
+Configuration du fit
+~~~~~~~~~~~~~~~~~~~~
+Avant de commencer, Il est nécessaire de choisir quelles PDFs seront utilisées lors du fit sur les données. Le fichier de configuration utilisé par défaut est +fit_configuration/fit_pdf_faltb.json+.
+
+.Extrait du fichier de configuration
+----
+{
+  "muon": {
+    "background": {
+      "name": "faltB",
+      "parameters": "faltB"
+    }
+  },
+  "electron": {
+    "background": {
+      "name": "faltB",
+      "parameters": "faltB"
+    }
+  }
+}
+----
+
+La syntaxe du fichier est identique au fichier décrit dans la section <<fit-signal,Fit du signal>>. Il n'y a pas besoin de section +signal+ ici, puisque les PDFs sont chargées directement depuis les workspaces créés lors du fit du signal.
+
+Calcul des sections efficaces
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+L'utilitaire utilisé ici est +computeSigmaRef+.
+
+.computeSigmaRef
+----
+   ./computeSigmaRef  {--input-list <string>|-i <string>} [--b-tag
+                      <integer>] [--muons-only] [-m <integer>] ...  [--]
+                      [--version] [-h]
+----
+
+IMPORTANT: Vous devez passer en entrée le dataset des données.
+
+NOTE: Les sections efficaces sont stockées dans le fichier +sigma_reference.json+.
+
+TIP: Si vous ne spécifiez pas le flag +-m+, les sections efficaces sont extraites pour toutes les masses.
+
+Systématiques
+-------------
+Les étapes nécessaires dans cette section dépend directement des réponses données lors de la création de la nouvelle analyse. Si vous n'avez pas demandez de systématique, cette étape est inutile, et vous pouvez passer directement à l'étape du <<likelihood-scan,likelihood scan>>.
+
+Signal
+~~~~~~
+Deux cas peuvent se présenter, suivant la PDF utiliser pour le fit du signal
+
+RooKeysPdf
+^^^^^^^^^^^
+L'utilitaire a utiliser dans ce cas est +computeKeysPdfSyst+.
+
+.computeKeysPdfSyst
+----
+   ./computeKeysPdfSyst  {--input-list <string>|-i <string>}
+                         [--dont-extract] [--b-tag <integer>] -m <integer>
+                         [--muons-only] --signal <string> [--] [--version]
+                         [-h]
+----
+
+CAUTION: Le dataset passé avec le flag +-i+ doit être celui des données, et pas du signal.
+
+En plus du flag +-i+, le flag +--signal+ doit être spécifié, et il doit pointer vers le dataset du signal.
+
+.systématiques pour un Z' de 1250 GeV
+----
+./computeKeysPdfSyst -m 1250 -i ../Extractor2Dataset/MTT_Data_merged_2012.root
+  --signal ../Extractor2Dataset/MTT_Zprime_1250_Narrow_2012_08Nov_merged.root
+----
+
+[NOTE]
+====
+Les résultats du calcul sont stockés dans les fichiers +<analysis_name>_systematics_<mass>_*.root+.
+
+ * Les fichier +*_fits.root+ contiennent les pull, la distribution de sigma et les residuals
+ * Les fichier +*_pdf.root+ contiennent les +RooKeysPdf+ générées pour chaque toy, en plus du dataset généré. Deux macros sont fournies pour plotter en superposés toutes les +RooKeysPdf+ (+plotOverlaidKeysPdf.c+) ou les datasets (+plotOverlaidDataset.c+).
+
+.Exemple d'utilisation de la macro +plotOverlaidKeysPdf.c+
+----
+root -l keyspdf_systematics_1250_2_btag_pdf.root plotOverlaidKeysPdf.c
+----
+====
+
+NOTE: Les systématiques sont stockées dans le fichier +systematics.json+
+
+Autre chose
+^^^^^^^^^^^
+Avec une autre PDF paramétrisée, le calcul des systématiques est différent. L'utilitaire dans ce cas est +computeSignalSyst+.
+
+.computeSignalSyst
+----
+./computeSignalSyst  {--input-list <string>|-i <string>} [--b-tag
+                     <integer>] [-m <integer>] ...  [--dont-extract]
+                     [--muons-only] [--] [--version] [-h]
+----
+
+WARNING: Les paramètres à faire varier lors du calcul sont hard-codés dans l'utilitaire.
+
+TIP: Si aucune masse n'est spécifiée (pas de flag +-m+), le calcul est lancé sur les 4 points de masse.
+
+
+Background
+~~~~~~~~~~
+L'utilitaire a utiliser ici est +computeBkgSyst+.
+
+.computeBkgSyst
+----
+./computeBkgSyst  {--input-list <string>|-i <string>} [--b-tag
+                  <integer>] [-m <integer>] ...  [--dont-extract]
+                  [--muons-only] [--] [--version] [-h]
+----
+
+Le principe consiste a changer la PDF qui fit le bruit de fond par une autre. Pour cela, l'utilitaire s'attend a trouver dans le dossier +fit_configuration/+ un fichier +fit_pdf_<pdf_name>.json+, qui décrit quelles PDFs utiliser (la liste des +<pdf_name>+ est hard-codée).
+
+A l'heure de l'écriture de cette documentation, seule +f~alt~+ est utilisée pour le calcul de la systématique. 
+
+WARNING: La liste des fonctions a utiliser pour le calcul de cette systématique est hard-codé.
+
+TIP: Si aucune masse n'est spécifiée (pas de flag +-m+), le calcul est lancé sur les 4 points de masse.
+
+NOTE: Les systématiques sont sauvegardées dans le fichier +systematics.json+
+
+JEC
+~~~
+Pour calculer cette systématique, il est nécessaire de posséder les datasets _extraits_ avec la _JEC_ +up+ et +down+. L'utilitaire est +computeJECSyst+
+
+.computeJECSyst
+----
+./computeJECSyst  {--input-list <string>|-i <string>} [--b-tag
+                  <integer>] [-m <integer>] ...  [--dont-extract]
+                  [--muons-only] [--] [--version] [-h]
+----
+
+IMPORTANT: Vous devez avoir au préable tourné +fritSignal+ avec les options +--jec up+ et +--jec down+
+
+TIP: Si aucune masse n'est spécifiée (pas de flag +-m+), le calcul est lancé sur les 4 points de masse.
+
+NOTE: Les systématiques sont sauvegardées dans le fichier +systematics.json+
+
+[[likelihood-scan]]
+Limites observées - Likelihood scan
+-----------------------------------
+Une fois les systématiques calculées, on peut lancer le likelihood scan. L'utilitaire est +runLikelihoodScan+.
+
+.runLikelihoodScan
+----
+./runLikelihoodScan  {--input-list <string>|-i <string>} [--b-tag <int>]
+                     [--only-lumi-syst] [--muons-only] [-m <integer>]
+                     ...  [--] [--version] [-h]
+----
+
+NOTE: Les résultats du scan sont stockés dans le fichier +likelihood_scan.json+
+
+TIP: Si aucune masse n'est spécifiée (pas de flag +-m+), le calcul est lancé sur les 4 points de masse.
+
+Limites attendues - Toys
+------------------------
+Il reste maintenant à lancer les toys pour calculer les limites attendues. Il faut pour cela se rendre dans le dossier +toys/+.
+
+On utilisera +ganga+ pour lancer les toys, à l'aide du script +submitjobs.py+.
+
+.submitjobs.py
+----
+./submitjobs.py  -i <string> --b-tag <integer>]
+----
+
+.Exemple d'utilisation de ganga
+----
+ganga submitjobs.py -i ../../Extractor2Dataset/MTT_Data_merged_2012.root --b-tag 2
+----
+
+De base, le script lancer 100 jobs par masse (soit 400 jobs au total), pour un total de 1000 jobs par masse. Une fois les jobs soumis, il suffit d'attendre la fin de leur exécution. Pour cela, dans +ganga+, il suffit de lancer régulièrement la commande +jobs+, et d'attendre que tous les jobs soient finis. Une fois terminé, un simple +jobs.remove()+ permet d'effacer la liste.
+
+Le résultat des toys est stocké dans le dossier +results/x-btag+, sous forme d'un fichier root par job (donc 100 fichiers par masse). Il reste maintenant à lancer le script +merge.py+, pour merger ces fichiers en un seul.
+
+.merge.py
+----
+./merge.py [output path]
+----
+
+.Exemple d'utilisation de merge.py
+----
+./merge.py results/2-btag/
+----
+
+Les fichiers sont mergés et supprimés. Il ne reste au final que 4 fichiers, un par masse.
+
+IMPORTANT: Veuillez lire link:http://www.ipnl.in2p3.fr/spip.php?article1427[le guide suivant] afin de configurer correctement ganga pour lyoserv. (il n'y a rien à faire pour lxplus)
+
+NOTE: Le nombre total de toys par masse, et le nombre de jobs par mase sont hard-codés dans le script.
+
+treatToyStuff
+~~~~~~~~~~~~~
+Une fois les toys terminés, il faut extrait les limites attendues. L'utilitaire pour cela est +treatToyStuff+.
+
+.treatToyStuff
+----
+./treatToyStuff  --b-tag <int> [-m <integer>] ...  [--input-path
+                  <string>] [--dont-save] [--dont-write-root] [--]
+                  [--version] [-h]
+----
+
+Le seul argument obligatoire est +--b-tag+. Le script va automatiquement aller chercher les fichiers dans +toys/results/x-btag+, sauf si un autre chemin est spécifié à l'aide du flag +--input-path+.
+
+NOTE: Les limites attendues sont sauvegardées dans le fichier +expected_limits.json+
+
+Courbe de limite
+----------------
+Maintenant que les limites attendues et observées sont extraites, il reste juste à dessiner la courbe de limite. Pour cela, utilisez +drawLimitCurve+.
+
+.drawLimitCurve
+----
+./drawLimitCurve  --b-tag <int> [--] [--version] [-h]
+----
+
+NOTE: La courbe de limite est sauvegardée au format +png+, +pdf+ et +root+ dans le même répertoire, sous la forme +limitCurve_2012_\*.*+
+
+Sauvegarder l'analyze
+---------------------
+Il est possible de créer une sauvegarde de l'analyze au format +pdf+, en utilisant le script +bookmark.py+.
+
+.bookmark.py
+----
+bookmark.py --b-tag BTAG
+----
+
+Le script crée automatiquement un fichier +bookmark_<analysis_name>_<date>.pdf+. A vous de sauvegardez ce fichier quelque part.
+
+[appendix]
+fitMtt
+------
+L'utilitaire principal de l'analyse est +fitMtt+. Commez vous avez pu le voir, jamais vous ne l'avez utilisé. Pourtant, tout les autres utilitaires font appelle à lui d'une manière ou d'une autre.
+
+C'est cet utilitaire qui s'occupe de fitter le fond avec la bonne PDF (donc fond + signal), et d'extraire le nombre d'événements de signal. Il s'occupe aussi du likelihood scan. La liste d'options est longue et compliquée, mais vous n'aurez pas besoin de la plupart. En effet, pour tester une nouvelle PDF, ou simplement voir l'allure d'un fit, aucun paramètre n'est nécessaire si ce n'est la masse (+-m+), et le dataset (+-i+).
+
+.fitMtt
+----
+   ./fitMtt  {--input-list <string>|-i <string>} [--workspace <string>]
+             [--shm-key <integer>] [--shared-memory] [--config-file
+             <string>] [--batch] [-v] [--b-tag <int>] [--only-lumi-syst]
+             [--muons-only] [--bkg-only] [--save-sigma-ref]
+             [--syst-computation] [--eff-file <string>] [--output-path
+             <string>] [--path <string>] [--systCB <string>] [--syst-sign
+             <up|down>] [--syst <nominal|JECup|JECdown>] [--disc-curve]
+             [--index <integer>] [--no-scan-in-toys] [--toys <integer>]
+             [--limit-curve] [--no-figs] [--no-text-files]
+             [--no-root-files] [--scan] [--no-fit] -m <integer> [--]
+             [--version] [-h]
+----
+
+WARNING: Les luminosités dans le canal semi-e et semi-mu sont hard-codées dans la source.
+
+WARNING: Les efficacités de b-tagging, et diverses erreurs sont hard-codées dans la source.
+
+.Exemple d'utilisation de fitMtt - fit à 750 GeV
+----
+./fitMtt -m 750 -i ../Extractor2Dataset/MTT_Zprime_750_Narrow_2012_08Nov_merged.root
+----
+
+[[create-pdf]]
+[appendix]
+Ajouter votre propre PDF
+------------------------
+Il est possible d'ajouter vos propres PDF dans l'analyse. Pour cela, plusieurs étapes :
+
+ . Si votre PDF existe déjà dans +RooFit+, vous pouvez directement passer à l'étape 3.
+ . Premièrement, il faut créer votre PDF. C'est une classe qui doit héritée de +RooAbsPdf+, et implémenter diverses fonctions, dont la fonction +evaluate()+.
+ . Il faut maintenant créer une nouvelle classe qui hérite de +BaseFunction+, soit dans le fichier +SignalFunctions.h+ ou +BackgroundFunctions.h+. Cette classe doit avoir un constructeur qui attends un +const std::string&+ en argument, et une méthode +createPdf(RooRealVar& observable)+.
+   ** Suivant ce que vous voulez faire, vous avez accès aux objets +mParameters+, défini comme +std::map<std::string, std::shared_ptr<RooRealVar>>+, et qui est automatiquement rempli avec les arguments spécifiés dans le fichier +fit_configuration/pdf_parameters.json+, ainsi qu'a +mDataset+, un objet de type +std::shared_ptr<RooDataSet>+, qui pointe vers le dataset en cours (principalement utile pour les +RooKeysPdf+)
+   ** La variable +mIsExtended+ doit être mise à +true+ si votre PDF doit être utilisée seule (sans background associé) au sein d'un +RooExtended+. 
+ . Il reste maintenant a ajouter votre PDF dans la liste des fonctions connues. Pour cela, il faut éditer le fichier +Functions.h+, et ajouter votre PDF dans la fonction +getPdf()+, par exemple :
+
+[source,cpp]
+if (name == "nom_nom")
+    return std::shared_ptr<BaseFunction>(new MaPDF(pdfName));
+
+// vim: set syntax=asciidoc:
