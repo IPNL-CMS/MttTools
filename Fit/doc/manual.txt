@@ -5,6 +5,42 @@ Sébastien Brochet <s.brochet@ipnl.in2p3.fr>
 
 Cette documentation devrait vous permettre d'utiliser la toolchain pour extraire les limites pour l'analyse Z'
 
+Obtenir la toolchain
+--------------------
+La toolchain est hébergée sous git. Vous pouvez avoir un aperçu du repository en allant sur http://ipnl.madalynn.eu/MttAnalysis.git. Pour récupérer la dernière version, il suffit de cloner le repository en local :
+
+[source,bash]
+git clone ssh://git@ipnl.madalynn.eu:2222/MttAnalysis.git
+
+[NOTE]
+====
+Si git vous demande un mot de passe pour l'utilisateur "git" (*à ne pas confondre avec le mot de passe de votre clé SSH*), c'est que vous ne m'avez pas donné votre clé publique ! Il faut donc utiliser la commande :
+
+[source, bash]
+git clone git://ipnl.madalynn.eu/MttAnalysis.git
+
+Il ne sera cependant pas possible de commiter les changements que vous faites. Le repository est en lecture seul.
+====
+
+Un dossier +MttAnalysis+ est maintenant disponible, comportement tous les outils.
+
+Configurer l'environnement
+--------------------------
+
+Afin d'avoir les bonnes versions de root, gcc et python, il est nécessaire de sourcer un script bash:
+
+[source,bash]
+----
+source Fit/setup_lyoserv_env.sh
+----
+
+************************************************
+Sous +lxplus+
+[source,bash]
+source Fit/setup_lxplus_env.sh
+************************************************
+
+
 Extractor2Dataset
 -----------------
 La première étape consiste à transformer la sortir d'+Extractor+ en +TTree+. Pour cela, il suffit d'utiliser l'utilitaire +Extractor2Dataset+ (dans le dossier +Extractor2Dataset+) 
@@ -58,22 +94,6 @@ Tous les utilitaires dans les sections à venir partagent certaines propriétés
 * *Tous* les utilitaires possèdent un flag +--b-tag+, qui permet de choisir pour quel b-tag calculer les valeurs.
 
 NOTE: Pour le moment, indiquer comme valeur de b-tag 3 permet de lancer l'analyse combinée (0 + 1 + 2 b-tag) (uniquement pour +fitMtt+)
-
-Configurer l'environnement
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Afin d'avoir les bonnes versions de root, gcc et python, il est nécessaire de sourcer un script bash:
-
-[source,bash]
-----
-source setup_lyoserv_env.sh
-----
-
-************************************************
-Sous +lxplus+
-[source,bash]
-source setup_lxplus_env.sh
-************************************************
 
 [[fit-signal]]
 Fit du signal

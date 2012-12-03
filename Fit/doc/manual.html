@@ -2079,6 +2079,58 @@ else
 </div>
 </div>
 <div class="sect1">
+<h2 id="_obtenir_la_toolchain">Obtenir la toolchain</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>La toolchain est hébergée sous git. Vous pouvez avoir un aperçu du repository en allant sur <a href="http://ipnl.madalynn.eu/MttAnalysis.git">http://ipnl.madalynn.eu/MttAnalysis.git</a>. Pour récupérer la dernière version, il suffit de cloner le repository en local :</p></div>
+<div class="listingblock">
+<div class="content"><!-- Generator: GNU source-highlight 3.1.7
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>git clone ssh<span style="color: #990000">:</span>//git@ipnl<span style="color: #990000">.</span>madalynn<span style="color: #990000">.</span>eu<span style="color: #990000">:</span><span style="color: #993399">2222</span>/MttAnalysis<span style="color: #990000">.</span>git</tt></pre></div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>Si git vous demande un mot de passe pour l&#8217;utilisateur "git" (<strong>à ne pas confondre avec le mot de passe de votre clé SSH</strong>), c&#8217;est que vous ne m&#8217;avez pas donné votre clé publique ! Il faut donc utiliser la commande :</p></div>
+<div class="listingblock">
+<div class="content"><!-- Generator: GNU source-highlight 3.1.7
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt>git clone git<span style="color: #990000">:</span>//ipnl<span style="color: #990000">.</span>madalynn<span style="color: #990000">.</span>eu/MttAnalysis<span style="color: #990000">.</span>git</tt></pre></div></div>
+<div class="paragraph"><p>Il ne sera cependant pas possible de commiter les changements que vous faites. Le repository est en lecture seul.</p></div>
+</td>
+</tr></table>
+</div>
+<div class="paragraph"><p>Un dossier <span class="monospaced">MttAnalysis</span> est maintenant disponible, comportement tous les outils.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_configurer_l_8217_environnement">Configurer l&#8217;environnement</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Afin d&#8217;avoir les bonnes versions de root, gcc et python, il est nécessaire de sourcer un script bash:</p></div>
+<div class="listingblock">
+<div class="content"><!-- Generator: GNU source-highlight 3.1.7
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><span style="font-weight: bold"><span style="color: #0000FF">source</span></span> Fit/setup_lyoserv_env<span style="color: #990000">.</span>sh</tt></pre></div></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="paragraph"><p>Sous <span class="monospaced">lxplus</span></p></div>
+<div class="listingblock">
+<div class="content"><!-- Generator: GNU source-highlight 3.1.7
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><span style="font-weight: bold"><span style="color: #0000FF">source</span></span> Fit/setup_lxplus_env<span style="color: #990000">.</span>sh</tt></pre></div></div>
+</div></div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_extractor2dataset">Extractor2Dataset</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>La première étape consiste à transformer la sortir d'<span class="monospaced">Extractor</span> en <span class="monospaced">TTree</span>. Pour cela, il suffit d&#8217;utiliser l&#8217;utilitaire <span class="monospaced">Extractor2Dataset</span> (dans le dossier <span class="monospaced">Extractor2Dataset</span>)</p></div>
@@ -2176,26 +2228,6 @@ Un flag <span class="monospaced">-h</span> est disponible, qui liste les options
 </td>
 <td class="content">Pour le moment, indiquer comme valeur de b-tag 3 permet de lancer l&#8217;analyse combinée (0 + 1 + 2 b-tag) (uniquement pour <span class="monospaced">fitMtt</span>)</td>
 </tr></table>
-</div>
-<div class="sect2">
-<h3 id="_configurer_l_8217_environnement">Configurer l&#8217;environnement</h3>
-<div class="paragraph"><p>Afin d&#8217;avoir les bonnes versions de root, gcc et python, il est nécessaire de sourcer un script bash:</p></div>
-<div class="listingblock">
-<div class="content"><!-- Generator: GNU source-highlight 3.1.7
-by Lorenzo Bettini
-http://www.lorenzobettini.it
-http://www.gnu.org/software/src-highlite -->
-<pre><tt><span style="font-weight: bold"><span style="color: #0000FF">source</span></span> setup_lyoserv_env<span style="color: #990000">.</span>sh</tt></pre></div></div>
-<div class="sidebarblock">
-<div class="content">
-<div class="paragraph"><p>Sous <span class="monospaced">lxplus</span></p></div>
-<div class="listingblock">
-<div class="content"><!-- Generator: GNU source-highlight 3.1.7
-by Lorenzo Bettini
-http://www.lorenzobettini.it
-http://www.gnu.org/software/src-highlite -->
-<pre><tt><span style="font-weight: bold"><span style="color: #0000FF">source</span></span> setup_lxplus_env<span style="color: #990000">.</span>sh</tt></pre></div></div>
-</div></div>
 </div>
 </div>
 </div>
@@ -2777,7 +2809,7 @@ http://www.gnu.org/software/src-highlite -->
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-12-02 10:29:41 CET
+Last updated 2012-12-03 11:34:07 CET
 </div>
 </div>
 </body>
