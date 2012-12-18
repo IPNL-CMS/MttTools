@@ -131,7 +131,7 @@ void Extractor2Histos::Loop()
 
     hNTrueInt_nosel->Fill(n_trueInteractions, eventWeight);
 
-    if (!m_triggerPassed) {
+    if (!mIsMC && !m_triggerPassed) {
       continue;
     }
 
