@@ -27,6 +27,6 @@ MTT_Tbar_tW-channel_17Dec12_semimu.root               MTT_Histos_AntiSingleTop_t
 
 MTT_TTJets_MassiveBinDECAY_17Dec12_semimu.root        MTT_Histos_TTbar_semimu.root                                     TTJets_MassiveBinDecay
 
-MTT_DYJetsToLL_M-50_17Dec12_semimu.root               MTT_Histos_Whets_semimu.root                                     WJetsToLNu
+MTT_DYJetsToLL_M-50_17Dec12_semimu.root               MTT_Histos_Wjets_semimu.root                                     WJetsToLNu
 MTT_WJetsToLNu_17Dec12_semimu.root                    MTT_Histos_ZjetsToLL_M-50_semimu.root                            DYJetsToLL_M-50
 end
