@@ -1,5 +1,4 @@
 # Input_file  Output_file Name
-<<<<<<< Updated upstream
 MTT_TTJets_2012_08Nov_semie.root                        MTT_Histos_TTbar_2012_semie.root                              TTJets
 MTT_WJetsToLNu_2012_08Nov_semie.root                    MTT_Histos_Wjets_2012_semie.root                              WJetsToLNu
 MTT_DYJetsToLL_M-50_2012_08Nov_semie.root               MTT_Histos_ZjetsToLL_M-50_2012_semie.root                     DYJetsToLL_M-50
@@ -30,4 +29,3 @@ MTT_RSGluon1500_2012_11Oct_semie.root               MTT_Histos_RSGluon1500_2012_
 MTT_RSGluon1600_2012_11Oct_semie.root               MTT_Histos_RSGluon1600_2012_v1_semie.root                        RSGluon1600
 MTT_RSGluon2000_2012_11Oct_semie.root               MTT_Histos_RSGluon2000_2012_v1_semie.root                        RSGluon2000
 end
-
