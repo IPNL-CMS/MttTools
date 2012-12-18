@@ -4,13 +4,14 @@
 
 enum class PUProfile : uint8_t {
   S6,
-  S7
+  S7,
+  S10
 };
 
 class PUReweighter {
   public:
     PUReweighter(bool isSemiMu, const std::string& mcName);
-    PUReweighter(bool isSemiMu, PUProfile profile = PUProfile::S7);
+    PUReweighter(bool isSemiMu, PUProfile profile = PUProfile::S10);
 
     ~PUReweighter() {
       delete puHisto;
