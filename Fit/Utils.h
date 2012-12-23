@@ -22,8 +22,14 @@ struct SHMFitResults {
   int fit_status;
 };
 
-extern double b_tagging_correction;
-extern double b_tagging_corr_error_relative;
+extern double b_tagging_scale_factor;
+extern double b_tagging_scale_factor_error;
+
+extern double trigger_scale_factor_muons;
+extern double trigger_scale_factor_muons_error;
+
+extern double trigger_scale_factor_electrons;
+extern double trigger_scale_factor_electrons_error;
 
 extern double trigger_correction_muons;
 extern double trigger_corr_muons_error_relative;
@@ -54,4 +60,5 @@ extern bool        analysisUseSignalSyst  (const std::string& base = ".");
 extern bool        analysisUseBkgSyst     (const std::string& base = ".");
 extern bool        analysisUseJECSyst     (const std::string& base = ".");
 
-extern "C" double computeEfficiency(double selEfficiency, double hltEfficiency);
+extern "C" double computeEfficiencyMuons(double selEfficiency, double hltEfficiency);
+extern "C" double computeEfficiencyElectrons(double selEfficiency, double hltEfficiency);

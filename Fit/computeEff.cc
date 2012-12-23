@@ -10,6 +10,9 @@
 
 #include "Utils.h"
 
+#include <TGraphErrors.h>
+#include <TF1.h>
+
 void loadSelection(const std::string& jecType, int btag, const int (&masses)[4], float (&nSelectionMu)[4], float (&errNSelectionMu)[4], float (&nSelectionE)[4], float (&errNSelectionE)[4]) {
 
   Json::Reader reader;
@@ -64,21 +67,106 @@ void loadSelection(const std::string& jecType, int btag, const int (&masses)[4],
   }
 }
 
+class Efficiencies {
+  public: 
+    bool   isInterpolated;
+    int    mass;
+
+    float effTrig_mu;
+    float effTrig_e;
+    float error_effTrig_mu;
+    float error_effTrig_e;
+
+    float selectionEff_mu;
+    float selectionEff_e;
+    float error_selectionEff_mu;
+    float error_selectionEff_e;
+
+    void copy(const Efficiencies& from) {
+      effTrig_mu = from.effTrig_mu;
+      effTrig_e  = from.effTrig_e;
+      error_effTrig_mu = from.error_effTrig_mu;
+      error_effTrig_e  = from.error_effTrig_e;
+
+      selectionEff_mu  = from.selectionEff_mu;
+      selectionEff_e   = from.selectionEff_e;
+      error_selectionEff_mu = from.error_selectionEff_mu;
+      error_selectionEff_e  = from.error_selectionEff_e;
+    }
+
+    Efficiencies(int m) {
+      effTrig_mu = 1.; effTrig_e = 1.;
+      selectionEff_mu = 0; selectionEff_e = 0;
+
+      mass = m;
+      isInterpolated = (mass != 750 && mass != 1000 && mass != 1250 && mass != 1500);
+    }
+
+    Efficiencies() {
+
+    }
+
+    Efficiencies(const Efficiencies& from) {
+      operator=(from);
+    }
+
+    Efficiencies& operator=(const Efficiencies& from) {
+      isInterpolated = from.isInterpolated;
+      mass = from.mass;
+
+      copy(from);
+
+      return *this;
+    }
+
+    Json::Value getAsJSON() {
+      
+      Json::Value array(Json::arrayValue);
+      array.append(selectionEff_mu);
+      array.append(selectionEff_e);
+      array.append(effTrig_mu);
+      array.append(effTrig_e);
+      array.append(error_selectionEff_mu / selectionEff_mu);
+      array.append(error_selectionEff_e / selectionEff_e);
+      array.append(0.009 / effTrig_mu);
+      array.append(0.004 / effTrig_e);
+
+      return array;
+    }
+
+    friend std::ostream& operator<<(std::ostream& stream, const Efficiencies& eff);
+};
+
+std::ostream& operator<<(std::ostream& stream, const Efficiencies& eff) {
+  stream << "M_Z' = " << eff.mass
+    << '\t' << "eff_muon = " << eff.selectionEff_mu << " +/- " << eff.error_selectionEff_mu 
+    << '\t' << "eff_electron = " << eff.selectionEff_e << " +/- " << eff.error_selectionEff_e;
+
+  return stream;
+}
+
 int main(int argc, char** argv) {
 
   try {
     TCLAP::CmdLine cmd("Compute efficiencies", ' ', "0.1");
 
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", false, 2, "int", cmd);
+    TCLAP::ValueArg<std::string> jecArg("", "jec", "Type of JEC", false, "nominal", "nominal/JECup/JECdown", cmd);
 
     cmd.parse(argc, argv);
 
     int btag = btagArg.getValue();
+    std::string jec = jecArg.getValue();
 
     std::stringstream stream;
     stream << btag;
 
     std::string btagStr = stream.str();
+
+    std::map<int, Efficiencies> efficiencies;
+    for (int i = 750; i <= 1500; i += 50) {
+      efficiencies[i] = Efficiencies(i);
+    }
 
     const int M[4] = {750, 1000, 1250, 1500};
 
@@ -140,113 +228,99 @@ int main(int argc, char** argv) {
     }
     std::cout << std::endl;
 
+    for (auto& i: efficiencies) {
+      i.second.effTrig_mu = 1.;
+      i.second.effTrig_e  = 1.;
+      i.second.error_effTrig_mu = 0;
+      i.second.error_effTrig_e  = 0;
+    }
+
     //--- selection efficiencies
     const float N0[4] = {108827, 102411, 96994, 96194};
 
-    float Nsel_mu_nominal[4];
-    float ErrNsel_mu_nominal[4];
-    float Nsel_e_nominal[4];
-    float ErrNsel_e_nominal[4];
-    loadSelection("nominal", btag, M, Nsel_mu_nominal, ErrNsel_mu_nominal, Nsel_e_nominal, ErrNsel_e_nominal);
+    float Nsel_mu[4];
+    float ErrNsel_mu[4];
+    float Nsel_e[4];
+    float ErrNsel_e[4];
+    loadSelection(jec, btag, M, Nsel_mu, ErrNsel_mu, Nsel_e, ErrNsel_e);
 
-    float Nsel_mu_JECup[4];
-    float ErrNsel_mu_JECup[4];
-    float Nsel_e_JECup[4];
-    float ErrNsel_e_JECup[4];
-    loadSelection("JECup", btag, M, Nsel_mu_JECup, ErrNsel_mu_JECup, Nsel_e_JECup, ErrNsel_e_JECup);
+    TGraphErrors e_mu;
+    TGraphErrors e_mu_low;
+    TGraphErrors e_mu_high;
 
-    float Nsel_mu_JECdown[4];
-    float ErrNsel_mu_JECdown[4];
-    float Nsel_e_JECdown[4];
-    float ErrNsel_e_JECdown[4];
-    loadSelection("JECdown", btag, M, Nsel_mu_JECdown, ErrNsel_mu_JECdown, Nsel_e_JECdown, ErrNsel_e_JECdown);
+    TGraphErrors e_e;
+    TGraphErrors e_e_low;
+    TGraphErrors e_e_high;
 
-    float eff_mu[4];
-    float eff_e[4];
-    float s_eff_mu[4];
-    float s_eff_e[4];
-    float eff_mu_JECup[4];
-    float eff_e_JECup[4];
-    float s_eff_mu_JECup[4];
-    float s_eff_e_JECup[4];
-    float eff_mu_JECdown[4];
-    float eff_e_JECdown[4];
-    float s_eff_mu_JECdown[4];
-    float s_eff_e_JECdown[4];
-    std::cout << "---- Selection efficiencies (w/o HLT)----" << std::endl;
-    for (int i=0 ; i<4 ; i++)
-    {
-      eff_mu[i] = Nsel_mu_nominal[i] / N0[i];
-      s_eff_mu[i] = ErrNsel_mu_nominal[i] / N0[i];
-      eff_e[i] = Nsel_e_nominal[i] / N0[i];
-      s_eff_e[i] = ErrNsel_e_nominal[i] / N0[i];
-      std::cout << "nominal M_Z' = " << M[i]
-        << '\t' << "eff_muon = " << eff_mu[i] << " +/- " << s_eff_mu[i] 
-        << '\t' << "eff_electron = " << eff_e[i] << " +/- " << s_eff_e[i] << std::endl;
-      eff_mu_JECup[i] = Nsel_mu_JECup[i]/N0[i];
-      s_eff_mu_JECup[i] = ErrNsel_mu_JECup[i]/N0[i];
-      eff_e_JECup[i] = Nsel_e_JECup[i]/N0[i];
-      s_eff_e_JECup[i] = ErrNsel_e_JECup[i]/N0[i];
-      std::cout << "JECup   M_Z' = " << M[i]
-        << '\t' << "eff_muon = " << eff_mu_JECup[i] << " +/- " << s_eff_mu_JECup[i] 
-        << '\t' << "eff_electron = " << eff_e_JECup[i] << " +/- " << s_eff_e_JECup[i] << std::endl;
-      eff_mu_JECdown[i] = Nsel_mu_JECdown[i]/N0[i];
-      s_eff_mu_JECdown[i] = ErrNsel_mu_JECdown[i]/N0[i];
-      eff_e_JECdown[i] = Nsel_e_JECdown[i]/N0[i];
-      s_eff_e_JECdown[i] = ErrNsel_e_JECdown[i]/N0[i];
-      std::cout << "JECdown M_Z' = " << M[i]
-        << '\t' << "eff_muon = " << eff_mu_JECdown[i] << " +/- " << s_eff_mu_JECdown[i] 
-        << '\t' << "eff_electron = " << eff_e_JECdown[i] << " +/- " << s_eff_e_JECdown[i] << std::endl;
+    TF1 selectionEff_fit_mu("sel_eff_fit_mu", "[0] + [1] * x + [2] * x * x", 750, 1500);
+    TF1* selectionEff_fit_mu_low = (TF1*) selectionEff_fit_mu.Clone();
+    TF1* selectionEff_fit_mu_high = (TF1*) selectionEff_fit_mu.Clone();
+
+    TF1 selectionEff_fit_e("sel_eff_fit_e", "[0] + [1] * x + [2] * x * x", 750, 1500);
+    TF1* selectionEff_fit_e_low = (TF1*) selectionEff_fit_e.Clone();
+    TF1* selectionEff_fit_e_high = (TF1*) selectionEff_fit_e.Clone();
+
+    int index = 0;
+    Efficiencies* lowMass_eff = nullptr;
+    for (auto& i: efficiencies) {
+      Efficiencies& eff = i.second;
+
+      if (! i.second.isInterpolated) {
+        lowMass_eff = &eff;
+
+        eff.selectionEff_mu = Nsel_mu[index] / N0[index];
+        eff.selectionEff_e  = Nsel_e[index] / N0[index];
+        eff.error_selectionEff_mu = ErrNsel_mu[index] / N0[index];
+        eff.error_selectionEff_e = ErrNsel_e[index] / N0[index];
+
+        e_mu.SetPoint(index, i.first, i.second.selectionEff_mu);
+        e_mu.SetPointError(index, 0, i.second.error_selectionEff_mu);
+
+        e_mu_low.SetPoint(index, i.first, i.second.selectionEff_mu - i.second.error_selectionEff_mu);
+        e_mu_high.SetPoint(index, i.first, i.second.selectionEff_mu + i.second.error_selectionEff_mu);
+
+        e_e.SetPoint(index, i.first, i.second.selectionEff_e);
+        e_e.SetPointError(index, 0, i.second.error_selectionEff_e);
+
+        e_e_low.SetPoint(index, i.first, i.second.selectionEff_e - i.second.error_selectionEff_e);
+        e_e_high.SetPoint(index, i.first, i.second.selectionEff_e + i.second.error_selectionEff_e);
+
+        index++;
+      } else {
+        eff.copy(*lowMass_eff);
+      }
     }
-    std::cout << std::endl;
 
-    // nominal
+    e_mu.Fit(&selectionEff_fit_mu, "QR");
+    e_mu_low.Fit(selectionEff_fit_mu_low, "QR");
+    e_mu_high.Fit(selectionEff_fit_mu_high, "QR");
+
+    e_e.Fit(&selectionEff_fit_e, "QR");
+    e_e_low.Fit(selectionEff_fit_e_low, "QR");
+    e_e_high.Fit(selectionEff_fit_e_high, "QR");
+
+    for (auto& i: efficiencies) {
+      Efficiencies& eff = i.second;
+
+      if (i.second.isInterpolated) {
+        eff.selectionEff_mu = selectionEff_fit_mu.Eval(i.first);
+        eff.selectionEff_e  = selectionEff_fit_e.Eval(i.first);
+
+        eff.error_selectionEff_mu = fabs(selectionEff_fit_mu_high->Eval(i.first) - selectionEff_fit_mu_low->Eval(i.first)) / 2.;
+        eff.error_selectionEff_e = fabs(selectionEff_fit_e_high->Eval(i.first) - selectionEff_fit_e_low->Eval(i.first)) / 2.; 
+      }
+    }
 
     Json::Value root;
     getJsonRoot("efficiencies.json", root, false);
-    for (int i=0 ; i<4 ; i++) {
 
+    for (auto& i: efficiencies) {
       std::stringstream ss;
-      ss << M[i];
-
+      ss << i.first;
       std::string mass = ss.str();
 
-      //root[mass]["nominal"] = 
-      Json::Value array(Json::arrayValue);
-      array.append(eff_mu[i]);
-      array.append(eff_e[i]);
-      array.append(eff_trg_mu[i]);
-      array.append(eff_trg_e[i]);
-      array.append(s_eff_mu[i] / eff_mu[i]);
-      array.append(s_eff_e[i] / eff_e[i]);
-      array.append(0.009 / eff_trg_mu[i]);
-      array.append(0.004 / eff_trg_e[i]);
-
-      root[getAnalysisUUID()][mass][btagStr]["nominal"] = array;
-      array.clear();
-
-      array.append(eff_mu_JECup[i]);
-      array.append(eff_e_JECup[i]);
-      array.append(eff_trg_mu[i]);
-      array.append(eff_trg_e[i]);
-      array.append(eff_mu_JECup[i] == 0 ? 0 : s_eff_mu_JECup[i] / eff_mu_JECup[i]);
-      array.append(eff_e_JECup[i] == 0 ? 0 : s_eff_e_JECup[i] / eff_e_JECup[i]);
-      array.append(0.009 / eff_trg_mu[i]);
-      array.append(0.004 / eff_trg_e[i]);
-
-      root[getAnalysisUUID()][mass][btagStr]["JECup"] = array;
-      array.clear();
-
-      array.append(eff_mu_JECdown[i]);
-      array.append(eff_e_JECdown[i]);
-      array.append(eff_trg_mu[i]);
-      array.append(eff_trg_e[i]);
-      array.append(eff_mu_JECdown[i] == 0 ? 0 : s_eff_mu_JECdown[i] / eff_mu_JECdown[i]);
-      array.append(eff_e_JECdown[i] == 0 ? 0 : s_eff_e_JECdown[i] / eff_e_JECdown[i]);
-      array.append(0.009 / eff_trg_mu[i]);
-      array.append(0.004 / eff_trg_e[i]);
-
-      root[getAnalysisUUID()][mass][btagStr]["JECdown"] = array;
+      root[getAnalysisUUID()][mass][btagStr][jec] = i.second.getAsJSON();
+      std::cout << i.second << std::endl;
     }
 
     Json::StyledWriter writer;
@@ -255,26 +329,36 @@ int main(int argc, char** argv) {
     output.close();
     std::cout << "Efficiencies saved as 'efficiences.json'" << std::endl;
 
-    TString noteFilename = TString::Format("efficiencies_table_%s_%d_btag.tex", getAnalysisName().c_str(), btagArg.getValue());
+    if (jec == "nominal") {
+      TString noteFilename = TString::Format("efficiencies_table_%s_%d_btag.tex", getAnalysisName().c_str(), btagArg.getValue());
 
-    // table latex pour la note :
-    std::ofstream latex(noteFilename);
-    latex << "\\mtt & 750 GeV & 1000 GeV & 1250 GeV & 1500 GeV \\\\ " << std::endl;
-    latex << "\\hline" << std::endl;
-    latex << std::setiosflags(std::ios::fixed) << std::setprecision(2) ;
-    latex << "$\\epsilon(Z^{\\prime}), semi-mu$ (\\%)         &  " 
-      << eff_mu[1]*100 << "$\\pm$" << s_eff_mu[0]*100 << " & "
-      << eff_mu[2]*100 << "$\\pm$" << s_eff_mu[1]*100 << " & "
-      << eff_mu[3]*100 << "$\\pm$" << s_eff_mu[2]*100 << " & "
-      << eff_mu[4]*100 << "$\\pm$" << s_eff_mu[3]*100 << " \\\\" << std::endl;
-    latex << "$\\epsilon(Z^{\\prime}), semi-e$ (\\%)          &  " 
-      << eff_e[1]*100 << "$\\pm$" << s_eff_e[0]*100 << " & "
-      << eff_e[2]*100 << "$\\pm$" << s_eff_e[1]*100 << " & "
-      << eff_e[3]*100 << "$\\pm$" << s_eff_e[2]*100 << " & "
-      << eff_e[4]*100 << "$\\pm$" << s_eff_e[3]*100 << " \\\\" << std::endl;
-    latex.close();
+      // table latex pour la note :
+      std::ofstream latex(noteFilename);
+      latex << "\\mtt";
 
-    std::cout << "Latex table saved as '" << noteFilename << "'" << std::endl;
+      for (auto& i: efficiencies) {
+        latex << " & " << i.first << " GeV";
+      }
+
+      latex << "\\\\" << std::endl << "\\hline" << std::endl;
+      latex << std::setiosflags(std::ios::fixed) << std::setprecision(2);
+
+      latex << "$\\epsilon(Z^{\\prime}), semi-mu$ (\\%)";
+      for (auto& i: efficiencies) {
+        latex << " & " << i.second.selectionEff_mu * 100 << " $\\pm$ " << std::setprecision(4) << i.second.error_selectionEff_mu * 100 << std::setprecision(2);
+      }
+      latex << "\\\\" << std::endl;
+
+      latex << "$\\epsilon(Z^{\\prime}), semi-e$ (\\%)"; 
+      for (auto& i: efficiencies) {
+        latex << " & " << i.second.selectionEff_e * 100 << " $\\pm$ " << std::setprecision(4) << i.second.error_selectionEff_e * 100 << std::setprecision(2);
+      }
+      latex << "\\\\" << std::endl;
+
+      latex.close();
+
+      std::cout << "Latex table saved as '" << noteFilename << "'" << std::endl;
+    }
 
   } catch (TCLAP::ArgException& e) {
 

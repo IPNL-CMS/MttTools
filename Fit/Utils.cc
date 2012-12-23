@@ -1,13 +1,30 @@
 #include "Utils.h"
 
-double b_tagging_correction = 0.90; // (0.95^2)
-double b_tagging_corr_error_relative = 0.08; //0.30; 2010
+double b_tagging_scale_factor = 0.963; // See http://cms.cern.ch/iCMS/jsp/openfile.jsp?tp=draft&files=AN2012_470_v3.pdf
+double b_tagging_scale_factor_error = 0.020;
 
-double trigger_correction_muons = 1.; // PRELIMINRAY -- was 0.9946
-double trigger_corr_muons_error_relative = 0.0001;
-double trigger_correction_ele = 1.; //PRELIMINARY!!
-double trigger_corr_ele_error_relative = 0.0001;
+//double b_tagging_correction = 0.90; // (0.95^2)
+//double b_tagging_corr_error_relative = 0.08; //0.30; 2010
 
+double trigger_scale_factor_muons = 1.;
+double trigger_scale_factor_muons_error = 0.;
+
+double trigger_scale_factor_electrons = 1.;
+double trigger_scale_factor_electrons_error = 0.;
+
+double muonID_scale_factor = 1.; //FIXME
+double muonID_scale_factor_error = 0.; //FIXME
+
+double muonIso_scale_factor = 1.; //FIXME
+double muonIso_scale_factor_error = 0.; //FIXME
+
+double electronID_scale_factor = 1.; //FIXME
+double electronID_scale_factor_error = 0.; //FIXME
+
+double electronIso_scale_factor = 1.; //FIXME
+double electronIso_scale_factor_error = 0.; //FIXME
+
+/*
 double muID_correction = 0.997;
 double muID_correction_error_relative = 0.0012;
 double muIso_correction = 0.998;
@@ -17,6 +34,7 @@ double eleID_correction = 1.002;
 double eleID_correction_error_relative = 0.0004;
 double eleIso_correction = 0.9999;
 double eleIso_correction_error_relative = 0.0004;
+*/
 
 bool fileExists(const std::string& filename) {
   struct stat buf;
@@ -77,8 +95,12 @@ char** getSystCLParameters(const std::string& mass, const std::string& file, boo
   return array;
 }
 
-double computeEfficiency(double selEfficiency, double hltEfficiency) {
-  return trigger_correction_muons * muID_correction  * muIso_correction  * b_tagging_correction * selEfficiency * hltEfficiency;
+double computeEfficiencyMuons(double selEfficiency, double hltEfficiency) {
+  return trigger_scale_factor_muons * muonID_scale_factor  * muonIso_scale_factor  * b_tagging_scale_factor * selEfficiency * hltEfficiency;
+}
+
+double computeEfficiencyElectrons(double selEfficiency, double hltEfficiency) {
+  return trigger_scale_factor_electrons * electronID_scale_factor  * electronIso_scale_factor  * b_tagging_scale_factor * selEfficiency * hltEfficiency;
 }
 
 uint32_t getAnalysisIndex(const std::string& base/* = "."*/) {
