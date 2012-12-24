@@ -1199,7 +1199,12 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       maxBTag = 1;
       scriptNamePrefix = "0+1btag";
       break;
+
+    default:
+      minBTag = maxBTag = btag;
   }
+
+  int nCombinedBTag = maxBTag - minBTag;
 
   // configure root
   gROOT->Clear();
@@ -1275,8 +1280,8 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   //double lumi_mu            = 4678. * 1.066; // Original: 4678; +6.6%
   //double lumi_e             = 4682. * 1.066; // Original: 4682; +6.6%
 
-  double lumi_mu = 14825.0;
-  double lumi_e  = 14668.82;
+  double lumi_mu = 16801.751;
+  double lumi_e  = 16803.706;
 
   double s_lumi_mu_percent  = 2.2 / 100.; // 2.2%
 
@@ -1413,25 +1418,25 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   std::map<int, double> eff_mu;
   std::map<int, double> eff_e;
 
-  double selection_efficiency = 0;
+  double total_efficiency = 0;
   
   if (! combine) {
 
-    eff_mu[btag] = computeEfficiency(sel_eff_mu[btag], hlt_eff_mu[btag]);
-    eff_e[btag]  = computeEfficiency(sel_eff_e[btag], hlt_eff_e[btag]);
-    selection_efficiency = eff_mu[btag];
+    eff_mu[btag] = computeEfficiencyMuons(sel_eff_mu[btag], hlt_eff_mu[btag]);
+    eff_e[btag]  = computeEfficiencyElectrons(sel_eff_e[btag], hlt_eff_e[btag]);
+    total_efficiency = eff_mu[btag];
 
   } else {
 
     for (int i = minBTag; i <= maxBTag; i++) {
-      eff_mu[i] = computeEfficiency(sel_eff_mu[i], hlt_eff_mu[i]);
-      eff_e[i]  = computeEfficiency(sel_eff_e[i], hlt_eff_e[i]);
+      eff_mu[i] = computeEfficiencyMuons(sel_eff_mu[i], hlt_eff_mu[i]);
+      eff_e[i]  = computeEfficiencyElectrons(sel_eff_e[i], hlt_eff_e[i]);
     }
 
-    selection_efficiency = eff_mu[2]; // Our parameters is nSig_mu for 2 btag. Use its efficiency for sigma computation
+    total_efficiency = eff_mu[2]; // Our parameters is nSig_mu for 2 btag. Use its efficiency for sigma computation
   }
 
-  std::cout << "Selection efficiency: " << selection_efficiency * 100 << " %" << std::endl;
+  std::cout << "Total efficiency: " << total_efficiency * 100 << " %" << std::endl;
 
   std::map<int, double> s_eff_mu_percent;
   std::map<int, double> s_eff_mu_pb;
@@ -1445,101 +1450,153 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   double s_lumi_mu_pb                   = 0.;
   double b_tagging_corr_error_pb        = 0.;
 
-  double err_sys_pb                     = 0.;
-  double err_sys_events                 = 0.;
-  double err_sys_percent                = 0.;
+  double systematics_error_pb           = 0.;
+  double systematics_error_events       = 0.;
+  double systematics_error_percent      = 0.;
 
   s_lumi_mu_pb = sigma_ref * s_lumi_mu_percent;
-  b_tagging_corr_error_pb = sigma_ref * b_tagging_corr_error_relative;
+  b_tagging_corr_error_pb = sigma_ref * b_tagging_scale_factor_error;
 
-  if (! combine) {
-    s_eff_mu_percent[btag] = sqrt(s_sel_eff_mu[btag] * s_sel_eff_mu[btag]
-        + s_hlt_eff_mu[btag] * s_hlt_eff_mu[btag]
-        + trigger_corr_muons_error_relative * trigger_corr_muons_error_relative
-        + muID_correction_error_relative * muID_correction_error_relative
-        + muIso_correction_error_relative * muIso_correction_error_relative);
+  // Compute systematics errors
+  // Three part, lumi, b-tagging, efficiencies
+  
+  // Lumi
+  double lumi_systematic_relative = s_lumi_mu_percent;
 
-    s_eff_e_percent[btag] = sqrt(s_hlt_eff_e[btag] * s_hlt_eff_e[btag]
-        + trigger_corr_ele_error_relative * trigger_corr_ele_error_relative
-        + eleID_correction_error_relative * eleID_correction_error_relative
-        + eleIso_correction_error_relative * eleIso_correction_error_relative); //dont put the sel eff cause it's already counted in s_eff_mu ?
+  // B-tagging
+  double b_tagging_systematic_relative = (nCombinedBTag * b_tagging_scale_factor + 1) / (b_tagging_scale_factor + 1) * (b_tagging_scale_factor_error / b_tagging_scale_factor);
 
-    s_yield_percent[btag] = sqrt(s_sys_JEC[btag] * s_sys_JEC[btag] + s_sys_PDF[btag] * s_sys_PDF[btag] + s_sys_PDF_CB[btag] * s_sys_PDF_CB[btag]);
+  // Efficiency
+  double trigger_scale_factor_muons_relative = trigger_scale_factor_muons_error / trigger_scale_factor_muons;
+  double trigger_scale_factor_electrons_relative = trigger_scale_factor_electrons_error / trigger_scale_factor_electrons;
 
-    s_yield_pb[btag] = sigma_ref * s_yield_percent[btag];
-    s_eff_mu_pb[btag] = sigma_ref * s_eff_mu_percent[btag];
-    s_eff_e_pb[btag] = sigma_ref * s_eff_e_percent[btag];
+  double muonID_scale_factor_relative = muonID_scale_factor_error / muonID_scale_factor;
+  double muonIso_scale_factor_relative = muonIso_scale_factor_error / muonIso_scale_factor;
 
-    if (ONLY_LUMI_SYST) {
-      std::cout << "WARNING: Using only luminosity error for systematics" << std::endl;
-      err_sys_percent = s_lumi_mu_percent;
-    } else {
-      err_sys_percent = sqrt(
-          s_yield_percent[btag] * s_yield_percent[btag] +
-          s_eff_mu_percent[btag] * s_eff_mu_percent[btag] +
-          s_lumi_mu_percent * s_lumi_mu_percent +
-          b_tagging_corr_error_relative * b_tagging_corr_error_relative +
-          s_eff_e_percent[btag] * s_eff_e_percent[btag]);
-    }
-
-    err_sys_pb = sigma_ref * err_sys_percent;
-    err_sys_events = eff_mu[btag] * lumi_mu * br_semil * err_sys_pb;
-
-  } else {
-
-    // FIXME: Is this even right?!
-
-    if (ONLY_LUMI_SYST)
-      std::cout << "WARNING: Using only luminosity error for systematics" << std::endl;
-
+  double efficiency_muons = hlt_eff_mu[minBTag] * trigger_scale_factor_muons * muonID_scale_factor * muonIso_scale_factor;
+  {
+    double foo = 0.;
     for (int i = minBTag; i <= maxBTag; i++) {
-      s_eff_mu_percent[i] = sqrt(s_sel_eff_mu[i] * s_sel_eff_mu[i]
-          + s_hlt_eff_mu[i] * s_hlt_eff_mu[i]
-          + trigger_corr_muons_error_relative * trigger_corr_muons_error_relative
-          + muID_correction_error_relative * muID_correction_error_relative
-          + muIso_correction_error_relative * muIso_correction_error_relative);
-
-      s_eff_e_percent[i] = sqrt(s_hlt_eff_e[i] * s_hlt_eff_e[i]
-          + trigger_corr_ele_error_relative * trigger_corr_ele_error_relative
-          + eleID_correction_error_relative * eleID_correction_error_relative
-          + eleIso_correction_error_relative * eleIso_correction_error_relative); //dont put the sel eff cause it's already counted in s_eff_mu ?
-
-      s_yield_percent[i] = sqrt(s_sys_JEC[i] * s_sys_JEC[i] + s_sys_PDF[i] * s_sys_PDF[i] + s_sys_PDF_CB[i] * s_sys_PDF_CB[i]);
-
-      s_yield_pb[i] = sigma_ref * s_yield_percent[i];
-      s_eff_mu_pb[i] = sigma_ref * s_eff_mu_percent[i];
-      s_eff_e_pb[i] = sigma_ref * s_eff_e_percent[i];
-
-      if (ONLY_LUMI_SYST) {
-        err_sys_percent += s_lumi_mu_percent;
-      } else {
-        err_sys_percent += sqrt(
-            s_yield_percent[i] * s_yield_percent[i] +
-            s_eff_mu_percent[i] * s_eff_mu_percent[i] +
-            s_lumi_mu_percent * s_lumi_mu_percent +
-            b_tagging_corr_error_relative * b_tagging_corr_error_relative +
-            s_eff_e_percent[i] * s_eff_e_percent[i]);
-      }
-
+      foo += sel_eff_mu[i];
     }
-
-    err_sys_pb     = sigma_ref * err_sys_percent;
-    //err_sys_events = eff_mu[i] * lumi_mu * br_semil * err_sys_pb;
+    efficiency_muons *= foo;
   }
+
+  double efficiency_muons_relative_square = 
+      s_hlt_eff_mu[minBTag] * s_hlt_eff_mu[minBTag] +
+      trigger_scale_factor_muons_relative * trigger_scale_factor_muons_relative +
+      muonID_scale_factor_relative * muonID_scale_factor_relative +
+      muonIso_scale_factor_relative * muonIso_scale_factor_relative;
+
+  /*if (nCombinedBTag == 1) {
+    efficiency_systematic_muons_relative_square += (s_sel_eff_mu[btag] * s_sel_eff_mu[btag]);
+  } else*/ {
+    double top = 0., bottom = 0.;
+    for (int i = minBTag; i <= maxBTag; i++) {
+      top += (s_sel_eff_mu[i] * s_sel_eff_mu[i] * sel_eff_mu[i] * sel_eff_mu[i]);
+      bottom += (sel_eff_mu[i]);
+    }
+    bottom *= bottom;
+    efficiency_muons_relative_square += (top / bottom);
+  }
+
+  double electronID_scale_factor_relative = electronID_scale_factor_error / electronID_scale_factor;
+  double electronIso_scale_factor_relative = electronIso_scale_factor_error / electronIso_scale_factor;
+
+  double efficiency_electrons = hlt_eff_e[minBTag] * trigger_scale_factor_electrons * electronID_scale_factor * electronIso_scale_factor;
+  {
+    double foo = 0.;
+    for (int i = minBTag; i <= maxBTag; i++) {
+      foo += sel_eff_e[i];
+    }
+    efficiency_electrons *= foo;
+  }
+
+  double efficiency_electrons_relative_square = 
+      s_hlt_eff_e[minBTag] * s_hlt_eff_e[minBTag] +
+      trigger_scale_factor_electrons_relative * trigger_scale_factor_electrons_relative +
+      electronID_scale_factor_relative * electronID_scale_factor_relative +
+      electronIso_scale_factor_relative * electronIso_scale_factor_relative;
+
+  /*if (nCombinedBTag == 1) {
+    efficiency_systematic_electrons_relative_square += (s_sel_eff_e[btag] * s_sel_eff_e[btag]);
+  } else*/ {
+    double top = 0., bottom = 0.;
+    for (int i = minBTag; i <= maxBTag; i++) {
+      top += (s_sel_eff_e[i] * s_sel_eff_e[i] * sel_eff_e[i] * sel_eff_e[i]);
+      bottom += (sel_eff_e[i]);
+    }
+    bottom *= bottom;
+    efficiency_electrons_relative_square += (top / bottom);
+  }
+
+  double efficiency_systematic_relative_square = (
+      (efficiency_muons * efficiency_muons * efficiency_muons_relative_square + efficiency_electrons * efficiency_electrons * efficiency_electrons_relative_square) /
+      ((efficiency_muons + efficiency_electrons) * (efficiency_muons + efficiency_electrons))
+      );
+
+  double selection_systematic_relative = sqrt(lumi_systematic_relative * lumi_systematic_relative + b_tagging_systematic_relative * b_tagging_systematic_relative + efficiency_systematic_relative_square);
+
+  double yield_efficiency_relative_square = 0.;
+  for (int i = minBTag; i <= minBTag; i++) {
+     yield_efficiency_relative_square += s_sys_JEC[i] * s_sys_JEC[i] + s_sys_PDF[i] * s_sys_PDF[i] + s_sys_PDF_CB[i] * s_sys_PDF_CB[i];
+  }
+
+  if (ONLY_LUMI_SYST) {
+    std::cout << Bash::set_color(Bash::Color::RED) << "WARNING: Using only luminosity error for systematics" << Bash::set_color() << std::endl;
+    systematics_error_percent = lumi_systematic_relative;
+  } else {
+    systematics_error_percent = sqrt(
+        yield_efficiency_relative_square +
+        selection_systematic_relative * selection_systematic_relative
+        );
+  }
+
+  systematics_error_pb = sigma_ref * systematics_error_percent;
+  systematics_error_events = eff_mu[btag > 2 ? 2 : btag] * lumi_mu * br_semil * systematics_error_pb;
 
   if (! useSystematics) {
-    err_sys_percent = err_sys_pb = err_sys_events = 0.;
-    std::cout << "WARNING: Systematics are set to 0." << std::endl;
+    systematics_error_pb = systematics_error_events = systematics_error_percent = 0.;
+    std::cout << Bash::set_color(Bash::Color::RED) << "WARNING: Systematics are set to 0." << Bash::set_color() << std::endl;
   }
 
+  std::cout << "Analysis values" << std::endl;
+  std::cout << "Luminosity: " << lumi_mu << " /pb" << std::endl;
+  std::cout << "Reference cross-section: " << sigma_ref << " pb" << std::endl;
+  std::cout << "Total efficiency (selection * trigger * SFs): " << total_efficiency * 100 << " %" << std::endl;
+
+  std::cout << "Total systematic errors: ";
+
+  if (! useSystematics)
+    std::cout << Bash::set_color(Bash::Color::RED);
+
+  std::cout << systematics_error_events << " events ; " << systematics_error_pb << " pb ; " << systematics_error_percent << " %";
+
+  if (! useSystematics)
+    std::cout << Bash::set_color();
+
+  std::cout << "Systematic details: " << std::endl;
+
+  std::cout << " - Yield: " << std::endl;
+
+  double err_base = eff_mu[btag] * lumi_mu * br_semil;
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << Bash::set_color(Bash::Color::BLUE) << " - Yield for " << i << " b-tag" << Bash::set_color() << std::endl;
+
+    std::cout << "    - JEC: " << err_base * sigma_ref * s_sys_JEC[i] << " events ; " << sigma_ref * s_sys_JEC[i] << " pb ; " << s_sys_JEC[i]  * 100 << " %" << std::endl;
+    std::cout << "    - Bkg PDF: " << err_base * sigma_ref * s_sys_PDF[i] << " events ; " << sigma_ref * s_sys_PDF[i] << " pb ; " << s_sys_PDF[i] * 100 << " %" << std::endl;
+    std::cout << "    - Signal PDF: " << err_base * sigma_ref * s_sys_PDF_CB[i] << " events ; " << sigma_ref * s_sys_PDF_CB[i] << " pb ; " << s_sys_PDF_CB[i] * 100 << " %" << std::endl;
+    std::cout << std::endl;
+  }
+
+  /*
   // Output systematics error
   if (! combine) {
     std::cout << std::endl;
 
     double err_base = eff_mu[btag] * lumi_mu * br_semil;
-    std::cout << "Reference cross-section: " << sigma_ref << " pb" << std::endl;
     std::cout << "Efficiencies: " << std::endl;
-    std::cout << " - Eff: " << selection_efficiency * 100 << " %" << std::endl;
+    std::cout << " - Eff: " << total_efficiency * 100 << " %" << std::endl;
     std::cout << " - Lumi mu: " << lumi_mu << " /pb" << std::endl;
     std::cout << std::endl;
     std::cout << "Total syst errors: ";
@@ -1554,10 +1611,11 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
     std::cout << std::endl;
 
+
     std::cout << " - Eff mu: " << err_base * s_eff_mu_pb[btag] << " events ; " << s_eff_mu_pb[btag] << " pb ; " << s_eff_mu_percent[btag] * 100 << " %" << std::endl;
     std::cout << " - Eff e: " << err_base * s_eff_e_pb[btag] << " events ; " << s_eff_e_pb[btag] << " pb ; " << s_eff_e_percent[btag] * 100 << " %" << std::endl;
     std::cout << " - Lumi mu: " << err_base * s_lumi_mu_pb << " events ; " << s_lumi_mu_pb << " pb ; " << s_lumi_mu_percent * 100 << " %" << std::endl;
-    std::cout << " - B-tagging: " << err_base * b_tagging_corr_error_pb << " events ; " << b_tagging_corr_error_pb << " pb ; " << b_tagging_corr_error_relative * 100 << " %" << std::endl;
+    std::cout << " - B-tagging: " << err_base * b_tagging_corr_error_pb << " events ; " << b_tagging_corr_error_pb << " pb ; " << b_tagging_scale_factor_error * 100 << " %" << std::endl;
     std::cout << " - Yield: " << std::endl;
     std::cout << "    - JEC: " << err_base * sigma_ref * s_sys_JEC[btag] << " events ; " << sigma_ref * s_sys_JEC[btag] << " pb ; " << s_sys_JEC[btag]  * 100 << " %" << std::endl;
     std::cout << "    - Bkg PDF: " << err_base * sigma_ref * s_sys_PDF[btag] << " events ; " << sigma_ref * s_sys_PDF[btag] << " pb ; " << s_sys_PDF[btag] * 100 << " %" << std::endl;
@@ -1567,6 +1625,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     std::cout << std::endl << Bash::set_color(Bash::Color::RED) << "Systematics are not yet implemented for combined analysis !!" << Bash::set_color() << std::endl << std::endl;
     err_sys_events = err_sys_pb = 0;
   }
+  */
 
   //exit(0);
 
@@ -1774,9 +1833,9 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     }
 
     //FIXME
-    double sigmaZ = nSig.getVal() / (selection_efficiency * lumi_mu * br_semil);
+    double sigmaZ = nSig.getVal() / (total_efficiency * lumi_mu * br_semil);
 
-    double errorqstat = nSig.getError() * nSig.getError() / (selection_efficiency * lumi_mu * br_semil * selection_efficiency * lumi_mu * br_semil);
+    double errorqstat = nSig.getError() * nSig.getError() / (total_efficiency * lumi_mu * br_semil * total_efficiency * lumi_mu * br_semil);
     double errorqtot_pb = errorqstat + s_yield_pb[btag] * s_yield_pb[btag] + b_tagging_corr_error_pb * b_tagging_corr_error_pb + s_eff_mu_pb[btag] * s_eff_mu_pb[btag] + s_lumi_mu_pb * s_lumi_mu_pb;
     double Limit_Z_obs_pb = sigma_ref + 2. * sqrt(errorqtot_pb);
 
@@ -1825,7 +1884,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
       LikelihoodResults results;
       //FIXME. Steps is 2
-      doLikelihoodScan(*datasetToFit, simPdf, nSig, massZprime, fitResult->minNll(), 2, err_sys_events, results);
+      doLikelihoodScan(*datasetToFit, simPdf, nSig, massZprime, fitResult->minNll(), 2, systematics_error_events, results);
 
       TFile likelihoodFile(OUTPUT_PATH + prefix + "_likscan_" + suffix + ".root", "recreate");
       likelihoodFile.cd();
@@ -1857,10 +1916,10 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
       cout << "The Zprime cross section is " << sigmaZ << " +- " << sqrt(errorqtot_pb) << " pb" << endl;
       cout << "The 95% C.L. upper limit on the Zprime cross section is " << Limit_Z_obs_pb << " pb" << endl;
-      cout << "95% prob. limit from scan " << results.scan_limit / (selection_efficiency * lumi_mu * br_semil) << endl;
-      cout << "95% prob. limit from scan with systematics " << results.scan_wsyst_limit / (selection_efficiency * lumi_mu * br_semil) << endl;
-      cout << "95% prob. limit from scan without systematics and prior sigma>0. " << results.scan_cut_limit / (selection_efficiency * lumi_mu * br_semil) << endl;
-      cout << "95% prob. limit from scan with systematics and prior sigma>0. " << results.scan_wsyst_cut_limit / (selection_efficiency * lumi_mu * br_semil) << endl;
+      cout << "95% prob. limit from scan " << results.scan_limit / (total_efficiency * lumi_mu * br_semil) << endl;
+      cout << "95% prob. limit from scan with systematics " << results.scan_wsyst_limit / (total_efficiency * lumi_mu * br_semil) << endl;
+      cout << "95% prob. limit from scan without systematics and prior sigma>0. " << results.scan_cut_limit / (total_efficiency * lumi_mu * br_semil) << endl;
+      cout << "95% prob. limit from scan with systematics and prior sigma>0. " << results.scan_wsyst_cut_limit / (total_efficiency * lumi_mu * br_semil) << endl;
 
       /*
       ofstream outlikscan(OUTPUT_PATH + prefix + "_likscan.txt");
@@ -1873,7 +1932,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       outlikscan.close();
       */
 
-      saveLikelihoodResults(massZprime, btag, results, selection_efficiency * lumi_mu * br_semil);
+      saveLikelihoodResults(massZprime, btag, results, total_efficiency * lumi_mu * br_semil);
 
       results.release();
     }
@@ -2125,8 +2184,8 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       if (nSigVal == 0)
         nSigVal = 0.00000001;
 
-      double sigmaZl = nSigVal / (selection_efficiency * lumi_mu * br_semil);
-      double errorqstatl_pb = nSigErrHi * nSigErrHi / (selection_efficiency * lumi_mu * br_semil * selection_efficiency * lumi_mu * br_semil);
+      double sigmaZl = nSigVal / (total_efficiency * lumi_mu * br_semil);
+      double errorqstatl_pb = nSigErrHi * nSigErrHi / (total_efficiency * lumi_mu * br_semil * total_efficiency * lumi_mu * br_semil);
       double errorqtotl_pb = errorqstatl_pb + s_yield_pb[btag] * s_yield_pb[btag] + b_tagging_corr_error_pb * b_tagging_corr_error_pb + s_eff_mu_pb[btag] * s_eff_mu_pb[btag] + s_lumi_mu_pb * s_lumi_mu_pb;
       double Limit_Z = sigmaZl + 2. * sqrt(errorqtotl_pb);
 
@@ -2143,7 +2202,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
         LikelihoodResults results;
         //FIXME: It's 10 steps
-        doLikelihoodScan(*binnedDatasetForToys, simPdfToyFit, nSig, massZprime, toyFitRes->minNll(), 10, err_sys_events, results);
+        doLikelihoodScan(*binnedDatasetForToys, simPdfToyFit, nSig, massZprime, toyFitRes->minNll(), 10, systematics_error_events, results);
 
         TString dirName = TString::Format("likscans_%s_toy_%d", indexJob.Data(), i);
         toyResFile->mkdir(dirName);
@@ -2157,7 +2216,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
         toyResFile->cd();
 
         //cout << "i fill with: " << results.scan_wsyst_cut_limit / (combined_efficiency * lumi_mu * br_semil) << endl;
-        hLimit_Z->Fill(results.scan_wsyst_cut_limit / (selection_efficiency * lumi_mu * br_semil));
+        hLimit_Z->Fill(results.scan_wsyst_cut_limit / (total_efficiency * lumi_mu * br_semil));
 
         results.release();
       }

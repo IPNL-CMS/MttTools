@@ -31,20 +31,15 @@ extern double trigger_scale_factor_muons_error;
 extern double trigger_scale_factor_electrons;
 extern double trigger_scale_factor_electrons_error;
 
-extern double trigger_correction_muons;
-extern double trigger_corr_muons_error_relative;
-extern double trigger_correction_ele;
-extern double trigger_corr_ele_error_relative;
+extern double muonID_scale_factor;
+extern double muonID_scale_factor_error;
+extern double muonIso_scale_factor;
+extern double muonIso_scale_factor_error;
 
-extern double muID_correction;
-extern double muID_correction_error_relative;
-extern double muIso_correction;
-extern double muIso_correction_error_relative;
-  //
-extern double eleID_correction;
-extern double eleID_correction_error_relative;
-extern double eleIso_correction;
-extern double eleIso_correction_error_relative;
+extern double electronID_scale_factor;
+extern double electronID_scale_factor_error;
+extern double electronIso_scale_factor;
+extern double electronIso_scale_factor_error;
 
 extern bool fileExists(const std::string& filename);
 extern void getJsonRoot(const std::string& filename, Json::Value& root, bool exitOnError = true);
