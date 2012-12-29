@@ -11,7 +11,9 @@
 #include "Utils.h"
 
 #include <TGraphErrors.h>
+#include <TMultiGraph.h>
 #include <TF1.h>
+#include <TCanvas.h>
 
 void loadSelection(const std::string& jecType, int btag, const int (&masses)[4], float (&nSelectionMu)[4], float (&errNSelectionMu)[4], float (&nSelectionE)[4], float (&errNSelectionE)[4]) {
 
@@ -128,8 +130,8 @@ class Efficiencies {
       array.append(effTrig_e);
       array.append(error_selectionEff_mu / selectionEff_mu);
       array.append(error_selectionEff_e / selectionEff_e);
-      array.append(0.009 / effTrig_mu);
-      array.append(0.004 / effTrig_e);
+      array.append(error_effTrig_mu / effTrig_mu);
+      array.append(error_effTrig_e / effTrig_e);
 
       return array;
     }
@@ -138,9 +140,14 @@ class Efficiencies {
 };
 
 std::ostream& operator<<(std::ostream& stream, const Efficiencies& eff) {
-  stream << "M_Z' = " << eff.mass
-    << '\t' << "eff_muon = " << eff.selectionEff_mu << " +/- " << eff.error_selectionEff_mu 
-    << '\t' << "eff_electron = " << eff.selectionEff_e << " +/- " << eff.error_selectionEff_e;
+  stream << "M_Z' = " << eff.mass<< std::endl;
+  stream << "Selection efficiency: "
+    << '\t' << "muon = " << eff.selectionEff_mu << " +/- " << eff.error_selectionEff_mu 
+    << '\t' << "electron = " << eff.selectionEff_e << " +/- " << eff.error_selectionEff_e;
+  stream << std::endl;
+  stream << "Trigger efficiency: "
+    << '\t' << "muon = " << eff.effTrig_mu << " +/- " << eff.error_effTrig_mu 
+    << '\t' << "electron = " << eff.effTrig_e << " +/- " << eff.error_effTrig_e;
 
   return stream;
 }
@@ -170,70 +177,107 @@ int main(int argc, char** argv) {
 
     const int M[4] = {750, 1000, 1250, 1500};
 
+    // HLT efficiencies
+    // See https://docs.google.com/spreadsheet/ccc?key=0AsI4zLOlSqcUdHhiYmFKbDIxY3YwWlJHdE9NSVhMSnc
+    // for details about effiencies
 
-    //--- first compute trigger efficiencies
-    // lumi : cf https://lyosvn.in2p3.fr/cms_top/wiki/Fall11_428
-    const float lumimu_A1 = 211.599;
-    const float lumimu_A2 = 929.748;
-    const float lumimu_A3 = 368.037;
-    const float lumimu_A4 = 412.359;
-    const float lumimu_A5 = 246.527;
-    const float lumimu_B6 = 1698. ;
-    const float lumimu_B7 = 812.470;
-    const float lumimu_tot = lumimu_A1+lumimu_A2+lumimu_A3+lumimu_A4+lumimu_A5+lumimu_B6+lumimu_B7;
+    TGraphErrors trig_e;
+    TGraphErrors trig_e_low;
+    TGraphErrors trig_e_high;
 
-    const float lumie_A1 = 216.240;
-    const float lumie_A2 = 139.078;
-    const float lumie_A3 = 790.670;
-    const float lumie_A4 = 368.017;
-    const float lumie_A5 = 658.886;
-    const float lumie_B6 = 1697. ;
-    const float lumie_B7 = 812.47 ;
-    const float lumie_tot = lumie_A1+lumie_A2+lumie_A3+lumie_A4+lumie_A5+lumie_B6+lumie_B7;
+    TGraphErrors trig_mu;
+    TGraphErrors trig_mu_low;
+    TGraphErrors trig_mu_high;
 
-    // trg efficiencies : cfg mail nicolas
-    const float eff_IsoMu17[4] = {88.3, 84.2, 82.4, 79.3};
-    const float eff_IsoMu17_DiCentralJet30[4] = {87.3, 83.5, 80.1 , 81.8}; 
-    const float eff_IsoMu17_TriCentralJet30[4] = {84.0, 81.8, 78.5, 78.8};
-    const float eff_IsoMu17_TriCentralPFJet30[4] = {84.1, 81.5, 78.2, 77.2};
-
-    const float eff_Ele27_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT[4] = {97.6, 97.5, 97.4, 97.7};
-    const float eff_Ele32_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT[4] = {93.7, 94.6, 95.0, 94.5};
-    const float eff_Ele25_CaloIdVT_TrkIdT_TriCentralJet30[4] = {97.0, 96.6, 96.7, 96.8};
-    const float eff_Ele25_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_TriCentralJet30[4] = {96.6, 97.1, 96.8, 97.}; 
-    const float eff_Ele25_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_TriCentralPFJet30[4] = {96.7, 97.0, 96.5, 96.7};
-
-    // compute integrated trigger efficiencies
-    float eff_trg_mu[4];
-    float eff_trg_e[4];
-    std::cout << "---- HLT efficiencies ----" << std::endl;
-    for (int i=0 ; i < 4 ; i++)
-    {
-      //eff_trg_mu[i]= ( (lumimu_A1 + lumimu_A2) * eff_IsoMu17[i] 
-          //+ (lumimu_A3 + lumimu_A4) * eff_IsoMu17_DiCentralJet30[i] 
-          //+ (lumimu_A5 + lumimu_B6) * eff_IsoMu17_TriCentralJet30[i] 
-          //+ lumimu_B7 * eff_IsoMu17_TriCentralPFJet30[i] 
-          //) / lumimu_tot / 100;
-      eff_trg_mu[i] = 1.; //FIXME
-      //eff_trg_e[i]= ( lumie_A1 * eff_Ele27_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT[i] 
-          //+ lumie_A2 * eff_Ele32_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT[i] 
-          //+ lumie_A3 * eff_Ele25_CaloIdVT_TrkIdT_TriCentralJet30[i] 
-          //+ (lumie_A4 + lumie_A5 + lumie_B6) * eff_Ele25_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_TriCentralJet30[i] 
-          //+ lumie_B7 * eff_Ele25_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_TriCentralPFJet30[i] 
-          //) /lumie_tot / 100;
-      eff_trg_e[i] = 1.; //FIXME
-      std::cout << "M_Z' = " << M[i] 
-        << '\t' << "eff_muon = " << eff_trg_mu[i]  
-        << '\t' << "eff_electron = " << eff_trg_e[i] << std::endl;
-    }
-    std::cout << std::endl;
+    int index = 0;
 
     for (auto& i: efficiencies) {
-      i.second.effTrig_mu = 1.;
-      i.second.effTrig_e  = 1.;
-      i.second.error_effTrig_mu = 0;
-      i.second.error_effTrig_e  = 0;
+
+      if (i.second.isInterpolated)
+        continue;
+
+      switch (i.first) {
+        case 750:
+
+          i.second.effTrig_mu = 0.915380675350528;
+          i.second.effTrig_e  = 0.96626144360191;
+          i.second.error_effTrig_mu = 0.002953712440538;
+          i.second.error_effTrig_e  = 0.001977197511629;
+          break;
+        case 1000:
+
+          i.second.effTrig_mu = 0.919285739933724;
+          i.second.effTrig_e  = 0.96382348703396;
+          i.second.error_effTrig_mu = 0.002772009485335;
+          i.second.error_effTrig_e  = 0.001970065457726;
+          break;
+        case 1250:
+
+          i.second.effTrig_mu = 0.911219301358804;
+          i.second.effTrig_e  = 0.95970579322911;
+          i.second.error_effTrig_mu = 0.002954293566453;
+          i.second.error_effTrig_e  = 0.002040906650861;
+          break;
+        case 1500:
+
+          i.second.effTrig_mu = 0.919850794664936;
+          i.second.effTrig_e  = 0.95589371607159;
+          i.second.error_effTrig_mu = 0.002964341074836;
+          i.second.error_effTrig_e  = 0.00222098605711;
+          break;
+      }
+
+      trig_mu.SetPoint(index, i.first, i.second.effTrig_mu);
+      trig_mu.SetPointError(index, 0., i.second.error_effTrig_mu);
+
+      trig_mu_low.SetPoint(index, i.first, i.second.effTrig_mu - i.second.error_effTrig_mu);
+      trig_mu_low.SetPointError(index, 0., i.second.error_effTrig_mu); // Needed for fit
+      trig_mu_high.SetPoint(index, i.first, i.second.effTrig_mu + i.second.error_effTrig_mu);
+      trig_mu_high.SetPointError(index, 0., i.second.error_effTrig_mu); // Needed for fit
+
+      trig_e.SetPoint(index, i.first, i.second.effTrig_e);
+      trig_e.SetPointError(index, 0., i.second.error_effTrig_e);
+
+      trig_e_low.SetPoint(index, i.first, i.second.effTrig_e - i.second.error_effTrig_e);
+      trig_e_low.SetPointError(index, 0., i.second.error_effTrig_e); // Needed for fit
+      trig_e_high.SetPoint(index, i.first, i.second.effTrig_e + i.second.error_effTrig_e);
+      trig_e_high.SetPointError(index++, 0., i.second.error_effTrig_e); // Needed for fit
+
     }
+
+    TF1 triggerEff_fit_mu("sel_eff_fit_mu", "[0] + [1] * x + [2] * x * x + [3] * x * x * x", 750, 1500);
+    TF1* triggerEff_fit_mu_low = (TF1*) triggerEff_fit_mu.Clone("triggerEff_fit_mu_low");
+    TF1* triggerEff_fit_mu_high = (TF1*) triggerEff_fit_mu.Clone("triggerEff_fit_mu_high");
+
+    TF1 triggerEff_fit_e("sel_eff_fit_e", "[0] + [1] * x + [2] * x * x + [3] * x * x * x", 750, 1500);
+    TF1* triggerEff_fit_e_low = (TF1*) triggerEff_fit_e.Clone("triggerEff_fit_e_low");
+    TF1* triggerEff_fit_e_high = (TF1*) triggerEff_fit_e.Clone("triggerEff_fit_e_high");
+
+    trig_mu.Fit(&triggerEff_fit_mu, "QMR");
+    trig_mu_low.Fit(triggerEff_fit_mu_low, "QMR");
+    trig_mu_high.Fit(triggerEff_fit_mu_high, "QMR");
+
+    trig_e.Fit(&triggerEff_fit_e, "QR");
+    trig_e_low.Fit(triggerEff_fit_e_low, "QR");
+    trig_e_high.Fit(triggerEff_fit_e_high, "QR");
+
+    TCanvas c("c", "c", 800, 800);
+    
+    /*
+    {
+      TMultiGraph *mg = new TMultiGraph();
+
+      mg->Add(&trig_e, "lp");
+      mg->Add(&trig_e_low, "lp");
+      mg->Add(&trig_e_high, "lp");
+
+      mg->Draw("a");
+
+      c.Print("trig_eff.root");
+
+      delete mg;
+    }
+    */
 
     //--- selection efficiencies
     const float N0[4] = {108827, 102411, 96994, 96194};
@@ -253,14 +297,14 @@ int main(int argc, char** argv) {
     TGraphErrors e_e_high;
 
     TF1 selectionEff_fit_mu("sel_eff_fit_mu", "[0] + [1] * x + [2] * x * x", 750, 1500);
-    TF1* selectionEff_fit_mu_low = (TF1*) selectionEff_fit_mu.Clone();
-    TF1* selectionEff_fit_mu_high = (TF1*) selectionEff_fit_mu.Clone();
+    TF1* selectionEff_fit_mu_low = (TF1*) selectionEff_fit_mu.Clone("sel_eff_fit_mu_low");
+    TF1* selectionEff_fit_mu_high = (TF1*) selectionEff_fit_mu.Clone("sel_eff_fit_mu_high");
 
     TF1 selectionEff_fit_e("sel_eff_fit_e", "[0] + [1] * x + [2] * x * x", 750, 1500);
-    TF1* selectionEff_fit_e_low = (TF1*) selectionEff_fit_e.Clone();
-    TF1* selectionEff_fit_e_high = (TF1*) selectionEff_fit_e.Clone();
+    TF1* selectionEff_fit_e_low = (TF1*) selectionEff_fit_e.Clone("sel_eff_fit_e_low");
+    TF1* selectionEff_fit_e_high = (TF1*) selectionEff_fit_e.Clone("sel_eff_fit_e_high");
 
-    int index = 0;
+    index = 0;
     Efficiencies* lowMass_eff = nullptr;
     for (auto& i: efficiencies) {
       Efficiencies& eff = i.second;
@@ -299,6 +343,22 @@ int main(int argc, char** argv) {
     e_e_low.Fit(selectionEff_fit_e_low, "QR");
     e_e_high.Fit(selectionEff_fit_e_high, "QR");
 
+    /*
+    {
+      TMultiGraph *mg = new TMultiGraph();
+
+      mg->Add(&e_mu, "lp");
+      mg->Add(&e_mu_low, "lp");
+      mg->Add(&e_mu_high, "lp");
+
+      mg->Draw("a");
+
+      c.Print("sel_eff.root");
+
+      delete mg;
+    }
+    */
+
     for (auto& i: efficiencies) {
       Efficiencies& eff = i.second;
 
@@ -308,6 +368,12 @@ int main(int argc, char** argv) {
 
         eff.error_selectionEff_mu = fabs(selectionEff_fit_mu_high->Eval(i.first) - selectionEff_fit_mu_low->Eval(i.first)) / 2.;
         eff.error_selectionEff_e = fabs(selectionEff_fit_e_high->Eval(i.first) - selectionEff_fit_e_low->Eval(i.first)) / 2.; 
+
+        eff.effTrig_mu = triggerEff_fit_mu.Eval(i.first);
+        eff.effTrig_e = triggerEff_fit_e.Eval(i.first);
+
+        eff.error_effTrig_mu = fabs(triggerEff_fit_mu_high->Eval(i.first) - triggerEff_fit_mu_low->Eval(i.first)) / 2.;
+        eff.error_effTrig_e = fabs(triggerEff_fit_e_high->Eval(i.first) - triggerEff_fit_e_low->Eval(i.first)) / 2.;
       }
     }
 
@@ -321,6 +387,7 @@ int main(int argc, char** argv) {
 
       root[getAnalysisUUID()][mass][btagStr][jec] = i.second.getAsJSON();
       std::cout << i.second << std::endl;
+      std::cout << std::endl;
     }
 
     Json::StyledWriter writer;
@@ -337,6 +404,8 @@ int main(int argc, char** argv) {
       latex << "\\mtt";
 
       for (auto& i: efficiencies) {
+        if (i.second.isInterpolated)
+          continue;
         latex << " & " << i.first << " GeV";
       }
 
@@ -345,12 +414,16 @@ int main(int argc, char** argv) {
 
       latex << "$\\epsilon(Z^{\\prime}), semi-mu$ (\\%)";
       for (auto& i: efficiencies) {
+        if (i.second.isInterpolated)
+          continue;
         latex << " & " << i.second.selectionEff_mu * 100 << " $\\pm$ " << std::setprecision(4) << i.second.error_selectionEff_mu * 100 << std::setprecision(2);
       }
       latex << "\\\\" << std::endl;
 
       latex << "$\\epsilon(Z^{\\prime}), semi-e$ (\\%)"; 
       for (auto& i: efficiencies) {
+        if (i.second.isInterpolated)
+          continue;
         latex << " & " << i.second.selectionEff_e * 100 << " $\\pm$ " << std::setprecision(4) << i.second.error_selectionEff_e * 100 << std::setprecision(2);
       }
       latex << "\\\\" << std::endl;
