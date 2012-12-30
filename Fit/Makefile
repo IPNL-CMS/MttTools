@@ -39,17 +39,14 @@ SRCS =  $(wildcard *.cc)
 DEPS =  $(patsubst %.cc, %.d, $(wildcard *.cc)) 
 OBJS =  $(patsubst %.cc, %.o, $(wildcard *.cc))
 
-all: reduceDataset reduceDatasetFromData fritSignal fitMtt computeEff computeSignalSyst computeJECSyst computeBkgSyst computeSystPb computeSigmaRef runLikelihoodScan treatToyStuff extractLimits drawLimitCurve computeKeysPdfSyst
+all: fritSignal fitMtt computeEff computeSignalSyst computeJECSyst computeBkgSyst computeSystPb computeSigmaRef runLikelihoodScan treatToyStuff extractLimits drawLimitCurve computeKeysPdfSyst interpolatePdf
 
 # Make the executable
 fitMtt: fitMtt.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) fitMtt.o $(LIBS) $(EXPLLINKLIBS) -o fitMtt
 
-reduceDataset: reduceDataset.o lib/jsoncpp.o
-	$(LD) $(LDFLAGS) $^ $(DYNAMIC_LIBS) $(EXPLLINKLIBS) -o reduceDataset
-
-reduceDatasetFromData: reduceDatasetFromData.o lib/jsoncpp.o
-	$(LD) $(LDFLAGS) $^ $(DYNAMIC_LIBS) $(EXPLLINKLIBS) -o reduceDatasetFromData
+interpolatePdf: interpolatePdf.o lib/jsoncpp.o libUtils
+	$(LD) $(LDFLAGS) interpolatePdf.o $(LIBS) $(EXPLLINKLIBS) -o interpolatePdf
 
 fritSignal: fritSignal.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) fritSignal.o $(LIBS) $(EXPLLINKLIBS) -o fritSignal

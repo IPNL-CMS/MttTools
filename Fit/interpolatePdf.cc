@@ -17,6 +17,7 @@
 #include <TFile.h>
 #include <TLatex.h>
 #include <TChain.h>
+#include <TVectorD.h>
 
 #include <RooRealVar.h>
 #include <RooCategory.h>
@@ -38,6 +39,7 @@
 #include <RooChi2Var.h>
 #include <RooExtendPdf.h>
 #include <RooIntegralMorph.h>
+#include <RooMomentMorph.h>
 
 using namespace RooFit;
 
@@ -100,9 +102,10 @@ void doInterpolation(int mass, const std::string& jec, int btag) {
   highMass_pdf_mu->SetName("highMass_signal_muon");
   highMass_file.Close();
 
-  double alpha = 1. - (double) (mass - lowMass) / (double) (highMass - lowMass);
+  //double alpha = 1. - (double) (mass - lowMass) / (double) (highMass - lowMass);
+  double alpha = (double) (mass - lowMass) / (double) (highMass - lowMass);
 
-  RooRealVar mtt("mtt", "mtt", 750, 2000, "GeV/c^2");
+  RooRealVar mtt("mtt", "mtt", 500, 2000, "GeV/c^2");
   RooRealVar rAlpha("alpha", "alpha", alpha, 0, 1);
 
   mtt.setBins(10, "cache");
@@ -110,8 +113,16 @@ void doInterpolation(int mass, const std::string& jec, int btag) {
 
   // Interpolate
   std::cout << "Interpolate ..." << std::endl;
-  RooIntegralMorph interpolation_muon("signal_muon", "signal_muon", *lowMass_pdf_mu, *highMass_pdf_mu, mtt, rAlpha, true);
-  RooIntegralMorph interpolation_e("signal_electron", "signal_electron", *lowMass_pdf_e, *highMass_pdf_e, mtt, rAlpha, true);
+  //RooIntegralMorph interpolation_muon("signal_muon", "signal_muon", *lowMass_pdf_mu, *highMass_pdf_mu, mtt, rAlpha, true);
+  //RooIntegralMorph interpolation_e("signal_electron", "signal_electron", *lowMass_pdf_e, *highMass_pdf_e, mtt, rAlpha, true);
+  
+  TVectorD hypoMass(2);
+  hypoMass(0) = 0; 
+  hypoMass(1) = 1;
+
+  RooMomentMorph interpolation_muon("signal_muon", "signal_muon", rAlpha, RooArgList(mtt), RooArgList(*lowMass_pdf_mu, *highMass_pdf_mu), hypoMass);
+  RooMomentMorph interpolation_e("signal_electron", "signal_electron", rAlpha, RooArgList(mtt), RooArgList(*lowMass_pdf_e, *highMass_pdf_e), hypoMass);
+  
   std::cout << "Done." << std::endl;
 
   RooWorkspace workspace("w", "Interpolation signal workspace");
