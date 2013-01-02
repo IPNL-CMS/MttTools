@@ -2,6 +2,7 @@
 #include <sys/wait.h>
 #include <fstream>
 #include <cmath>
+#include <unistd.h>
 
 #include <tclap/CmdLine.h>
 #include <json/json.h>
