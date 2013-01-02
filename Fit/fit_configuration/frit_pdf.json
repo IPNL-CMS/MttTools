@@ -1,8 +1,8 @@
 {
   "muon": {
     "signal": {
-      "name": "crystalball",
-      "parameters": "crystalball_mu"
+      "name": "keyspdf",
+      "parameters": "none"
     },
     "background": {
       "name": "exp",
@@ -11,8 +11,8 @@
   },
   "electron": {
     "signal": {
-      "name": "crystalball",
-      "parameters": "crystalball_e"
+      "name": "keyspdf",
+      "parameters": "none"
     },
     "background": {
       "name": "exp",
