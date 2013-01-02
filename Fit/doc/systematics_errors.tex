@@ -1,0 +1,133 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[francais]{babel}
+\usepackage{amsmath}
+
+\title{Systematics errors for $m_{t\bar{t}}$ analysis}
+\author{Sébastien Brochet \and Stéphane Perries \and Viola Sordini}
+
+\begin{document}
+
+\maketitle
+
+\section{$e + \mu$, 2 b-tag}
+
+On a $N = N_e + N_\mu$, avec
+
+\begin{align}
+  N_e &= \sigma_Z \times \mathcal{L}_e \times \Pi_i \left\{ \epsilon_i^{e} \right\} \times \epsilon_{sel}^{e, 2b} \times (SF)_b^2 \\
+  N_\mu &= \sigma_Z \times \mathcal{L}_\mu \times \Pi_i \left\{ \epsilon_i^{\mu} \right\} \times \epsilon_{sel}^{\mu, 2b} \times (SF)_b^2
+\end{align}
+
+avec $\Pi_i \left\{ \epsilon_i  \right\}$ le produit de toutes les efficacités (trigger, isolation, ID, \ldots) excepté celle de selection, et $SF_b$ le scale factor de b-tagging.
+
+On rappelle que
+\begin{align}
+  \Delta N^2 &= \sum_{i}{\left| \frac{\partial N}{\partial a_i} \right|^2 \Delta \left( a_i \right)^2}
+\end{align}
+
+où la somme $i$ porte sur toutes les variables ayant une incertitude associée.
+
+Dans notre cas, on a
+
+\begin{align}
+  N &= \sigma_Z \mathcal{L}_\mu (SF)_b^2 \left( \Pi_i \left\{ \epsilon_i^{e} \right\} \times \epsilon_{sel}^{e, 2b} + \Pi_i \left\{ \epsilon_i^{\mu} \right\} \times \epsilon_{sel}^{\mu, 2b} \right)
+\end{align}
+
+En posant
+
+\begin{align}
+  M &= \Pi_i \left\{ \epsilon_i^{\mu} \right\} \times \epsilon_{sel}^{\mu, 2b} &
+  E &= \Pi_i \left\{ \epsilon_i^{e} \right\} \times \epsilon_{sel}^{e, 2b}
+\end{align}
+
+on obtiens une équation de la forme
+
+\begin{align}
+  N &= \sigma_Z \mathcal{L}_\mu (SF)_b^2 \left( M + E \right)
+\end{align}
+
+qui donne, en calculant l'incertitude
+
+\begin{align}
+  \delta N^2 &= \delta \mathcal{L}^2 + 2 \delta (SF)_b^2 + \frac{M^2 \delta M^2 + E^2 \delta E^2}{\left(M + E\right)^2}
+\end{align}
+
+en ayant posé $\delta A = \frac{\Delta A}{A}$.
+
+
+\section{$e + \mu$, 1 + 2 b-tag}
+
+On a $N = N_e^{1b} + N_\mu^{1b} + N_e^{2b} + M_\mu^{2b}$. En demandant un et uniquement un seul jet de b, on complique le calcul des incertitudes. En effet, en demande deux jets b-taggué ou plus, on a
+
+\begin{align}
+  \epsilon_{sel}^{raw} &= \epsilon_{cut} \times \epsilon_{b}^2
+\end{align}
+
+où $\epsilon_{sel}$ est l'efficacité de sélection que l'on mesure, $\epsilon_{cut}$ est l'efficacité des coupures, et $\epsilon_b$ l'efficacité de b-tagging. L'application des scale factors est trivial et donne
+
+\begin{align}
+  \epsilon_{sel} &= \epsilon_{cut} \times \epsilon_{b}^2 \times (SF)_b^2 \\
+  &= \epsilon_{sel}^{raw} \times (SF)_b^2
+\end{align}
+
+Pour un seul jet b-taggué, la factorsation est plus compliquée. On a en effet\footnote{C'est la probabilité de tagguer un jet multipliée par la probabilité de ne pas tagguer l'autre jet)}
+
+\begin{align}
+  \epsilon_{sel}^{raw} &= \epsilon_{cut} \times 2 \times \epsilon_{b} \times \left( 1 - \epsilon_b \right)
+\end{align}
+
+En appliquant les scale factor, on obtient
+
+\begin{align}
+  \epsilon_{sel} &= \epsilon_{cut} \times 2 \times \epsilon_{b} (SF)_b \times \left( 1 - \epsilon_b \right (SF)_b)\\
+  &= \epsilon_{cut} \times 2 \times \epsilon_{b} \times \left(1 - \epsilon_b \right) \times (SF)_b \frac{1 - \epsilon_b (SF)_b}{1 - \epsilon_b} \\
+  &= \epsilon_{sel}^{raw} \times (SF)_b \frac{1 - \epsilon_b (SF)_b}{1 - \epsilon_b}
+\end{align}
+
+Finalement, on a, en posant $\phi = \epsilon_b$
+
+\begin{align}
+  N_e^{1b} &= \sigma_Z \times \mathcal{L}_e \times \Pi_i \left\{ \epsilon_i^{e} \right\} \times \epsilon_{sel}^{e, 2b} \times (SF)_b\frac{1 - \phi (SF)_b}{1 - \phi} \\
+  N_\mu^{1b} &= \sigma_Z \times \mathcal{L}_\mu \times \Pi_i \left\{ \epsilon_i^{\mu} \right\} \times \epsilon_{sel}^{\mu, 2b} \times (SF)_b\frac{1 - \phi (SF)_b}{1 - \phi} \\
+  \notag \\
+  N_e^{2b} &= \sigma_Z \times \mathcal{L}_e \times \Pi_i \left\{ \epsilon_i^{e} \right\} \times \epsilon_{sel}^{e, 2b} \times (SF)_b^2 \\
+  N_\mu^{2b} &= \sigma_Z \times \mathcal{L}_\mu \times \Pi_i \left\{ \epsilon_i^{\mu} \right\} \times \epsilon_{sel}^{\mu, 2b} \times (SF)_b^2
+\end{align}
+
+On obtient une équation de la forme
+
+\begin{align}
+  N &= \sigma_Z \times \mathcal{L}_\mu \times \left( M + E \right)
+\end{align}
+
+avec
+
+\begin{align}
+  M &= \Pi_i \left\{ \epsilon_i^{\mu} \right\} \left( a + b \right) & 
+  E &= \Pi_i \left\{ \epsilon_i^{e} \right\} \left( c + d \right) \\
+  \text{et avec,} \\
+  a &= \epsilon_{sel}^{\mu, 2b} (SF)_b^2 & b &= \epsilon_{sel}^{\mu, 1b} (SF)_b\frac{1 - \phi (SF)_b}{1 - \phi}
+\end{align}
+
+À noter que $c$ et $d$ sont identique ($\mu \rightarrow e$)
+
+On obtient au final
+
+\begin{align}
+  \delta N^2 &= \delta \mathcal{L}_\mu^2 + \frac{M^2 \delta M^2 + E^2 \delta E^2}{\left(M + E\right)^2}\\
+\end{align}
+avec 
+\begin{align}
+  \delta M^2 &= \sum_i{\delta {\epsilon_i^{\mu}}^2} + \frac{a^2 \delta a^2 + b^2 \delta b^2}{\left(a + b\right)^2} &
+  \delta E^2 &= \sum_i{\delta {\epsilon_i^{e}}^2} + \frac{c^2 \delta c^2 + d^2 \delta d^2}{\left(c + d\right)^2} \\
+  \text{et}\\
+  \delta a^2 &= \delta \left( \epsilon_{sel}^{\mu, 2b} \right)^2 + 2\delta(SF)_b^2 &
+  \delta b^2 &= \delta \left( \epsilon_{sel}^{\mu, 1b} \right)^2 + \left( \frac{1 - 2\phi (SF)_b}{1 - \phi (SF)_b} \right)^2 \delta(SF)_b^2 &
+\end{align}
+
+On obtiens $\delta c^2$ et $\delta d^2$ en effectuant la transformation $\mu \rightarrow e$
+
+\end{document}
