@@ -25,6 +25,9 @@ struct SHMFitResults {
 extern double b_tagging_scale_factor;
 extern double b_tagging_scale_factor_error;
 
+extern double b_tagging_efficiency;
+extern double b_tagging_efficiency_error;
+
 extern double trigger_scale_factor_muons;
 extern double trigger_scale_factor_muons_error;
 

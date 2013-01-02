@@ -3,6 +3,9 @@
 double b_tagging_scale_factor = 0.963; // See http://cms.cern.ch/iCMS/jsp/openfile.jsp?tp=draft&files=AN2012_470_v3.pdf
 double b_tagging_scale_factor_error = 0.020;
 
+double b_tagging_efficiency = 0.68;
+double b_tagging_efficiency_error = 0.;
+
 //double b_tagging_correction = 0.90; // (0.95^2)
 //double b_tagging_corr_error_relative = 0.08; //0.30; 2010
 
