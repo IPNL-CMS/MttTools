@@ -159,6 +159,7 @@ int main(int argc, char** argv) {
 
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", false, 2, "int", cmd);
     TCLAP::ValueArg<std::string> jecArg("", "jec", "Type of JEC", false, "nominal", "nominal/JECup/JECdown", cmd);
+    TCLAP::SwitchArg ignoreInterpolatedArg("", "ignore-interpolated", "Ignore interpolated mass for extrapolation", cmd, false);
 
     cmd.parse(argc, argv);
 
@@ -227,22 +228,23 @@ int main(int argc, char** argv) {
           break;
       }
 
-      trig_mu.SetPoint(index, i.first, i.second.effTrig_mu);
-      trig_mu.SetPointError(index, 0., i.second.error_effTrig_mu);
+      if (! ignoreInterpolatedArg.getValue()) {
+        trig_mu.SetPoint(index, i.first, i.second.effTrig_mu);
+        trig_mu.SetPointError(index, 0., i.second.error_effTrig_mu);
 
-      trig_mu_low.SetPoint(index, i.first, i.second.effTrig_mu - i.second.error_effTrig_mu);
-      trig_mu_low.SetPointError(index, 0., i.second.error_effTrig_mu); // Needed for fit
-      trig_mu_high.SetPoint(index, i.first, i.second.effTrig_mu + i.second.error_effTrig_mu);
-      trig_mu_high.SetPointError(index, 0., i.second.error_effTrig_mu); // Needed for fit
+        trig_mu_low.SetPoint(index, i.first, i.second.effTrig_mu - i.second.error_effTrig_mu);
+        trig_mu_low.SetPointError(index, 0., i.second.error_effTrig_mu); // Needed for fit
+        trig_mu_high.SetPoint(index, i.first, i.second.effTrig_mu + i.second.error_effTrig_mu);
+        trig_mu_high.SetPointError(index, 0., i.second.error_effTrig_mu); // Needed for fit
 
-      trig_e.SetPoint(index, i.first, i.second.effTrig_e);
-      trig_e.SetPointError(index, 0., i.second.error_effTrig_e);
+        trig_e.SetPoint(index, i.first, i.second.effTrig_e);
+        trig_e.SetPointError(index, 0., i.second.error_effTrig_e);
 
-      trig_e_low.SetPoint(index, i.first, i.second.effTrig_e - i.second.error_effTrig_e);
-      trig_e_low.SetPointError(index, 0., i.second.error_effTrig_e); // Needed for fit
-      trig_e_high.SetPoint(index, i.first, i.second.effTrig_e + i.second.error_effTrig_e);
-      trig_e_high.SetPointError(index++, 0., i.second.error_effTrig_e); // Needed for fit
-
+        trig_e_low.SetPoint(index, i.first, i.second.effTrig_e - i.second.error_effTrig_e);
+        trig_e_low.SetPointError(index, 0., i.second.error_effTrig_e); // Needed for fit
+        trig_e_high.SetPoint(index, i.first, i.second.effTrig_e + i.second.error_effTrig_e);
+        trig_e_high.SetPointError(index++, 0., i.second.error_effTrig_e); // Needed for fit
+      }
     }
 
     TF1 triggerEff_fit_mu("sel_eff_fit_mu", "[0] + [1] * x + [2] * x * x + [3] * x * x * x", 750, 1500);
@@ -253,13 +255,15 @@ int main(int argc, char** argv) {
     TF1* triggerEff_fit_e_low = (TF1*) triggerEff_fit_e.Clone("triggerEff_fit_e_low");
     TF1* triggerEff_fit_e_high = (TF1*) triggerEff_fit_e.Clone("triggerEff_fit_e_high");
 
-    trig_mu.Fit(&triggerEff_fit_mu, "QMR");
-    trig_mu_low.Fit(triggerEff_fit_mu_low, "QMR");
-    trig_mu_high.Fit(triggerEff_fit_mu_high, "QMR");
+    if (! ignoreInterpolatedArg.getValue()) {
+      trig_mu.Fit(&triggerEff_fit_mu, "QMR");
+      trig_mu_low.Fit(triggerEff_fit_mu_low, "QMR");
+      trig_mu_high.Fit(triggerEff_fit_mu_high, "QMR");
 
-    trig_e.Fit(&triggerEff_fit_e, "QR");
-    trig_e_low.Fit(triggerEff_fit_e_low, "QR");
-    trig_e_high.Fit(triggerEff_fit_e_high, "QR");
+      trig_e.Fit(&triggerEff_fit_e, "QR");
+      trig_e_low.Fit(triggerEff_fit_e_low, "QR");
+      trig_e_high.Fit(triggerEff_fit_e_high, "QR");
+    }
 
     TCanvas c("c", "c", 800, 800);
     
@@ -317,31 +321,35 @@ int main(int argc, char** argv) {
         eff.error_selectionEff_mu = ErrNsel_mu[index] / N0[index];
         eff.error_selectionEff_e = ErrNsel_e[index] / N0[index];
 
-        e_mu.SetPoint(index, i.first, i.second.selectionEff_mu);
-        e_mu.SetPointError(index, 0, i.second.error_selectionEff_mu);
+        if (! ignoreInterpolatedArg.getValue()) {
+          e_mu.SetPoint(index, i.first, i.second.selectionEff_mu);
+          e_mu.SetPointError(index, 0, i.second.error_selectionEff_mu);
 
-        e_mu_low.SetPoint(index, i.first, i.second.selectionEff_mu - i.second.error_selectionEff_mu);
-        e_mu_high.SetPoint(index, i.first, i.second.selectionEff_mu + i.second.error_selectionEff_mu);
+          e_mu_low.SetPoint(index, i.first, i.second.selectionEff_mu - i.second.error_selectionEff_mu);
+          e_mu_high.SetPoint(index, i.first, i.second.selectionEff_mu + i.second.error_selectionEff_mu);
 
-        e_e.SetPoint(index, i.first, i.second.selectionEff_e);
-        e_e.SetPointError(index, 0, i.second.error_selectionEff_e);
+          e_e.SetPoint(index, i.first, i.second.selectionEff_e);
+          e_e.SetPointError(index, 0, i.second.error_selectionEff_e);
 
-        e_e_low.SetPoint(index, i.first, i.second.selectionEff_e - i.second.error_selectionEff_e);
-        e_e_high.SetPoint(index, i.first, i.second.selectionEff_e + i.second.error_selectionEff_e);
+          e_e_low.SetPoint(index, i.first, i.second.selectionEff_e - i.second.error_selectionEff_e);
+          e_e_high.SetPoint(index, i.first, i.second.selectionEff_e + i.second.error_selectionEff_e);
+        }
 
         index++;
-      } else {
+      } else if (ignoreInterpolatedArg.getValue()) {
         eff.copy(*lowMass_eff);
       }
     }
 
-    e_mu.Fit(&selectionEff_fit_mu, "QR");
-    e_mu_low.Fit(selectionEff_fit_mu_low, "QR");
-    e_mu_high.Fit(selectionEff_fit_mu_high, "QR");
+    if (! ignoreInterpolatedArg.getValue()) {
+      e_mu.Fit(&selectionEff_fit_mu, "QR");
+      e_mu_low.Fit(selectionEff_fit_mu_low, "QR");
+      e_mu_high.Fit(selectionEff_fit_mu_high, "QR");
 
-    e_e.Fit(&selectionEff_fit_e, "QR");
-    e_e_low.Fit(selectionEff_fit_e_low, "QR");
-    e_e_high.Fit(selectionEff_fit_e_high, "QR");
+      e_e.Fit(&selectionEff_fit_e, "QR");
+      e_e_low.Fit(selectionEff_fit_e_low, "QR");
+      e_e_high.Fit(selectionEff_fit_e_high, "QR");
+    }
 
     /*
     {
@@ -359,21 +367,24 @@ int main(int argc, char** argv) {
     }
     */
 
-    for (auto& i: efficiencies) {
-      Efficiencies& eff = i.second;
 
-      if (i.second.isInterpolated) {
-        eff.selectionEff_mu = selectionEff_fit_mu.Eval(i.first);
-        eff.selectionEff_e  = selectionEff_fit_e.Eval(i.first);
+    if (! ignoreInterpolatedArg.getValue()) {
+      for (auto& i: efficiencies) {
+        Efficiencies& eff = i.second;
 
-        eff.error_selectionEff_mu = fabs(selectionEff_fit_mu_high->Eval(i.first) - selectionEff_fit_mu_low->Eval(i.first)) / 2.;
-        eff.error_selectionEff_e = fabs(selectionEff_fit_e_high->Eval(i.first) - selectionEff_fit_e_low->Eval(i.first)) / 2.; 
+        if (i.second.isInterpolated) {
+          eff.selectionEff_mu = selectionEff_fit_mu.Eval(i.first);
+          eff.selectionEff_e  = selectionEff_fit_e.Eval(i.first);
 
-        eff.effTrig_mu = triggerEff_fit_mu.Eval(i.first);
-        eff.effTrig_e = triggerEff_fit_e.Eval(i.first);
+          eff.error_selectionEff_mu = fabs(selectionEff_fit_mu_high->Eval(i.first) - selectionEff_fit_mu_low->Eval(i.first)) / 2.;
+          eff.error_selectionEff_e = fabs(selectionEff_fit_e_high->Eval(i.first) - selectionEff_fit_e_low->Eval(i.first)) / 2.; 
 
-        eff.error_effTrig_mu = fabs(triggerEff_fit_mu_high->Eval(i.first) - triggerEff_fit_mu_low->Eval(i.first)) / 2.;
-        eff.error_effTrig_e = fabs(triggerEff_fit_e_high->Eval(i.first) - triggerEff_fit_e_low->Eval(i.first)) / 2.;
+          eff.effTrig_mu = triggerEff_fit_mu.Eval(i.first);
+          eff.effTrig_e = triggerEff_fit_e.Eval(i.first);
+
+          eff.error_effTrig_mu = fabs(triggerEff_fit_mu_high->Eval(i.first) - triggerEff_fit_mu_low->Eval(i.first)) / 2.;
+          eff.error_effTrig_e = fabs(triggerEff_fit_e_high->Eval(i.first) - triggerEff_fit_e_low->Eval(i.first)) / 2.;
+        }
       }
     }
 
@@ -381,6 +392,10 @@ int main(int argc, char** argv) {
     getJsonRoot("efficiencies.json", root, false);
 
     for (auto& i: efficiencies) {
+
+      if (ignoreInterpolatedArg.getValue() && i.second.isInterpolated)
+        continue;
+
       std::stringstream ss;
       ss << i.first;
       std::string mass = ss.str();
