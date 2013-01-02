@@ -306,11 +306,11 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
   }
 
   if (! log) {
-    canvas->Print((prefix + "_fitCB.pdf").c_str());
-    canvas->Print((prefix + "_fitCB.png").c_str());
+    canvas->Print((prefix + "_fit.pdf").c_str());
+    canvas->Print((prefix + "_fit.png").c_str());
   } else {
-    canvas->Print((prefix + "_fitCB_log.pdf").c_str());
-    canvas->Print((prefix + "_fitCB_log.png").c_str());
+    canvas->Print((prefix + "_fit_log.pdf").c_str());
+    canvas->Print((prefix + "_fit_log.png").c_str());
   }
   
   delete canvas;
