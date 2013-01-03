@@ -58,5 +58,7 @@ extern bool        analysisUseSignalSyst  (const std::string& base = ".");
 extern bool        analysisUseBkgSyst     (const std::string& base = ".");
 extern bool        analysisUseJECSyst     (const std::string& base = ".");
 
-extern "C" double computeEfficiencyMuons(double selEfficiency, double hltEfficiency);
-extern "C" double computeEfficiencyElectrons(double selEfficiency, double hltEfficiency);
+extern "C" double computeEfficiencyMuons_2btag(double selEfficiency, double hltEfficiency);
+extern "C" double computeEfficiencyElectrons_2btag(double selEfficiency, double hltEfficiency);
+extern "C" double computeEfficiencyMuons_1btag(double selEfficiency, double hltEfficiency);
+extern "C" double computeEfficiencyElectrons_1btag(double selEfficiency, double hltEfficiency);

@@ -1422,16 +1422,17 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   
   if (! combine) {
 
-    eff_mu[btag] = computeEfficiencyMuons(sel_eff_mu[btag], hlt_eff_mu[btag]);
-    eff_e[btag]  = computeEfficiencyElectrons(sel_eff_e[btag], hlt_eff_e[btag]);
-    total_efficiency = eff_mu[btag];
+    eff_mu[2] = computeEfficiencyMuons_2btag(sel_eff_mu[2], hlt_eff_mu[2]);
+    eff_e[2]  = computeEfficiencyElectrons_2btag(sel_eff_e[2], hlt_eff_e[2]);
+    total_efficiency = eff_mu[2];
 
   } else {
 
-    for (int i = minBTag; i <= maxBTag; i++) {
-      eff_mu[i] = computeEfficiencyMuons(sel_eff_mu[i], hlt_eff_mu[i]);
-      eff_e[i]  = computeEfficiencyElectrons(sel_eff_e[i], hlt_eff_e[i]);
-    }
+    eff_mu[1] = computeEfficiencyMuons_1btag(sel_eff_mu[1], hlt_eff_mu[1]);
+    eff_e[1]  = computeEfficiencyElectrons_1btag(sel_eff_e[1], hlt_eff_e[1]);
+
+    eff_mu[2] = computeEfficiencyMuons_2btag(sel_eff_mu[2], hlt_eff_mu[2]);
+    eff_e[2]  = computeEfficiencyElectrons_2btag(sel_eff_e[2], hlt_eff_e[2]);
 
     total_efficiency = eff_mu[2]; // Our parameters is nSig_mu for 2 btag. Use its efficiency for sigma computation
   }

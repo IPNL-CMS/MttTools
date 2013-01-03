@@ -95,12 +95,20 @@ char** getSystCLParameters(const std::string& mass, const std::string& file, boo
   return array;
 }
 
-double computeEfficiencyMuons(double selEfficiency, double hltEfficiency) {
-  return trigger_scale_factor_muons * muonID_scale_factor  * muonIso_scale_factor  * b_tagging_scale_factor * selEfficiency * hltEfficiency;
+double computeEfficiencyMuons_2btag(double selEfficiency, double hltEfficiency) {
+  return trigger_scale_factor_muons * muonID_scale_factor * muonIso_scale_factor * b_tagging_scale_factor * b_tagging_scale_factor * selEfficiency * hltEfficiency;
 }
 
-double computeEfficiencyElectrons(double selEfficiency, double hltEfficiency) {
-  return trigger_scale_factor_electrons * electronID_scale_factor  * electronIso_scale_factor  * b_tagging_scale_factor * selEfficiency * hltEfficiency;
+double computeEfficiencyElectrons_2btag(double selEfficiency, double hltEfficiency) {
+  return trigger_scale_factor_electrons * electronID_scale_factor * electronIso_scale_factor * b_tagging_scale_factor * b_tagging_scale_factor * selEfficiency * hltEfficiency;
+}
+
+double computeEfficiencyMuons_1btag(double selEfficiency, double hltEfficiency) {
+  return trigger_scale_factor_muons * muonID_scale_factor * muonIso_scale_factor * selEfficiency * hltEfficiency * b_tagging_scale_factor * ((1. - b_tagging_efficiency * b_tagging_scale_factor) / (1. - b_tagging_efficiency));
+}
+
+double computeEfficiencyElectrons_1btag(double selEfficiency, double hltEfficiency) {
+  return trigger_scale_factor_electrons * electronID_scale_factor * electronIso_scale_factor * selEfficiency * hltEfficiency * b_tagging_scale_factor * ((1. - b_tagging_efficiency * b_tagging_scale_factor) / (1. - b_tagging_efficiency));
 }
 
 uint32_t getAnalysisIndex(const std::string& base/* = "."*/) {
