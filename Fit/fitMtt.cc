@@ -1504,29 +1504,27 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       s_sel_eff_e[minBTag] * s_sel_eff_e[minBTag];
 
   } else if (nCombinedBTag == 2) {
-    const double a = sel_eff_mu[2] * b_tagging_scale_factor * b_tagging_scale_factor;
-    const double b = sel_eff_mu[1] * b_tagging_scale_factor * (1. - b_tagging_efficiency * b_tagging_scale_factor) / (1. - b_tagging_efficiency);
+    const double a = hlt_eff_mu[2] * sel_eff_mu[2] * b_tagging_scale_factor * b_tagging_scale_factor;
+    const double b = hlt_eff_mu[1] * sel_eff_mu[1] * b_tagging_scale_factor * (1. - b_tagging_efficiency * b_tagging_scale_factor) / (1. - b_tagging_efficiency);
 
-    const double c = sel_eff_e[2] * b_tagging_scale_factor * b_tagging_scale_factor;
-    const double d = sel_eff_e[1] * b_tagging_scale_factor * (1. - b_tagging_efficiency * b_tagging_scale_factor) / (1. - b_tagging_efficiency);
+    const double c = hlt_eff_e[2] * sel_eff_e[2] * b_tagging_scale_factor * b_tagging_scale_factor;
+    const double d = hlt_eff_mu[1] * sel_eff_e[1] * b_tagging_scale_factor * (1. - b_tagging_efficiency * b_tagging_scale_factor) / (1. - b_tagging_efficiency);
 
-    const double delta_a_square = s_sel_eff_mu[2] * s_sel_eff_mu[2] + 2 * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
-    const double delta_b_square = s_sel_eff_mu[1] * s_sel_eff_mu[1] + pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
+    const double delta_a_square =  s_hlt_eff_mu[2] * s_hlt_eff_mu[2] * s_sel_eff_mu[2] * s_sel_eff_mu[2] + 2 * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
+    const double delta_b_square = s_hlt_eff_mu[1] * s_hlt_eff_mu[1] * s_sel_eff_mu[1] * s_sel_eff_mu[1] + pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
 
-    const double delta_c_square = s_sel_eff_e[2] * s_sel_eff_e[2] + 2 * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
-    const double delta_d_square = s_sel_eff_e[1] * s_sel_eff_e[1] + pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
+    const double delta_c_square = s_hlt_eff_e[2] * s_hlt_eff_e[2] * s_sel_eff_e[2] * s_sel_eff_e[2] + 2 * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
+    const double delta_d_square = s_hlt_eff_e[1] * s_hlt_eff_e[1] * s_sel_eff_e[1] * s_sel_eff_e[1] + pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
 
-    M = hlt_eff_mu[2] * trigger_scale_factor_muons * muonID_scale_factor * muonIso_scale_factor * (a + b);
-    E = hlt_eff_e[2] * trigger_scale_factor_electrons * electronID_scale_factor * electronIso_scale_factor * (c + d);
+    M = trigger_scale_factor_muons * muonID_scale_factor * muonIso_scale_factor * (a + b);
+    E = trigger_scale_factor_electrons * electronID_scale_factor * electronIso_scale_factor * (c + d);
 
-    delta_M_square = s_hlt_eff_mu[2] * s_hlt_eff_mu[2] +
-      trigger_scale_factor_muons_relative * trigger_scale_factor_muons_relative +
+    delta_M_square = trigger_scale_factor_muons_relative * trigger_scale_factor_muons_relative +
       muonID_scale_factor_relative * muonID_scale_factor_relative +
       muonIso_scale_factor_relative * muonIso_scale_factor_relative +
       ((a * a * delta_a_square + b * b * delta_b_square) / ((a + b) * (a + b)));
 
-    delta_E_square = s_hlt_eff_e[2] * s_hlt_eff_e[2] +
-      trigger_scale_factor_electrons_relative * trigger_scale_factor_electrons_relative +
+    delta_E_square = trigger_scale_factor_electrons_relative * trigger_scale_factor_electrons_relative +
       electronID_scale_factor_relative * electronID_scale_factor_relative +
       electronIso_scale_factor_relative * electronIso_scale_factor_relative +
       ((c * c * delta_c_square + d * d * delta_d_square) / ((c + d) * (c + d)));

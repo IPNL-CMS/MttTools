@@ -90,11 +90,11 @@ En appliquant les scale factor, on obtient
 Finalement, on a, en posant $\phi = \epsilon_b$
 
 \begin{align}
-  N_e^{1b} &= \sigma_Z \times \mathcal{L}_e \times \Pi_i \left\{ \epsilon_i^{e} \right\} \times \epsilon_{sel}^{e, 2b} \times (SF)_b\frac{1 - \phi (SF)_b}{1 - \phi} \\
-  N_\mu^{1b} &= \sigma_Z \times \mathcal{L}_\mu \times \Pi_i \left\{ \epsilon_i^{\mu} \right\} \times \epsilon_{sel}^{\mu, 2b} \times (SF)_b\frac{1 - \phi (SF)_b}{1 - \phi} \\
+  N_e^{1b} &= \sigma_Z \times \mathcal{L}_e \times \Pi_i \left\{ \epsilon_i^{e} \right\} \times \epsilon_{HLT}^{e, 1b} \times \epsilon_{sel}^{e, 1b} \times (SF)_b\frac{1 - \phi (SF)_b}{1 - \phi} \\
+  N_\mu^{1b} &= \sigma_Z \times \mathcal{L}_\mu \times \Pi_i \left\{ \epsilon_i^{\mu} \right\} \times \epsilon_{HLT}^{\mu, 1b} \times \epsilon_{sel}^{\mu, 1b} \times (SF)_b\frac{1 - \phi (SF)_b}{1 - \phi} \\
   \notag \\
-  N_e^{2b} &= \sigma_Z \times \mathcal{L}_e \times \Pi_i \left\{ \epsilon_i^{e} \right\} \times \epsilon_{sel}^{e, 2b} \times (SF)_b^2 \\
-  N_\mu^{2b} &= \sigma_Z \times \mathcal{L}_\mu \times \Pi_i \left\{ \epsilon_i^{\mu} \right\} \times \epsilon_{sel}^{\mu, 2b} \times (SF)_b^2
+  N_e^{2b} &= \sigma_Z \times \mathcal{L}_e \times \Pi_i \left\{ \epsilon_i^{e} \right\} \times \epsilon_{HLT}^{e, 2b} \times \epsilon_{sel}^{e, 2b} \times (SF)_b^2 \\
+  N_\mu^{2b} &= \sigma_Z \times \mathcal{L}_\mu \times \Pi_i \left\{ \epsilon_i^{\mu} \right\} \times \epsilon_{HLT}^{\mu, 2b} \times \epsilon_{sel}^{\mu, 2b} \times (SF)_b^2
 \end{align}
 
 On obtient une équation de la forme
@@ -109,7 +109,7 @@ avec
   M &= \Pi_i \left\{ \epsilon_i^{\mu} \right\} \left( a + b \right) & 
   E &= \Pi_i \left\{ \epsilon_i^{e} \right\} \left( c + d \right) \\
   \text{et avec,} \\
-  a &= \epsilon_{sel}^{\mu, 2b} (SF)_b^2 & b &= \epsilon_{sel}^{\mu, 1b} (SF)_b\frac{1 - \phi (SF)_b}{1 - \phi}
+  a &= \epsilon_{HLT}^{\mu, 2b} \times \epsilon_{sel}^{\mu, 2b} (SF)_b^2 & b &= \epsilon_{HLT}^{\mu, 1b} \times \epsilon_{sel}^{\mu, 1b} (SF)_b\frac{1 - \phi (SF)_b}{1 - \phi}
 \end{align}
 
 À noter que $c$ et $d$ sont identique ($\mu \rightarrow e$)
@@ -123,9 +123,11 @@ avec
 \begin{align}
   \delta M^2 &= \sum_i{\delta {\epsilon_i^{\mu}}^2} + \frac{a^2 \delta a^2 + b^2 \delta b^2}{\left(a + b\right)^2} &
   \delta E^2 &= \sum_i{\delta {\epsilon_i^{e}}^2} + \frac{c^2 \delta c^2 + d^2 \delta d^2}{\left(c + d\right)^2} \\
-  \text{et}\\
-  \delta a^2 &= \delta \left( \epsilon_{sel}^{\mu, 2b} \right)^2 + 2\delta(SF)_b^2 &
-  \delta b^2 &= \delta \left( \epsilon_{sel}^{\mu, 1b} \right)^2 + \left( \frac{1 - 2\phi (SF)_b}{1 - \phi (SF)_b} \right)^2 \delta(SF)_b^2 &
+\end{align}
+et
+\begin{align}
+  \delta a^2 &= \delta \left( \epsilon_{HLT}^{\mu, 2b} \right)^2 \times \delta \left( \epsilon_{sel}^{\mu, 2b} \right)^2 + 2\delta(SF)_b^2\\
+  \delta b^2 &= \delta \left( \epsilon_{HLT}^{\mu, 1b} \right)^2 \times \delta \left( \epsilon_{sel}^{\mu, 1b} \right)^2 + \left( \frac{1 - 2\phi (SF)_b}{1 - \phi (SF)_b} \right)^2 \delta(SF)_b^2
 \end{align}
 
 On obtiens $\delta c^2$ et $\delta d^2$ en effectuant la transformation $\mu \rightarrow e$
