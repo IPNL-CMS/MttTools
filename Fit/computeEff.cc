@@ -197,35 +197,69 @@ int main(int argc, char** argv) {
       if (i.second.isInterpolated)
         continue;
 
-      switch (i.first) {
-        case 750:
+      if (btag == 1) {
+        switch (i.first) {
+          case 750:
 
-          i.second.effTrig_mu = 0.915380675350528;
-          i.second.effTrig_e  = 0.96626144360191;
-          i.second.error_effTrig_mu = 0.002953712440538;
-          i.second.error_effTrig_e  = 0.001977197511629;
-          break;
-        case 1000:
+            i.second.effTrig_mu = 0.915122446654598;
+            i.second.effTrig_e = 0.96969953545322;
+            i.second.error_effTrig_mu = 0.004642381230494;
+            i.second.error_effTrig_e = 0.002879505024457;
+            break;
+          case 1000:
 
-          i.second.effTrig_mu = 0.919285739933724;
-          i.second.effTrig_e  = 0.96382348703396;
-          i.second.error_effTrig_mu = 0.002772009485335;
-          i.second.error_effTrig_e  = 0.001970065457726;
-          break;
-        case 1250:
+            i.second.effTrig_mu = 0.918923622827662;
+            i.second.effTrig_e = 0.95921905206221;
+            i.second.error_effTrig_mu = 0.004375487331033;
+            i.second.error_effTrig_e = 0.003205576076252;
+            break;
+          case 1250:
 
-          i.second.effTrig_mu = 0.911219301358804;
-          i.second.effTrig_e  = 0.95970579322911;
-          i.second.error_effTrig_mu = 0.002954293566453;
-          i.second.error_effTrig_e  = 0.002040906650861;
-          break;
-        case 1500:
+            i.second.effTrig_mu = 0.912991926623528;
+            i.second.effTrig_e = 0.96208121973835;
+            i.second.error_effTrig_mu = 0.004608858750741;
+            i.second.error_effTrig_e = 0.003105605567111;
+            break;
+          case 1500:
 
-          i.second.effTrig_mu = 0.919850794664936;
-          i.second.effTrig_e  = 0.95589371607159;
-          i.second.error_effTrig_mu = 0.002964341074836;
-          i.second.error_effTrig_e  = 0.00222098605711;
-          break;
+            i.second.effTrig_mu = 0.921745651170932;
+            i.second.effTrig_e = 0.95439771390689;
+            i.second.error_effTrig_mu = 0.004688169399042;
+            i.second.error_effTrig_e = 0.003656738673623;
+            break;
+        }
+
+      } else if (btag == 2) {
+        switch (i.first) {
+          case 750:
+
+            i.second.effTrig_mu = 0.917163304486474;
+            i.second.effTrig_e = 0.962889078839;
+            i.second.error_effTrig_mu = 0.004446650436803;
+            i.second.error_effTrig_e = 0.003200162475621;
+            break;
+          case 1000:
+
+            i.second.effTrig_mu = 0.920284402024634;
+            i.second.effTrig_e = 0.97122799548137;
+            i.second.error_effTrig_mu = 0.004263819222257;
+            i.second.error_effTrig_e = 0.002739894204469;
+            break;
+          case 1250:
+
+            i.second.effTrig_mu = 0.906055190143938;
+            i.second.effTrig_e = 0.96165533977795;
+            i.second.error_effTrig_mu = 0.004919248449977;
+            i.second.error_effTrig_e = 0.003277588820738;
+            break;
+          case 1500:
+
+            i.second.effTrig_mu = 0.920540646888956;
+            i.second.effTrig_e = 0.95867889687774;
+            i.second.error_effTrig_mu = 0.005035374383869;
+            i.second.error_effTrig_e = 0.003762430369621;
+            break;
+        }
       }
 
       if (! ignoreInterpolatedArg.getValue()) {
