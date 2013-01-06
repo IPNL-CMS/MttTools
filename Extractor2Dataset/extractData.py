@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
-import os, subprocess
+import os, subprocess, datetime
+
+d = datetime.datetime.now().strftime("%d%b%y")
 
 inputs = [
-    ["MTT_Muons_2012.root", "input_data_semimu.list", "semimu"],
-    ["MTT_Electrons_2012.root", "input_data_semie.list", "semie"]
+    ["MTT_Muons_2012_%s.root" % d, "input_data_semimu.list", "semimu"],
+    ["MTT_Electrons_2012_%s.root" % d, "input_data_semie.list", "semie"]
     ]
 
 jobs = []
@@ -24,11 +26,11 @@ for job in jobs:
 # All is done, merge
 
 print("Merging ...")
-args = ["hadd", "MTT_Data_merged_2012.root"]
+args = ["hadd", "MTT_Data_merged_2012_%s.root" % d]
 for output in inputs:
   args.append(output[0])
 
 subprocess.call(args)
 
-for output in inputs.keys():
-  os.remove(output)
+for output in inputs:
+  os.remove(output[0])

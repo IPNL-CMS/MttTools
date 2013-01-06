@@ -12,5 +12,6 @@ MTT_SingleElectron_Run2012B-TOPElePlusJets-13Jul2012_19Dec.root  MTT_Histos_Sing
 MTT_SingleElectron_Run2012C-TOPElePlusJets-24Aug2012_19Dec.root  MTT_Histos_SingleElectron_Run2012C-rereco.root  0
 MTT_SingleElectron_Run2012C-TOPElePlusJets-PromptSkim_19Dec.root MTT_Histos_SingleElectron_Run2012C-prompt.root  0
 MTT_SingleElectron_Run2012D-TOPElePlusJets-PromptSkim_19Dec.root MTT_Histos_SingleElectron_Run2012D-prompt.root  0
+MTT_SingleElectron_Run2012D-TOPElePlusJets-PromptSkim_part2_06Jan.root MTT_Histos_SingleElectron_Run2012D-prompt_part2.root 0
 end
 
