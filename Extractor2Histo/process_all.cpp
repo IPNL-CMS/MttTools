@@ -64,7 +64,7 @@ int main(int argc, char** argv)
 
     std::vector<MCData> mcDatas;
 
-    if (semimuArg.getValue()) {
+    if (!dataArg.getValue() && semimuArg.getValue()) {
 
       mcDatas = parseMCInputs("input_mu.list", true);
 
@@ -77,7 +77,7 @@ int main(int argc, char** argv)
       }
     }
 
-    if (semieArg.getValue()) {
+    if (!dataArg.getValue() && semieArg.getValue()) {
 
       mcDatas = parseMCInputs("input_e.list", true);
 
@@ -96,6 +96,14 @@ int main(int argc, char** argv)
       mcDatas = parseMCInputs("input_data.list", false);
 
       for (std::vector<MCData>::iterator it = mcDatas.begin(); it != mcDatas.end(); ++it) {
+
+        if (semimuArg.getValue() || semieArg.getValue()) {
+          if (semimuArg.getValue() && !it->semimu)
+            continue;
+
+          if (semieArg.getValue() && it->semimu)
+            continue;
+        }
 
         a = new Extractor2Histos(it->inputFile, it->outputFile, "", it->semimu, false);
         a->Loop();

@@ -147,7 +147,7 @@ void Extractor2Histos::Loop()
     }
     else
     {
-      if (nGoodElectrons <= 0 || hyperTight1MC[0] != 1 || elRelIso[0] >= 0.1)
+      if (nGoodElectrons <= 0)
         continue;
 
       ptLepton = electronPt[0];
