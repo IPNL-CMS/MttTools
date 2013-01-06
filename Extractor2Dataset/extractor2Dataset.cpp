@@ -118,52 +118,26 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
   delete puReweigher;
 }
 
-void loadChain(const std::vector<std::string>& inputFiles, bool isData, const std::string& suffix, TChain*& mtt, TChain*& event) {
+void loadChain(const std::vector<std::string>& inputFiles, TChain*& mtt, TChain*& event) {
 
   mtt = new TChain("Mtt");
   event = new TChain("event");
 
-  if (isData) {
-    for (const std::string& file: inputFiles) {
-      mtt->Add(file.c_str());
-      event->Add(file.c_str());
-    }
-  } else {
-    for (const std::string& file: inputFiles) {
-      TString f = OVERRIDE_TYPE ? file : TString::Format(file.c_str(), suffix.c_str());
-      mtt->Add(f);
-      event->Add(f);
-    }
+  for (const std::string& file: inputFiles) {
+    mtt->Add(file.c_str());
+    event->Add(file.c_str());
   }
 }
 
-void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData) {
+void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type) {
 
   TChain* mtt = NULL, *event = NULL;
-  if (isData || OVERRIDE_TYPE) {
-    
-    std::string type;
-    if (isData) {
-      type = TString(outputFile).Contains("Mu") ? "semimu" : "semie";
-    } else {
-      type = OVERRIDED_TYPE;
-    }
 
-    loadChain(inputFiles, isData, type, mtt, event);
-    reduce(mtt, event, outputFile, isData, type);
-    delete mtt; delete event;
+  loadChain(inputFiles, mtt, event);
+  reduce(mtt, event, outputFile, isData, type);
 
-  } else {
-
-      loadChain(inputFiles, false, "semimu", mtt, event);
-      reduce(mtt, event, outputFile, false, "semimu");
-      delete mtt; delete event;
-
-      loadChain(inputFiles, false, "semie", mtt, event);
-      reduce(mtt, event, outputFile, false, "semie");
-      delete mtt; delete event;
-
-  }
+  delete mtt;
+  delete event;
 }
 
 void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {
@@ -194,22 +168,19 @@ int main(int argc, char** argv)
 
     cmd.xorAdd(dataArg, mcArg);
 
-    TCLAP::ValueArg<std::string> typeArg("", "type", "current inputfile type (semie or semimu)", false, "", "string", cmd);
-    TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S7", "string", cmd);
+    TCLAP::ValueArg<std::string> typeArg("", "type", "current inputfile type (semie or semimu)", true, "", "string", cmd);
+    TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S10", "string", cmd);
 
     cmd.parse(argc, argv);
-
-    if (typeArg.isSet()) {
-      OVERRIDE_TYPE = true;
-      OVERRIDED_TYPE = typeArg.getValue();
-    }
 
     std::string p = pileupArg.getValue();
     std::transform(p.begin(), p.end(), p.begin(), ::tolower);
     if (p == "s6")
       puProfile = PUProfile::S6;
-    else
+    else if (p == "s7")
       puProfile = PUProfile::S7;
+    else if (p == "s10")
+      puProfile = PUProfile::S10;
     
     bool isData = dataArg.isSet();
 
@@ -220,7 +191,7 @@ int main(int argc, char** argv)
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    reduce(inputFiles, outputFileArg.getValue(), isData);    
+    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue());    
 
   } catch (TCLAP::ArgException& e) {
     std::cout << e.what() << std::endl;
