@@ -21,10 +21,12 @@
 #include <tclap/CmdLine.h>
 #include <json/json.h>
 
+std::string base_path = "";
+
 void loadObservedLimits(int btag, const std::vector<double>& masses, std::vector<double>& obs) {
   Json::Reader reader;
   Json::Value root;
-  std::ifstream file("likelihood_scan.json");
+  std::ifstream file((base_path + "/likelihood_scan.json").c_str());
   bool success = reader.parse(file, root);
   file.close();
   if (! success) {
@@ -57,7 +59,7 @@ void loadObservedLimits(int btag, const std::vector<double>& masses, std::vector
 void loadExpectedLimits(int btag, const std::vector<double>& masses, std::vector<double>& exp, std::vector<double>& error_h_95, std::vector<double>& error_l_95, std::vector<double>& error_h_68, std::vector<double>& error_l_68) {
   Json::Reader reader;
   Json::Value root;
-  std::ifstream file("expected_limits.json");
+  std::ifstream file((base_path + "/expected_limits.json").c_str());
   bool success = reader.parse(file, root);
   file.close();
   if (! success) {
@@ -184,7 +186,7 @@ void drawLimitCurve(int btag) {
   t.DrawLatex(0.63, 0.62, "#font[42]{14.8 fb^{-1} at #sqrt{s}=8 TeV}");
 
   std::string analysisName = getAnalysisName();
-  TString prefix = TString::Format("limitCurve_2012_%s_%dbtag", analysisName.c_str(), btag);
+  TString prefix = TString::Format("%s/limitCurve_2012_%s_%dbtag", base_path.c_str(), analysisName.c_str(), btag);
 
   c1->Print(prefix + ".png");
   c1->SaveAs(prefix + ".pdf");

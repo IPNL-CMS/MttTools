@@ -199,8 +199,9 @@ int main(int argc, char** argv)
 
     cmd.xorAdd(inputListArg, inputFileArg);
 
-    TCLAP::ValueArg<std::string> pathArg("", "path", "Folder where to load files", false, "./", "string", cmd);
-    TCLAP::ValueArg<std::string> outputPathArg("", "output-path", "Folder where output files are stored", false, "./", "string", cmd);
+    std::string default_base_path = "./analysis/" + getAnalysisUUID() + "/";
+    TCLAP::ValueArg<std::string> pathArg("", "path", "Folder where to load files", false, default_base_path, "string", cmd);
+    TCLAP::ValueArg<std::string> outputPathArg("", "output-path", "Folder where output files are stored", false, default_base_path, "string", cmd);
     TCLAP::ValueArg<std::string> effArg("", "eff-file", "File where efficiences are stored (JSON format)", false, "efficiencies.json", "string", cmd);
     TCLAP::SwitchArg doSystComputationArg("", "syst-computation", "Set this flag if you are running me to compute systematic", cmd);
     TCLAP::SwitchArg saveSigmaArg("", "save-sigma-ref", "Set this flag if you want to save the computed sigma as the ref one", cmd);

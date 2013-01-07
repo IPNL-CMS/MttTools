@@ -196,9 +196,11 @@ int main(int argc, char** argv) {
   try {
     TCLAP::CmdLine cmd("Treat toy infos", ' ', "0.1");
 
+    std::string defaultInputPath = "analysis/" + getAnalysisUUID() + "/toys/results/";
+
     TCLAP::SwitchArg writeArg("", "dont-write-root", "Don't save root files", cmd, true);
     TCLAP::SwitchArg saveArg("", "dont-save", "Don't save images", cmd, true);
-    TCLAP::ValueArg<std::string> inputPathArg("", "input-path", "Where loading files", false, "./toys/results/", "string", cmd);
+    TCLAP::ValueArg<std::string> inputPathArg("", "input-path", "Where loading files", false, defaultInputPath, "string", cmd);
     TCLAP::MultiArg<int> massArg("m", "mass", "Zprime mass", false, "integer", cmd);
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", true, 2, "int", cmd);
 

@@ -15,11 +15,13 @@
 #include <TF1.h>
 #include <TCanvas.h>
 
+std::string base_path = "";
+
 void loadSelection(const std::string& jecType, int btag, const int (&masses)[4], float (&nSelectionMu)[4], float (&errNSelectionMu)[4], float (&nSelectionE)[4], float (&errNSelectionE)[4]) {
 
   Json::Reader reader;
   Json::Value root;
-  std::ifstream file("frit_efficiencies.json");
+  std::ifstream file((base_path + "/frit_efficiencies.json").c_str());
   bool success = reader.parse(file, root);
   file.close();
 
@@ -171,6 +173,8 @@ int main(int argc, char** argv) {
 
     std::string btagStr = stream.str();
 
+    base_path = "./analysis/" + getAnalysisUUID();
+
     std::map<int, Efficiencies> efficiencies;
     for (int i = 750; i <= 1500; i += 50) {
       efficiencies[i] = Efficiencies(i);
@@ -180,6 +184,7 @@ int main(int argc, char** argv) {
 
     // HLT efficiencies
     // See https://docs.google.com/spreadsheet/ccc?key=0AsI4zLOlSqcUdHhiYmFKbDIxY3YwWlJHdE9NSVhMSnc
+    // and https://docs.google.com/spreadsheet/ccc?key=0AsI4zLOlSqcUdEkySy11MFlYczNRcE9BNTZvTjRFMWc
     // for details about effiencies
 
     TGraphErrors trig_e;
@@ -318,7 +323,12 @@ int main(int argc, char** argv) {
     */
 
     //--- selection efficiencies
-    const float N0[4] = {108827, 102411, 96994, 96194};
+    const float N0[4] = {
+      216768,
+      205479,
+      195664,
+      480406
+    };
 
     float Nsel_mu[4];
     float ErrNsel_mu[4];
@@ -423,7 +433,7 @@ int main(int argc, char** argv) {
     }
 
     Json::Value root;
-    getJsonRoot("efficiencies.json", root, false);
+    getJsonRoot(base_path + "/efficiencies.json", root, false);
 
     for (auto& i: efficiencies) {
 
@@ -440,13 +450,13 @@ int main(int argc, char** argv) {
     }
 
     Json::StyledWriter writer;
-    std::ofstream output("efficiencies.json");
+    std::ofstream output(base_path + "/efficiencies.json");
     output << writer.write(root);
     output.close();
     std::cout << "Efficiencies saved as 'efficiences.json'" << std::endl;
 
     if (jec == "nominal") {
-      TString noteFilename = TString::Format("efficiencies_table_%s_%d_btag.tex", getAnalysisName().c_str(), btagArg.getValue());
+      TString noteFilename = TString::Format("%s/efficiencies_table_%s_%d_btag.tex", base_path.c_str(), getAnalysisName().c_str(), btagArg.getValue());
 
       // table latex pour la note :
       std::ofstream latex(noteFilename);

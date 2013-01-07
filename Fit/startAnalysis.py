@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import json, uuid, sys, os, datetime
+import json, uuid, sys, os, datetime, shutil, glob
 from pprint import pprint
 
 import sys
@@ -88,6 +88,17 @@ if useAsCurrentAnalysis:
 
 with open('analysis.json', 'w') as f:
   json.dump(data, f, indent=2)
+
+# Create folder structure
+os.makedirs("analysis/%s" % analysisUUID)
+os.mkdir("analysis/%s/frit" % analysisUUID)
+shutil.copy("analysis.json", "analysis/%s" % analysisUUID)
+
+shutil.copytree("fit_configuration", "analysis/%s/fit_configuration" % analysisUUID)
+shutil.copytree("toys", "analysis/%s/toys" % analysisUUID, ignore = shutil.ignore_patterns('*.root'))
+
+for filename in glob.glob('*.script'):
+  shutil.copy(filename, "analysis/%s" % analysisUUID)
 
 print("Added new analysis:")
 print("\tID: %s" % analysisUUID)

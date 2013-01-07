@@ -6,6 +6,7 @@
 #include <sys/wait.h>
 #include <cmath>
 #include <regex>
+#include <cstdio>
 
 #include <TString.h>
 #include <TRandom3.h>
@@ -109,6 +110,8 @@ void drawPdfs(RooRealVar& observable, RooAbsPdf& interpolated_pdf, RooAbsPdf& lo
   canvas->Update();
   canvas->SaveAs(filename);
 
+  std::cout << "Plot saved as '" << filename << "'" << std::endl;
+
   delete canvas;
   delete plot;
 }
@@ -116,6 +119,8 @@ void drawPdfs(RooRealVar& observable, RooAbsPdf& interpolated_pdf, RooAbsPdf& lo
 void doInterpolation(int mass, const std::string& jec, int btag) {
 
   std::string analysisName = getAnalysisName();
+  std::string base_path = "analysis/" + getAnalysisUUID();
+
   TString prefix = TString::Format("%s-Zprime%d_%s_%d_btag", jec.c_str(), mass, analysisName.c_str(), btag);
 
   int lowMass = 0;
@@ -136,16 +141,16 @@ void doInterpolation(int mass, const std::string& jec, int btag) {
   }*/
 
   if (lowMass == 0 || highMass == 0) {
-    std::cerr << "Error: please use a mass between 750 and 1500 GeV." << std::endl;
+    std::cout << "Error: please use a mass between 750 and 1500 GeV." << std::endl;
     return;
   }
 
   // Open workspaces and retrieve PDFs
   TString lowMass_prefix = TString::Format("%s-Zprime%d_%s_%d_btag", jec.c_str(), lowMass, analysisName.c_str(), btag);
-  TString lowMass_workspaceFile = "frit/" + lowMass_prefix + "_workspace.root";
+  TString lowMass_workspaceFile = base_path + "/frit/" + lowMass_prefix + "_workspace.root";
 
   TString highMass_prefix = TString::Format("%s-Zprime%d_%s_%d_btag", jec.c_str(), highMass, analysisName.c_str(), btag);
-  TString highMass_workspaceFile = "frit/" + highMass_prefix + "_workspace.root";
+  TString highMass_workspaceFile = base_path + "/frit/" + highMass_prefix + "_workspace.root";
 
   TFile lowMass_file(lowMass_workspaceFile);
   RooAbsPdf* lowMass_pdf_e = static_cast<RooWorkspace*>(lowMass_file.Get("w"))->pdf("signal_electron");
@@ -167,8 +172,8 @@ void doInterpolation(int mass, const std::string& jec, int btag) {
   RooRealVar mtt("mtt", "mtt", 500, 2000, "GeV/c^2");
   RooRealVar rAlpha("alpha", "alpha", alpha, 0, 1);
 
-  mtt.setBins(10, "cache");
-  rAlpha.setBins(10, "cache");
+  mtt.setBins(1000, "cache");
+  rAlpha.setBins(1000, "cache");
 
   // Interpolate
   std::cout << "Interpolate ..." << std::endl;
@@ -179,19 +184,19 @@ void doInterpolation(int mass, const std::string& jec, int btag) {
   hypoMass(0) = 0; 
   hypoMass(1) = 1;
 
-  RooMomentMorph interpolation_muon("signal_muon", "signal_muon", rAlpha, RooArgList(mtt), RooArgList(*lowMass_pdf_mu, *highMass_pdf_mu), hypoMass);
-  RooMomentMorph interpolation_e("signal_electron", "signal_electron", rAlpha, RooArgList(mtt), RooArgList(*lowMass_pdf_e, *highMass_pdf_e), hypoMass);
+  RooMomentMorph interpolation_muon("signal_muon", "signal_muon", rAlpha, RooArgList(mtt), RooArgList(*lowMass_pdf_mu, *highMass_pdf_mu), hypoMass, RooMomentMorph::Linear);
+  RooMomentMorph interpolation_e("signal_electron", "signal_electron", rAlpha, RooArgList(mtt), RooArgList(*lowMass_pdf_e, *highMass_pdf_e), hypoMass, RooMomentMorph::Linear);
   
   std::cout << "Done." << std::endl;
 
-  drawPdfs(mtt, interpolation_muon, *lowMass_pdf_mu, *highMass_pdf_mu, "frit/" + prefix + "_interpolation_muon.pdf", btag, mass);
-  drawPdfs(mtt, interpolation_e, *lowMass_pdf_e, *highMass_pdf_e, "frit/" + prefix + "_interpolation_electron.pdf", btag, mass);
+  drawPdfs(mtt, interpolation_muon, *lowMass_pdf_mu, *highMass_pdf_mu, base_path + "/frit/" + prefix + "_interpolation_muon.pdf", btag, mass);
+  drawPdfs(mtt, interpolation_e, *lowMass_pdf_e, *highMass_pdf_e, base_path + "/frit/" + prefix + "_interpolation_electron.pdf", btag, mass);
 
   RooWorkspace workspace("w", "Interpolation signal workspace");
   workspace.import(interpolation_muon);
   workspace.import(interpolation_e);
 
-  TString workspaceFile = "frit/" + prefix + "_workspace.root";
+  TString workspaceFile = base_path + "/frit/" + prefix + "_workspace.root";
   workspace.writeToFile(workspaceFile, true);
 }
 
@@ -224,6 +229,8 @@ int main(int argc, char** argv) {
     RooMsgService::instance().addStream(RooFit::ERROR); // DEBUG  INFO  PROGRESS  WARNING ERROR FATAL
     RooMsgService::instance().setSilentMode(true);
 
+    // Disable stderr
+    freopen("/dev/null", "w", stderr);
     doInterpolation(massArg.getValue(), jec, btagArg.getValue());
 
   } catch (TCLAP::ArgException& e) {

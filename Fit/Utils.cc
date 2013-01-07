@@ -3,8 +3,11 @@
 double b_tagging_scale_factor = 0.963; // See http://cms.cern.ch/iCMS/jsp/openfile.jsp?tp=draft&files=AN2012_470_v3.pdf
 double b_tagging_scale_factor_error = 0.020;
 
-double b_tagging_efficiency = 0.68;
-double b_tagging_efficiency_error = 0.;
+// See  http://cms.cern.ch/iCMS/jsp/openfile.jsp?tp=draft&files=AN2012_187_v5.pdf
+// Also http://cms.cern.ch/iCMS/jsp/openfile.jsp?tp=draft&files=AN2012_432_v2.pdf
+// Mean between the tow values
+double b_tagging_efficiency = 0.6915;
+double b_tagging_efficiency_error = 0.002;
 
 double trigger_scale_factor_muons = 1.;
 double trigger_scale_factor_muons_error = 0.;

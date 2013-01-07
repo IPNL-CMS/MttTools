@@ -14,6 +14,7 @@ std::string buildConfigFileName(const std::string& fctName) {
 }
 
 std::vector<std::string> BKG_FUNCTIONS;
+std::string base_path = "";
 
 void process(std::vector<int>& masses, bool onlyMuons, int btag, const std::string& file, bool singleFile) {
   std::vector<pid_t> children; // For fork()
@@ -59,12 +60,12 @@ void fillParams() {
 
 void saveSystematic(int mass, int btag, double syst) {
 
-  FILE* lock = fopen("systematics.lock", "w+");
+  FILE* lock = fopen((base_path + "/systematics.lock").c_str(), "w+");
   lockf(fileno(lock), F_LOCK, 0); // This will block until we have the right to write in the file
 
   Json::Reader reader;
   Json::Value root;
-  std::ifstream file("systematics.json");
+  std::ifstream file((base_path + "/systematics.json").c_str());
   reader.parse(file, root);
   file.close();
 
@@ -78,7 +79,7 @@ void saveSystematic(int mass, int btag, double syst) {
 
   root[getAnalysisUUID()][strMass][btagStr]["background_pdf"] = syst;
 
-  FILE* fd = fopen("systematics.json", "w+");
+  FILE* fd = fopen((base_path + "/systematics.json").c_str(), "w+");
   Json::StyledWriter writer;
   const std::string json = writer.write(root);
   fwrite(json.c_str(), json.length(), 1, fd);
@@ -95,7 +96,7 @@ void computeSyst(std::vector<int> masses, int btag) {
 
   Json::Reader reader;
   Json::Value root;
-  std::ifstream file("systematics_parameters.json");
+  std::ifstream file((base_path + "/systematics_parameters.json").c_str());
   bool success = reader.parse(file, root);
   file.close();
   if (! success) {
@@ -106,7 +107,7 @@ void computeSyst(std::vector<int> masses, int btag) {
   root = root[getAnalysisUUID()];
 
   Json::Value refRoot;
-  file.open("sigma_reference.json");
+  file.open((base_path + "/sigma_reference.json").c_str());
   success = reader.parse(file, refRoot);
   file.close();
   if (! success) {
@@ -179,6 +180,8 @@ int main(int argc, char** argv) {
       masses.push_back(1250);
       masses.push_back(1500);
     }
+
+    base_path = "analysis/" + getAnalysisUUID();
 
     fillParams();
 

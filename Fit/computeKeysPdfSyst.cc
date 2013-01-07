@@ -41,11 +41,13 @@
 
 #define NUM_ITER 500
 
+std::string base_path = "";
+
 double getSigmaReference(int mass, int btag) {
 
   Json::Reader reader;
   Json::Value refRoot;
-  std::ifstream file("sigma_reference.json");
+  std::ifstream file((base_path + "/sigma_reference.json").c_str());
   bool success = reader.parse(file, refRoot);
   file.close();
   if (! success) {
@@ -78,7 +80,7 @@ double getNumberOfEventsReference(int mass, int btag) {
 
   Json::Reader reader;
   Json::Value refRoot;
-  std::ifstream file("sigma_reference.json");
+  std::ifstream file((base_path + "/sigma_reference.json").c_str());
   bool success = reader.parse(file, refRoot);
   file.close();
   if (! success) {
@@ -113,6 +115,7 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
   int shmid;
 
   std::string analysisName = getAnalysisName();
+  base_path = "analysis/" + getAnalysisUUID();
 
   TRandom* random = new TRandom2(0);
 
@@ -135,7 +138,6 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
     exit(1);
   }
 
-  double sigma_reference = getSigmaReference(mass, btag);      
   double events_reference = getNumberOfEventsReference(mass, btag);
 
   /*
@@ -162,7 +164,7 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
   TH1* events = new TH1D("events", "events", 80, events_reference - 100, events_reference + 100);
   TH1* residuals = new TH1D("residuals", "residuals", 80, -200, 200);
 
-  TString workspace_file = TString::Format("frit/nominal-Zprime%d_%s_%d_btag_workspace.root", mass, analysisName.c_str(), btag);
+  TString workspace_file = TString::Format("%s/frit/nominal-Zprime%d_%s_%d_btag_workspace.root", base_path.c_str(), mass, analysisName.c_str(), btag);
   TFile *w = TFile::Open(workspace_file, "read");
 
   RooWorkspace* workspace = static_cast<RooWorkspace*>(w->Get("w"));
@@ -236,7 +238,7 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
         );
   }
 
-  TString keysFile = TString::Format("keyspdf_systematics_%d_%d_btag_pdf.root", mass, btag);
+  TString keysFile = TString::Format("%s/keyspdf_systematics_%d_%d_btag_pdf.root", base_path.c_str(), mass, btag);
   RooWorkspace keys_workspace("w", "Frit signal workspace");
 
   keys_workspace.import(mtt);
@@ -293,7 +295,7 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
 
     // Save the pdf in a workspace
 
-    TString workspaceFile = TString::Format("frit/temporary_Zprime%d_%s_%d_btag_workspace.root", mass, analysisName.c_str(), btag);
+    TString workspaceFile = TString::Format("%s/frit/temporary_Zprime%d_%s_%d_btag_workspace.root", base_path.c_str(), mass, analysisName.c_str(), btag);
     RooWorkspace temp_workspace("w", "Frit signal workspace");
 
     temp_workspace.import(*muon_toy_pdf);
@@ -366,12 +368,12 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
 
 void saveSystematic(int mass, int btag, double syst) {
 
-  FILE* lock = fopen("systematics.lock", "w+");
+  FILE* lock = fopen((base_path + "/systematics.lock").c_str(), "w+");
   lockf(fileno(lock), F_LOCK, 0); // This will block until we have the right to write in the file
 
   Json::Reader reader;
   Json::Value root;
-  std::ifstream file("systematics.json");
+  std::ifstream file((base_path + "/systematics.json").c_str());
   reader.parse(file, root);
   file.close();
 
@@ -385,7 +387,7 @@ void saveSystematic(int mass, int btag, double syst) {
 
   root[getAnalysisUUID()][strMass][btagStr]["signal_pdf"] = syst;
 
-  FILE* fd = fopen("systematics.json", "w+");
+  FILE* fd = fopen((base_path + "/systematics.json").c_str(), "w+");
   Json::StyledWriter writer;
   const std::string json = writer.write(root);
   fwrite(json.c_str(), json.length(), 1, fd);
@@ -400,7 +402,7 @@ void computeSyst(int mass, int btag) {
 
   std::cout << std::endl << std::endl;
 
-  TString filename = TString::Format("keyspdf_systematics_%d_%d_btag.root", mass, btag);
+  TString filename = TString::Format("%s/keyspdf_systematics_%d_%d_btag.root", base_path.c_str(), mass, btag);
   TFile* f = TFile::Open(filename, "read");
 
   TH1* sigma = static_cast<TH1*>(f->Get("sigma"));
@@ -419,7 +421,7 @@ void computeSyst(int mass, int btag) {
   TH1* residuals = static_cast<TH1*>(f->Get("residuals"));
   residuals->Fit("gaus", "Q");
 
-  filename = TString::Format("keyspdf_systematics_%d_%d_btag_fits.root", mass, btag);
+  filename = TString::Format("%s/keyspdf_systematics_%d_%d_btag_fits.root", base_path.c_str(), mass, btag);
   TFile* output = TFile::Open(filename, "recreate");
   sigma->Write();
   pull->Write();

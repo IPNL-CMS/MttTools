@@ -8,10 +8,12 @@
 
 #include "Utils.h"
 
+std::string base_path = "";
+
 void loadObservedLimits(const std::vector<int>& masses, int btag, std::vector<double>& obs) {
   Json::Reader reader;
   Json::Value root;
-  std::ifstream file("likelihood_scan.json");
+  std::ifstream file((base_path + "/likelihood_scan.json").c_str());
   bool success = reader.parse(file, root);
   file.close();
   if (! success) {
@@ -44,7 +46,7 @@ void loadObservedLimits(const std::vector<int>& masses, int btag, std::vector<do
 void loadExpectedLimits(const std::vector<int>& masses, int btag, std::vector<double>& exp, std::vector<double>& error_h_95, std::vector<double>& error_l_95, std::vector<double>& error_h_68, std::vector<double>& error_l_68) {
   Json::Reader reader;
   Json::Value root;
-  std::ifstream file("expected_limits.json");
+  std::ifstream file((base_path + "/expected_limits.json").c_str());
   bool success = reader.parse(file, root);
   file.close();
   if (! success) {
@@ -137,6 +139,8 @@ int main(int argc, char** argv) {
       masses.push_back(1250);
       masses.push_back(1500);
     }
+
+    base_path = "analysis/" + getAnalysisUUID();
 
     extractLimits(masses, observedArg.getValue(), expectedArg.getValue(), btagArg.getValue());
 

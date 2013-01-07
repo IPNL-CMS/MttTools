@@ -39,7 +39,7 @@ SRCS =  $(wildcard *.cc)
 DEPS =  $(patsubst %.cc, %.d, $(wildcard *.cc)) 
 OBJS =  $(patsubst %.cc, %.o, $(wildcard *.cc))
 
-all: fritSignal fitMtt computeEff computeSignalSyst computeJECSyst computeBkgSyst computeSystPb computeSigmaRef runLikelihoodScan treatToyStuff extractLimits drawLimitCurve computeKeysPdfSyst interpolatePdf
+all: fritSignal fitMtt computeEff computeCrystalBallSyst computeJECSyst computeBkgSyst computeSigmaRef runLikelihoodScan treatToyStuff extractLimits drawLimitCurve computeKeysPdfSyst interpolatePdf
 
 # Make the executable
 fitMtt: fitMtt.o lib/jsoncpp.o libUtils
@@ -54,8 +54,8 @@ fritSignal: fritSignal.o lib/jsoncpp.o libUtils
 computeEff: computeEff.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) computeEff.o $(LIBS) $(EXPLLINKLIBS) -o computeEff
 
-computeSignalSyst: computeSignalSyst.o lib/jsoncpp.o libUtils
-	$(LD) $(LDFLAGS) computeSignalSyst.o $(LIBS) $(EXPLLINKLIBS) -o computeSignalSyst
+computeCrystalBallSyst: computeCrystalBallSyst.o lib/jsoncpp.o libUtils
+	$(LD) $(LDFLAGS) computeCrystalBallSyst.o $(LIBS) $(EXPLLINKLIBS) -o computeCrystalBallSyst
 
 computeKeysPdfSyst: computeKeysPdfSyst.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) computeKeysPdfSyst.o $(LIBS) $(EXPLLINKLIBS) -o computeKeysPdfSyst
@@ -65,9 +65,6 @@ computeJECSyst: computeJECSyst.o lib/jsoncpp.o libUtils
 
 computeBkgSyst: computeBkgSyst.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) computeBkgSyst.o $(LIBS) $(EXPLLINKLIBS) -o computeBkgSyst
-
-computeSystPb: computeSystPb.o lib/jsoncpp.o
-	$(LD) $(LDFLAGS) $^ $(DYNAMIC_LIBS) $(EXPLLINKLIBS) -o computeSystPb
 
 computeSigmaRef: computeSigmaRef.o
 	$(LD) $(LDFLAGS) $^ $(DYNAMIC_LIBS) $(EXPLLINKLIBS) -o computeSigmaRef

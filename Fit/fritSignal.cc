@@ -55,6 +55,8 @@ std::vector<std::string> JEC;
 bool FIT_WARNINGS = false;
 int FIT_ERROR_LEVEL = -1;
 
+std::string base_path = "";
+
 void fritSignal(TChain* chain, const std::string& jecType, const std::string& configFile, int massZprime, int btag);
 
 void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {
@@ -123,13 +125,13 @@ int main(int argc, char** argv) {
 
 void saveParameter(int mass, const std::string& jecType, int btag, const std::string& name, double nSig, double nSig_err, double chi2) {
 
-  FILE* lock = fopen("frit_efficiencies.lock", "w+");
+  FILE* lock = fopen((base_path + "/frit_efficiencies.lock").c_str(), "w+");
   lockf(fileno(lock), F_LOCK, 0); // This will block until we have the right to write in the file
 
   Json::Reader reader;
   Json::Value root;
-  if (fileExists("frit_efficiencies.json")) {
-    std::ifstream file("frit_efficiencies.json");
+  if (fileExists(base_path + "/frit_efficiencies.json")) {
+    std::ifstream file(base_path + "/frit_efficiencies.json");
     reader.parse(file, root);
     file.close();
   }
@@ -147,7 +149,7 @@ void saveParameter(int mass, const std::string& jecType, int btag, const std::st
   node["error"] = nSig_err;
   node["chi2"] = chi2;
 
-  FILE* fd = fopen("frit_efficiencies.json", "w+");
+  FILE* fd = fopen((base_path + "/frit_efficiencies.json").c_str(), "w+");
   Json::StyledWriter writer;
   const std::string json = writer.write(root);
   fwrite(json.c_str(), json.length(), 1, fd);
@@ -158,13 +160,13 @@ void saveParameter(int mass, const std::string& jecType, int btag, const std::st
 
 void saveCombinedChiSquare(int mass, const std::string& jecType, int btag, double chi2) {
 
-  FILE* lock = fopen("frit_efficiencies.lock", "w+");
+  FILE* lock = fopen((base_path + "/frit_efficiencies.lock").c_str(), "w+");
   lockf(fileno(lock), F_LOCK, 0); // This will block until we have the right to write in the file
 
   Json::Reader reader;
   Json::Value root;
-  if (fileExists("frit_efficiencies.json")) {
-    std::ifstream file("frit_efficiencies.json");
+  if (fileExists(base_path + "/frit_efficiencies.json")) {
+    std::ifstream file(base_path + "/frit_efficiencies.json");
     reader.parse(file, root);
     file.close();
   }
@@ -181,7 +183,7 @@ void saveCombinedChiSquare(int mass, const std::string& jecType, int btag, doubl
   node["chi2"] = chi2;
 
 
-  FILE* fd = fopen("frit_efficiencies.json", "w+");
+  FILE* fd = fopen((base_path + "/frit_efficiencies.json").c_str(), "w+");
   Json::StyledWriter writer;
   const std::string json = writer.write(root);
   fwrite(json.c_str(), json.length(), 1, fd);
@@ -361,12 +363,15 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
   }
 
   std::string analysisName = getAnalysisName();
+  std::string analysisUUID = getAnalysisUUID();
 
-  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf("./fit_configuration", configFile, mtt, NULL, massZprime, "background", whichLepton, nullptr);
+  base_path = "./analysis/" + analysisUUID;
+
+  std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfs = getCategoriesPdf(base_path + "/fit_configuration", configFile, mtt, NULL, massZprime, "background", whichLepton, nullptr);
 
   // It takes some time, inform the user of what's going on
   std::cout << "Loading signal pdfs... (may takes some time)" << std::endl;
-  std::map<std::string, std::shared_ptr<BaseFunction>> signalPdfs = getCategoriesPdf("./fit_configuration", configFile, mtt, dataset, massZprime, "signal", whichLepton, NULL);
+  std::map<std::string, std::shared_ptr<BaseFunction>> signalPdfs = getCategoriesPdf(base_path + "/fit_configuration", configFile, mtt, dataset, massZprime, "signal", whichLepton, NULL);
   std::cout << "Done." << std::endl;
 
   for (auto& pdf: backgroundPdfs) {
@@ -448,8 +453,8 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
 
   } while (! fitIsGood && fitIterations > 0);
 
-  drawHistograms(whichLepton, mtt, nBins, *dataset, simPdf, backgroundPdfs, btag, std::string("frit/" + prefix), false);
-  drawHistograms(whichLepton, mtt, nBins, *dataset, simPdf, backgroundPdfs, btag, std::string("frit/" + prefix), true);
+  drawHistograms(whichLepton, mtt, nBins, *dataset, simPdf, backgroundPdfs, btag, std::string(base_path + "/frit/" + prefix), false);
+  drawHistograms(whichLepton, mtt, nBins, *dataset, simPdf, backgroundPdfs, btag, std::string(base_path + "/frit/" + prefix), true);
 
   fitResult->Print("v");
 
@@ -548,7 +553,7 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
 
   // Save our signal functions into the workspace
   // We will need it for the fit on data
-  TString workspaceFile = "frit/" + prefix + "_workspace.root";
+  TString workspaceFile = base_path + "/frit/" + prefix + "_workspace.root";
   RooWorkspace workspace("w", "Frit signal workspace");
 
   for (auto& pdf: signalPdfs) {
