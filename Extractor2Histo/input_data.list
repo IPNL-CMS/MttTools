@@ -4,6 +4,7 @@ MTT_MuHad_Run2012A-recover-06Aug2012_19Dec.root                  MTT_Histos_MuHa
 MTT_SingleMu_Run2012B-TOPMuPlusJets-13Jul2012_19Dec.root         MTT_Histos_SingleMu_Run2012B-rereco.root        1
 MTT_SingleMu_Run2012C-TOPMuPlusJets-24Aug2012_19Dec.root         MTT_Histos_SingleMu_Run2012C-rereco.root        1
 MTT_SingleMu_Run2012C-TOPMuPlusJets-PromptSkim_19Dec.root        MTT_Histos_SingleMu_Run2012C-prompt.root        1
+MTT_SingleMu_Run2012C-EcalRecover-11Dec2012_07Jan.root           MTT_Histos_SingleMu_Run2012C-ecalrecover.root   1
 MTT_SingleMu_Run2012D-TOPMuPlusJets-PromptSkim_19Dec.root        MTT_Histos_SingleMu_Run2012D-prompt.root        1
 MTT_SingleMu_Run2012D-TOPMuPlusJets-PromptSkim_part2_03Jan.root  MTT_Histos_SingleMu_Run2012D-prompt_part2.root  1
 MTT_ElectronHad_Run2012A-13Jul2012_19Dec.root                    MTT_Histos_ElectronHad_Run2012A-rereco.root     0
