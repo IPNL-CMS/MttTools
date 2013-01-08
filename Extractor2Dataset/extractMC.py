@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-import os, subprocess, tempfile
+import os, subprocess, tempfile, datetime
+
+d = datetime.datetime.now().strftime("%d%b%y")
 
 files = [
     ["MTT_Zprime_750_Narrow_2012_dataset_%s.root", "MC/MTT_Zprime_750_Narrow_full_stat_%s.list"],
@@ -32,6 +34,10 @@ subprocess.call(args)
 
 # Merge files
 for file in files:
-  merged_file = file[0].replace("_%s", "_merged")
+  merged_file = file[0].replace("_%s", "_merged_%s" % d)
   args = ["hadd", merged_file, file[0] % "semimu", file[0] % "semie"]
   subprocess.call(args)
+
+for file in files:
+  os.remove(file[0] % "semimu")
+  os.remove(file[0] % "semie")
