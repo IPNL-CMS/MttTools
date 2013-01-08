@@ -54,6 +54,7 @@ int main(int argc, char** argv)
 
     TCLAP::CmdLine cmd("Convert Extractor output to histograms", ' ', "0.1");
 
+    TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jet to require", true, 2, "int", cmd);
     TCLAP::SwitchArg semimuArg("", "semimu", "Process semimu", cmd, false);
     TCLAP::SwitchArg semieArg("", "semie", "Process semie", cmd, false);
     TCLAP::SwitchArg dataArg("", "data", "Process data", cmd, false);
@@ -70,7 +71,7 @@ int main(int argc, char** argv)
 
       for (std::vector<MCData>::iterator it = mcDatas.begin(); it != mcDatas.end(); ++it) {
 
-        a = new Extractor2Histos(it->inputFile, it->outputFile, it->name, true, true);
+        a = new Extractor2Histos(it->inputFile, it->outputFile, it->name, true, true, btagArg.getValue());
         a->Loop();
         delete a;
 
@@ -83,7 +84,7 @@ int main(int argc, char** argv)
 
       for (std::vector<MCData>::iterator it = mcDatas.begin(); it != mcDatas.end(); ++it) {
 
-        a = new Extractor2Histos(it->inputFile, it->outputFile, it->name, false, true);
+        a = new Extractor2Histos(it->inputFile, it->outputFile, it->name, false, true, btagArg.getValue());
         a->Loop();
         delete a;
 
@@ -105,7 +106,7 @@ int main(int argc, char** argv)
             continue;
         }
 
-        a = new Extractor2Histos(it->inputFile, it->outputFile, "", it->semimu, false);
+        a = new Extractor2Histos(it->inputFile, it->outputFile, "", it->semimu, false, btagArg.getValue());
         a->Loop();
         delete a;
 

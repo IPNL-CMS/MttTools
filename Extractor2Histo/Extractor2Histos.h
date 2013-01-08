@@ -121,7 +121,9 @@ class Extractor2Histos {
     TString         mOutputFile;
     TString         mInputFile;
 
-    Extractor2Histos(TString fIn, TString fOut, const std::string& dataset, bool isSemiMu, bool isMC);
+    int             mBTag;
+
+    Extractor2Histos(TString fIn, TString fOut, const std::string& dataset, bool isSemiMu, bool isMC, int btag);
     virtual ~Extractor2Histos();
     virtual Int_t    GetEntry(Long64_t entry);
     virtual void     Loop();
