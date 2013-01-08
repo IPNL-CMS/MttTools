@@ -150,6 +150,7 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
     exit(1);
   }
 
+  double sigma_reference = getSigmaReference(mass, btag);
   double events_reference = getNumberOfEventsReference(mass, btag);
 
   /*
@@ -170,26 +171,47 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
      std::cout << "Sigma ref: JSON = " << sigma_reference << "; C++ = " << shm->sigma << std::endl;
      */
 
+  std::map<int, RooKeysPdf*> muon_pdf_rookeys;
+  std::map<int, RooKeysPdf*> electron_pdf_rookeys;
+  std::map<int, std::shared_ptr<TFile>> workspace_files;
+
   TString filename = TString::Format("%s/keyspdf_systematics_%d_%d_btag.root", base_path.c_str(), mass, btag);
-  TH1* sigma = new TH1D("sigma", "sigma", 80, -3, 3);
+  TH1* sigma = new TH1D("sigma", "sigma", 80, sigma_reference - 2, sigma_reference + 2);
   TH1* pull = new TH1D("pull", "pull", 80, -3, 3);
   TH1* events = new TH1D("events", "events", 80, events_reference - 100, events_reference + 100);
   TH1* residuals = new TH1D("residuals", "residuals", 80, -200, 200);
 
-  TString workspace_file = TString::Format("%s/frit/nominal-Zprime%d_%s_%d_btag_workspace.root", base_path.c_str(), mass, analysisName.c_str(), btag);
-  TFile *w = TFile::Open(workspace_file, "read");
+  
 
-  RooWorkspace* workspace = static_cast<RooWorkspace*>(w->Get("w"));
-  if (! workspace) {
-    std::cerr << "ERROR: Workspace not found!" << std::endl;
+  int btagMin = 0, btagMax = 0;
+  if (btag <= 2) {
+    btagMin = btagMax = btag;
+  } else if (btag == 3) {
+    btagMin = 1;
+    btagMax = 2;
+  } else {
+    std::cerr << "ERROR: Unsupported number of b-tag" << std::endl;
     exit(1);
   }
-  workspace->SetName("old_w");
 
-  RooKeysPdf* muon_pdf_rookeys = dynamic_cast<RooKeysPdf*>(workspace->pdf("signal_muon"));
-  muon_pdf_rookeys->SetName("old_signal_muon");
-  RooKeysPdf* electron_pdf_rookeys = dynamic_cast<RooKeysPdf*>(workspace->pdf("signal_electron"));
-  electron_pdf_rookeys->SetName("old_signal_electron");
+  for (int i = btagMin; i <= btagMax; i++) {
+    TString workspace_file = TString::Format("%s/frit/nominal-Zprime%d_%s_%d_btag_workspace.root", base_path.c_str(), mass, analysisName.c_str(), i);
+    workspace_files[i].reset(TFile::Open(workspace_file, "read"));
+
+    RooWorkspace* workspace = static_cast<RooWorkspace*>(workspace_files[i]->Get("w"));
+    if (! workspace) {
+      std::cerr << "ERROR: Workspace not found!" << std::endl;
+      exit(1);
+    }
+    workspace->SetName(TString::Format("old_w_%d", i));
+
+    muon_pdf_rookeys[i] = dynamic_cast<RooKeysPdf*>(workspace->pdf("signal_muon"));
+    muon_pdf_rookeys[i]->SetName(TString::Format("old_signal_muon_%d", i));
+
+    electron_pdf_rookeys[i] = dynamic_cast<RooKeysPdf*>(workspace->pdf("signal_electron"));
+    electron_pdf_rookeys[i]->SetName(TString::Format("old_signal_electron_%d", i));
+  }
+
 
   RooRealVar mtt("mtt", "mtt", 500, 2000, "GeV/c^2");
   //RooRealVar weight("weight", "weight", 0, 100000);
@@ -212,112 +234,117 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
   // Set binning to 5 GeV
   mtt.setBins(nBins);
 
+  TParameter<int> n("iterations", NUM_ITER);
 
   // Load signal dataset
-  TString treeName = TString::Format("dataset_%dbtag", btag);
-  TChain* chain = new TChain(treeName);
-  chain->Add(signalDatasetFile.c_str());
+  std::map<int, std::shared_ptr<TChain>> chains;
+  std::map<int, std::shared_ptr<RooDataSet>> signalDatasets;
+  std::map<int, int> nMuons;
+  std::map<int, int> nElectrons;
+  std::map<int, std::shared_ptr<RooDataHist>> binnedSignalDataset_muons;
+  std::map<int, std::shared_ptr<RooDataHist>> binnedSignalDataset_electrons;
 
-  RooDataSet signalDataset("dataset", "dataset", RooArgSet(mtt, lepton_type), RooFit::Import(*chain));
-
-  Roo1DTable* table = signalDataset.table(lepton_type);
-  int nMuons = table->get("muon");
-  int nElectrons = table->get("electron");
-
-  RooDataHist* binnedSignalDataset = signalDataset.binnedClone();
-
-  RooDataHist* binnedSignalDataset_muons = static_cast<RooDataHist*>(binnedSignalDataset->reduce(RooFit::SelectVars(RooArgSet(mtt)), RooFit::Cut("lepton_type == 13"), RooFit::Name("binned_dataset_muon")));
-  RooDataHist* binnedSignalDataset_electrons = static_cast<RooDataHist*>(binnedSignalDataset->reduce(RooFit::SelectVars(RooArgSet(mtt)), RooFit::Cut("lepton_type == 11"), RooFit::Name("binned_dataset_electron")));
-
-  delete binnedSignalDataset;
-
-  // Keys pdf from dataset
-  //RooKeysPdf muon_pdf_binned_keys("muon_binned_keys_pdf", "muon_binned_keys_pdf", mtt, *binnedSignalDataset_muons, RooKeysPdf::MirrorBoth, 2);
-  //RooKeysPdf electron_pdf_binned_keys("electron_binned_keys_pdf", "electron_binned_keys_pdf", mtt, *binnedSignalDataset_electrons, RooKeysPdf::MirrorBoth, 2);
-
-  // Create pdf from dataset
-  RooHistPdf muon_pdf("muon_hist_pdf", "muon_hist_pdf", RooArgSet(mtt), *binnedSignalDataset_muons);
-  RooHistPdf electron_pdf("electron_hist_pdf", "electron_hist_pdf", RooArgSet(mtt), *binnedSignalDataset_electrons);
-
-  std::shared_ptr<RooAbsPdf::GenSpec> genSpecs_muon = std::shared_ptr<RooAbsPdf::GenSpec>(
-      muon_pdf.prepareMultiGen(RooArgSet(mtt), RooFit::NumEvents(nMuons), RooFit::Extended(true), RooFit::AutoBinned(false)/*, RooFit::Verbose(true)*/)
-      );
-
-  std::shared_ptr<RooAbsPdf::GenSpec> genSpecs_electron;
-  if (! muonsOnly) {
-    genSpecs_electron = std::shared_ptr<RooAbsPdf::GenSpec>(
-        electron_pdf.prepareMultiGen(RooArgSet(mtt), RooFit::NumEvents(nElectrons), RooFit::Extended(true), RooFit::AutoBinned(false))
-        );
-  }
+  std::map<int, std::shared_ptr<RooHistPdf>> muon_pdf;
+  std::map<int, std::shared_ptr<RooHistPdf>> electron_pdf;
+  std::map<int, std::shared_ptr<RooAbsPdf::GenSpec>> genSpecs_muon;
+  std::map<int, std::shared_ptr<RooAbsPdf::GenSpec>> genSpecs_electron;
 
   TString keysFile = TString::Format("%s/keyspdf_systematics_%d_%d_btag_pdf.root", base_path.c_str(), mass, btag);
   RooWorkspace keys_workspace("w", "Frit signal workspace");
-
   keys_workspace.import(mtt);
-  keys_workspace.import(muon_pdf);
-  keys_workspace.import(electron_pdf);
-  keys_workspace.import(*muon_pdf_rookeys);
-  keys_workspace.import(*electron_pdf_rookeys);
-
-  //keys_workspace.import(muon_pdf_binned_keys);
-  //keys_workspace.import(electron_pdf_binned_keys);
-
-  //keys_workspace.import(*binnedSignalDataset_muons);
-  //keys_workspace.import(*binnedSignalDataset_electrons);
-
-  TParameter<int> n("iterations", NUM_ITER);
   keys_workspace.import(n);
+
+  for (int i = btagMin; i <= btagMax; i++) {
+    TString treeName = TString::Format("dataset_%dbtag", i);
+    chains[i].reset(new TChain(treeName));
+    chains[i]->Add(signalDatasetFile.c_str());
+
+    signalDatasets[i].reset(new RooDataSet(TString::Format("dataset_%d", i), "dataset", RooArgSet(mtt, lepton_type), RooFit::Import(*chains[i])));
+    // Keep 7000 events max
+    //signalDatasets[i].reset(static_cast<RooDataSet*>(signalDatasets[i]->reduce(RooFit::EventRange(0, 7000), RooFit::SelectVars(RooArgSet(mtt, lepton_type)))));
+
+    Roo1DTable* table = signalDatasets[i]->table(lepton_type);
+    nMuons[i] = table->get("muon");
+    nElectrons[i] = table->get("electron");
+    delete table;
+
+    std::cout << i << " b-tag: " << nMuons[i] << " muon events, " << nElectrons[i] << " electron events" << std::endl;
+
+    RooDataHist* binnedSignalDataset = signalDatasets[i]->binnedClone();
+
+    binnedSignalDataset_muons[i].reset(static_cast<RooDataHist*>(binnedSignalDataset->reduce(RooFit::SelectVars(RooArgSet(mtt)), RooFit::Cut("lepton_type == 13"), RooFit::Name(TString::Format("binned_dataset_muon_%d", i)))));
+    binnedSignalDataset_electrons[i].reset(static_cast<RooDataHist*>(binnedSignalDataset->reduce(RooFit::SelectVars(RooArgSet(mtt)), RooFit::Cut("lepton_type == 11"), RooFit::Name(TString::Format("binned_dataset_electron_%d", i)))));
+
+    delete binnedSignalDataset;
+
+    // Create pdf from dataset
+    muon_pdf[i].reset(new RooHistPdf(TString::Format("muon_hist_pdf_%d", i), "muon_hist_pdf", RooArgSet(mtt), *binnedSignalDataset_muons[i]));
+    electron_pdf[i].reset(new RooHistPdf(TString::Format("electron_hist_pdf_%d", i), "electron_hist_pdf", RooArgSet(mtt), *binnedSignalDataset_electrons[i]));
+
+    genSpecs_muon[i].reset(muon_pdf[i]->prepareMultiGen(RooArgSet(mtt), RooFit::NumEvents(nMuons[i]), RooFit::Extended(true), RooFit::AutoBinned(false)/*, RooFit::Verbose(true)*/));
+
+    if (! muonsOnly) {
+      genSpecs_electron[i].reset(electron_pdf[i]->prepareMultiGen(RooArgSet(mtt), RooFit::NumEvents(nElectrons[i]), RooFit::Extended(true), RooFit::AutoBinned(false)));
+    }
+
+    keys_workspace.import(*muon_pdf[i]);
+    keys_workspace.import(*electron_pdf[i]);
+    keys_workspace.import(*muon_pdf_rookeys[i]);
+    keys_workspace.import(*electron_pdf_rookeys[i]);
+
+  }
 
   for (int i = 0; i < NUM_ITER; i++) {
 
     std::cout << "Iteration #" << i + 1 << " over " << NUM_ITER << std::endl;
 
-    std::cout << "Generating distribution..." << std::endl;
-    RooDataSet* muon_toyData = nullptr;
-    RooDataSet* electron_toyData = nullptr;
 
-    muon_toyData = muon_pdf.generate(*genSpecs_muon);
-    if (!muonsOnly)
-      electron_toyData = electron_pdf.generate(*genSpecs_electron);
+    std::map<int, std::shared_ptr<RooDataSet>> muon_toyData;
+    std::map<int, std::shared_ptr<RooDataSet>> electron_toyData;
+
+    std::map<int, std::shared_ptr<RooKeysPdf>> muon_toy_pdf;
+    std::map<int, std::shared_ptr<RooKeysPdf>> electron_toy_pdf;
 
     // Create RooKeysPdf from toys
-    std::cout << "Generating keys pdf..." << std::endl;
-    std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
+    for (int b = btagMin; b <= btagMax; b++) {
 
-    RooKeysPdf* muon_toy_pdf = new RooKeysPdf("signal_muon", "Keys pdf for signal", mtt, *muon_toyData, RooKeysPdf::MirrorBoth, 2);
-    RooKeysPdf* electron_toy_pdf = nullptr;
-    if (!muonsOnly) {
-      electron_toy_pdf = new RooKeysPdf("signal_electron", "Keys pdf for signal", mtt, *electron_toyData, RooKeysPdf::MirrorBoth, 2);
+      std::cout << "Generating distribution for " << b << " b-tag..." << std::endl;
+      muon_toyData[b].reset(muon_pdf[b]->generate(*genSpecs_muon[b]));
+      if (!muonsOnly)
+        electron_toyData[b].reset(electron_pdf[b]->generate(*genSpecs_electron[b]));
+      
+      std::cout << "Generating keys pdf for " << b << " b-tag ..." << std::endl;
+      std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
+      muon_toy_pdf[b].reset(new RooKeysPdf("signal_muon", "Keys pdf for signal", mtt, *muon_toyData[b], RooKeysPdf::MirrorBoth, 2));
+      if (!muonsOnly) {
+        electron_toy_pdf[b].reset(new RooKeysPdf("signal_electron", "Keys pdf for signal", mtt, *electron_toyData[b], RooKeysPdf::MirrorBoth, 2));
+      }
+      std::chrono::seconds t = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - t0);
+      std::cout << "Done in " << t.count() << "s." << std::endl;
+
+      // Save the pdf in a workspace
+
+      TString workspaceFile = TString::Format("%s/frit/temporary_Zprime%d_%s_%d_btag_workspace.root", base_path.c_str(), mass, analysisName.c_str(), b);
+      RooWorkspace temp_workspace("w", "Frit signal workspace");
+
+      temp_workspace.import(*muon_toy_pdf[b]);
+      if (! muonsOnly)
+        temp_workspace.import(*electron_toy_pdf[b]);
+
+      temp_workspace.writeToFile(workspaceFile, true);
+
+      TString datasetName = TString::Format("dataset_muon_%d_%d", b, i);
+      muon_toyData[b]->SetName(datasetName);
+
+      datasetName = TString::Format("dataset_electron_%d_%d", b, i);
+      electron_toyData[b]->SetName(datasetName);
+
+      keys_workspace.import(*muon_toyData[b]);
+      keys_workspace.import(*electron_toyData[b]);
     }
 
-    std::chrono::seconds t = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - t0);
-    std::cout << "Done in " << t.count() << "s." << std::endl;
-
-    TString datasetName = TString::Format("dataset_muon_%d", i);
-    muon_toyData->SetName(datasetName);
-
-    datasetName = TString::Format("dataset_electron_%d", i);
-    electron_toyData->SetName(datasetName);
-
-    keys_workspace.import(*muon_toyData);
-    keys_workspace.import(*electron_toyData);
-
-    delete muon_toyData;
-    delete electron_toyData;
-
-    // Save the pdf in a workspace
-
-    TString workspaceFile = TString::Format("%s/frit/temporary_Zprime%d_%s_%d_btag_workspace.root", base_path.c_str(), mass, analysisName.c_str(), btag);
-    RooWorkspace temp_workspace("w", "Frit signal workspace");
-
-    temp_workspace.import(*muon_toy_pdf);
-    if (! muonsOnly)
-      temp_workspace.import(*electron_toy_pdf);
-
-    temp_workspace.writeToFile(workspaceFile, true);
-
+    TString workspaceFile = TString::Format("%s/frit/temporary_Zprime%d_%s_%%d_btag_workspace.root", base_path.c_str(), mass, analysisName.c_str());
     std::cout << "Fitting..." << std::endl;
-
     pid_t child = fork();
     if (child == 0) {
 
@@ -341,17 +368,16 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
     pull->Fill((shm->nSignalEvents - events_reference) / shm->nSignalEvents_error);
     residuals->Fill(shm->nSignalEvents - events_reference);
 
-    TString pdfName = TString::Format("signal_muon_%d", i);
-    muon_toy_pdf->SetName(pdfName);
+    for (int b = btagMin; b < btagMax; b++) {
+      TString pdfName = TString::Format("signal_muon_%d_%d", b, i);
+      muon_toy_pdf[b]->SetName(pdfName);
 
-    pdfName = TString::Format("signal_electron_%d", i);
-    electron_toy_pdf->SetName(pdfName);
+      pdfName = TString::Format("signal_electron_%d_%d", b, i);
+      electron_toy_pdf[b]->SetName(pdfName);
 
-    keys_workspace.import(*muon_toy_pdf);
-    keys_workspace.import(*electron_toy_pdf);
-
-    delete muon_toy_pdf;
-    delete electron_toy_pdf;
+      keys_workspace.import(*muon_toy_pdf[b]);
+      keys_workspace.import(*electron_toy_pdf[b]);
+    }
   }
 
   keys_workspace.writeToFile(keysFile); 
@@ -367,11 +393,6 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
 
   delete sigma;
   delete pull;
-
-  delete w;
-
-  delete binnedSignalDataset_muons;
-  delete binnedSignalDataset_electrons;
 
   shmdt(shm);
 

@@ -1360,7 +1360,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
     TString workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), syst_str.c_str(), massZprime, analysisName.c_str(), categoryBTag);
     if (customWorkspaceFile.length() > 0) {
-      workspaceFile = customWorkspaceFile;
+      workspaceFile = TString::Format(customWorkspaceFile.c_str(), categoryBTag);
       std::cout << Bash::set_color(Bash::Color::BLUE) << "Using custom workspace '" << workspaceFile << "'" << Bash::set_color() << std::endl;
     }
 
