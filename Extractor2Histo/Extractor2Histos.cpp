@@ -25,6 +25,9 @@ void Extractor2Histos::Loop()
   TH1D *hMuRelIso = new TH1D("hMuRelIso", "", 50, 0., 0.15);
   TH1D *hMuRelIso_beforesel = new TH1D("hMuRelIso_beforesel", "", 50, 0., 0.15);
 
+  TH1D *hElRelIso = new TH1D("hElRelIso", "", 50, 0., 0.15);
+  TH1D *hElRelIso_beforesel = new TH1D("hElRelIso_beforesel", "", 50, 0., 0.15);
+
   TH1D *h1stjetpt = new TH1D("h1stjetpt", "", 100, 70., 640.);
   TH1D *h1stjetpt_beforesel = new TH1D("h1stjetpt_beforesel", "", 100, 70., 640.);
 
@@ -146,7 +149,10 @@ void Extractor2Histos::Loop()
       hNBtaggedJets_beforesel->Fill(nBtaggedJets_CSVM, eventWeight);
 
       hLeptonPt_beforesel->Fill(ptLepton, eventWeight);
-      hMuRelIso_beforesel->Fill(muRelIso[0], eventWeight);
+      if (mIsSemiMu)
+        hMuRelIso_beforesel->Fill(muRelIso[0], eventWeight);
+      else
+        hElRelIso_beforesel->Fill(elRelIso[0], eventWeight);
       
       hMET_beforesel->Fill(MET, eventWeight);
 
@@ -179,7 +185,10 @@ void Extractor2Histos::Loop()
         hNVtx->Fill(n_vertices, eventWeight);
         hNTrueInt->Fill(n_trueInteractions, eventWeight);
 
-        hMuRelIso->Fill(muRelIso[0], eventWeight);
+        if (mIsSemiMu)
+          hMuRelIso->Fill(muRelIso[0], eventWeight);
+        else
+          hElRelIso->Fill(elRelIso[0], eventWeight);
 
         hmtlep->Fill(mLepTop_AfterChi2andKF, eventWeight);
         hmthad->Fill(mHadTop_AfterChi2andKF, eventWeight);
@@ -212,6 +221,9 @@ void Extractor2Histos::Loop()
 
   hMuRelIso->Write();
   hMuRelIso_beforesel->Write();
+
+  hElRelIso->Write();
+  hElRelIso_beforesel->Write();
 
   h1stjetpt->Write();
   h1stjetpt_beforesel->Write();
@@ -327,7 +339,7 @@ void Extractor2Histos::Init()
     SetBranchAddress(fMTT, "nGoodElectrons", &nGoodElectrons, &b_nGoodElectrons);
     SetBranchAddress(fMTT, "electronPt", &electronPt, &b_electronPt);
     SetBranchAddress(fMTT, "elRelIso", &elRelIso, &b_elRelIso);
-    SetBranchAddress(fMTT, "hyperTight1MC", &hyperTight1MC, &b_hyperTight1MC);
+    //SetBranchAddress(fMTT, "hyperTight1MC", &hyperTight1MC, &b_hyperTight1MC);
   }
   SetBranchAddress(fMTT, "1stjetpt", &p_1stjetpt, &b_1stjetpt);
   SetBranchAddress(fMTT, "2ndjetpt", &p_2ndjetpt, &b_2ndjetpt);
@@ -357,7 +369,7 @@ void Extractor2Histos::Init()
   SetBranchAddress(fMTT, "mtt_AfterChi2", &mtt_AfterChi2, &b_mtt_AfterChi2);
   SetBranchAddress(fMTT, "mLepTop_AfterChi2andKF", &mLepTop_AfterChi2andKF, &b_mLepTop_AfterChi2andKF);
   SetBranchAddress(fMTT, "mHadTop_AfterChi2andKF", &mHadTop_AfterChi2andKF, &b_mHadTop_AfterChi2andKF);
-  SetBranchAddress(fMTT, "mtt_AfterChi2andKF", &mtt_AfterChi2andKF, &b_mtt_AfterChi2andKF);
+  //SetBranchAddress(fMTT, "mtt_AfterChi2andKF", &mtt_AfterChi2andKF, &b_mtt_AfterChi2andKF);
 
   if (fMTT->GetBranch("trigger_passed")) {
     SetBranchAddress(fMTT, "trigger_passed", &m_triggerPassed, NULL);
