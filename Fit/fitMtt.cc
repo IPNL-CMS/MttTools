@@ -474,12 +474,12 @@ void loadSystematics(int mass, int btag, double& jec, double& pdf, double& pdf_c
 void saveSigma(int mass, int btag, double sigma, double chi, double events, RooFitResult* fitRes)
 {
 
-  FILE* lock = fopen("sigma_reference.lock", "w+");
+  FILE* lock = fopen((BASE_PATH + "sigma_reference.lock").c_str(), "w+");
   lockf(fileno(lock), F_LOCK, 0); // This will block until we have the right to write in the file
 
   Json::Reader reader;
   Json::Value root;
-  std::ifstream file("sigma_reference.json");
+  std::ifstream file((BASE_PATH + "sigma_reference.json").c_str());
   reader.parse(file, root);
   file.close();
 
@@ -500,7 +500,7 @@ void saveSigma(int mass, int btag, double sigma, double chi, double events, RooF
 
 
   std::ofstream ofile;
-  ofile.open("sigma_reference.json", std::ios::out | std::ios::trunc);
+  ofile.open((BASE_PATH + "sigma_reference.json").c_str(), std::ios::out | std::ios::trunc);
   Json::StyledWriter writer;
   ofile << writer.write(root);
   ofile.close();
@@ -511,12 +511,12 @@ void saveSigma(int mass, int btag, double sigma, double chi, double events, RooF
 void saveSystematicParameter(int mass, int btag, const std::string& type, const std::string& param, const std::string& subparam, double nEvents, double sigma, double chi2, RooFitResult* fitRes)
 {
 
-  FILE* lock = fopen("systematics_parameters.lock", "w+");
+  FILE* lock = fopen((BASE_PATH + "systematics_parameters.lock").c_str(), "w+");
   lockf(fileno(lock), F_LOCK, 0); // This will block until we have the right to write in the file
 
   Json::Reader reader;
   Json::Value root;
-  std::ifstream file("systematics_parameters.json");
+  std::ifstream file((BASE_PATH + "systematics_parameters.json").c_str());
   reader.parse(file, root);
   file.close();
 
@@ -548,7 +548,7 @@ void saveSystematicParameter(int mass, int btag, const std::string& type, const 
   }
 
   //TODO: reswitch to ofstream
-  FILE* fd = fopen("systematics_parameters.json", "w+");
+  FILE* fd = fopen((BASE_PATH + "systematics_parameters.json").c_str(), "w+");
   Json::StyledWriter writer;
   const std::string json = writer.write(root);
   fwrite(json.c_str(), json.length(), 1, fd);
@@ -615,12 +615,12 @@ struct LikelihoodResults
 
 void saveLikelihoodResults(const int mass, int btag, const LikelihoodResults& results, const double denominator)
 {
-  FILE* lock = fopen("likelihood_scan.lock", "w+");
+  FILE* lock = fopen((BASE_PATH + "likelihood_scan.lock").c_str(), "w+");
   lockf(fileno(lock), F_LOCK, 0); // This will block until we have the right to write in the file
 
   Json::Reader reader;
   Json::Value root;
-  std::ifstream file("likelihood_scan.json");
+  std::ifstream file((BASE_PATH + "likelihood_scan.json").c_str());
   reader.parse(file, root);
   file.close();
 
@@ -638,7 +638,7 @@ void saveLikelihoodResults(const int mass, int btag, const LikelihoodResults& re
   root[uuid][strMass][btagStr]["scan_wsyst_cut_limit"] = results.scan_wsyst_cut_limit / denominator;
 
   std::ofstream ofile;
-  ofile.open("likelihood_scan.json", std::ios::out | std::ios::trunc);
+  ofile.open((BASE_PATH + "likelihood_scan.json").c_str(), std::ios::out | std::ios::trunc);
   Json::StyledWriter writer;
   ofile << writer.write(root);
   ofile.close();
@@ -917,7 +917,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, Ro
 
   const int padWidth = 900;
   const int padHeight = 900;
-  const float LUMI = 14.8;
+  const float LUMI = 19.58;
 
   const int canvasWidth = padWidth * x;
   const int canvasHeight = padHeight * y;
@@ -1281,10 +1281,10 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   //double lumi_mu            = 4678. * 1.066; // Original: 4678; +6.6%
   //double lumi_e             = 4682. * 1.066; // Original: 4682; +6.6%
 
-  double lumi_mu = 16801.751;
-  double lumi_e  = 16803.706;
+  double lumi_mu = 19576.993;
+  double lumi_e  = 19444.706;
 
-  double s_lumi_mu_percent  = 2.2 / 100.; // 2.2%
+  double s_lumi_mu_percent  = 4.4 / 100.; // 2.2%
 
   Double_t br_semil = 1.0; //0.14815; now included in the efficiency
 
@@ -1423,9 +1423,15 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   
   if (! combine) {
 
-    eff_mu[2] = computeEfficiencyMuons_2btag(sel_eff_mu[2], hlt_eff_mu[2]);
-    eff_e[2]  = computeEfficiencyElectrons_2btag(sel_eff_e[2], hlt_eff_e[2]);
-    total_efficiency = eff_mu[2];
+    if (btag == 2) {
+      eff_mu[2] = computeEfficiencyMuons_2btag(sel_eff_mu[2], hlt_eff_mu[2]);
+      eff_e[2]  = computeEfficiencyElectrons_2btag(sel_eff_e[2], hlt_eff_e[2]);
+      total_efficiency = eff_mu[2];
+    } else if (btag == 1) {
+      eff_mu[1] = computeEfficiencyMuons_1btag(sel_eff_mu[1], hlt_eff_mu[1]);
+      eff_e[1]  = computeEfficiencyElectrons_1btag(sel_eff_e[1], hlt_eff_e[1]);
+      total_efficiency = eff_mu[1];
+    }
 
   } else {
 

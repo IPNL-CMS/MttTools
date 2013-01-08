@@ -206,7 +206,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
 
   const int padWidth = 900;
   const int padHeight = 900;
-  const float LUMI = 5.1;
+  const float LUMI = 19.58;
 
   const int canvasWidth = padWidth * x;
   const int canvasHeight = padHeight * y;

@@ -39,7 +39,7 @@
 
 #include "Utils.h"
 
-#define NUM_ITER 500
+#define NUM_ITER 150
 
 std::string base_path = "";
 
@@ -68,6 +68,11 @@ double getSigmaReference(int mass, int btag) {
 
   if (!refRoot.isMember(strMass)) {
     std::cerr << "ERROR: mass '" << mass << "' not found in JSON file. Exiting." << std::endl;
+    exit(1);
+  }
+
+  if (! refRoot[strMass].isMember(btagStr)) {
+    std::cerr << "ERROR: No sigma_ref for this b-tag. Please run fitMtt." << std::endl;
     exit(1);
   }
 
@@ -104,6 +109,11 @@ double getNumberOfEventsReference(int mass, int btag) {
     exit(1);
   }
 
+  if (! refRoot[strMass].isMember(btagStr)) {
+    std::cerr << "ERROR: No sigma_ref for this b-tag. Please run fitMtt." << std::endl;
+    exit(1);
+  }
+
   return refRoot[strMass][btagStr]["events"].asDouble();
 }
 
@@ -125,6 +135,8 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
     perror("Can't create shared memory area");
     exit(1);
   }
+  
+  delete random;
 
   std::stringstream ss;
   ss << mass;
@@ -158,7 +170,7 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
      std::cout << "Sigma ref: JSON = " << sigma_reference << "; C++ = " << shm->sigma << std::endl;
      */
 
-  TString filename = TString::Format("keyspdf_systematics_%d_%d_btag.root", mass, btag);
+  TString filename = TString::Format("%s/keyspdf_systematics_%d_%d_btag.root", base_path.c_str(), mass, btag);
   TH1* sigma = new TH1D("sigma", "sigma", 80, -3, 3);
   TH1* pull = new TH1D("pull", "pull", 80, -3, 3);
   TH1* events = new TH1D("events", "events", 80, events_reference - 100, events_reference + 100);

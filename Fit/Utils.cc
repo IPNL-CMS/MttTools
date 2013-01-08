@@ -74,7 +74,7 @@ char** getSystCLParameters(const std::string& mass, const std::string& file, boo
   va_start(paramList, btag);
 
   const std::string parameter = singleFile ? "-i" : "--input-list";
-  std::vector<const char*> params = { "fitMtt", parameter.c_str(), file.c_str(), "-m", mass.c_str(), "--syst-computation", "--no-figs", "--no-text-files", "--no-root-files", "--b-tag" };
+  std::vector<const char*> params = { "fitMtt", parameter.c_str(), file.c_str(), "-m", mass.c_str(), "--syst-computation", "--no-figs", "--no-root-files", "--b-tag" };
 
   std::stringstream ss;
   ss << btag;
