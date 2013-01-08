@@ -6,7 +6,7 @@
 PUReweighter::PUReweighter(bool isSemiMu, const std::string& mcName):
   puHisto(NULL) {
     const std::string path = "../PUReweighting/";
-    const std::string dataFileName = path + ((isSemiMu) ? "Muon_Run2012AB_pileup_profile.root" : "Electron_Run2012AB_pileup_profile.root");
+    const std::string dataFileName = path + ((isSemiMu) ? "pileup_Muon_full_stat_2012_08Jan13.root" : "pileup_Electron_full_stat_2012_08Jan13.root");
 
     TString mcFileName = TString::Format((path + "summer12_computed_mc_%s_pu_truth_70bins.root").c_str(), mcName.c_str());
 
@@ -57,7 +57,7 @@ PUReweighter::PUReweighter(bool isSemiMu, const std::string& mcName):
 PUReweighter::PUReweighter(bool isSemiMu, PUProfile profile/* = PUProfile::S10*/):
   puHisto(NULL) {
     const std::string path = "../PUReweighting/";
-    const std::string dataFileName = path + ((isSemiMu) ? "Muon_Run2012AB_pileup_profile.root" : "Electron_Run2012AB_pileup_profile.root");
+    const std::string dataFileName = path + ((isSemiMu) ? "pileup_Muon_full_stat_2012_08Jan13.root" : "pileup_Electron_full_stat_2012_08Jan13.root");
 
     TFile* dataFile = TFile::Open(dataFileName.c_str());
 
