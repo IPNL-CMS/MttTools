@@ -1306,21 +1306,21 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   std::map<int, double> s_hlt_eff_mu; // ?
   std::map<int, double> s_hlt_eff_e; // ?
 
-  std::map<int, double> s_sys_JEC; // JEC systematic error for each b-tag
-  std::map<int, double> s_sys_PDF; // Signal PDF systematic error for each b-tag
-  std::map<int, double> s_sys_PDF_CB; // Background PDF systematic error for each b-tag
+  double s_sys_JEC; // JEC systematic error
+  double s_sys_PDF; // Signal PDF systematic error
+  double s_sys_PDF_CB; // Background PDF systematic
 
   double sigma_ref = 0;; // Reference cross-section, obtained when fitting once
   loadSigmaRef(massZprime, btag, sigma_ref);
 
+  loadSystematics(massZprime, btag, s_sys_JEC, s_sys_PDF, s_sys_PDF_CB);
+
   if (! combine) {
     loadEfficiencies(massZprime, syst_str, btag, sel_eff_mu[btag], sel_eff_e[btag], hlt_eff_mu[btag], hlt_eff_e[btag], s_sel_eff_mu[btag], s_sel_eff_e[btag], s_hlt_eff_mu[btag], s_hlt_eff_e[btag]);
-    loadSystematics(massZprime, btag, s_sys_JEC[btag], s_sys_PDF[btag], s_sys_PDF_CB[btag]);
   } else {
     // Load for 0, 1 and 2 btag
     for (int i = minBTag; i <= maxBTag; i++) {
       loadEfficiencies(massZprime, syst_str, i, sel_eff_mu[i], sel_eff_e[i], hlt_eff_mu[i], hlt_eff_e[i], s_sel_eff_mu[i], s_sel_eff_e[i], s_hlt_eff_mu[i], s_hlt_eff_e[i]);
-      loadSystematics(massZprime, i, s_sys_JEC[i], s_sys_PDF[i], s_sys_PDF_CB[i]);
     }
   }
 
@@ -1543,10 +1543,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
   double selection_systematic_relative_square = lumi_systematic_relative * lumi_systematic_relative + b_tagging_systematic_relative * b_tagging_systematic_relative + efficiency_systematic;
 
-  double yield_efficiency_relative_square = 0.;
-  for (int i = minBTag; i <= minBTag; i++) {
-     yield_efficiency_relative_square += s_sys_JEC[i] * s_sys_JEC[i] + s_sys_PDF[i] * s_sys_PDF[i] + s_sys_PDF_CB[i] * s_sys_PDF_CB[i];
-  }
+  double yield_efficiency_relative_square = s_sys_JEC * s_sys_JEC + s_sys_PDF * s_sys_PDF + s_sys_PDF_CB * s_sys_PDF_CB;
 
   if (ONLY_LUMI_SYST) {
     std::cout << Bash::set_color(Bash::Color::RED) << "WARNING: Using only luminosity error for systematics" << Bash::set_color() << std::endl;
