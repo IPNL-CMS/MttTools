@@ -5,14 +5,14 @@ import os, subprocess, tempfile, datetime
 d = datetime.datetime.now().strftime("%d%b%y")
 
 files = [
-    ["MTT_Zprime_750_Narrow_2012_dataset_%s.root", "MC/MTT_Zprime_750_Narrow_full_stat_%s.list"],
-    ["MTT_Zprime_1000_Narrow_2012_dataset_%s.root", "MC/MTT_Zprime_1000_Narrow_full_stat_%s.list"],
-    ["MTT_Zprime_1250_Narrow_2012_dataset_%s.root", "MC/MTT_Zprime_1250_Narrow_full_stat_%s.list"],
-    ["MTT_Zprime_1500_Narrow_2012_dataset_%s.root", "MC/MTT_Zprime_1500_Narrow_full_stat_%s.list"]
+    ["MTT_Zprime_750_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_750_Narrow_full_stat_%s.list"],
+    ["MTT_Zprime_1000_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_1000_Narrow_full_stat_%s.list"],
+    ["MTT_Zprime_1250_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_1250_Narrow_full_stat_%s.list"],
+    ["MTT_Zprime_1500_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_1500_Narrow_full_stat_%s.list"]
   ]
 
 def launch(input, output):
-  args = ["./extractor2Dataset", "--input-list", input, "-o", output, "--mc"]
+  args = ["./extractor2Dataset", "--input-list", input, "-o", output, "--mc", "-n", "4000"]
   if "semie" in input:
     args.append("--type semie")
   elif "semimu" in input:

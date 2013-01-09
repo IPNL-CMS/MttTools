@@ -5,15 +5,15 @@ import os, subprocess, tempfile, datetime
 d = datetime.datetime.now().strftime("%d%b%y")
 
 files = [
-    ["MTT_Zprime_750_Narrow_2012_dataset_JECup_%s.root",  "Systematics/JECup/MTT_Zprime_750_Narrow_full_stat_%s.list"],
-    ["MTT_Zprime_1000_Narrow_2012_dataset_JECup_%s.root", "Systematics/JECup/MTT_Zprime_1000_Narrow_full_stat_%s.list"],
-    ["MTT_Zprime_1250_Narrow_2012_dataset_JECup_%s.root", "Systematics/JECup/MTT_Zprime_1250_Narrow_full_stat_%s.list"],
-    ["MTT_Zprime_1500_Narrow_2012_dataset_JECup_%s.root", "Systematics/JECup/MTT_Zprime_1500_Narrow_full_stat_%s.list"],
+    ["MTT_Zprime_750_Narrow_2012_dataset_%s_JECup.root",  "Systematics/JECup/MTT_Zprime_750_Narrow_full_stat_%s.list"],
+    ["MTT_Zprime_1000_Narrow_2012_dataset_%s_JECup.root", "Systematics/JECup/MTT_Zprime_1000_Narrow_full_stat_%s.list"],
+    ["MTT_Zprime_1250_Narrow_2012_dataset_%s_JECup.root", "Systematics/JECup/MTT_Zprime_1250_Narrow_full_stat_%s.list"],
+    ["MTT_Zprime_1500_Narrow_2012_dataset_%s_JECup.root", "Systematics/JECup/MTT_Zprime_1500_Narrow_full_stat_%s.list"],
 
-    ["MTT_Zprime_750_Narrow_2012_dataset_JECdown_%s.root",  "Systematics/JECdown/MTT_Zprime_750_Narrow_full_stat_%s.list"],
-    ["MTT_Zprime_1000_Narrow_2012_dataset_JECdown_%s.root", "Systematics/JECdown/MTT_Zprime_1000_Narrow_full_stat_%s.list"],
-    ["MTT_Zprime_1250_Narrow_2012_dataset_JECdown_%s.root", "Systematics/JECdown/MTT_Zprime_1250_Narrow_full_stat_%s.list"],
-    ["MTT_Zprime_1500_Narrow_2012_dataset_JECdown_%s.root", "Systematics/JECdown/MTT_Zprime_1500_Narrow_full_stat_%s.list"]
+    ["MTT_Zprime_750_Narrow_2012_dataset_%s_JECdown.root",  "Systematics/JECdown/MTT_Zprime_750_Narrow_full_stat_%s.list"],
+    ["MTT_Zprime_1000_Narrow_2012_dataset_%s_JECdown.root", "Systematics/JECdown/MTT_Zprime_1000_Narrow_full_stat_%s.list"],
+    ["MTT_Zprime_1250_Narrow_2012_dataset_%s_JECdown.root", "Systematics/JECdown/MTT_Zprime_1250_Narrow_full_stat_%s.list"],
+    ["MTT_Zprime_1500_Narrow_2012_dataset_%s_JECdown.root", "Systematics/JECdown/MTT_Zprime_1500_Narrow_full_stat_%s.list"]
   ]
 
 def launch(input, output):

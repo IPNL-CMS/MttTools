@@ -20,7 +20,7 @@ bool OVERRIDE_TYPE;
 std::string OVERRIDED_TYPE;
 PUProfile puProfile;
 
-void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isData, const std::string& type) {
+void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isData, const std::string& type, int max) {
 
   TString outputFileFormated = OVERRIDE_TYPE ? outputFile : TString::Format(outputFile.c_str(), (isData) ? "" : type.c_str());
   std::cout << outputFileFormated << std::endl;
@@ -76,6 +76,9 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
   }
 
   int64_t entries = mtt->GetEntries();
+
+  std::map<int, int64_t> selectedEntries;
+
   for (int64_t i = 0; i < entries; i++) {
     mtt->GetEntry(i);
     event->GetEntry(i);
@@ -87,12 +90,6 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
     // Selection
     if (isSel == 1 && pt_1stJet > 70. && pt_2ndJet > 50. && mtt_afterChi2 > 0. && bestSolChi2 < 500.) {
       // Good event
-
-      weight = 1.;
-      if (! isData) {
-        weight = puReweigher->weight(n_trueInteractions);
-      }
-
       int index;
       if (nBtaggedJets_CSVM == 0)
         index = 0;
@@ -101,7 +98,16 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
       else
         index = 2;
 
+      if (max > 0 && selectedEntries[index] >= max)
+        continue;
+
+      weight = 1.;
+      if (! isData) {
+        weight = puReweigher->weight(n_trueInteractions);
+      }
+
       outputTrees[index]->Fill();
+      selectedEntries[index]++;
     }
   }
 
@@ -129,12 +135,12 @@ void loadChain(const std::vector<std::string>& inputFiles, TChain*& mtt, TChain*
   }
 }
 
-void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type) {
+void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type, int max) {
 
   TChain* mtt = NULL, *event = NULL;
 
   loadChain(inputFiles, mtt, event);
-  reduce(mtt, event, outputFile, isData, type);
+  reduce(mtt, event, outputFile, isData, type, max);
 
   delete mtt;
   delete event;
@@ -170,6 +176,7 @@ int main(int argc, char** argv)
 
     TCLAP::ValueArg<std::string> typeArg("", "type", "current inputfile type (semie or semimu)", true, "", "string", cmd);
     TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S10", "string", cmd);
+    TCLAP::ValueArg<int> maxEntriesArg("n", "", "Maximal number of entries to process", false, -1, "int", cmd);
 
     cmd.parse(argc, argv);
 
@@ -191,7 +198,7 @@ int main(int argc, char** argv)
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue());    
+    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue(), maxEntriesArg.getValue()); 
 
   } catch (TCLAP::ArgException& e) {
     std::cout << e.what() << std::endl;
