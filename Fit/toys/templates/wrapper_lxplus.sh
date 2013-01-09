@@ -16,8 +16,10 @@ num_exp=$3
 job_index=$4
 btag=$8
 
+echo "About to launch"
+echo "./fitMtt -i $1 -m $mass --limit-curve --toys ${num_exp} --index ${job_index} --path \"$6\" --output-path \"$7\" --no-figs --no-root-files     --b-tag $8 --batch"
 # launch analysis
-./fitMtt -i $1 -m $mass --limit-curve --toys ${num_exp} --index ${job_index} --path \"$6\" --output-path \"$7\" --no-text-files --no-figs --no-root-files --b-tag $8 --batch
+./fitMtt -i $1 -m $mass --limit-curve --toys ${num_exp} --index ${job_index} --path \"$6\" --output-path \"$7\" --no-figs --no-root-files --b-tag $8 --batch
 
 error=$?
 

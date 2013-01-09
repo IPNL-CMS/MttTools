@@ -100,8 +100,8 @@ frit_files = [
 
 
 works_files = [
-    "../fitMtt",
-    "templates/wrapper.sh"
+    "../../../fitMtt",
+    "../analysis.json"
     ]
 
 print "Submitting %d jobs with %d toys per job: Total: %d toys for each mass" % (num_jobs, num_toys_per_job, num_toys)
