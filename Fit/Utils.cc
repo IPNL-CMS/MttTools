@@ -67,7 +67,7 @@ std::string formatPath(const std::string& base, const std::string& filename) {
   return ss.str();
 }
 
-char** getSystCLParameters(const std::string& mass, const std::string& file, bool singleFile, bool muonsOnly, int btag, ...) {
+char** getSystCLParameters(const std::string& mass, const std::string& file, bool singleFile, bool fixBackground, bool muonsOnly, int btag, ...) {
  // fitMtt", "-m", ss.str().c_str(), "--syst", (*param).c_str(), "--syst-computation", "--no-figs", "--no-text-files", "--no-root-files", "--muons-only  
  
   va_list paramList;
@@ -83,6 +83,9 @@ char** getSystCLParameters(const std::string& mass, const std::string& file, boo
 
   if (muonsOnly)
     params.push_back("--muons-only");
+
+  if (fixBackground)
+    params.push_back("--fix-background");
 
   char * arg = NULL;
   while ((arg = va_arg(paramList, char*))) {
@@ -174,4 +177,13 @@ bool analysisUseSystematics(const std::string& base/* = "."*/) {
   const std::string uuid = getAnalysisUUID(base);
 
   return root["analysis"][getAnalysisIndex(base)][uuid]["systematics"].asBool();
+}
+
+bool analysisFixedBackground(const std::string& base/* = "."*/) {
+  Json::Value root;
+  getJsonRoot(formatPath(base, "analysis.json"), root);
+
+  const std::string uuid = getAnalysisUUID(base);
+
+  return root["analysis"][getAnalysisIndex(base)][uuid]["fixed_background"].asBool();
 }

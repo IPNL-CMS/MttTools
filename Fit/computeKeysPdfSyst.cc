@@ -117,7 +117,7 @@ double getNumberOfEventsReference(int mass, int btag) {
   return refRoot[strMass][btagStr]["events"].asDouble();
 }
 
-void process(int mass, bool muonsOnly, int btag, const std::string& file, bool singleFile, const std::string& signalDatasetFile) {
+void process(int mass, bool muonsOnly, int btag, const std::string& file, bool singleFile, const std::string& signalDatasetFile, bool fixBackground) {
   
   RooRandom::randomGenerator()->SetSeed(0);
 
@@ -352,7 +352,7 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
       dup2(fd, STDOUT_FILENO); 
       dup2(fd, STDIN_FILENO);
 
-      char** params = getSystCLParameters(ss.str(), file, singleFile, muonsOnly, btag, "--shared-memory", "--shm-key", strKey.str().c_str(), "--workspace", workspaceFile.Data(), NULL);
+      char** params = getSystCLParameters(ss.str(), file, singleFile, fixBackground, muonsOnly, btag, "--shared-memory", "--shm-key", strKey.str().c_str(), "--workspace", workspaceFile.Data(), NULL);
       if (execv("./fitMtt", params) < 0) {
         perror("Can't execute fitMtt");
       }
@@ -485,6 +485,8 @@ int main(int argc, char** argv) {
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", false, 2, "integer", cmd);
     TCLAP::SwitchArg extractArg("", "dont-extract", "Only compute systematic with previous results, don't run fitMtt", cmd);
 
+    TCLAP::SwitchArg fixBackgroundArg("", "fix-background", "Fix background when fitting", cmd);
+
     cmd.parse(argc, argv);
 
     int mass = massArg.getValue();
@@ -495,7 +497,7 @@ int main(int argc, char** argv) {
     RooMsgService::instance().setSilentMode(true);
 
     if (! extractArg.getValue())
-      process(mass, muonsOnlyArg.getValue(), btagArg.getValue(), inputFileArg.isSet() ? inputFileArg.getValue() : inputListArg.getValue(), inputFileArg.isSet(), signalDatasetFileArg.getValue());
+      process(mass, muonsOnlyArg.getValue(), btagArg.getValue(), inputFileArg.isSet() ? inputFileArg.getValue() : inputListArg.getValue(), inputFileArg.isSet(), signalDatasetFileArg.getValue(), fixBackgroundArg.getValue());
 
     computeSyst(mass, btagArg.getValue());
 

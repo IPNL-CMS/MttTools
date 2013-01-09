@@ -1169,6 +1169,12 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   if (fitConfigurationFile == "auto" || fitConfigurationFile.empty())
     fitConfigurationFile = "fit_pdf_faltb.json";
 
+  if (! fixBackground) {
+    fixBackground = analysisFixedBackground();
+  } else {
+    std::cout << Bash::set_color(Bash::Color::RED) << "Fitting with fixed background (--fix-background flag overrides analysis configuration)" << Bash::set_color() << std::endl;
+  }
+
   std::cout << "Loading fit configuration from '" << fitConfigurationFile << "'" << std::endl;
 
   // Systematics?

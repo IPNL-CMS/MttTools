@@ -47,7 +47,7 @@ extern double electronIso_scale_factor_error;
 extern bool fileExists(const std::string& filename);
 extern void getJsonRoot(const std::string& filename, Json::Value& root, bool exitOnError = true);
 extern std::string formatPath(const std::string& base, const std::string& filename);
-extern char** getSystCLParameters(const std::string& mass, const std::string& file, bool singleFile, bool muonsOnly, int btag, ...);
+extern char** getSystCLParameters(const std::string& mass, const std::string& file, bool singleFile, bool fixBackground, bool muonsOnly, int btag, ...);
 
 extern int         getAnalysisId  (const std::string& base = ".");
 extern std::string getAnalysisUUID(const std::string& base = ".");
@@ -57,6 +57,7 @@ extern bool        analysisUseSystematics (const std::string& base = ".");
 extern bool        analysisUseSignalSyst  (const std::string& base = ".");
 extern bool        analysisUseBkgSyst     (const std::string& base = ".");
 extern bool        analysisUseJECSyst     (const std::string& base = ".");
+extern bool        analysisFixedBackground(const std::string& base = ".");
 
 extern "C" double computeEfficiencyMuons_2btag(double selEfficiency, double hltEfficiency);
 extern "C" double computeEfficiencyElectrons_2btag(double selEfficiency, double hltEfficiency);

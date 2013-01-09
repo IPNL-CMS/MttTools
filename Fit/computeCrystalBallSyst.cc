@@ -12,7 +12,7 @@
 std::string base_path = "";
 std::vector<std::string> CB_PARAMS;
 
-void process(std::vector<int>& masses, bool muonsOnly, int btag, const std::string& file, bool singleFile) {
+void process(std::vector<int>& masses, bool muonsOnly, int btag, const std::string& file, bool singleFile, bool fixBackground) {
   std::vector<pid_t> children; // For fork()
 
   for (std::vector<int>::iterator it = masses.begin(); it != masses.end(); ++it) {
@@ -30,7 +30,7 @@ void process(std::vector<int>& masses, bool muonsOnly, int btag, const std::stri
         for (int i = 0; i < 2; i++) {
           pid_t child = fork();
           if (child == 0) {
-            char** params = getSystCLParameters(ss.str(), file, singleFile, muonsOnly, btag, "--systCB", (*param).c_str(), "--syst-sign", signs[i], NULL);
+            char** params = getSystCLParameters(ss.str(), file, singleFile, fixBackground, muonsOnly, btag, "--systCB", (*param).c_str(), "--syst-sign", signs[i], NULL);
             execv("./fitMtt", params);
             exit(0);
           } else {
@@ -181,6 +181,8 @@ int main(int argc, char** argv) {
     TCLAP::MultiArg<int> massArg("m", "mass", "Zprime mass", false, "integer", cmd);
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", false, 2, "integer", cmd);
 
+    TCLAP::SwitchArg fixBackgroundArg("", "fix-background", "Fix background when fitting", cmd);
+
     cmd.parse(argc, argv);
 
     std::vector<int> masses = massArg.getValue();
@@ -196,7 +198,7 @@ int main(int argc, char** argv) {
     fillParams(muonsOnlyArg.getValue());
 
     if (! extractArg.getValue())
-      process(masses, muonsOnlyArg.getValue(), btagArg.getValue(), inputFileArg.isSet() ? inputFileArg.getValue() : inputListArg.getValue(), inputFileArg.isSet());
+      process(masses, muonsOnlyArg.getValue(), btagArg.getValue(), inputFileArg.isSet() ? inputFileArg.getValue() : inputListArg.getValue(), inputFileArg.isSet(), fixBackgroundArg.getValue());
 
     computeSyst(masses, btagArg.getValue());
 

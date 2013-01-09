@@ -50,6 +50,7 @@ else:
   analysisSignalSyst = False
   analysisBkgSyst = False
   analysisJECSyst = False
+analysisFixedBackground = query_yes_no("When fitting, should the background be fixed?")
 
 useAsCurrentAnalysis = query_yes_no("Set this new analysis as the current one?")
 
@@ -77,7 +78,8 @@ new_analysis = {
       "systematics": analysisHasSyst,
       "signal_syst": analysisSignalSyst,
       "background_syst": analysisBkgSyst,
-      "jec_syst": analysisJECSyst
+      "jec_syst": analysisJECSyst,
+      "fixed_background": analysisFixedBackground
       }
     }
 
