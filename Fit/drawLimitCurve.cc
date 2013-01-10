@@ -134,7 +134,7 @@ void drawLimitCurve(int btag) {
 
   TGraphAsymmErrors* gra95 = new TGraphAsymmErrors(4, &masses[0], &expected[0], no_error, no_error, &error_low_95[0], &error_high_95[0]);//the 95% band of the 95% expected limits
   gra95->SetMinimum(0);
-  gra95->SetMaximum(20);
+  gra95->SetMaximum(6);
   gra95->SetTitle("95% C.L. upper limit on the cross section");
   gra95->GetXaxis()->SetTitle("m(t#bar{t}) (GeV/c^{2})")	  ;
   gra95->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z') #times BR(Z' #rightarrow t#bar{t}) (pb)");
@@ -144,7 +144,7 @@ void drawLimitCurve(int btag) {
 
   TGraphAsymmErrors* gra = new TGraphAsymmErrors(4, &masses[0], &expected[0], no_error, no_error, &error_low_68[0], &error_high_68[0]);//the 68% band of the 95% expected limits
   gra->SetMinimum(0);
-  gra->SetMaximum(20);
+  gra->SetMaximum(6);
   gra->SetTitle("95% C.L. upper limit on the cross section");
   gra->GetXaxis()->SetTitle("m(t#bar{t}) (GeV/c^{2})")	  ;
   gra->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z') #times BR(Z' #rightarrow t#bar{t}) (pb)");
@@ -182,8 +182,8 @@ void drawLimitCurve(int btag) {
   TLatex t;
   t.SetTextSize(0.04);
   t.SetNDC();
-  t.DrawLatex(0.63, 0.67, "#font[42]{CMS preliminary}");
-  t.DrawLatex(0.63, 0.62, "#font[42]{19.58 fb^{-1} at #sqrt{s}=8 TeV}");
+  t.DrawLatex(0.53, 0.67, "#font[42]{CMS preliminary}");
+  t.DrawLatex(0.53, 0.62, "#font[42]{19.58 fb^{-1} at #sqrt{s}=8 TeV}");
 
   std::string analysisName = getAnalysisName();
   TString prefix = TString::Format("%s/limitCurve_2012_%s_%dbtag", base_path.c_str(), analysisName.c_str(), btag);
