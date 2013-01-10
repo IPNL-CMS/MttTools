@@ -183,7 +183,7 @@ void drawLimitCurve(int btag) {
   t.SetTextSize(0.04);
   t.SetNDC();
   t.DrawLatex(0.63, 0.67, "#font[42]{CMS preliminary}");
-  t.DrawLatex(0.63, 0.62, "#font[42]{14.8 fb^{-1} at #sqrt{s}=8 TeV}");
+  t.DrawLatex(0.63, 0.62, "#font[42]{19.58 fb^{-1} at #sqrt{s}=8 TeV}");
 
   std::string analysisName = getAnalysisName();
   TString prefix = TString::Format("%s/limitCurve_2012_%s_%dbtag", base_path.c_str(), analysisName.c_str(), btag);
@@ -202,6 +202,7 @@ int main(int argc, char** argv) {
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", true, 2, "int", cmd);
 
     cmd.parse(argc, argv);
+    base_path = "analysis/" + getAnalysisUUID();
 
     drawLimitCurve(btagArg.getValue());
 
