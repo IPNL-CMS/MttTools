@@ -21,6 +21,7 @@
 #include <sys/stat.h>
 
 std::string INPUT_PATH;
+std::string base_path = "";
 
 void saveToyLimits(const int mass, const int btag, const double mean, const double rms, const double median, const double m68, const double p68,
     const double m95, const double p95) {
@@ -37,7 +38,7 @@ void saveToyLimits(const int mass, const int btag, const double mean, const doub
 
   Json::Reader reader;
   Json::Value root;
-  std::ifstream file("expected_limits.json");
+  std::ifstream file((base_path + "/expected_limits.json").c_str());
   reader.parse(file, root);
   file.close();
 
@@ -64,7 +65,7 @@ void saveToyLimits(const int mass, const int btag, const double mean, const doub
   root[uuid][strMass][btagStr]["widthP95"] = widthP95;
 
   std::ofstream ofile;
-  ofile.open("expected_limits.json", std::ios::out | std::ios::trunc);
+  ofile.open((base_path + "/expected_limits.json").c_str(), std::ios::out | std::ios::trunc);
   Json::StyledWriter writer;
   ofile << writer.write(root);
   ofile.close();
@@ -155,9 +156,9 @@ void treatToyStuff(bool writeTxtFile, bool savePsGifFiles, int massZprime, int b
 
 
   if (savePsGifFiles) {
-    mkdir(TString::Format("toys/plots/%d-btag", btag).Data(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    mkdir(TString::Format("%s/toys/plots/%d-btag", base_path.c_str(), btag).Data(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
-    TString prefix = TString::Format("toys/plots/%d-btag/data_2012_Zprime%d_%s", btag, massZprime, analysisName.c_str());
+    TString prefix = TString::Format("%s/toys/plots/%d-btag/data_2012_Zprime%d_%s", base_path.c_str(), btag, massZprime, analysisName.c_str());
 
     cToy->Print(TString::Format("%s_LimitPlotsEMu.gif", prefix.Data()));
     cToy2->Print(TString::Format("%s_LimitPlotsSigma.gif", prefix.Data()));
@@ -215,6 +216,7 @@ int main(int argc, char** argv) {
     }
 
     INPUT_PATH = inputPathArg.getValue();
+    base_path = "analysis/" + getAnalysisUUID();
 
     //FIXME: Parallelize
     for (std::vector<int>::iterator mass = masses.begin(); mass != masses.end(); ++mass) {
