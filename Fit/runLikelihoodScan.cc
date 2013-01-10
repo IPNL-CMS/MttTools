@@ -26,14 +26,14 @@ void process(std::vector<int>& masses, bool muonsOnly, bool onlyLumiSyst, int bt
 
       if (! muonsOnly) {
         if (!onlyLumiSyst)
-          execl("./fitMtt", "fitMtt", parameter.c_str(), file.c_str(), "-m", mass.c_str(), "--scan", "--no-text-files", "--no-root-files", "--no-figs", "--b-tag", btagStr.c_str(), NULL);
+          execl("./fitMtt", "fitMtt", parameter.c_str(), file.c_str(), "-m", mass.c_str(), "--scan", "--no-root-files", "--no-figs", "--b-tag", btagStr.c_str(), NULL);
         else
-          execl("./fitMtt", "fitMtt", parameter.c_str(), file.c_str(), "-m", mass.c_str(), "--scan", "--no-text-files", "--no-root-files", "--no-figs", "--only-lumi-syst", "--b-tag", btagStr.c_str(), NULL);
+          execl("./fitMtt", "fitMtt", parameter.c_str(), file.c_str(), "-m", mass.c_str(), "--scan", "--no-root-files", "--no-figs", "--only-lumi-syst", "--b-tag", btagStr.c_str(), NULL);
       } else {
         if (!onlyLumiSyst)
-          execl("./fitMtt", "fitMtt", parameter.c_str(), file.c_str(), "-m", mass.c_str(), "--scan", "--no-text-files", "--no-root-files", "--no-figs", "--muons-only", "--b-tag", btagStr.c_str(), NULL);
+          execl("./fitMtt", "fitMtt", parameter.c_str(), file.c_str(), "-m", mass.c_str(), "--scan", "--no-root-files", "--no-figs", "--muons-only", "--b-tag", btagStr.c_str(), NULL);
         else
-          execl("./fitMtt", "fitMtt", parameter.c_str(), file.c_str(), "-m", mass.c_str(), "--scan", "--no-text-files", "--no-root-files", "--no-figs", "--muons-only", "--only-lumi-syst", "--b-tag", btagStr.c_str(), NULL);
+          execl("./fitMtt", "fitMtt", parameter.c_str(), file.c_str(), "-m", mass.c_str(), "--scan", "--no-root-files", "--no-figs", "--muons-only", "--only-lumi-syst", "--b-tag", btagStr.c_str(), NULL);
       }
       exit(0);
     } else {
