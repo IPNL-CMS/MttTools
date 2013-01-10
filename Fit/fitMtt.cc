@@ -1561,7 +1561,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   }
 
   systematics_error_pb = sigma_ref * systematics_error_percent;
-  systematics_error_events = eff_mu[btag > 2 ? 2 : btag] * lumi_mu * br_semil * systematics_error_pb;
+  systematics_error_events = total_efficiency * lumi_mu * br_semil * systematics_error_pb;
 
   if (! useSystematics) {
     systematics_error_pb = systematics_error_events = systematics_error_percent = 0.;
@@ -1579,25 +1579,20 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   else
     std::cout << Bash::set_color(Bash::Color::MAGENTA);
 
-  std::cout << systematics_error_events << " events ; " << systematics_error_pb << " pb ; " << systematics_error_percent << " %";
+  std::cout << systematics_error_events << " events ; " << systematics_error_pb << " pb ; " << systematics_error_percent * 100 << " %";
 
   std::cout << Bash::set_color();
 
   std::cout << std::endl << std::endl;
   std::cout << "Systematic details: " << std::endl;
 
-  double err_base = eff_mu[btag] * lumi_mu * br_semil;
-  for (int i = minBTag; i <= maxBTag; i++) {
-    std::cout << Bash::set_color(Bash::Color::BLUE) << " - Yield for " << i << " b-tag" << Bash::set_color() << std::endl;
-    std::cout << Bash::set_color(Bash::Color::RED) <<  "   TODO" << Bash::set_color() << std::endl;
-
-    /*
-    std::cout << "    - JEC: " << err_base * sigma_ref * s_sys_JEC[i] << " events ; " << sigma_ref * s_sys_JEC[i] << " pb ; " << s_sys_JEC[i]  * 100 << " %" << std::endl;
-    std::cout << "    - Bkg PDF: " << err_base * sigma_ref * s_sys_PDF[i] << " events ; " << sigma_ref * s_sys_PDF[i] << " pb ; " << s_sys_PDF[i] * 100 << " %" << std::endl;
-    std::cout << "    - Signal PDF: " << err_base * sigma_ref * s_sys_PDF_CB[i] << " events ; " << sigma_ref * s_sys_PDF_CB[i] << " pb ; " << s_sys_PDF_CB[i] * 100 << " %" << std::endl;
-    std::cout << std::endl;
-    */
-  }
+  double err_base = total_efficiency * lumi_mu * br_semil;
+  std::cout << Bash::set_color(Bash::Color::BLUE) << " - Yield for " << btag << " b-tag" << Bash::set_color() << std::endl;
+  std::cout << "    - Selection: " << err_base * sigma_ref * sqrt(selection_systematic_relative_square) << " events ; " << sigma_ref * sqrt(selection_systematic_relative_square) << " pb ; " << sqrt(selection_systematic_relative_square) * 100 << " %" << std::endl;
+  std::cout << "    - JEC: " << err_base * sigma_ref * s_sys_JEC << " events ; " << sigma_ref * s_sys_JEC << " pb ; " << s_sys_JEC  * 100 << " %" << std::endl;
+  std::cout << "    - Bkg PDF: " << err_base * sigma_ref * s_sys_PDF << " events ; " << sigma_ref * s_sys_PDF << " pb ; " << s_sys_PDF * 100 << " %" << std::endl;
+  std::cout << "    - Signal PDF: " << err_base * sigma_ref * s_sys_PDF_CB << " events ; " << sigma_ref * s_sys_PDF_CB << " pb ; " << s_sys_PDF_CB * 100 << " %" << std::endl;
+  std::cout << std::endl;
 
   /*
   // Output systematics error

@@ -167,7 +167,7 @@ bool analysisUseBkgSyst(const std::string& base/* = "."*/) {
 
   const std::string uuid = getAnalysisUUID(base);
 
-  return root["analysis"][getAnalysisIndex(base)][uuid]["bkg_syst"].asBool();
+  return root["analysis"][getAnalysisIndex(base)][uuid]["background_syst"].asBool();
 }
 
 bool analysisUseSystematics(const std::string& base/* = "."*/) {
