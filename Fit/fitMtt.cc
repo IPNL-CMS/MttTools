@@ -558,7 +558,7 @@ void saveSystematicParameter(int mass, int btag, const std::string& type, const 
 }
 
 #define MIN_LIKELIHOOD -200.
-#define MAX_LIKELIHOOD 300.
+#define MAX_LIKELIHOOD 800.
 
 /**
  * Compute the likelihood range
@@ -568,7 +568,7 @@ void computeLikeloodRange(const RooRealVar& v, double& xLow, double& xHigh)
 
   double meanValue = v.getVal();
   xLow = meanValue - 300;
-  xHigh = meanValue + 600;
+  xHigh = meanValue + 900;
   // Ensure xLow is -300 at least
   xLow = std::min(MIN_LIKELIHOOD, xLow);
   // Ensure xHigh is 300 at least
