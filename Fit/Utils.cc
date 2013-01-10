@@ -9,17 +9,17 @@ double b_tagging_scale_factor_error = 0.020;
 double b_tagging_efficiency = 0.6915;
 double b_tagging_efficiency_error = 0.002;
 
-double trigger_scale_factor_muons = 1.;
-double trigger_scale_factor_muons_error = 0.;
+double trigger_scale_factor_muons = 0.974;
+double trigger_scale_factor_muons_error = 0.02;
 
-double trigger_scale_factor_electrons = 1.;
-double trigger_scale_factor_electrons_error = 0.;
+double trigger_scale_factor_electrons = 0.988;
+double trigger_scale_factor_electrons_error = 0.02;
 
-double muonID_scale_factor = 1.; //FIXME
-double muonID_scale_factor_error = 0.; //FIXME
+double muonID_scale_factor = 0.99457;
+double muonID_scale_factor_error = 0.00035;
 
-double muonIso_scale_factor = 1.; //FIXME
-double muonIso_scale_factor_error = 0.; //FIXME
+double muonIso_scale_factor = 0.9975;
+double muonIso_scale_factor_error = 0.0003;
 
 double electronID_scale_factor = 1.; //FIXME
 double electronID_scale_factor_error = 0.; //FIXME
