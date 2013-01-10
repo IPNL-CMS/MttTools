@@ -83,9 +83,14 @@
 \subsection{Efficacités}
 \subsubsection{Efficacités de sélection}
 
-\begin{tabular}{|c|c|c|c|c|}
-  \IfFileExists{efficiencies_table.tex}{\input{efficiencies_table.tex}}{}
-\end{tabular}
+\IfFileExists{efficiencies_table_1btag.tex}{\subsubsection{1 b-tag}
+\begin{tabular}{|c|c|c|c|c|}\input{efficiencies_table_1btag.tex}\end{tabular}
+}
+
+\IfFileExists{efficiencies_table_2btag.tex}{\subsubsection{2 b-tag}
+\begin{tabular}{|c|c|c|c|c|}\input{efficiencies_table_2btag.tex}\end{tabular}
+}
+
 
 \subsubsection{Efficacité totales}
 \IfFileExists{total_eff.tex}{\input{total_eff.tex}}{}

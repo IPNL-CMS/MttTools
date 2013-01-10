@@ -37,7 +37,7 @@ useBkgSyst = analysisTuple["background_syst"]
 
 masses = [750, 1000, 1250, 1500]
 jecs = ["nominal", "JECup", "JECdown"]
-pwd = os.getcwd()
+pwd = os.getcwd() + "/analysis/" + analysisUUID
 
 btag = str(args.btag)
 
@@ -68,9 +68,22 @@ template = Template(r"""\begin{itemize}
     \item Analysis name: ${name}
     \item Analysis description: ${description}
     \item Analysis date: {$date}
-\end{itemize}""")
+\end{itemize}
 
-intro.write(template.substitute(uuid = analysisUUID, name = analysisName, description = analysisDescription, date = analysisDate))
+Analysis done with ${btag} b-tag.""")
+
+btag_str = ""
+minBTag = maxBTag = 0
+if args.btag <= 2:
+  btag_str = str(btag)
+  minBTag = maxBTag = int(btag)
+else:
+  if args.btag == 3:
+    minBTag = 1
+    maxBTag = 2
+    btag_str = "1 + 2"
+
+intro.write(template.substitute(uuid = analysisUUID, name = analysisName.replace("_", "\_"), description = analysisDescription, date = analysisDate, btag = btag_str))
 
 intro.close()
 
@@ -81,56 +94,59 @@ if not useSystematics:
 
 # First, frit
 
-if btag != "3":
-  template_full = Template(r"""\begin{minipage}{0.33\textwidth} \centering
-  \includegraphics[width=0.99\textwidth]{${pwd}/frit/nominal-Zprime${mass}_${analysis_name}_${btag}_btag_fitCB.pdf}\\
+for i in range(minBTag, maxBTag + 1):
+  template_full = Template(r"""\subsubsection{${btag} b-tag}
+  \begin{minipage}{0.33\textwidth} \centering
+  \includegraphics[width=0.99\textwidth]{${pwd}/frit/nominal-Zprime${mass}_${analysis_name}_${btag}_btag_fit.pdf}\\
   Nominal\\
   $$\chi^2 = ${chi2_nominal}$$
   \end{minipage}%
   \begin{minipage}{0.33\textwidth} \centering
-  \includegraphics[width=0.99\textwidth]{${pwd}/frit/JECup-Zprime${mass}_${analysis_name}_${btag}_btag_fitCB.pdf}\\
+  \includegraphics[width=0.99\textwidth]{${pwd}/frit/JECup-Zprime${mass}_${analysis_name}_${btag}_btag_fit.pdf}\\
   JEC Up\\
   $$\chi^2 = ${chi2_JECup}$$
   \end{minipage}%
   \begin{minipage}{0.33\textwidth} \centering
-  \includegraphics[width=0.99\textwidth]{${pwd}/frit/JECdown-Zprime${mass}_${analysis_name}_${btag}_btag_fitCB.pdf}\\
+  \includegraphics[width=0.99\textwidth]{${pwd}/frit/JECdown-Zprime${mass}_${analysis_name}_${btag}_btag_fit.pdf}\\
   JEC Down\\
   $$\chi^2 = ${chi2_JECdown}$$
   \end{minipage}""")
 
-  template_reduced = Template(r"""\begin{center}\begin{minipage}{0.50\textwidth} \centering
-  \includegraphics[width=0.99\textwidth]{${pwd}/frit/nominal-Zprime${mass}_${analysis_name}_${btag}_btag_fitCB.pdf}\\
+  template_reduced = Template(r"""\subsubsection{${btag} b-tag}
+  \begin{center}\begin{minipage}{0.50\textwidth} \centering
+  \includegraphics[width=0.99\textwidth]{${pwd}/frit/nominal-Zprime${mass}_${analysis_name}_${btag}_btag_fit.pdf}\\
   Nominal\\
   $$\chi^2 = ${chi2_nominal}$$
   \end{minipage}\end{center}""")
   
   for mass in masses:
-    jsonFile = open("frit_efficiencies.json")
+    jsonFile = open(pwd + "/frit_efficiencies.json")
     chi2 = {}
     jsonValues = json.load(jsonFile)
     jsonFile.close()
 
     for jec in jecs:
-      if jec in jsonValues[analysisUUID][str(mass)][btag]:
-        chi2["chi2_" + jec] = jsonValues[analysisUUID][str(mass)][btag][jec]["chi2"]
+      if jec in jsonValues[analysisUUID][str(mass)][str(i)]:
+        chi2["chi2_" + jec] = jsonValues[analysisUUID][str(mass)][str(i)][jec]["chi2"]
       else:
         chi2["chi2_" + jec] = "Not computed"
 
     chi2.update(PARAMS)
-    f = open(tmp + "/frit_%d.tex" % mass, "w")
+    f = open(tmp + "/frit_%d.tex" % mass, "a+")
 
     if useJECSyst:
-      f.write(template_full.substitute(chi2, mass = mass))
+      f.write(template_full.substitute(chi2, btag = i, mass = mass))
     else:
-      f.write(template_reduced.substitute(chi2, mass = mass))
+      f.write(template_reduced.substitute(chi2, btag = i, mass = mass))
 
     f.close()
 
-  shutil.copy(pwd + ("/efficiencies_table_%s_btag.tex" % btag), tmp + "/efficiencies_table.tex")
+  shutil.copy(pwd + ("/efficiencies_table_%s_%s_btag.tex" % (analysisName, str(i))), tmp + "/efficiencies_table_%dbtag.tex" % i)
 
   # Compute final efficiency
 
-  template = Template(r"""\begin{tabular}{|c|c|c|c|c|}
+  template = Template(r"""\subsubsection{${btag} b-tag}
+  \begin{tabular}{|c|c|c|c|c|}
   \hline
   \mtt & 750 GeV & 1000 GeV & 1250 GeV & 1500 GeV\\
   \hline
@@ -145,28 +161,35 @@ if btag != "3":
   hltEff_e = {}
   eff = {}
   for mass in masses:
-    jsonFile = open("efficiencies.json")
+    jsonFile = open(pwd + "/efficiencies.json")
     jsonValues = json.load(jsonFile)
     jsonFile.close()
   
     strMass = str(mass)
-    selEff_mu[strMass] = jsonValues[analysisUUID][strMass][btag]["nominal"][0]
-    selEff_e[strMass] = jsonValues[analysisUUID][strMass][btag]["nominal"][1]
-    hltEff_mu[strMass] = jsonValues[analysisUUID][strMass][btag]["nominal"][2]
-    hltEff_e[strMass] = jsonValues[analysisUUID][strMass][btag]["nominal"][3]
+    selEff_mu[strMass] = jsonValues[analysisUUID][strMass][str(i)]["nominal"][0]
+    selEff_e[strMass] = jsonValues[analysisUUID][strMass][str(i)]["nominal"][1]
+    hltEff_mu[strMass] = jsonValues[analysisUUID][strMass][str(i)]["nominal"][2]
+    hltEff_e[strMass] = jsonValues[analysisUUID][strMass][str(i)]["nominal"][3]
   
   from ctypes import cdll, c_double
   lib = cdll.LoadLibrary("./libUtils.so")
   
-  lib.computeEfficiency.restype = c_double
+  lib.computeEfficiencyMuons_1btag.restype = c_double
+  lib.computeEfficiencyMuons_2btag.restype = c_double
+  lib.computeEfficiencyElectrons_1btag.restype = c_double
+  lib.computeEfficiencyElectrons_2btag.restype = c_double
   for mass in masses:
     strMass = str(mass)
   
-    eff["eff_mu_" + strMass] = round(lib.computeEfficiency(c_double(selEff_mu[strMass]), c_double(hltEff_mu[strMass])) * 100, 2) 
-    eff["eff_e_" + strMass] = round(lib.computeEfficiency(c_double(selEff_e[strMass]), c_double(hltEff_e[strMass])) * 100, 2)
+    if i == 1:
+      eff["eff_mu_" + strMass] = round(lib.computeEfficiencyMuons_1btag(c_double(selEff_mu[strMass]), c_double(hltEff_mu[strMass])) * 100, 2) 
+      eff["eff_e_" + strMass] = round(lib.computeEfficiencyElectrons_1btag(c_double(selEff_e[strMass]), c_double(hltEff_e[strMass])) * 100, 2)
+    else:
+      eff["eff_mu_" + strMass] = round(lib.computeEfficiencyMuons_2btag(c_double(selEff_mu[strMass]), c_double(hltEff_mu[strMass])) * 100, 2) 
+      eff["eff_e_" + strMass] = round(lib.computeEfficiencyElectrons_2btag(c_double(selEff_e[strMass]), c_double(hltEff_e[strMass])) * 100, 2)
   
-  f = open(tmp + "/total_eff.tex", "w")
-  f.write(template.substitute(eff))
+  f = open(tmp + "/total_eff.tex", "a+")
+  f.write(template.substitute(eff, btag = i))
   f.close()
 
 # data_2012_nominal_1000_crystalball_faltB_2_btag/
@@ -185,7 +208,7 @@ Nominal, échelle log\\
 \item Statut du fit : ${fit}
 \end{itemize}""")
 for mass in masses:
-  jsonFile = open("sigma_reference.json")
+  jsonFile = open(pwd + "/sigma_reference.json")
   jsonValues = json.load(jsonFile)
   jsonFile.close()
 
@@ -205,7 +228,7 @@ $$\sigma$$ (pb) & $sigma_750 & $sigma_1000 & $sigma_1250 & $sigma_1500\\
 \end{tabular}""")
 
 datas = {}
-jsonFile = open("sigma_reference.json")
+jsonFile = open(pwd + "/sigma_reference.json")
 jsonValues = json.load(jsonFile)
 jsonFile.close()
 for mass in masses:
@@ -219,10 +242,10 @@ f.close()
 # Third, systematics
 datas = {}
 if useSystematics:
-  jsonFile = open("systematics_parameters.json")
+  jsonFile = open(pwd + "/systematics_parameters.json")
   jsonValues = json.load(jsonFile)
   jsonFile.close()
-  jsonFile = open("systematics.json")
+  jsonFile = open(pwd + "/systematics.json")
   jsonSyst = json.load(jsonFile)
   jsonFile.close()
 
@@ -253,7 +276,7 @@ if useJECSyst:
   for mass in masses:
     if "jec" in jsonValues[analysisUUID][str(mass)][btag]:
       for jec in reducedJEC:
-        if jec in jsonValues[analysisUUID][str(mass)][btag]["jec"]:
+        if "JEC" + jec in jsonValues[analysisUUID][str(mass)][btag]["jec"]:
           datas["c_" + str(mass) + "_" + jec] = round(jsonValues[analysisUUID][str(mass)][btag]["jec"]["JEC" + jec]["chi2"], 4)
           datas["s_" + str(mass) + "_" + jec] = round(jsonValues[analysisUUID][str(mass)][btag]["jec"]["JEC" + jec]["sigma"], 4)
           datas["f_" + str(mass) + "_" + jec] = "OK" if (jsonValues[analysisUUID][str(mass)][btag]["jec"]["JEC" + jec]["fit_status"] == 0 and jsonValues[analysisUUID][str(mass)][btag]["jec"]["JEC" + jec]["fit_covQual"] == 3) else "Echec"
@@ -263,7 +286,7 @@ if useJECSyst:
           datas["f_" + str(mass) + "_" + jec] = "N/A"
 
 
-      datas["s_" + str(mass)] = round(jsonSyst[str(mass)][btag]["jec"], 4)
+      datas["s_" + str(mass)] = round(jsonSyst[analysisUUID][str(mass)][btag]["jec"], 4)
     else:
       for jec in reducedJEC:
         datas["c_" + str(mass) + "_" + jec] = "N/A"
@@ -350,7 +373,7 @@ if useBkgSyst:
   arrayLine = ""
   for mass in masses:
     arrayLine = arrayLine + "\multicolumn{4}{|l|}{$m = %d$ GeV}\\\\\n\\hline\n" % mass
-    for param, values in jsonValues[str(mass)][btag]["background"].items():
+    for param, values in jsonValues[analysisUUID][str(mass)][btag]["background"].items():
       arrayLine = arrayLine + param.replace("_", r"\_")
       chi2 = round(values["chi2"], 4)
       sigma = round(values["sigma"], 4)
@@ -358,7 +381,7 @@ if useBkgSyst:
       arrayLine = arrayLine + " & %.04f & %.04f & %s\\\\\n" % (chi2, sigma, fit)
   
       arrayLine = arrayLine + "\\hline\\hline\n"
-    arrayLine = arrayLine + "\multicolumn{4}{|l|}{$\sigma_{syst} = %.04f$ pb}\\\\ \\hline\\hline\n" % jsonSyst[str(mass)][btag]["background_pdf"]
+    arrayLine = arrayLine + "\multicolumn{4}{|l|}{$\sigma_{syst} = %.04f$ pb}\\\\ \\hline\\hline\n" % jsonSyst[analysisUUID][str(mass)][btag]["background_pdf"]
   
   f = open(tmp + "/syst_bkg.tex", "w")
   f.write(template.substitute(content = arrayLine).encode("utf-8"))
@@ -393,7 +416,7 @@ PDF scan + systématiques pour $$N_{sig} > 0$$
 
 """)
 
-jsonFile = open("likelihood_scan.json")
+jsonFile = open(pwd + "/likelihood_scan.json")
 jsonValues = json.load(jsonFile)
 jsonFile.close()
 values = {}
@@ -460,7 +483,7 @@ Erreur sur limite
 \end{center}
 """)
 
-jsonFile = open("expected_limits.json")
+jsonFile = open(pwd + "/expected_limits.json")
 jsonValues = json.load(jsonFile)
 jsonFile.close()
 values = {}
@@ -529,13 +552,13 @@ f = open(tmp + "/limites.tex", "w")
 f.write(template.substitute(values).encode("utf-8"))
 f.close()
 
-shutil.copy(pwd + "/template/analysis_summary.tex", tmp)
+shutil.copy(os.getcwd() + "/template/analysis_summary.tex", tmp)
 os.chdir(tmp)
 os.system("pdflatex analysis_summary.tex")
 os.system("pdflatex analysis_summary.tex")
 os.chdir(pwd)
 
-bookmark = "bookmark_%s_%s.pdf" % (analysisName, datetime.date.today().isoformat())
+bookmark = pwd + "/bookmark_%s_%s.pdf" % (analysisName, datetime.date.today().isoformat())
 shutil.copy(tmp + "/analysis_summary.pdf", bookmark)
 
 print ""
