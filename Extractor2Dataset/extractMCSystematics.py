@@ -17,7 +17,7 @@ files = [
   ]
 
 def launch(input, output):
-  args = ["./extractor2Dataset", "--input-list", input, "-o", output, "--mc"]
+  args = ["./extractor2Dataset", "--input-list", input, "-o", output, "--mc", "-n", "4000"]
   if "semie" in input:
     args.append("--type semie")
   elif "semimu" in input:
