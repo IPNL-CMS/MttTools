@@ -368,7 +368,7 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
     pull->Fill((shm->nSignalEvents - events_reference) / shm->nSignalEvents_error);
     residuals->Fill(shm->nSignalEvents - events_reference);
 
-    for (int b = btagMin; b < btagMax; b++) {
+    for (int b = btagMin; b <= btagMax; b++) {
       TString pdfName = TString::Format("signal_muon_%d_%d", b, i);
       muon_toy_pdf[b]->SetName(pdfName);
 
