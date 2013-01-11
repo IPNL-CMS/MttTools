@@ -887,14 +887,14 @@ void renameAndSetPdfParametersConst(const RooArgSet& observables, const RooAbsPd
   delete params;
 }
 
-void setPdfParametersConst(const RooArgSet& observables, const RooAbsPdf& pdf)
+void setPdfParametersConst(const RooArgSet& observables, const RooAbsPdf& pdf, bool constant)
 {
   RooArgSet* params = pdf.getParameters(observables);
   TIterator* iter = params->createIterator();
   RooRealVar* var = NULL;
   while ((var = static_cast<RooRealVar*>(iter->Next())))
   {
-    var->setConstant(true);
+    var->setConstant(constant);
   }
 
   delete iter;
@@ -1795,6 +1795,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
 
     RooFitResult *fitResult = nullptr;
+    /*
     if (fixBackground) {
 
       std::cout << "Background only ..." << std::endl;
@@ -1814,8 +1815,9 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
       std::cout << "Done." << std::endl;
     }
+    */
 
-    std::cout << "Background + signal ..." << std::endl;
+    std::cout << "Background (floating) + signal ..." << std::endl;
 
     // And refit
     fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(0));
@@ -1837,7 +1839,15 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       delete outputFile;
     }
 
-    //FIXME
+    if (fixBackground) {
+      // Set background pdf parameters as constant for likelihood scan
+      it = mainCategory.typeIterator();
+      type = nullptr;
+      while ((type = static_cast<RooCatType*>(it->Next()))) {
+        setPdfParametersConst(mtt, *backgroundPdfsFromWorkspace[type->GetName()], true);
+      }
+    }
+
     double sigmaZ = nSig.getVal() / (total_efficiency * lumi_mu * br_semil);
 
     double errorqstat = nSig.getError() * nSig.getError() / (total_efficiency * lumi_mu * br_semil * total_efficiency * lumi_mu * br_semil);
@@ -2142,7 +2152,15 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
         nll->setData(*binnedDatasetForToys);
       }
 
-      //TODO: Maybe we need to reset all pdf parameters to their default values
+      if (fixBackground) {
+        // Release background parameter for the fit
+        it = mainCategory.typeIterator();
+        type = nullptr;
+        while ((type = static_cast<RooCatType*>(it->Next()))) {
+          setPdfParametersConst(mtt, *backgroundPdfsFromWorkspace[type->GetName()], false);
+        }
+      }
+
       // Be sure that nSig_mu is not fixed anymore, and reset to 0
       nSig.setVal(0);
       nSig.setConstant(false);
@@ -2161,6 +2179,15 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
       RooFitResult* toyFitRes = minimizer->save();
       toyFitRes->Print("v");
+
+      if (fixBackground) {
+        // Set background parameter constant for the likelihood scan
+        it = mainCategory.typeIterator();
+        type = nullptr;
+        while ((type = static_cast<RooCatType*>(it->Next()))) {
+          setPdfParametersConst(mtt, *backgroundPdfsFromWorkspace[type->GetName()], true);
+        }
+      }
 
       double nSigVal   = nSig.getVal();
       double nSigErrHi = nSig.getAsymErrorHi();
