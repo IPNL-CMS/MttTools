@@ -702,9 +702,9 @@ void doLikelihoodScan(RooAbsData& dataset, RooAbsPdf& pdf, RooRealVar& observabl
     observable.setConstant(true);
 
     RooMinuit* minimizer = new RooMinuit(*nll);
+    minimizer->setStrategy(2);
     minimizer->setEvalErrorWall(0);
     minimizer->optimizeConst(0);
-    minimizer->setStrategy(2);
     minimizer->migrad();
     fitResults = minimizer->save();
 
@@ -762,9 +762,9 @@ void doLikelihoodScan(RooAbsData& dataset, RooAbsPdf& pdf, RooRealVar& observabl
     observable.setConstant(true);
 
     RooMinuit* minimizer = new RooMinuit(*nll);
+    minimizer->setStrategy(2);
     minimizer->setEvalErrorWall(0);
     minimizer->optimizeConst(0);
-    minimizer->setStrategy(2);
     minimizer->migrad();
     fitResults = minimizer->save();
 
@@ -2044,6 +2044,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     
     // Create PDF for fitting
     RooSimultaneous simPdfToyFit("simPdfToyFit", "simultaneous pdf for toys fitting", mainCategory);
+    RooSimultaneous simPdfToyFitBackgroundOnly("simPdfToyFitBackgroundOnly", "simultaneous pdf for toys fitting (background only)", mainCategory);
 
     int nEventsToy = 0;
 
@@ -2131,6 +2132,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       }
 
       simPdfToyFit.addPdf(*globalPdfs[category], category.c_str());
+      simPdfToyFitBackgroundOnly.addPdf(*backgroundPdfsFromWorkspace[category], category.c_str());
     }
 
     std::cout << "Generating " << nEventsToy << " toys events" << std::endl;
@@ -2153,6 +2155,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
     // NLL for fitting
     RooAbsReal* nll = NULL;
+    RooAbsReal* nll_background = NULL;
 
     // Number of experiments with worse fits
     Int_t nWorseFit = 0;
@@ -2204,9 +2207,11 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       {
         // Only create the nll the first time
         nll = simPdfToyFit.createNLL(*binnedDatasetForToys, RooFit::Optimize(0));
+        nll_background = simPdfToyFitBackgroundOnly.createNLL(*binnedDatasetForToys, RooFit::Optimize(0));
       }
       else
       {
+        nll->setData(*binnedDatasetForToys);
         nll->setData(*binnedDatasetForToys);
       }
 
@@ -2214,10 +2219,29 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       nSig.setVal(0);
       nSig.setConstant(false);
 
-      // Fit
-      RooMinuit* minimizer = new RooMinuit(*nll);
+      // Background fit only
+      RooMinuit* minimizer = new RooMinuit(*nll_background);
+      minimizer->setStrategy(2);
       minimizer->setEvalErrorWall(0);
       minimizer->optimizeConst(0);
+      minimizer->migrad();
+      //minimizer->migrad();
+      //minimizer->migrad();
+
+      RooFitResult* tmp = minimizer->save();
+      tmp->Print("v");
+      delete tmp;
+
+      std::cout << "done.";
+      delete minimizer;
+
+      // Fit
+      minimizer = new RooMinuit(*nll);
+      minimizer->setStrategy(2);
+      minimizer->setEvalErrorWall(0);
+      minimizer->optimizeConst(0);
+      minimizer->migrad();
+      minimizer->migrad();
       minimizer->migrad();
       std::cout << "done.";
 
@@ -2250,8 +2274,11 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
         // Fit
         minimizer = new RooMinuit(*nll);
+        minimizer->setStrategy(2);
         minimizer->setEvalErrorWall(0);
         minimizer->optimizeConst(0);
+        minimizer->migrad();
+        minimizer->migrad();
         minimizer->migrad();
         std::cout << "done. Minos:";
 
