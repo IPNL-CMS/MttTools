@@ -1825,7 +1825,28 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
     std::cout << "Done." << std::endl;
 
-    drawHistograms(mainCategory, mtt, *dataOrig, simPdf, backgroundPdfsFromWorkspace, btag, saveFigures, std::string(prefix), std::string(suffix), !bkgOnly, true, outputFile);
+    drawHistograms(mainCategory, mtt, *dataOrig, simPdf, backgroundPdfsFromWorkspace, btag, saveFigures, std::string(prefix), std::string(suffix) + "bkg_floating", !bkgOnly, true, (fixBackground ? nullptr : outputFile));
+
+    if (fixBackground) {
+      delete fitResult;
+
+      // Fix background parameters
+      it = mainCategory.typeIterator();
+      type = nullptr;
+      while ((type = static_cast<RooCatType*>(it->Next()))) {
+        setPdfParametersConst(mtt, *backgroundPdfsFromWorkspace[type->GetName()], true);
+      }
+
+      std::cout << "Background (fixed) + signal ..." << std::endl;
+
+      fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(0));
+      fitResult->Print("v");
+
+      drawHistograms(mainCategory, mtt, *dataOrig, simPdf, backgroundPdfsFromWorkspace, btag, saveFigures, std::string(prefix), std::string(suffix) + "_bkg_fixed", !bkgOnly, true, outputFile);
+
+
+      std::cout << "Done." << std::endl;
+    }
 
     std::map<std::string, float> chi2 = computeChi2(mtt, simPdf, mainCategory, *dataOrig, mainWorkspace);
 
@@ -2140,8 +2161,17 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       myFile->Close();
       delete myFile;
       */
+      if (fixBackground) {
+        // Release background parameter for the fit
+        it = mainCategory.typeIterator();
+        type = nullptr;
+        while ((type = static_cast<RooCatType*>(it->Next()))) {
+          setPdfParametersConst(mtt, *backgroundPdfsFromWorkspace[type->GetName()], false);
+        }
+      }
 
-      std::cout << "Fitting distribution ..." << std::endl;
+
+      std::cout << "Fitting distribution (background floating + signal) ..." << std::endl;
       if (nll == NULL)
       {
         // Only create the nll the first time
@@ -2150,15 +2180,6 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       else
       {
         nll->setData(*binnedDatasetForToys);
-      }
-
-      if (fixBackground) {
-        // Release background parameter for the fit
-        it = mainCategory.typeIterator();
-        type = nullptr;
-        while ((type = static_cast<RooCatType*>(it->Next()))) {
-          setPdfParametersConst(mtt, *backgroundPdfsFromWorkspace[type->GetName()], false);
-        }
       }
 
       // Be sure that nSig_mu is not fixed anymore, and reset to 0
@@ -2170,15 +2191,50 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       minimizer->setEvalErrorWall(0);
       minimizer->optimizeConst(0);
       minimizer->migrad();
-      std::cout << "done. Minos:" << std::endl;
+      std::cout << "done.";
 
-      // Only compute errors for nSig
-      minimizer->minos(RooArgSet(nSig));
+      if (! fixBackground) {
+        std::cout << " Minos:" << std::endl;
 
-      std::cout << "done." << std::endl;
+        // Only compute errors for nSig
+        minimizer->minos(RooArgSet(nSig));
+
+        std::cout << "done." << std::endl;
+      } else {
+        std::cout << std::endl;
+      }
 
       RooFitResult* toyFitRes = minimizer->save();
       toyFitRes->Print("v");
+
+      if (fixBackground) {
+        delete toyFitRes;
+        delete minimizer;
+
+        // Fix background parameters
+        it = mainCategory.typeIterator();
+        type = nullptr;
+        while ((type = static_cast<RooCatType*>(it->Next()))) {
+          setPdfParametersConst(mtt, *backgroundPdfsFromWorkspace[type->GetName()], true);
+        }
+
+        std::cout << "Fitting distribution (Background fixed + signal) ..." << std::endl;
+
+        // Fit
+        minimizer = new RooMinuit(*nll);
+        minimizer->setEvalErrorWall(0);
+        minimizer->optimizeConst(0);
+        minimizer->migrad();
+        std::cout << "done. Minos:";
+
+        // Only compute errors for nSig
+        minimizer->minos(RooArgSet(nSig));
+
+        std::cout << "done." << std::endl;
+
+        toyFitRes = minimizer->save();
+        toyFitRes->Print("v");
+      }
 
       if (fixBackground) {
         // Set background parameter constant for the likelihood scan
