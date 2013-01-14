@@ -141,6 +141,7 @@ void computeSyst(std::vector<int> masses, int btag) {
     down = jecNode["JECdown"]["sigma"].asDouble();
     double syst = computeSystValue(sigma_ref, up, down);
     saveSystematic(*it, btag, syst);
+    std::cout << "sigma for JECup: " << up << " ; sigma for JECdown: " << down << std::endl;
     std::cout << "JEC syst for MZ' = " << *it << " : " << syst << std::endl;
   }
 }
