@@ -1795,6 +1795,18 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
 
     RooFitResult *fitResult = nullptr;
+   
+    std::cout << "Background only ..." << std::endl;
+    
+    // First, fit with background only pdfs
+    simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
+    simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
+    fitResult = simPdfBackgroundOnly.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(2));
+
+    fitResult->Print("v");
+    delete fitResult;
+    
+
     /*
     if (fixBackground) {
 
@@ -1820,12 +1832,26 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     std::cout << "Background (floating) + signal ..." << std::endl;
 
     // And refit
-    fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(0));
+    simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
+    simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
+    fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(2));
     fitResult->Print("v");
 
     std::cout << "Done." << std::endl;
 
     drawHistograms(mainCategory, mtt, *dataOrig, simPdf, backgroundPdfsFromWorkspace, btag, saveFigures, std::string(prefix), std::string(suffix) + "bkg_floating", !bkgOnly, true, (fixBackground ? nullptr : outputFile));
+
+    /*
+    TString backgroundPdfWorkspaceFile = TString::Format("%s/test.root", BASE_PATH.c_str());
+    RooWorkspace backgroundPdfWorkspace("w", "Background PDF workspace");
+    it = mainCategory.typeIterator();
+    type = nullptr;
+    while ((type = static_cast<RooCatType*>(it->Next()))) {
+      backgroundPdfWorkspace.import(*backgroundPdfsFromWorkspace[type->GetName()]->getParameters(RooArgSet(mtt)));
+    }
+
+    backgroundPdfWorkspace.writeToFile(backgroundPdfWorkspaceFile);
+    */
 
     if (fixBackground) {
       delete fitResult;
@@ -1839,7 +1865,9 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
       std::cout << "Background (fixed) + signal ..." << std::endl;
 
-      fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(0));
+      simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
+      simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
+      fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(2));
       fitResult->Print("v");
 
       drawHistograms(mainCategory, mtt, *dataOrig, simPdf, backgroundPdfsFromWorkspace, btag, saveFigures, std::string(prefix), std::string(suffix) + "_bkg_fixed", !bkgOnly, true, outputFile);
