@@ -55,7 +55,7 @@ void process(std::vector<int>& masses, bool onlyMuons, int btag, const std::stri
 
 void fillParams() {
   BKG_FUNCTIONS.push_back("falt");
-  //BKG_FUNCTIONS.push_back("faltC");
+  //BKG_FUNCTIONS.push_back("faltc");
 }
 
 void saveSystematic(int mass, int btag, double syst) {
@@ -145,7 +145,13 @@ void computeSyst(std::vector<int> masses, int btag) {
 
     Json::Value::Members members = bkgNode.getMemberNames();
     for (Json::Value::Members::iterator member = members.begin(); member != members.end(); ++member) {
+      if (std::find_if(BKG_FUNCTIONS.begin(), BKG_FUNCTIONS.end(), [&member](std::string& s) {
+            return buildConfigFileName(s) == *member;
+          }) == BKG_FUNCTIONS.end())
+          continue;
+
       double sigma = bkgNode[*member]["sigma"].asDouble();
+      std::cout << "sigma for " << *member  << ": " << sigma << std::endl;
       totalSyst += computeSystValue(sigma_ref, sigma);
       n++;
     }
