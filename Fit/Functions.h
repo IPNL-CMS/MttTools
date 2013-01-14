@@ -23,6 +23,12 @@ std::shared_ptr<BaseFunction> getPdf(const std::string& name, const std::string&
 
   if (name == "faltB")
     return std::shared_ptr<BaseFunction>(new FAltB(pdfName));
+  
+  if (name == "faltc")
+    return std::shared_ptr<BaseFunction>(new FAltC(pdfName));
+
+  if (name == "UFO")
+    return std::shared_ptr<BaseFunction>(new UFO(pdfName));
 
   if (name == "falt")
     return std::shared_ptr<BaseFunction>(new FAlt(pdfName));

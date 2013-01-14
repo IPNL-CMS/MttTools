@@ -7,6 +7,7 @@
 #include <RooExponential.h>
 #include <RooChebychev.h>
 #include <RooPolynomial.h>
+#include <RooGenericPdf.h>
 
 class FAltB : public BaseFunction {
   public:
@@ -37,6 +38,43 @@ class FAlt : public BaseFunction {
         return false;
 
       mPdf.reset(new FAltPdf(mName.c_str(), mName.c_str(), observable, *mParameters["a"], *mParameters["b"], *mParameters["c"]));
+
+      return true;
+    }
+};
+
+class FAltC : public BaseFunction {
+  public:
+    FAltC(const std::string& name)
+      : BaseFunction(name) {}
+
+  protected:
+    virtual bool createPdf(RooRealVar& observable) {
+
+      if (mParameters.size() != 2)
+        return false;
+
+      mPdf.reset(new FAltCPdf(mName.c_str(), mName.c_str(), observable, *mParameters["a"], *mParameters["b"]));
+
+      return true;
+    }
+};
+
+class UFO : public BaseFunction {
+  public:
+    UFO(const std::string& name)
+      : BaseFunction(name) {}
+
+  protected:
+    virtual bool createPdf(RooRealVar& observable) {
+
+      if (mParameters.size() != 2)
+        return false;
+
+      mPdf.reset(new UFOPdf(mName.c_str(), mName.c_str(), observable, *mParameters["a"], *mParameters["b"]));
+      //mPdf.reset(new RooGenericPdf(mName.c_str(), mName.c_str(), "@3. / (1. + exp((@0 - @1) / @2))", RooArgList(observable, *mParameters["a"], *mParameters["b"], *mParameters["c"])));
+
+      mPdf->forceNumInt(true);
 
       return true;
     }

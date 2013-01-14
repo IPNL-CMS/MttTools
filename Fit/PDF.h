@@ -173,6 +173,41 @@ class FAltCPdf : public RooAbsPdf {
     };
 };
 
+class UFOPdf : public RooAbsPdf {
+  public:
+    UFOPdf() {} ; 
+    UFOPdf(const char *name, const char *title, RooAbsReal& _x, RooAbsReal& _a, RooAbsReal& _b):
+      RooAbsPdf(name, title),
+      x("x", "x", this, _x),
+      a("a", "a", this, _a),
+      b("b", "b", this, _b) {};
+
+    UFOPdf(const UFOPdf& other, const char* name = NULL):
+      RooAbsPdf(other, name),
+      x("x", this, other.x),
+      a("a", this, other.a),
+      b("b", this, other.b) {};
+
+    virtual TObject* clone(const char* newname) const { return new UFOPdf(*this, newname); }
+    inline virtual ~UFOPdf() { }
+
+  protected:
+
+    RooRealProxy x;
+    RooRealProxy a;
+    RooRealProxy b;
+
+    double evaluate() const {
+      /*std::cout << "x: " << x << std::endl;
+      std::cout << "a:" << a << std::endl;
+      std::cout << "b: " << b << std::endl;*/
+      double val = 1. / (1. + exp(((x / 8000) - a) / b));
+      /*std::cout << val << std::endl;*/
+
+      return val;
+    };
+};
+
 class PowPdf : public RooAbsPdf {
   public:
     PowPdf() {} ; 
