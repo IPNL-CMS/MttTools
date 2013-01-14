@@ -21,11 +21,8 @@ double muonID_scale_factor_error = 0.00035;
 double muonIso_scale_factor = 0.9975;
 double muonIso_scale_factor_error = 0.0003;
 
-double electronID_scale_factor = 1.; //FIXME
-double electronID_scale_factor_error = 0.; //FIXME
-
-double electronIso_scale_factor = 1.; //FIXME
-double electronIso_scale_factor_error = 0.; //FIXME
+double electron_scale_factor = 0.9820565;
+double electron_scale_factor_error = 0.0030953;
 
 /*
 double muID_correction = 0.997;
@@ -106,7 +103,7 @@ double computeEfficiencyMuons_2btag(double selEfficiency, double hltEfficiency) 
 }
 
 double computeEfficiencyElectrons_2btag(double selEfficiency, double hltEfficiency) {
-  return trigger_scale_factor_electrons * electronID_scale_factor * electronIso_scale_factor * b_tagging_scale_factor * b_tagging_scale_factor * selEfficiency * hltEfficiency;
+  return trigger_scale_factor_electrons * electron_scale_factor * b_tagging_scale_factor * b_tagging_scale_factor * selEfficiency * hltEfficiency;
 }
 
 double computeEfficiencyMuons_1btag(double selEfficiency, double hltEfficiency) {
@@ -114,7 +111,7 @@ double computeEfficiencyMuons_1btag(double selEfficiency, double hltEfficiency) 
 }
 
 double computeEfficiencyElectrons_1btag(double selEfficiency, double hltEfficiency) {
-  return trigger_scale_factor_electrons * electronID_scale_factor * electronIso_scale_factor * selEfficiency * hltEfficiency * b_tagging_scale_factor * ((1. - b_tagging_efficiency * b_tagging_scale_factor) / (1. - b_tagging_efficiency));
+  return trigger_scale_factor_electrons * electron_scale_factor * selEfficiency * hltEfficiency * b_tagging_scale_factor * ((1. - b_tagging_efficiency * b_tagging_scale_factor) / (1. - b_tagging_efficiency));
 }
 
 uint32_t getAnalysisIndex(const std::string& base/* = "."*/) {

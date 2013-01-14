@@ -39,10 +39,8 @@ extern double muonID_scale_factor_error;
 extern double muonIso_scale_factor;
 extern double muonIso_scale_factor_error;
 
-extern double electronID_scale_factor;
-extern double electronID_scale_factor_error;
-extern double electronIso_scale_factor;
-extern double electronIso_scale_factor_error;
+extern double electron_scale_factor;
+extern double electron_scale_factor_error;
 
 extern bool fileExists(const std::string& filename);
 extern void getJsonRoot(const std::string& filename, Json::Value& root, bool exitOnError = true);
