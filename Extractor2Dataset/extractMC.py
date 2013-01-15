@@ -11,16 +11,16 @@ files = [
 #    ["MTT_Zprime_1250_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_1250_Narrow_full_stat_%s.list"],
 #    ["MTT_Zprime_1500_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_1500_Narrow_full_stat_%s.list"]
 
-    ["MTT_TTJets_MassiveBinDECAY_19Dec12_dataset_%s_nominal.root", "MC/MTT_TTJets_MassiveBinDECAY_19Dec12_%s.list", 6908904., 234.],
-    ["MTT_DYJetsToLL_M-50_19Dec12_dataset_%s_nominal.root", "MC/MTT_DYJetsToLL_M-50_19Dec12_%s.list", 30439508, 3503.71],
-    ["MTT_WJetsToLNu_19Dec12_dataset_%s_nominal.root", "MC/MTT_WJetsToLNu_19Dec12_%s.list", 57687669, 37509.0],
+    ["MTT_MC_TTJets_MassiveBinDECAY_19Dec12_dataset_%s_nominal.root", "MC/MTT_TTJets_MassiveBinDECAY_19Dec12_%s.list", 6908904., 234.],
+    ["MTT_MC_DYJetsToLL_M-50_19Dec12_dataset_%s_nominal.root", "MC/MTT_DYJetsToLL_M-50_19Dec12_%s.list", 30439508, 3503.71],
+    ["MTT_MC_WJetsToLNu_19Dec12_dataset_%s_nominal.root", "MC/MTT_WJetsToLNu_19Dec12_%s.list", 57687669, 37509.0],
 
-    ["MTT_Tbar_s-channel_19Dec12_dataset_%s_nominal.root", "MC/MTT_Tbar_s-channel_19Dec12_%s.list", 139803, 1.75776],
-    ["MTT_Tbar_t-channel_19Dec12_dataset_%s_nominal.root", "MC/MTT_Tbar_t-channel_19Dec12_%s.list", 1932762, 30.7],
-    ["MTT_Tbar_tW-channel_19Dec12_dataset_%s_nominal.root", "MC/MTT_Tbar_tW-channel_19Dec12_%s.list", 492537, 11.1773],
-    ["MTT_T_s-channel_19Dec12_dataset_%s_nominal.root", "MC/MTT_T_s-channel_19Dec12_%s.list", 259571, 3.79],
-    ["MTT_T_t-channel_19Dec12_dataset_%s_nominal.root", "MC/MTT_T_t-channel_19Dec12_%s.list", 3722922, 56.4],
-    ["MTT_T_tW-channel_19Dec12_dataset_%s_nominal.root", "MC/MTT_T_tW-channel_19Dec12_%s.list", 496669, 11.1773],
+    ["MTT_MC_Tbar_s-channel_19Dec12_dataset_%s_nominal.root", "MC/MTT_Tbar_s-channel_19Dec12_%s.list", 139803, 1.75776],
+    ["MTT_MC_Tbar_t-channel_19Dec12_dataset_%s_nominal.root", "MC/MTT_Tbar_t-channel_19Dec12_%s.list", 1932762, 30.7],
+    ["MTT_MC_Tbar_tW-channel_19Dec12_dataset_%s_nominal.root", "MC/MTT_Tbar_tW-channel_19Dec12_%s.list", 492537, 11.1773],
+    ["MTT_MC_T_s-channel_19Dec12_dataset_%s_nominal.root", "MC/MTT_T_s-channel_19Dec12_%s.list", 259571, 3.79],
+    ["MTT_MC_T_t-channel_19Dec12_dataset_%s_nominal.root", "MC/MTT_T_t-channel_19Dec12_%s.list", 3722922, 56.4],
+    ["MTT_MC_T_tW-channel_19Dec12_dataset_%s_nominal.root", "MC/MTT_T_tW-channel_19Dec12_%s.list", 496669, 11.1773],
   ]
 
 def launch(input, output, events, xsection):
@@ -30,7 +30,7 @@ def launch(input, output, events, xsection):
   elif "semimu" in input:
     args.append("--type semimu")
 
-  args.append("--weight %.15f" % (xsection / events))
+  args.append("--weight %.15f" % (19580. * xsection / events))
 
   return " ".join(args)
 
@@ -40,7 +40,7 @@ print("Extracting dataset ...")
 for file in files:
   events = file[2] if len(file) >= 3 else 1
   xsection = file[3] if len(file) >= 4 else 1
-  print("Weight for %s: %.15f" % (file[1], xsection / events))
+  print("Weight for %s: %.15f" % (file[1], 19580. * xsection / events))
   for type in ["semie", "semimu"]:
     tmpfile.write(launch(file[1] % type, file[0] % type, events, xsection) + "\n");
 
