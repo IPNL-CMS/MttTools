@@ -350,7 +350,7 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
 
   // Get dataset from external file
   //RooDataSet *dataset = RooDataSet::read(file.c_str(), RooArgList(Mtt_KF_reco, whichLepton));
-  RooDataSet *dataset = new RooDataSet("dataset", "dataset", RooArgSet(mtt, whichLepton, weight), Import(*chain)/*, WeightVar(weight)*/);
+  RooDataSet *dataset = new RooDataSet("dataset", "dataset", RooArgSet(mtt, whichLepton, weight), Import(*chain), WeightVar(weight));
 
   // Reduce data set
   //RooDataSet* RedData = static_cast<RooDataSet*>(dataOrig->reduce("Mtt_KF_reco > 500 && Mtt_KF_reco < 2045"));
