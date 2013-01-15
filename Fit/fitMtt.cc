@@ -1232,7 +1232,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   }
 
   //fit region
-  Float_t minmTT = 500;
+  Float_t minmTT = 550;
   Float_t maxmTT = 2000;
 
   RooRealVar mtt("mtt", "mtt", minmTT, maxmTT, "GeV/c^2");
