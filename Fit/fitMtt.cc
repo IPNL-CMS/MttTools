@@ -1731,6 +1731,14 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
   if (fit)
   {
+    Double_t minmTTFit = minmTT + 0.0;
+    Double_t maxmTTFit = maxmTT - 0.0;
+    mtt.setRange(minmTTFit, maxmTTFit);
+
+    // Set binning to 1 GeV
+    std::cout << mtt.getBins() << std::endl;
+    mtt.setBins((maxmTTFit - minmTTFit) / 4.);
+
     RooDataSet *dataOrig = NULL;
     if (combine) {
       // Combine b-tags
@@ -1739,17 +1747,17 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       std::map<int, RooDataSet*> datasets;
 
       if (minBTag == 0)
-        datasets[0] = new RooDataSet("dataset", "dataset", RooArgSet(mtt, lepton_type, weight), Import(*(eventChain[0])));
+        datasets[0] = new RooDataSet("dataset", "dataset", RooArgSet(mtt, lepton_type, weight), Import(*(eventChain[0])), WeightVar(weight));
 
       if (minBTag <= 1 && maxBTag >= 1)
-        datasets[1] = new RooDataSet("dataset", "dataset", RooArgSet(mtt, lepton_type, weight), Import(*(eventChain[1])));
+        datasets[1] = new RooDataSet("dataset", "dataset", RooArgSet(mtt, lepton_type, weight), Import(*(eventChain[1])), WeightVar(weight));
 
       if (minBTag <= 2 && maxBTag >= 2)
-        datasets[2] = new RooDataSet("dataset", "dataset", RooArgSet(mtt, lepton_type, weight), Import(*(eventChain[2])));
+        datasets[2] = new RooDataSet("dataset", "dataset", RooArgSet(mtt, lepton_type, weight), Import(*(eventChain[2])), WeightVar(weight));
 
       switch (btag) {
         case 3:
-            dataOrig = new RooDataSet("combData", "combined data", RooArgSet(mtt, lepton_type/*, weight*/), Index(btagCategory), Import("1-btag", *datasets[1]), Import("2-btag", *datasets[2])/*, WeightVar(weight)*/);
+            dataOrig = new RooDataSet("combData", "combined data", RooArgSet(mtt, lepton_type, weight), Index(btagCategory), Import("1-btag", *datasets[1]), Import("2-btag", *datasets[2]), WeightVar(weight));
           break;
 
         case 4:
@@ -1761,6 +1769,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
           break;
       }
 
+      dataOrig->Print("");
       dataOrig->table(superCategory)->Print("v");
 
     } else {
@@ -1768,13 +1777,6 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       dataOrig = new RooDataSet("dataset", "dataset", RooArgSet(mtt, lepton_type/*, weight*/), Import(*(eventChain[btag]))/*, WeightVar(weight)*/);
       dataOrig->table(lepton_type)->Print("v");
     }
-
-    Double_t minmTTFit = minmTT + 0.0;
-    Double_t maxmTTFit = maxmTT - 0.0;
-    mtt.setRange(minmTTFit, maxmTTFit);
-
-    // Set binning to 1 GeV
-    mtt.setBins(maxmTTFit - minmTTFit);
 
     // Create a binned dataset
     std::shared_ptr<RooDataHist> binnedDataset = std::shared_ptr<RooDataHist>(dataOrig->binnedClone());
