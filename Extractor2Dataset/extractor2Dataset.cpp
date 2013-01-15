@@ -20,7 +20,7 @@ bool OVERRIDE_TYPE;
 std::string OVERRIDED_TYPE;
 PUProfile puProfile;
 
-void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isData, const std::string& type, int max) {
+void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight) {
 
   TString outputFileFormated = OVERRIDE_TYPE ? outputFile : TString::Format(outputFile.c_str(), (isData) ? "" : type.c_str());
   std::cout << outputFileFormated << std::endl;
@@ -103,7 +103,7 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
 
       weight = 1.;
       if (! isData) {
-        weight = puReweigher->weight(n_trueInteractions);
+        weight = puReweigher->weight(n_trueInteractions) * generator_weight;
       }
 
       outputTrees[index]->Fill();
@@ -135,12 +135,12 @@ void loadChain(const std::vector<std::string>& inputFiles, TChain*& mtt, TChain*
   }
 }
 
-void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type, int max) {
+void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight) {
 
   TChain* mtt = NULL, *event = NULL;
 
   loadChain(inputFiles, mtt, event);
-  reduce(mtt, event, outputFile, isData, type, max);
+  reduce(mtt, event, outputFile, isData, type, max, generator_weight);
 
   delete mtt;
   delete event;
@@ -177,6 +177,7 @@ int main(int argc, char** argv)
     TCLAP::ValueArg<std::string> typeArg("", "type", "current inputfile type (semie or semimu)", true, "", "string", cmd);
     TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S10", "string", cmd);
     TCLAP::ValueArg<int> maxEntriesArg("n", "", "Maximal number of entries to process", false, -1, "int", cmd);
+    TCLAP::ValueArg<double> generatorWeightArg("", "weight", "MC generator weight", false, 1., "double", cmd);
 
     cmd.parse(argc, argv);
 
@@ -198,7 +199,7 @@ int main(int argc, char** argv)
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue(), maxEntriesArg.getValue()); 
+    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue()); 
 
   } catch (TCLAP::ArgException& e) {
     std::cout << e.what() << std::endl;
