@@ -2262,7 +2262,6 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       }
 
 
-      std::cout << "Fitting distribution (background floating + signal) ..." << std::endl;
       if (nll == NULL)
       {
         // Only create the nll the first time
@@ -2280,6 +2279,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       nSig.setConstant(false);
 
       // Background fit only
+      std::cout << "Fitting distribution (background only) ..." << std::endl;
       RooMinuit* minimizer = new RooMinuit(*nll_background);
       minimizer->setStrategy(2);
       minimizer->setEvalErrorWall(0);
@@ -2296,6 +2296,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       delete minimizer;
 
       // Fit
+      std::cout << "Fitting distribution (background floating + signal) ..." << std::endl;
       minimizer = new RooMinuit(*nll);
       minimizer->setStrategy(2);
       minimizer->setEvalErrorWall(0);
