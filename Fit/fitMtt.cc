@@ -118,7 +118,24 @@ namespace Bash {
 
 }
 
-void fitMtt(std::map<int, TChain*> chains, int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground);
+void saveTemporaryResult(const std::string& outputFile, double result) {
+
+  Json::Value root;
+  root["result"] = result;
+
+  Json::StyledWriter writer;
+  const std::string json = writer.write(root);
+
+  std::ofstream file(outputFile.c_str());
+  file << json;
+  file.close();
+}
+
+void fitMtt(std::map<int, TChain*> chains, int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground,
+    // Background systematics
+    const std::string& temporaryResultFile,
+    bool doBackgroundSyst, const std::string& backgroundParameterName, double backgroundParameterValue
+    );
 
 std::string BASE_PATH;
 std::string OUTPUT_PATH;
@@ -223,6 +240,11 @@ int main(int argc, char** argv)
     // Fix background
     TCLAP::SwitchArg fixBackgroundArg("", "fix-background", "Fit once with background only, then fix the background and refit background + signal", cmd);
 
+    // New background syst calculation
+    TCLAP::ValueArg<std::string> backgroundParameterNameArg("", "bkg-parameter-name", "The background parameter name to vary", false, "", "string", cmd);
+    TCLAP::ValueArg<double> backgroundParameterValueArg("", "bkg-parameter-value", "The background parameter value", false, 0., "double", cmd);
+    TCLAP::ValueArg<std::string> temporaryResultFileArg("", "temp-output-file", "A temporary filename to store result", false, "", "string", cmd);
+
     cmd.parse(argc, argv);
 
     BASE_PATH = pathArg.getValue();
@@ -261,7 +283,13 @@ int main(int argc, char** argv)
       chains[btagArg.getValue()] = loadChain(inputFiles, treeName.Data());
     }
 
-    fitMtt(chains, massArg.getValue(), fitArg.getValue(), fitConfigFileArg.getValue(), doLikScanArg.getValue(), writeRootArg.getValue(), saveFiguresArg.getValue(), doLimitCurveArg.getValue(), nToyArg.getValue(), doLikInToyArg.getValue(), indexArg.getValue(), systArg.getValue(), systSignArg.getValue(), systCBArg.getValue(), bkgOnlyArg.getValue(), onlyMuonArg.getValue(), btagArg.getValue(), useSharedMemoryArg.getValue(), sharedMemoryKeyArg.getValue(), workspaceArg.getValue(), fixBackgroundArg.getValue());
+    bool doBackgroundSyst = backgroundParameterNameArg.isSet() && backgroundParameterValueArg.isSet() && temporaryResultFileArg.isSet();
+
+    fitMtt(chains, massArg.getValue(), fitArg.getValue(), fitConfigFileArg.getValue(), doLikScanArg.getValue(), writeRootArg.getValue(), saveFiguresArg.getValue(), doLimitCurveArg.getValue(), nToyArg.getValue(), doLikInToyArg.getValue(), indexArg.getValue(), systArg.getValue(), systSignArg.getValue(), systCBArg.getValue(), bkgOnlyArg.getValue(), onlyMuonArg.getValue(), btagArg.getValue(), useSharedMemoryArg.getValue(), sharedMemoryKeyArg.getValue(), workspaceArg.getValue(), fixBackgroundArg.getValue(),
+        // Background systematics
+        temporaryResultFileArg.getValue(),
+        doBackgroundSyst, backgroundParameterNameArg.getValue(), backgroundParameterValueArg.getValue()
+        );
 
     for (auto& chain: chains)
       delete chain.second;
@@ -1157,7 +1185,11 @@ void parseConfigFile(const std::string& filename, /*RooAbsCategoryLValue& catego
   workspace.Print("v");
 }
 
-void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string fitConfigurationFile, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground)
+void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string fitConfigurationFile, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground,
+    // Background systematics
+    const std::string& temporaryResultFile,
+    bool doBackgroundSyst, const std::string& backgroundParameterName, double backgroundParameterValue
+    )
 {
 
   if ((syst_str != "nominal") && (syst_str != "JECup") && (syst_str != "JECdown"))
@@ -1795,15 +1827,17 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
     RooFitResult *fitResult = nullptr;
    
-    std::cout << "Background only ..." << std::endl;
-    
-    // First, fit with background only pdfs
-    simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
-    simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
-    fitResult = simPdfBackgroundOnly.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(2));
+    //if (! doBackgroundSyst) {
+      std::cout << "Background only ..." << std::endl;
 
-    fitResult->Print("v");
-    delete fitResult;
+      // First, fit with background only pdfs
+      simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
+      simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
+      fitResult = simPdfBackgroundOnly.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(2));
+
+      fitResult->Print("v");
+      delete fitResult;
+    //}
     
 
     /*
@@ -1828,31 +1862,52 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     }
     */
 
-    std::cout << "Background (floating) + signal ..." << std::endl;
+    //if (! doBackgroundSyst) {
+      std::cout << "Background (floating) + signal ..." << std::endl;
 
-    // And refit
-    simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
-    simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
-    fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(2));
-    fitResult->Print("v");
+      // And refit
+      simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
+      simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
+      fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(2));
+      fitResult->Print("v");
 
-    std::cout << "Done." << std::endl;
+      // Correlations between parameters of a same function
+      std::cout << std::endl;
+      std::cout << "Correlation between {electron;1-btag}_a and {electron;1-btag}_b: " << fitResult->correlation("{electron;1-btag}_a", "{electron;1-btag}_b") << std::endl;
+      std::cout << "Correlation between {electron;1-btag}_a and {electron;1-btag}_c: " << fitResult->correlation("{electron;1-btag}_a", "{electron;1-btag}_c") << std::endl;
+      std::cout << "Correlation between {electron;1-btag}_b and {electron;1-btag}_c: " << fitResult->correlation("{electron;1-btag}_b", "{electron;1-btag}_c") << std::endl;
+      std::cout << std::endl;
+      std::cout << "Correlation between {electron;2-btag}_a and {electron;2-btag}_b: " << fitResult->correlation("{electron;2-btag}_a", "{electron;2-btag}_b") << std::endl;
+      std::cout << "Correlation between {electron;2-btag}_a and {electron;2-btag}_c: " << fitResult->correlation("{electron;2-btag}_a", "{electron;2-btag}_c") << std::endl;
+      std::cout << "Correlation between {electron;2-btag}_b and {electron;2-btag}_c: " << fitResult->correlation("{electron;2-btag}_b", "{electron;2-btag}_c") << std::endl;
+      std::cout << std::endl;
+      std::cout << "Correlation between {muon;1-btag}_a and {muon;1-btag}_b: " << fitResult->correlation("{muon;1-btag}_a", "{muon;1-btag}_b") << std::endl;
+      std::cout << "Correlation between {muon;1-btag}_a and {muon;1-btag}_c: " << fitResult->correlation("{muon;1-btag}_a", "{muon;1-btag}_c") << std::endl;
+      std::cout << "Correlation between {muon;1-btag}_b and {muon;1-btag}_c: " << fitResult->correlation("{muon;1-btag}_b", "{muon;1-btag}_c") << std::endl;
+      std::cout << std::endl;
+      std::cout << "Correlation between {muon;2-btag}_a and {muon;2-btag}_b: " << fitResult->correlation("{muon;2-btag}_a", "{muon;2-btag}_b") << std::endl;
+      std::cout << "Correlation between {muon;2-btag}_a and {muon;2-btag}_c: " << fitResult->correlation("{muon;2-btag}_a", "{muon;2-btag}_c") << std::endl;
+      std::cout << "Correlation between {muon;2-btag}_b and {muon;2-btag}_c: " << fitResult->correlation("{muon;2-btag}_b", "{muon;2-btag}_c") << std::endl;
 
-    drawHistograms(mainCategory, mtt, *dataOrig, simPdf, backgroundPdfsFromWorkspace, btag, saveFigures, std::string(prefix), std::string(suffix) + "bkg_floating", !bkgOnly, true, (fixBackground ? nullptr : outputFile));
+      std::cout << "Done." << std::endl;
 
-    /*
-    TString backgroundPdfWorkspaceFile = TString::Format("%s/test.root", BASE_PATH.c_str());
-    RooWorkspace backgroundPdfWorkspace("w", "Background PDF workspace");
-    it = mainCategory.typeIterator();
-    type = nullptr;
-    while ((type = static_cast<RooCatType*>(it->Next()))) {
-      backgroundPdfWorkspace.import(*backgroundPdfsFromWorkspace[type->GetName()]->getParameters(RooArgSet(mtt)));
-    }
+      drawHistograms(mainCategory, mtt, *dataOrig, simPdf, backgroundPdfsFromWorkspace, btag, saveFigures, std::string(prefix), std::string(suffix) + "bkg_floating", !bkgOnly, true, (fixBackground ? nullptr : outputFile));
 
-    backgroundPdfWorkspace.writeToFile(backgroundPdfWorkspaceFile);
-    */
+      if (SAVE_SIGMA) {
+        // Save background parameters for background systematics
+        TString backgroundPdfWorkspaceFile = TString::Format("%s/background_parameters_%d_%d_btag.root", BASE_PATH.c_str(), massZprime, btag);
+        RooWorkspace backgroundPdfWorkspace("w", "Background PDF workspace");
+        it = mainCategory.typeIterator();
+        type = nullptr;
+        while ((type = static_cast<RooCatType*>(it->Next()))) {
+          backgroundPdfWorkspace.import(*backgroundPdfsFromWorkspace[type->GetName()]->getParameters(RooArgSet(mtt)));
+        }
 
-    if (fixBackground) {
+        backgroundPdfWorkspace.writeToFile(backgroundPdfWorkspaceFile);
+      }
+    //}
+
+    if (fixBackground || doBackgroundSyst) {
       delete fitResult;
 
       // Fix background parameters
@@ -1860,6 +1915,16 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       type = nullptr;
       while ((type = static_cast<RooCatType*>(it->Next()))) {
         setPdfParametersConst(mtt, *backgroundPdfsFromWorkspace[type->GetName()], true);
+      }
+
+      if (doBackgroundSyst) {
+        RooRealVar* var = static_cast<RooRealVar*>(mainWorkspace.var(backgroundParameterName.c_str()));
+        if (! var) {
+          std::cout << "ERROR: Someone asked me to set the value of '" << backgroundParameterName << "', but I can't find it..." << std::endl;
+        } else {
+          var->setVal(backgroundParameterValue);
+          std::cout << "Value of '" << backgroundParameterName << "' set to " << backgroundParameterValue << std::endl;
+        }
       }
 
       std::cout << "Background (fixed) + signal ..." << std::endl;
@@ -1941,6 +2006,10 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
         memcpy(shm, (void*) &results, sizeof(SHMFitResults));
 
         shmdt(shm);
+      }
+
+      if (temporaryResultFile.length() > 0) {
+        saveTemporaryResult(temporaryResultFile, sigmaZ);
       }
 
     } else {
