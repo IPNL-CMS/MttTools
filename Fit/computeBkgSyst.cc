@@ -89,7 +89,7 @@ void saveSystematic(int mass, int btag, double syst) {
 }
 
 double computeSystValue(double sigma_ref, double sigma) {
-  return fabs(sigma - sigma_ref) / fabs(sigma_ref);
+  return fabs(fabs(sigma) - fabs(sigma_ref));
 }
 
 void computeSyst(std::vector<int> masses, int btag) {
@@ -158,8 +158,8 @@ void computeSyst(std::vector<int> masses, int btag) {
 
     totalSyst /= n;
 
-    saveSystematic(*it, btag, totalSyst);
-    std::cout << "Background PDF syst for MZ' = " << *it << " : " << totalSyst << std::endl;
+    saveSystematic(*it, btag, totalSyst / fabs(sigma_ref));
+    std::cout << "Background PDF syst for MZ' = " << *it << " : " << totalSyst << " pb; " << totalSyst / fabs(sigma_ref) * 100 << "%" << std::endl;
   }
 }
 

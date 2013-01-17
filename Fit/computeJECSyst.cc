@@ -81,8 +81,8 @@ void saveSystematic(int mass, int btag, double syst) {
 }
 
 double computeSystValue(double sigma, double up, double down) {
-  double systup = fabs(up - sigma) / fabs(sigma);
-  double systdown = fabs(down - sigma) / fabs(sigma);
+  double systup = fabs(up - sigma);
+  double systdown = fabs(down - sigma);
   return (systup + systdown) / 2.;
 }
 
@@ -140,9 +140,9 @@ void computeSyst(std::vector<int> masses, int btag) {
     up = jecNode["JECup"]["sigma"].asDouble();
     down = jecNode["JECdown"]["sigma"].asDouble();
     double syst = computeSystValue(sigma_ref, up, down);
-    saveSystematic(*it, btag, syst);
+    saveSystematic(*it, btag, syst / fabs(sigma_ref));
     std::cout << "sigma for JECup: " << up << " ; sigma for JECdown: " << down << std::endl;
-    std::cout << "JEC syst for MZ' = " << *it << " : " << syst << std::endl;
+    std::cout << "JEC syst for MZ' = " << *it << " : " << syst << "pb; " << syst / fabs(sigma_ref) * 100 << "%" << std::endl;
   }
 }
 

@@ -442,8 +442,8 @@ void computeSyst(int mass, int btag) {
   TF1* gaussian = new TF1("g", "gaus", -3, 3);
   sigma->Fit(gaussian, "Q");
 
-  double syst = gaussian->GetParameter(2) / sigma_ref;
-  saveSystematic(mass, btag, syst);
+  double syst = gaussian->GetParameter(2);
+  saveSystematic(mass, btag, syst / fabs(sigma_ref));
 
   TH1* pull = static_cast<TH1*>(f->Get("pull"));
   pull->Fit("gaus", "Q");
@@ -467,7 +467,7 @@ void computeSyst(int mass, int btag) {
   f->Close();
   delete f;
 
-  std::cout << "Signal PDF syst for MZ' = " << mass << " : " << syst << std::endl;
+  std::cout << "Signal PDF syst for MZ' = " << mass << " : " << syst << " pb; " << syst / fabs(sigma_ref) * 100 << " %" << std::endl;
 }
 
 int main(int argc, char** argv) {
