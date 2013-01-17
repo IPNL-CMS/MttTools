@@ -1761,16 +1761,16 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     OUTPUT_PATH = folderName;
   }
 
+  Double_t minmTTFit = minmTT + 0.0;
+  Double_t maxmTTFit = maxmTT - 0.0;
+  mtt.setRange(minmTTFit, maxmTTFit);
+
+  // Set binning to 1 GeV
+  std::cout << mtt.getBins() << std::endl;
+  mtt.setBins((maxmTTFit - minmTTFit) / 4.);
+
   if (fit)
   {
-    Double_t minmTTFit = minmTT + 0.0;
-    Double_t maxmTTFit = maxmTT - 0.0;
-    mtt.setRange(minmTTFit, maxmTTFit);
-
-    // Set binning to 1 GeV
-    std::cout << mtt.getBins() << std::endl;
-    mtt.setBins((maxmTTFit - minmTTFit) / 4.);
-
     RooDataSet *dataOrig = NULL;
     if (combine) {
       // Combine b-tags
@@ -1862,52 +1862,52 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     }
     */
 
-    //if (! doBackgroundSyst) {
-      std::cout << "Background (floating) + signal ..." << std::endl;
+    std::cout << "Background (floating) + signal ..." << std::endl;
 
-      // And refit
-      simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
-      simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
-      fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(2));
-      fitResult->Print("v");
+    // And refit
+    simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
+    simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
+    fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(2));
+    fitResult->Print("v");
 
-      // Correlations between parameters of a same function
-      std::cout << std::endl;
-      std::cout << "Correlation between {electron;1-btag}_a and {electron;1-btag}_b: " << fitResult->correlation("{electron;1-btag}_a", "{electron;1-btag}_b") << std::endl;
-      std::cout << "Correlation between {electron;1-btag}_a and {electron;1-btag}_c: " << fitResult->correlation("{electron;1-btag}_a", "{electron;1-btag}_c") << std::endl;
-      std::cout << "Correlation between {electron;1-btag}_b and {electron;1-btag}_c: " << fitResult->correlation("{electron;1-btag}_b", "{electron;1-btag}_c") << std::endl;
-      std::cout << std::endl;
-      std::cout << "Correlation between {electron;2-btag}_a and {electron;2-btag}_b: " << fitResult->correlation("{electron;2-btag}_a", "{electron;2-btag}_b") << std::endl;
-      std::cout << "Correlation between {electron;2-btag}_a and {electron;2-btag}_c: " << fitResult->correlation("{electron;2-btag}_a", "{electron;2-btag}_c") << std::endl;
-      std::cout << "Correlation between {electron;2-btag}_b and {electron;2-btag}_c: " << fitResult->correlation("{electron;2-btag}_b", "{electron;2-btag}_c") << std::endl;
-      std::cout << std::endl;
-      std::cout << "Correlation between {muon;1-btag}_a and {muon;1-btag}_b: " << fitResult->correlation("{muon;1-btag}_a", "{muon;1-btag}_b") << std::endl;
-      std::cout << "Correlation between {muon;1-btag}_a and {muon;1-btag}_c: " << fitResult->correlation("{muon;1-btag}_a", "{muon;1-btag}_c") << std::endl;
-      std::cout << "Correlation between {muon;1-btag}_b and {muon;1-btag}_c: " << fitResult->correlation("{muon;1-btag}_b", "{muon;1-btag}_c") << std::endl;
-      std::cout << std::endl;
-      std::cout << "Correlation between {muon;2-btag}_a and {muon;2-btag}_b: " << fitResult->correlation("{muon;2-btag}_a", "{muon;2-btag}_b") << std::endl;
-      std::cout << "Correlation between {muon;2-btag}_a and {muon;2-btag}_c: " << fitResult->correlation("{muon;2-btag}_a", "{muon;2-btag}_c") << std::endl;
-      std::cout << "Correlation between {muon;2-btag}_b and {muon;2-btag}_c: " << fitResult->correlation("{muon;2-btag}_b", "{muon;2-btag}_c") << std::endl;
+    // Correlations between parameters of a same function
+    /*
+    std::cout << std::endl;
+    std::cout << "Correlation between {electron;1-btag}_a and {electron;1-btag}_b: " << fitResult->correlation("{electron;1-btag}_a", "{electron;1-btag}_b") << std::endl;
+    std::cout << "Correlation between {electron;1-btag}_a and {electron;1-btag}_c: " << fitResult->correlation("{electron;1-btag}_a", "{electron;1-btag}_c") << std::endl;
+    std::cout << "Correlation between {electron;1-btag}_b and {electron;1-btag}_c: " << fitResult->correlation("{electron;1-btag}_b", "{electron;1-btag}_c") << std::endl;
+    std::cout << std::endl;
+    std::cout << "Correlation between {electron;2-btag}_a and {electron;2-btag}_b: " << fitResult->correlation("{electron;2-btag}_a", "{electron;2-btag}_b") << std::endl;
+    std::cout << "Correlation between {electron;2-btag}_a and {electron;2-btag}_c: " << fitResult->correlation("{electron;2-btag}_a", "{electron;2-btag}_c") << std::endl;
+    std::cout << "Correlation between {electron;2-btag}_b and {electron;2-btag}_c: " << fitResult->correlation("{electron;2-btag}_b", "{electron;2-btag}_c") << std::endl;
+    std::cout << std::endl;
+    std::cout << "Correlation between {muon;1-btag}_a and {muon;1-btag}_b: " << fitResult->correlation("{muon;1-btag}_a", "{muon;1-btag}_b") << std::endl;
+    std::cout << "Correlation between {muon;1-btag}_a and {muon;1-btag}_c: " << fitResult->correlation("{muon;1-btag}_a", "{muon;1-btag}_c") << std::endl;
+    std::cout << "Correlation between {muon;1-btag}_b and {muon;1-btag}_c: " << fitResult->correlation("{muon;1-btag}_b", "{muon;1-btag}_c") << std::endl;
+    std::cout << std::endl;
+    std::cout << "Correlation between {muon;2-btag}_a and {muon;2-btag}_b: " << fitResult->correlation("{muon;2-btag}_a", "{muon;2-btag}_b") << std::endl;
+    std::cout << "Correlation between {muon;2-btag}_a and {muon;2-btag}_c: " << fitResult->correlation("{muon;2-btag}_a", "{muon;2-btag}_c") << std::endl;
+    std::cout << "Correlation between {muon;2-btag}_b and {muon;2-btag}_c: " << fitResult->correlation("{muon;2-btag}_b", "{muon;2-btag}_c") << std::endl;
+    */
 
-      std::cout << "Done." << std::endl;
+    std::cout << "Done." << std::endl;
 
-      drawHistograms(mainCategory, mtt, *dataOrig, simPdf, backgroundPdfsFromWorkspace, btag, saveFigures, std::string(prefix), std::string(suffix) + "bkg_floating", !bkgOnly, true, (fixBackground ? nullptr : outputFile));
+    drawHistograms(mainCategory, mtt, *dataOrig, simPdf, backgroundPdfsFromWorkspace, btag, saveFigures, std::string(prefix), std::string(suffix), !bkgOnly, true, outputFile);
 
-      if (SAVE_SIGMA) {
-        // Save background parameters for background systematics
-        TString backgroundPdfWorkspaceFile = TString::Format("%s/background_parameters_%d_%d_btag.root", BASE_PATH.c_str(), massZprime, btag);
-        RooWorkspace backgroundPdfWorkspace("w", "Background PDF workspace");
-        it = mainCategory.typeIterator();
-        type = nullptr;
-        while ((type = static_cast<RooCatType*>(it->Next()))) {
-          backgroundPdfWorkspace.import(*backgroundPdfsFromWorkspace[type->GetName()]->getParameters(RooArgSet(mtt)));
-        }
-
-        backgroundPdfWorkspace.writeToFile(backgroundPdfWorkspaceFile);
+    if (SAVE_SIGMA) {
+      // Save background parameters for background systematics
+      TString backgroundPdfWorkspaceFile = TString::Format("%s/background_parameters_%d_%d_btag.root", BASE_PATH.c_str(), massZprime, btag);
+      RooWorkspace backgroundPdfWorkspace("w", "Background PDF workspace");
+      it = mainCategory.typeIterator();
+      type = nullptr;
+      while ((type = static_cast<RooCatType*>(it->Next()))) {
+        backgroundPdfWorkspace.import(*backgroundPdfsFromWorkspace[type->GetName()]->getParameters(RooArgSet(mtt)));
       }
-    //}
 
-    if (fixBackground || doBackgroundSyst) {
+      backgroundPdfWorkspace.writeToFile(backgroundPdfWorkspaceFile);
+    }
+
+    if (doBackgroundSyst) {
       delete fitResult;
 
       // Fix background parameters
@@ -1917,15 +1917,15 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
         setPdfParametersConst(mtt, *backgroundPdfsFromWorkspace[type->GetName()], true);
       }
 
-      if (doBackgroundSyst) {
-        RooRealVar* var = static_cast<RooRealVar*>(mainWorkspace.var(backgroundParameterName.c_str()));
-        if (! var) {
-          std::cout << "ERROR: Someone asked me to set the value of '" << backgroundParameterName << "', but I can't find it..." << std::endl;
-        } else {
-          var->setVal(backgroundParameterValue);
-          std::cout << "Value of '" << backgroundParameterName << "' set to " << backgroundParameterValue << std::endl;
-        }
+      RooRealVar* var = static_cast<RooRealVar*>(mainWorkspace.var(backgroundParameterName.c_str()));
+      if (! var) {
+        std::cout << "ERROR: Someone asked me to set the value of '" << backgroundParameterName << "', but I can't find it..." << std::endl;
+      } else {
+        var->setVal(backgroundParameterValue);
+        std::cout << "Value of '" << backgroundParameterName << "' set to " << backgroundParameterValue << std::endl;
       }
+
+      nSig.setVal(0);
 
       std::cout << "Background (fixed) + signal ..." << std::endl;
 
@@ -1933,9 +1933,6 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
       fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(2));
       fitResult->Print("v");
-
-      drawHistograms(mainCategory, mtt, *dataOrig, simPdf, backgroundPdfsFromWorkspace, btag, saveFigures, std::string(prefix), std::string(suffix) + "_bkg_fixed", !bkgOnly, true, outputFile);
-
 
       std::cout << "Done." << std::endl;
     }
@@ -2216,11 +2213,6 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       }
     }
 
-    double minmTTFit = minmTT + 0.0;
-    double maxmTTFit = maxmTT - 0.0;
-    mtt.setRange(minmTTFit, maxmTTFit);
-    mtt.setBins(maxmTT - minmTT);
-
     // NLL for fitting
     RooAbsReal* nll = NULL;
     RooAbsReal* nll_background = NULL;
@@ -2280,7 +2272,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       else
       {
         nll->setData(*binnedDatasetForToys);
-        nll->setData(*binnedDatasetForToys);
+        nll_background->setData(*binnedDatasetForToys);
       }
 
       // Be sure that nSig_mu is not fixed anymore, and reset to 0
@@ -2293,8 +2285,8 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       minimizer->setEvalErrorWall(0);
       minimizer->optimizeConst(0);
       minimizer->migrad();
-      //minimizer->migrad();
-      //minimizer->migrad();
+      minimizer->migrad();
+      minimizer->migrad();
 
       RooFitResult* tmp = minimizer->save();
       tmp->Print("v");
@@ -2313,51 +2305,15 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       minimizer->migrad();
       std::cout << "done.";
 
-      if (! fixBackground) {
-        std::cout << " Minos:" << std::endl;
+      std::cout << " Minos:" << std::endl;
 
-        // Only compute errors for nSig
-        minimizer->minos(RooArgSet(nSig));
+      // Only compute errors for nSig
+      minimizer->minos(RooArgSet(nSig));
 
-        std::cout << "done." << std::endl;
-      } else {
-        std::cout << std::endl;
-      }
+      std::cout << "done." << std::endl;
 
       RooFitResult* toyFitRes = minimizer->save();
       toyFitRes->Print("v");
-
-      if (fixBackground) {
-        delete toyFitRes;
-        delete minimizer;
-
-        // Fix background parameters
-        it = mainCategory.typeIterator();
-        type = nullptr;
-        while ((type = static_cast<RooCatType*>(it->Next()))) {
-          setPdfParametersConst(mtt, *backgroundPdfsFromWorkspace[type->GetName()], true);
-        }
-
-        std::cout << "Fitting distribution (Background fixed + signal) ..." << std::endl;
-
-        // Fit
-        minimizer = new RooMinuit(*nll);
-        minimizer->setStrategy(2);
-        minimizer->setEvalErrorWall(0);
-        minimizer->optimizeConst(0);
-        minimizer->migrad();
-        minimizer->migrad();
-        minimizer->migrad();
-        std::cout << "done. Minos:";
-
-        // Only compute errors for nSig
-        minimizer->minos(RooArgSet(nSig));
-
-        std::cout << "done." << std::endl;
-
-        toyFitRes = minimizer->save();
-        toyFitRes->Print("v");
-      }
 
       if (fixBackground) {
         // Set background parameter constant for the likelihood scan
