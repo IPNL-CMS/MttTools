@@ -12,6 +12,7 @@
 
 #include <TROOT.h>
 #include <TH1.h>
+#include <TLine.h>
 
 #include "Utils.h"
 #include <tclap/CmdLine.h>
@@ -122,8 +123,10 @@ void treatToyStuff(bool writeTxtFile, bool savePsGifFiles, int massZprime, int b
   TCanvas* cZ = new TCanvas("cZ","Z cross section", 400,400); 
   //    cZ->cd();
   TH1* hLimit_Z = (TH1*) f0->Get("hLimit_Z");
+  hLimit_Z->GetYaxis()->SetTitle("Arbitrary unit");
   //hLimit_Z->GetXaxis()->SetTitle("95% C.L. upper limit on #sigma(pp #rightarrow Z') #times BR(Z' #rightarrow t#bar{t}) (pb)");
-  hLimit_Z->GetXaxis()->SetRangeUser(0.,10.);
+  hLimit_Z->GetXaxis()->SetTitle("95% C.L. upper limit on #sigma(pp #rightarrow Z') (pb)");
+  hLimit_Z->GetXaxis()->SetRangeUser(0., 2.5);
   hLimit_Z->Draw();
   std::cout << "Mean of the Z limit distribution " << hLimit_Z->GetMean() << std::endl;
   std::cout << "RMS of the Z limit distribution " << hLimit_Z->GetRMS() << std::endl;
@@ -132,6 +135,12 @@ void treatToyStuff(bool writeTxtFile, bool savePsGifFiles, int massZprime, int b
   double medianq = 0.;
   hLimit_Z->GetQuantiles(1, &medianq, &areaq);
   std::cout << "Median of the Z limit distribution " << medianq << std::endl;
+
+  // Draw a line for the observed value
+  TLine l(medianq, 0, medianq, hLimit_Z->GetMaximum());
+  l.SetLineColor(kRed);
+  l.SetLineWidth(1);
+  l.Draw("same");
 
   double areaqP68 = 0.84;
   double P68band = 0.;
