@@ -39,7 +39,7 @@ SRCS =  $(wildcard *.cc)
 DEPS =  $(patsubst %.cc, %.d, $(wildcard *.cc)) 
 OBJS =  $(patsubst %.cc, %.o, $(wildcard *.cc))
 
-all: fritSignal fitMtt computeEff computeCrystalBallSyst computeJECSyst computeBkgSyst computeSigmaRef runLikelihoodScan treatToyStuff extractLimits drawLimitCurve computeKeysPdfSyst interpolatePdf generateToyDataset
+all: fritSignal fitMtt computeEff computeCrystalBallSyst computeJECSystWithToys computeJECSyst computeBkgSyst computeSigmaRef runLikelihoodScan treatToyStuff extractLimits drawLimitCurve computeKeysPdfSyst interpolatePdf generateToyDataset
 
 # Make the executable
 fitMtt: fitMtt.o lib/jsoncpp.o libUtils
@@ -65,6 +65,9 @@ computeKeysPdfSyst: computeKeysPdfSyst.o lib/jsoncpp.o libUtils
 
 computeJECSyst: computeJECSyst.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) computeJECSyst.o $(LIBS) $(EXPLLINKLIBS) -o computeJECSyst
+
+computeJECSystWithToys: computeJECSystWithToys.o lib/jsoncpp.o libUtils
+	$(LD) $(LDFLAGS) computeJECSystWithToys.o $(LIBS) $(EXPLLINKLIBS) -o computeJECSystWithToys
 
 computeBkgSyst: computeBkgSyst.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) computeBkgSyst.o $(LIBS) $(EXPLLINKLIBS) -o computeBkgSyst

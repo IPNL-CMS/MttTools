@@ -26,6 +26,12 @@ reduceDataset
 reduceDatasetFromData
 runLikelihoodScan
 treatToyStuff
+interpolatePdf
+generateToyDataset
+computeKeysPdfSyst
+computeJECSystWithToys
+computeCrystalBallSyst
 
 # Folders
 data_*_nominal_*_crystalball*/
+analysis/*
