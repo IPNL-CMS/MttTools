@@ -7,7 +7,7 @@
 # {muon;2-btag} -> 5
 
 # First, create our main observable, ie number of signal events
-nSig[0., -1000., 2000.]
+nSig[0., -1000., 2500.]
 
 # Create our number of background events, one for each category.
 nBkg_e_1[2000., 0., 50000.]
