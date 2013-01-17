@@ -2155,7 +2155,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     TH1F* hLoErr = new TH1F("hLoErr_mu", "lo err (mu) in Toy MC", 40, 0, 200);
     TH1F* hHiErr = new TH1F("hHiErr_mu", "hi err (mu) in Toy MC", 40, 0, 200);
     TH1F* hLimit = new TH1F("hLimit_mu", "signal limit (mu) in Toy MC", 33, -32, 100);
-    TH1F* hLimit_Z = new TH1F("hLimit_Z", "limit on the Z cross section", 990, -32, 100);
+    TH1F* hLimit_Z = new TH1F("hLimit_Z", "limit on the Z cross section", 500, 0, 7);
     TH1F* hMinNll = new TH1F("hMinNll", "minimum NLL for Toy MC", 20, fitMinNll - 0.3 * fitMinNll, fitMinNll + 0.3 * fitMinNll);
 
     // Set background variables values
