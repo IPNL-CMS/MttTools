@@ -30,6 +30,7 @@
 #include <TApplication.h>
 #include <TLatex.h>
 #include <TChain.h>
+#include <TGaxis.h>
 
 #include <RooGlobalFunc.h>
 #include <RooMsgService.h>
@@ -685,17 +686,21 @@ void doLikelihoodScan(RooAbsData& dataset, RooAbsPdf& pdf, RooRealVar& observabl
 
   std::cout << "Likehood from " << xLow << " to " << xHigh << "; bins: " << nLHBins << std::endl;
 
-  results.likscan = new TH1D("likscan", "likscan", nLHBins, xLow, xHigh);
-  results.pdfscan = new TH1D("pdfscan", "pdfscan", nLHBins, xLow, xHigh);
+  results.likscan = new TH1D("likscan", "likscan;Number of signal events;-#Delta Nll", nLHBins, xLow, xHigh);
+  results.pdfscan = new TH1D("pdfscan", "pdfscan;Number of signal events;PDF", nLHBins, xLow, xHigh);
+  results.pdfscan->GetYaxis()->SetTitleOffset(1.5);
 
   // Take into account gaussian smearing
   double xSmearedHigh = xHigh + 3 * systError;
   int nLHSmearedBins = (int)(xSmearedHigh - xLow) / steps;
   int nLHCuttedBins = (int) xSmearedHigh / steps;
   std::cout << "Likehood smearing from " << xLow << " to " << xSmearedHigh << "; bins: " << nLHSmearedBins << std::endl;
-  results.pdfscan_wsyst = new TH1D("pdfscan_wsyst", "pdfscan_wsyst", nLHSmearedBins, xLow, xSmearedHigh);
-  results.pdfscan_cut = new TH1D("pdfscan_cut", "pdfscan_cut", nLHCuttedBins, 0, xSmearedHigh);
-  results.pdfscan_wsyst_cut = new TH1D("pdfscan_wsyst_cut", "pdfscan_wsyst_cut", nLHCuttedBins, 0, xSmearedHigh);
+  results.pdfscan_wsyst = new TH1D("pdfscan_wsyst", "pdfscan_wsyst;Number of signal events;PDF", nLHSmearedBins, xLow, xSmearedHigh);
+  results.pdfscan_wsyst->GetYaxis()->SetTitleOffset(1.5);
+  results.pdfscan_cut = new TH1D("pdfscan_cut", "pdfscan_cut;Number of signal events;PDF", nLHCuttedBins, 0, xSmearedHigh);
+  results.pdfscan_cut->GetYaxis()->SetTitleOffset(1.5);
+  results.pdfscan_wsyst_cut = new TH1D("pdfscan_wsyst_cut", "pdfscan_wsyst_cut;Number of signal events;PDF", nLHCuttedBins, 0, xSmearedHigh);
+  results.pdfscan_wsyst_cut->GetYaxis()->SetTitleOffset(1.5);
 
   double center = observable.getVal();
 
@@ -2025,6 +2030,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       likelihoodFile.Close();
 
       TCanvas * tmpCanvas = new TCanvas("tmpCanvas", "", 600, 600);
+      tmpCanvas->SetLeftMargin(0.18);
 
       results.likscan->Draw();
       tmpCanvas->Print(OUTPUT_PATH + prefix + "_likscan_" + suffix + ".pdf");
