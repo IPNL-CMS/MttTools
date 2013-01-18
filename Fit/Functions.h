@@ -5,6 +5,7 @@
 #include <RooAbsCategory.h>
 #include <RooCatType.h>
 #include <RooAbsCategoryLValue.h>
+#include <RooSuperCategory.h>
 
 #include "BaseFunction.h"
 

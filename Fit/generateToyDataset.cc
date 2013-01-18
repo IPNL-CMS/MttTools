@@ -36,6 +36,10 @@
 #include <RooBinning.h>
 #include <RooDataHist.h>
 #include <RooHistPdf.h>
+#include <RooAbsPdf.h>
+#include <RooFitResult.h>
+
+#include "Functions.h"
 
 
 void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {
@@ -61,20 +65,28 @@ TChain* loadChain(const std::vector<std::string>& files, const std::string& name
 
 #include "Utils.h"
 
-void process(const std::vector<std::string>& inputFiles, TFile* outputFile, int btag) {
+void process(const std::vector<std::string>& inputFiles, TFile* outputFile, bool usePDF, int btag) {
 
   TString treeName = TString::Format("dataset_%dbtag", btag);
   
   std::shared_ptr<TChain> chain(loadChain(inputFiles, treeName.Data()));
 
-  RooRealVar mtt("mtt", "mtt", 0, 5000, "GeV/c^2");
+  double xMin = 550;
+  double xMax = 2000;
+
+  if (! usePDF) {
+    xMin = 0;
+    xMax = 5000;
+  }
+
+  RooRealVar mtt("mtt", "mtt", xMin, xMax, "GeV/c^2");
   RooRealVar weight("weight", "weight", 0, 10000);
 
   RooCategory lepton_type("lepton_type", "lepton_type");
   lepton_type.defineType("electron", 11);
   lepton_type.defineType("muon", 13);
 
-  mtt.setBins(5000 / 2.);
+  mtt.setBins((xMax -xMin) / 4.);
 
   std::shared_ptr<RooDataSet> dataset(new RooDataSet(treeName, "dataset", RooArgSet(mtt, lepton_type, weight), RooFit::Import(*chain), RooFit::WeightVar(weight)));
 
@@ -90,9 +102,39 @@ void process(const std::vector<std::string>& inputFiles, TFile* outputFile, int 
   std::shared_ptr<RooDataHist> binnedSignalDataset_electrons(static_cast<RooDataHist*>(binnedSignalDataset->reduce(RooFit::SelectVars(RooArgSet(mtt, weight)), RooFit::Cut("lepton_type == 11"), RooFit::Name(TString::Format("binned_dataset_electron_%d", btag)))));
    
   // Create pdf from dataset
-  std::shared_ptr<RooHistPdf> muon_pdf(new RooHistPdf(TString::Format("muon_hist_pdf_%d", btag), "muon_hist_pdf", RooArgSet(mtt), *binnedSignalDataset_muons));
-  std::shared_ptr<RooHistPdf> electron_pdf(new RooHistPdf(TString::Format("electron_hist_pdf_%d", btag), "electron_hist_pdf", RooArgSet(mtt), *binnedSignalDataset_electrons));
+  std::shared_ptr<RooAbsPdf> muon_pdf;
+  std::shared_ptr<RooAbsPdf> electron_pdf;
 
+  // Used only if generating from PDF
+  std::shared_ptr<BaseFunction> muon_pdf_base;
+  std::shared_ptr<BaseFunction> electron_pdf_base;
+
+  if (! usePDF) {
+    // Generate using a histogram
+    muon_pdf.reset(new RooHistPdf(TString::Format("muon_hist_pdf_%d", btag), "muon_hist_pdf", RooArgSet(mtt), *binnedSignalDataset_muons));
+    electron_pdf.reset(new RooHistPdf(TString::Format("electron_hist_pdf_%d", btag), "electron_hist_pdf", RooArgSet(mtt), *binnedSignalDataset_electrons));
+  } else {
+
+    Json::Value pdf;
+    pdf["name"] = "faltB";
+    pdf["parameters"] = "faltB";
+
+    muon_pdf_base = createPdf(pdf, "./fit_configuration", mtt, nullptr, 0, "background", "muon");
+    electron_pdf_base = createPdf(pdf, "./fit_configuration", mtt, nullptr, 0, "background", "electron");
+    
+    muon_pdf = muon_pdf_base->getSharedPdf();
+    electron_pdf = electron_pdf_base->getSharedPdf();
+
+    RooFitResult* fitResult = muon_pdf->fitTo(*binnedSignalDataset_muons, RooFit::Save(), RooFit::Optimize(0));
+    std::cout << "Muon fit" << std::endl;
+    fitResult->Print("v");
+    delete fitResult;
+
+    fitResult = electron_pdf->fitTo(*binnedSignalDataset_electrons, RooFit::Save(), RooFit::Optimize(0));
+    std::cout << "Electron fit" << std::endl;
+    fitResult->Print("v");
+    delete fitResult;
+  }
   
   //genSpecs_muon[i].reset(muon_pdf[i]->prepareMultiGen(RooArgSet(mtt), RooFit::NumEvents(nMuons[i]), RooFit::Extended(true), RooFit::AutoBinned(false)[>, RooFit::Verbose(true)<]));
 
@@ -137,14 +179,14 @@ void process(const std::vector<std::string>& inputFiles, TFile* outputFile, int 
   tree->Write();
 }
 
-void process(const std::vector<std::string>& inputFiles, const std::string& outputFile) {
+void process(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool usePDF) {
 
   RooRandom::randomGenerator()->SetSeed(0);
 
   TFile* output = TFile::Open(outputFile.c_str(), "recreate");
-  process(inputFiles, output, 0);
-  process(inputFiles, output, 1);
-  process(inputFiles, output, 2);
+  process(inputFiles, output, usePDF, 0);
+  process(inputFiles, output, usePDF, 1);
+  process(inputFiles, output, usePDF, 2);
 
   output->Close();
   delete output;
@@ -473,6 +515,8 @@ int main(int argc, char** argv) {
     cmd.xorAdd(inputListArg, inputFileArg);
 
     TCLAP::ValueArg<std::string> outputFileArg("o", "output-file", "The output file", true, "", "string", cmd);
+
+    TCLAP::SwitchArg usePDFArg("", "use-pdf", "Use the background PDF to generate toys", cmd);
     cmd.parse(argc, argv);
 
     RooMsgService::instance().setStreamStatus(0, false);
@@ -487,8 +531,7 @@ int main(int argc, char** argv) {
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-
-    process(inputFiles, outputFileArg.getValue());
+    process(inputFiles, outputFileArg.getValue(), usePDFArg.getValue());
 
   } catch (TCLAP::ArgException& e) {
     std::cerr << e.error() << std::endl;

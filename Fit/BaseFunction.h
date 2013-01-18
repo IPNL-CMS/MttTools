@@ -21,6 +21,10 @@ class BaseFunction {
       return *mPdf.get();
     }
 
+    std::shared_ptr<RooAbsPdf>& getSharedPdf() {
+      return mPdf;
+    }
+
     virtual bool createPdf(RooRealVar& observable) = 0;
 
     void setParameters(const std::map<std::string, std::shared_ptr<RooRealVar>>& parameters) {
