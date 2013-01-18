@@ -1836,8 +1836,8 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       std::cout << "Background only ..." << std::endl;
 
       // First, fit with background only pdfs
-      simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
-      simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
+      //simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
+      //simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
       fitResult = simPdfBackgroundOnly.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(2));
 
       fitResult->Print("v");
@@ -1870,8 +1870,8 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     std::cout << "Background (floating) + signal ..." << std::endl;
 
     // And refit
-    simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
-    simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
+    //simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
+    //simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
     fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(2));
     fitResult->Print("v");
 
