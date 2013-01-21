@@ -184,3 +184,16 @@ bool analysisFixedBackground(const std::string& base/* = "."*/) {
 
   return root["analysis"][getAnalysisIndex(base)][uuid]["fixed_background"].asBool();
 }
+
+bool analysisUseInterpolation(const std::string& base/* = "."*/) {
+  Json::Value root;
+  getJsonRoot(formatPath(base, "analysis.json"), root);
+
+  const std::string uuid = getAnalysisUUID(base);
+  const int index = getAnalysisIndex(base);
+
+  if (! root["analysis"][index][uuid].isMember("interpolation"))
+    return false;
+
+  return root["analysis"][index][uuid]["interpolation"].asBool();
+}

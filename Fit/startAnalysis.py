@@ -51,6 +51,7 @@ else:
   analysisBkgSyst = False
   analysisJECSyst = False
 analysisFixedBackground = query_yes_no("When fitting, should the background be fixed?")
+analysisUseInterpolation = query_yes_no("Do you want to use interpolation?")
 
 useAsCurrentAnalysis = query_yes_no("Set this new analysis as the current one?")
 
@@ -79,7 +80,8 @@ new_analysis = {
       "signal_syst": analysisSignalSyst,
       "background_syst": analysisBkgSyst,
       "jec_syst": analysisJECSyst,
-      "fixed_background": analysisFixedBackground
+      "fixed_background": analysisFixedBackground,
+      "interpolation": analysisUseInterpolation
       }
     }
 
