@@ -161,7 +161,8 @@ int main(int argc, char** argv) {
 
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", false, 2, "int", cmd);
     TCLAP::ValueArg<std::string> jecArg("", "jec", "Type of JEC", false, "nominal", "nominal/JECup/JECdown", cmd);
-    TCLAP::SwitchArg ignoreInterpolatedArg("", "ignore-interpolated", "Ignore interpolated mass for extrapolation", cmd, false);
+
+    // TCLAP::SwitchArg ignoreInterpolatedArg("", "ignore-interpolated", "Ignore interpolated mass for extrapolation", cmd, false);
 
     cmd.parse(argc, argv);
 
@@ -174,6 +175,7 @@ int main(int argc, char** argv) {
     std::string btagStr = stream.str();
 
     base_path = "./analysis/" + getAnalysisUUID();
+    bool ignoreInterpolated = !analysisUseInterpolation();
 
     std::map<int, Efficiencies> efficiencies;
     for (int i = 750; i <= 1500; i += 50) {
@@ -267,7 +269,7 @@ int main(int argc, char** argv) {
         }
       }
 
-      if (! ignoreInterpolatedArg.getValue()) {
+      if (! ignoreInterpolated) {
         trig_mu.SetPoint(index, i.first, i.second.effTrig_mu);
         trig_mu.SetPointError(index, 0., i.second.error_effTrig_mu);
 
@@ -294,7 +296,7 @@ int main(int argc, char** argv) {
     TF1* triggerEff_fit_e_low = (TF1*) triggerEff_fit_e.Clone("triggerEff_fit_e_low");
     TF1* triggerEff_fit_e_high = (TF1*) triggerEff_fit_e.Clone("triggerEff_fit_e_high");
 
-    if (! ignoreInterpolatedArg.getValue()) {
+    if (! ignoreInterpolated) {
       trig_mu.Fit(&triggerEff_fit_mu, "QMR");
       trig_mu_low.Fit(triggerEff_fit_mu_low, "QMR");
       trig_mu_high.Fit(triggerEff_fit_mu_high, "QMR");
@@ -365,7 +367,7 @@ int main(int argc, char** argv) {
         eff.error_selectionEff_mu = ErrNsel_mu[index] / N0[index];
         eff.error_selectionEff_e = ErrNsel_e[index] / N0[index];
 
-        if (! ignoreInterpolatedArg.getValue()) {
+        if (! ignoreInterpolated) {
           e_mu.SetPoint(index, i.first, i.second.selectionEff_mu);
           e_mu.SetPointError(index, 0, i.second.error_selectionEff_mu);
 
@@ -380,12 +382,12 @@ int main(int argc, char** argv) {
         }
 
         index++;
-      } else if (ignoreInterpolatedArg.getValue()) {
+      } else if (ignoreInterpolated) {
         eff.copy(*lowMass_eff);
       }
     }
 
-    if (! ignoreInterpolatedArg.getValue()) {
+    if (! ignoreInterpolated) {
       e_mu.Fit(&selectionEff_fit_mu, "QR");
       e_mu_low.Fit(selectionEff_fit_mu_low, "QR");
       e_mu_high.Fit(selectionEff_fit_mu_high, "QR");
@@ -412,7 +414,7 @@ int main(int argc, char** argv) {
     */
 
 
-    if (! ignoreInterpolatedArg.getValue()) {
+    if (! ignoreInterpolated) {
       for (auto& i: efficiencies) {
         Efficiencies& eff = i.second;
 
@@ -437,7 +439,7 @@ int main(int argc, char** argv) {
 
     for (auto& i: efficiencies) {
 
-      if (ignoreInterpolatedArg.getValue() && i.second.isInterpolated)
+      if (ignoreInterpolated && i.second.isInterpolated)
         continue;
 
       std::stringstream ss;
