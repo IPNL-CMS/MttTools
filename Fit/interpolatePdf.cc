@@ -41,6 +41,7 @@
 #include <RooExtendPdf.h>
 #include <RooIntegralMorph.h>
 #include <RooMomentMorph.h>
+#include <RooHistPdf.h>
 
 using namespace RooFit;
 
@@ -184,17 +185,31 @@ void doInterpolation(int mass, const std::string& jec, int btag) {
   hypoMass(0) = 0; 
   hypoMass(1) = 1;
 
-  RooMomentMorph interpolation_muon("signal_muon", "signal_muon", rAlpha, RooArgList(mtt), RooArgList(*lowMass_pdf_mu, *highMass_pdf_mu), hypoMass, RooMomentMorph::Linear);
-  RooMomentMorph interpolation_e("signal_electron", "signal_electron", rAlpha, RooArgList(mtt), RooArgList(*lowMass_pdf_e, *highMass_pdf_e), hypoMass, RooMomentMorph::Linear);
+  RooMomentMorph interpolation_muon("interpolated_signal_muon", "signal_muon", rAlpha, RooArgList(mtt), RooArgList(*lowMass_pdf_mu, *highMass_pdf_mu), hypoMass, RooMomentMorph::Linear);
+  RooMomentMorph interpolation_e("interpolated_signal_electron", "signal_electron", rAlpha, RooArgList(mtt), RooArgList(*lowMass_pdf_e, *highMass_pdf_e), hypoMass, RooMomentMorph::Linear);
   
   std::cout << "Done." << std::endl;
 
   drawPdfs(mtt, interpolation_muon, *lowMass_pdf_mu, *highMass_pdf_mu, base_path + "/frit/" + prefix + "_interpolation_muon.pdf", btag, mass);
   drawPdfs(mtt, interpolation_e, *lowMass_pdf_e, *highMass_pdf_e, base_path + "/frit/" + prefix + "_interpolation_electron.pdf", btag, mass);
 
+  // Transform PDF to RooHistPdf
+  // Binning: 1 GeV/bin
+  mtt.setBins((mtt.getMax() - mtt.getMin()) / 1.);
+  RooDataHist binned_dataset_muon("binned_dataset_muon", "binned_dataset_muon", RooArgSet(mtt));
+  interpolation_muon.fillDataHist(&binned_dataset_muon, NULL, 1.);
+
+  RooDataHist binned_dataset_electron("binned_dataset_electron", "binned_dataset_electron", RooArgSet(mtt));
+  interpolation_e.fillDataHist(&binned_dataset_electron, NULL, 1.);
+
+  RooHistPdf hist_pdf_muon("signal_muon", "hist_pdf_muon", RooArgSet(mtt), binned_dataset_muon);
+  RooHistPdf hist_pdf_electron("signal_electron", "hist_pdf_electron", RooArgSet(mtt), binned_dataset_electron);
+
   RooWorkspace workspace("w", "Interpolation signal workspace");
-  workspace.import(interpolation_muon);
-  workspace.import(interpolation_e);
+//  workspace.import(interpolation_muon);
+//  workspace.import(interpolation_e);
+  workspace.import(hist_pdf_muon);
+  workspace.import(hist_pdf_electron);
 
   TString workspaceFile = base_path + "/frit/" + prefix + "_workspace.root";
   workspace.writeToFile(workspaceFile, true);
