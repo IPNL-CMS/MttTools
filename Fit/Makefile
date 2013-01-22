@@ -72,8 +72,8 @@ computeJECSystWithToys: computeJECSystWithToys.o lib/jsoncpp.o libUtils
 computeBkgSyst: computeBkgSyst.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) computeBkgSyst.o $(LIBS) $(EXPLLINKLIBS) -o computeBkgSyst
 
-computeSigmaRef: computeSigmaRef.o
-	$(LD) $(LDFLAGS) $^ $(DYNAMIC_LIBS) $(EXPLLINKLIBS) -o computeSigmaRef
+computeSigmaRef: computeSigmaRef.o libUtils
+	$(LD) $(LDFLAGS) computeSigmaRef.o $(LIBS) $(EXPLLINKLIBS) -o computeSigmaRef
 
 runLikelihoodScan: runLikelihoodScan.o lib/jsoncpp.o
 	$(LD) $(LDFLAGS) $^ $(DYNAMIC_LIBS) $(EXPLLINKLIBS) -o runLikelihoodScan

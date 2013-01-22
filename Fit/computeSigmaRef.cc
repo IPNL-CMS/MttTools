@@ -6,6 +6,8 @@
 
 #include <tclap/CmdLine.h>
 
+#include "Utils.h"
+
 void process(std::vector<int>& masses, bool muonsOnly, int btag, const std::string& file, bool singleFile) {
   std::vector<pid_t> children; // For fork()
 
@@ -59,10 +61,12 @@ int main(int argc, char** argv) {
 
     std::vector<int> masses = massArg.getValue();
     if (masses.size() == 0) {
-      masses.push_back(750);
-      masses.push_back(1000);
-      masses.push_back(1250);
-      masses.push_back(1500);
+      double from = 750;
+      double to = 1500;
+      int step = (analysisUseInterpolation() ? 50 : 250);
+      for (int m = from; m <= to; m += step) {
+        masses.push_back(m);
+      }
     }
 
     process(masses, muonsOnlyArg.getValue(), btagArg.getValue(), inputFileArg.isSet() ? inputFileArg.getValue() : inputListArg.getValue(), inputFileArg.isSet());
