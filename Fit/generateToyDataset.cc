@@ -86,7 +86,7 @@ void process(const std::vector<std::string>& inputFiles, TFile* outputFile, bool
   lepton_type.defineType("electron", 11);
   lepton_type.defineType("muon", 13);
 
-  mtt.setBins((xMax -xMin) / 4.);
+  mtt.setBins((xMax -xMin) / 1.);
 
   std::shared_ptr<RooDataSet> dataset(new RooDataSet(treeName, "dataset", RooArgSet(mtt, lepton_type, weight), RooFit::Import(*chain), RooFit::WeightVar(weight)));
 

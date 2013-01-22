@@ -735,7 +735,7 @@ void doLikelihoodScan(RooAbsData& dataset, RooAbsPdf& pdf, RooRealVar& observabl
     observable.setConstant(true);
 
     RooMinuit* minimizer = new RooMinuit(*nll);
-    minimizer->setStrategy(2);
+    minimizer->setStrategy(1);
     minimizer->setEvalErrorWall(0);
     minimizer->optimizeConst(0);
     minimizer->migrad();
@@ -795,7 +795,7 @@ void doLikelihoodScan(RooAbsData& dataset, RooAbsPdf& pdf, RooRealVar& observabl
     observable.setConstant(true);
 
     RooMinuit* minimizer = new RooMinuit(*nll);
-    minimizer->setStrategy(2);
+    minimizer->setStrategy(1);
     minimizer->setEvalErrorWall(0);
     minimizer->optimizeConst(0);
     minimizer->migrad();
@@ -983,10 +983,10 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, Ro
     subData->plotOn(plot);
 
     if (! drawOnlyData) {
-      simPdfs.plotOn(plot, Slice(categories), ProjWData(*subData), Components(*backgroundPdfs[category]), LineStyle(kDashed), LineColor(kRed), LineWidth(2));
+      simPdfs.plotOn(plot, Slice(categories), ProjWData(*subData), Components(*backgroundPdfs[category]), LineStyle(kDashed), LineColor(kRed), LineWidth(2), Range("FULL"));
 
       if (drawSignal)
-        simPdfs.plotOn(plot, Slice(categories), ProjWData(*subData), LineColor(kBlue), LineWidth(2));
+        simPdfs.plotOn(plot, Slice(categories), ProjWData(*subData), LineColor(kBlue), LineWidth(2), Range("FULL"));
     }
 
     delete subData;
@@ -1768,11 +1768,15 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
   Double_t minmTTFit = minmTT + 0.0;
   Double_t maxmTTFit = maxmTT - 0.0;
+  
   mtt.setRange(minmTTFit, maxmTTFit);
+
+  mtt.setRange("R1", minmTTFit, massZprime - 50);
+  mtt.setRange("R2", massZprime + 50, maxmTTFit);
 
   // Set binning to 1 GeV
   std::cout << mtt.getBins() << std::endl;
-  mtt.setBins((maxmTTFit - minmTTFit) / 4.);
+  mtt.setBins((maxmTTFit - minmTTFit) / 1.);
 
   if (fit)
   {
@@ -1811,7 +1815,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
     } else {
       // Dataset is inside eventChain. Load RooDataSet from tree
-      dataOrig = new RooDataSet("dataset", "dataset", RooArgSet(mtt, lepton_type/*, weight*/), Import(*(eventChain[btag]))/*, WeightVar(weight)*/);
+      dataOrig = new RooDataSet("dataset", "dataset", RooArgSet(mtt, lepton_type, weight), Import(*(eventChain[btag])), WeightVar(weight));
       dataOrig->table(lepton_type)->Print("v");
     }
 
@@ -1838,7 +1842,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       // First, fit with background only pdfs
       //simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
       //simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
-      fitResult = simPdfBackgroundOnly.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(2));
+      fitResult = simPdfBackgroundOnly.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(1));
 
       fitResult->Print("v");
       delete fitResult;
@@ -1872,7 +1876,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     // And refit
     //simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
     //simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
-    fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(2));
+    fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(1));
     fitResult->Print("v");
 
     // Correlations between parameters of a same function
@@ -1934,9 +1938,9 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
       std::cout << "Background (fixed) + signal ..." << std::endl;
 
-      simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
-      simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
-      fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(2));
+      simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(1));
+      simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(1));
+      fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(1));
       fitResult->Print("v");
 
       std::cout << "Done." << std::endl;
@@ -2287,7 +2291,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       // Background fit only
       std::cout << "Fitting distribution (background only) ..." << std::endl;
       RooMinuit* minimizer = new RooMinuit(*nll_background);
-      minimizer->setStrategy(2);
+      minimizer->setStrategy(1);
       minimizer->setEvalErrorWall(0);
       minimizer->optimizeConst(0);
       minimizer->migrad();
@@ -2304,7 +2308,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       // Fit
       std::cout << "Fitting distribution (background floating + signal) ..." << std::endl;
       minimizer = new RooMinuit(*nll);
-      minimizer->setStrategy(2);
+      minimizer->setStrategy(1);
       minimizer->setEvalErrorWall(0);
       minimizer->optimizeConst(0);
       minimizer->migrad();
