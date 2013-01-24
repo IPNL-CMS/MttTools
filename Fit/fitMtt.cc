@@ -1325,7 +1325,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   //double lumi_e             = 4682. * 1.066; // Original: 4682; +6.6%
 
   double lumi_mu = 19576.993;
-  double lumi_e  = 19444.706;
+  double lumi_e  = 19578.948;
 
   double s_lumi_mu_percent  = 4.4 / 100.; // 2.2%
 
