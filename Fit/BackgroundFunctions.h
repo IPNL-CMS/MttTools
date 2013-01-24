@@ -20,7 +20,8 @@ class FAltB : public BaseFunction {
       if (mParameters.size() != 3)
         return false;
 
-      mPdf.reset(new FAltBPdf(mName.c_str(), mName.c_str(), observable, *mParameters["a"], *mParameters["b"], *mParameters["c"]));
+      //mPdf.reset(new FAltBPdf(mName.c_str(), mName.c_str(), observable, *mParameters["a"], *mParameters["b"], *mParameters["c"]));
+      mPdf.reset(new RooGenericPdf(mName.c_str(), mName.c_str(), "pow((1.-(@0/8000)+@3*pow((@0/8000),2)),@1)/pow(@0,@2)", RooArgList(observable, *mParameters["a"], *mParameters["b"], *mParameters["c"])));
 
       return true;
     }
