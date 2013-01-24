@@ -1604,7 +1604,18 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
   std::cout << "Luminosity: " << Bash::set_color(Bash::Color::MAGENTA) << lumi_mu << " /pb" << Bash::set_color() << std::endl;
   std::cout << "Reference cross-section: " << Bash::set_color(Bash::Color::MAGENTA) << sigma_ref << " pb" << Bash::set_color() << std::endl;
-  std::cout << "Total efficiency (selection * trigger * SFs): " << Bash::set_color(Bash::Color::MAGENTA) << total_efficiency * 100 << " %" << Bash::set_color() << std::endl;
+  std::cout << "Total efficiency (selection * trigger * SFs): " << std::endl;
+
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << "\tMuonic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << eff_mu[i] * 100 << " %" << Bash::set_color() << std::endl;
+    std::cout << "\tElectronic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << eff_e[i] * 100 << " %" << Bash::set_color() << std::endl;
+  }
+  std::cout << "Expected number of signal events: " << std::endl;
+
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << "\tMuonic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << lumi_mu * eff_mu[i] << Bash::set_color() << std::endl;
+    std::cout << "\tElectronic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << lumi_e * eff_e[i] << Bash::set_color() << std::endl;
+  }
 
   std::cout << "Total systematic errors: ";
 
@@ -1706,6 +1717,10 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
   RooRealVar lumiRatio("lumiRatio", "luminosity ratio", lumi_e / lumi_mu, "");
   mainWorkspace.import(lumiRatio);
+
+  if (! combine) {
+    std::cout << "Efficiencies ratio x lumis ratio: " << eff_e[btag] / eff_mu[btag] * lumi_e / lumi_mu << std::endl;
+  }
 
   // Read config file for global pdf
   std::string configFile = (combine)
