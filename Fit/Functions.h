@@ -89,7 +89,10 @@ std::shared_ptr<BaseFunction> createPdf(const Json::Value& value, const std::str
       return nullptr;
     }
 
-    pdf->setParameters(jsonToRealVars(observable, mass, prefix, parametersRoot[parameters]));
+    // Clean prefix
+    std::string cleanedPrefix = TString(prefix).ReplaceAll(";", "_").ReplaceAll("{", "").ReplaceAll("}", "").ReplaceAll("-", "").Data(); // For workspace names
+
+    pdf->setParameters(jsonToRealVars(observable, mass, cleanedPrefix, parametersRoot[parameters]));
   }
 
   if (dataset) {
