@@ -14,7 +14,7 @@ else
 USERLIBDIRS = $(root-config --libdir) -L.
 
 # Where to search for the include files.
-INCDIRS = -I$(shell root-config --incdir) -I$(shell pwd)/include/
+INCDIRS = -I$(shell root-config --incdir) -I$(shell pwd)/include/ -I.
 endif
 
 CC = gcc
@@ -39,11 +39,14 @@ SRCS =  $(wildcard *.cc)
 DEPS =  $(patsubst %.cc, %.d, $(wildcard *.cc)) 
 OBJS =  $(patsubst %.cc, %.o, $(wildcard *.cc))
 
-all: fritSignal fitMtt computeEff computeCrystalBallSyst computeJECSystWithToys computeJECSyst computeBkgSyst computeSigmaRef runLikelihoodScan treatToyStuff extractLimits drawLimitCurve computeKeysPdfSyst interpolatePdf generateToyDataset
+all: fritSignal fitMtt createCombineWorkspace computeEff computeCrystalBallSyst computeJECSystWithToys computeJECSyst computeBkgSyst computeSigmaRef runLikelihoodScan treatToyStuff extractLimits drawLimitCurve computeKeysPdfSyst interpolatePdf generateToyDataset
 
 # Make the executable
 fitMtt: fitMtt.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) fitMtt.o $(LIBS) $(EXPLLINKLIBS) -o fitMtt
+
+createCombineWorkspace: createCombineWorkspace.o lib/jsoncpp.o libUtils
+	$(LD) $(LDFLAGS) createCombineWorkspace.o $(LIBS) $(EXPLLINKLIBS) -o createCombineWorkspace
 
 generateToyDataset: generateToyDataset.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) generateToyDataset.o $(LIBS) $(EXPLLINKLIBS) -o generateToyDataset
