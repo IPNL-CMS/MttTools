@@ -1537,7 +1537,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   double E = 0.;
   double delta_E_square = 0.;
 
-  if (nCombinedBTag == 1 && minBTag == 2) {
+  if (nCombinedBTag == 1) {
     M = hlt_eff_mu[minBTag] * trigger_scale_factor_muons * muonID_scale_factor * muonIso_scale_factor * sel_eff_mu[minBTag];
     E = hlt_eff_e[minBTag] * trigger_scale_factor_electrons * electron_scale_factor * sel_eff_e[minBTag];
 
@@ -1552,6 +1552,14 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       electron_scale_factor_relative * electron_scale_factor_relative +
       s_sel_eff_e[minBTag] * s_sel_eff_e[minBTag];
 
+    if (minBTag == 2) {
+      b_tagging_systematic_relative *= 2;
+    } else if (minBTag == 1) {
+      b_tagging_systematic_relative *= pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2)
+    } else {
+      assert(false);
+    }
+
   } else if (nCombinedBTag == 2) {
     const double a = hlt_eff_mu[2] * sel_eff_mu[2] * b_tagging_scale_factor * b_tagging_scale_factor;
     const double b = hlt_eff_mu[1] * sel_eff_mu[1] * b_tagging_scale_factor * (1. - b_tagging_efficiency * b_tagging_scale_factor) / (1. - b_tagging_efficiency);
@@ -1559,11 +1567,11 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     const double c = hlt_eff_e[2] * sel_eff_e[2] * b_tagging_scale_factor * b_tagging_scale_factor;
     const double d = hlt_eff_mu[1] * sel_eff_e[1] * b_tagging_scale_factor * (1. - b_tagging_efficiency * b_tagging_scale_factor) / (1. - b_tagging_efficiency);
 
-    const double delta_a_square =  s_hlt_eff_mu[2] * s_hlt_eff_mu[2] * s_sel_eff_mu[2] * s_sel_eff_mu[2] + 2 * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
-    const double delta_b_square = s_hlt_eff_mu[1] * s_hlt_eff_mu[1] * s_sel_eff_mu[1] * s_sel_eff_mu[1] + pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
+    const double delta_a_square =  s_hlt_eff_mu[2] * s_hlt_eff_mu[2] + s_sel_eff_mu[2] * s_sel_eff_mu[2] + 2 * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
+    const double delta_b_square = s_hlt_eff_mu[1] * s_hlt_eff_mu[1] + s_sel_eff_mu[1] * s_sel_eff_mu[1] + pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
 
-    const double delta_c_square = s_hlt_eff_e[2] * s_hlt_eff_e[2] * s_sel_eff_e[2] * s_sel_eff_e[2] + 2 * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
-    const double delta_d_square = s_hlt_eff_e[1] * s_hlt_eff_e[1] * s_sel_eff_e[1] * s_sel_eff_e[1] + pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
+    const double delta_c_square = s_hlt_eff_e[2] * s_hlt_eff_e[2] + s_sel_eff_e[2] * s_sel_eff_e[2] + 2 * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
+    const double delta_d_square = s_hlt_eff_e[1] * s_hlt_eff_e[1] + s_sel_eff_e[1] * s_sel_eff_e[1] + pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
 
     M = trigger_scale_factor_muons * muonID_scale_factor * muonIso_scale_factor * (a + b);
     E = trigger_scale_factor_electrons * electron_scale_factor * (c + d);
