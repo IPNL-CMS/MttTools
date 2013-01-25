@@ -1555,7 +1555,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     if (minBTag == 2) {
       b_tagging_systematic_relative *= 2;
     } else if (minBTag == 1) {
-      b_tagging_systematic_relative *= pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2)
+      b_tagging_systematic_relative *= pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2);
     } else {
       assert(false);
     }
