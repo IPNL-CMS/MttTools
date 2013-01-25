@@ -39,7 +39,7 @@ SRCS =  $(wildcard *.cc)
 DEPS =  $(patsubst %.cc, %.d, $(wildcard *.cc)) 
 OBJS =  $(patsubst %.cc, %.o, $(wildcard *.cc))
 
-all: fritSignal fitMtt createCombineWorkspace computeEff computeCrystalBallSyst computeJECSystWithToys computeJECSyst computeBkgSyst computeSigmaRef runLikelihoodScan treatToyStuff extractLimits drawLimitCurve computeKeysPdfSyst interpolatePdf generateToyDataset
+all: fritSignal fitMtt createCombineWorkspace computeEff computeCrystalBallSyst computeJECSystWithToys computeJECSyst computeBkgSyst computeSigmaRef runLikelihoodScan treatToyStuff extractLimits drawLimitCurve computeKeysPdfSyst interpolatePdf generateToyDataset generateKeysPdfWorkspaces
 
 # Make the executable
 fitMtt: fitMtt.o lib/jsoncpp.o libUtils
@@ -65,6 +65,9 @@ computeCrystalBallSyst: computeCrystalBallSyst.o lib/jsoncpp.o libUtils
 
 computeKeysPdfSyst: computeKeysPdfSyst.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) computeKeysPdfSyst.o $(LIBS) $(EXPLLINKLIBS) -o computeKeysPdfSyst
+
+generateKeysPdfWorkspaces: generateKeysPdfWorkspaces.o lib/jsoncpp.o libUtils
+	$(LD) $(LDFLAGS) generateKeysPdfWorkspaces.o $(LIBS) $(EXPLLINKLIBS) -o generateKeysPdfWorkspaces
 
 computeJECSyst: computeJECSyst.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) computeJECSyst.o $(LIBS) $(EXPLLINKLIBS) -o computeJECSyst
