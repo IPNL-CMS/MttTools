@@ -39,7 +39,7 @@
 
 #include "Utils.h"
 
-#define NUM_ITER 1
+#define NUM_ITER 150
 
 std::string base_path = "";
 
