@@ -19,7 +19,7 @@ args = parser.parse_args()
 tmpfile = tempfile.NamedTemporaryFile(dir = '/scratch/', delete = True)
 
 for m in range(750, 1501, 250):
-  tmpfile.write("./computeKeysPdfSyst -m %d --b-tag %d -i %s --signal %s\n" % (m, args.btag, args.i, args.signal % m))
+  tmpfile.write("./generateKeysPdfWorkspaces -m %d --b-tag %d -i %s --signal %s\n" % (m, args.btag, args.i, args.signal % m))
 
 tmpfile.flush()
 
