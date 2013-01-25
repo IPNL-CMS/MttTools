@@ -71,26 +71,6 @@
 
 using namespace RooFit;
 
-/**
- * Profiling method
- */
-double get_time_usec()
-{
-  static struct timeval _t;
-  static struct timezone tz;
-  gettimeofday(&_t, &tz);
-  return (double) _t.tv_sec + (double)_t.tv_usec / (1000 * 1000);
-}
-
-  template<typename T>
-void deleteVector(std::vector<T*>& vector)
-{
-  for (typename std::vector<T*>::iterator it = vector.begin(); it != vector.end(); ++it)
-  {
-    delete *it;
-  }
-}
-
 // Nice output on Bash
 namespace Bash {
   enum Color {
@@ -120,33 +100,11 @@ namespace Bash {
 
 }
 
-void saveTemporaryResult(const std::string& outputFile, double result) {
-
-  Json::Value root;
-  root["result"] = result;
-
-  Json::StyledWriter writer;
-  const std::string json = writer.write(root);
-
-  std::ofstream file(outputFile.c_str());
-  file << json;
-  file.close();
-}
-
-void fitMtt(std::map<int, TChain*> chains, int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground,
-    // Background systematics
-    const std::string& temporaryResultFile,
-    bool doBackgroundSyst, const std::string& backgroundParameterName, double backgroundParameterValue
-    );
+void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigurationFile, int btag, const std::string& customWorkspaceFile, const std::string& outputFile);
 
 std::string BASE_PATH;
-std::string OUTPUT_PATH;
 std::string EFF_FILE;
-bool DO_SYST_COMPUTATION = false;
-bool SAVE_SIGMA = false;
-bool ONLY_LUMI_SYST = false;
 bool VERBOSE = false;
-bool BATCH_MODE = false;
 
 void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {
 
@@ -176,42 +134,7 @@ int main(int argc, char** argv)
     TCLAP::CmdLine cmd("Fit tt mass spectrum", ' ', "0.1");
 
     TCLAP::ValueArg<int> massArg("m", "mass", "Zprime mass", true, 750, "integer");
-    TCLAP::SwitchArg fitArg("", "no-fit", "Don't do the reference fit", true);
-    TCLAP::SwitchArg doLikScanArg("", "scan", "Do the likelihood scan", false);
-    TCLAP::SwitchArg writeRootArg("", "no-root-files", "Don't write root files", true);
-    TCLAP::SwitchArg saveFiguresArg("", "no-figs", "Don't save figures", true);
-    TCLAP::SwitchArg doLimitCurveArg("", "limit-curve", "Do the limit curve", false);
-    TCLAP::ValueArg<int> nToyArg("", "toys", "Number of toys exp.", false, 1, "integer");
-    TCLAP::SwitchArg doLikInToyArg("", "no-scan-in-toys", "Don't do the likelihood scan in toys", true);
-    TCLAP::ValueArg<int> indexArg("", "index", "Index", false, 1, "integer");
-
-    std::vector<std::string> jec;
-    jec.push_back("nominal");
-    jec.push_back("JECup");
-    jec.push_back("JECdown");
-    TCLAP::ValuesConstraint<std::string> allowedVals(jec);
-    TCLAP::ValueArg<std::string> systArg("", "syst", "Systematic", false, "nominal", &allowedVals);
-
-    std::vector<std::string> sign;
-    sign.push_back("up");
-    sign.push_back("down");
-    TCLAP::ValuesConstraint<std::string> allowedSign(sign);
-
-    TCLAP::ValueArg<std::string> systSignArg("", "syst-sign", "?", false, "up", &allowedSign);
-    TCLAP::ValueArg<std::string> systCBArg("", "systCB", "?", false, "none", "string");
-
     cmd.add(massArg);
-    cmd.add(fitArg);
-    cmd.add(doLikScanArg);
-    cmd.add(writeRootArg);
-    cmd.add(saveFiguresArg);
-    cmd.add(doLimitCurveArg);
-    cmd.add(nToyArg);
-    cmd.add(doLikInToyArg);
-    cmd.add(indexArg);
-    cmd.add(systArg);
-    cmd.add(systSignArg);
-    cmd.add(systCBArg);
 
     TCLAP::ValueArg<std::string> inputListArg("", "input-list", "A text file containing a list of input files", true, "", "string");
     TCLAP::ValueArg<std::string> inputFileArg("i", "input-file", "The input file", true, "", "string");
@@ -220,49 +143,24 @@ int main(int argc, char** argv)
 
     std::string default_base_path = "./analysis/" + getAnalysisUUID() + "/";
     TCLAP::ValueArg<std::string> pathArg("", "path", "Folder where to load files", false, default_base_path, "string", cmd);
-    TCLAP::ValueArg<std::string> outputPathArg("", "output-path", "Folder where output files are stored", false, default_base_path, "string", cmd);
-    TCLAP::ValueArg<std::string> effArg("", "eff-file", "File where efficiences are stored (JSON format)", false, "efficiencies.json", "string", cmd);
-    TCLAP::SwitchArg doSystComputationArg("", "syst-computation", "Set this flag if you are running me to compute systematic", cmd);
-    TCLAP::SwitchArg saveSigmaArg("", "save-sigma-ref", "Set this flag if you want to save the computed sigma as the ref one", cmd);
-    TCLAP::SwitchArg bkgOnlyArg("", "bkg-only", "Fit using background model only", cmd);
-    TCLAP::SwitchArg onlyMuonArg("", "muons-only", "Compute limits using only semi-mu data", cmd);
-    TCLAP::SwitchArg onlyLumiSystArg("", "only-lumi-syst", "Only use luminosity error for systematics", cmd);
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", false, 2, "int", cmd);
     TCLAP::SwitchArg verboseArg("v", "verbose", "Verbose mode", cmd);
-    TCLAP::SwitchArg batchArg("", "batch", "Run in batch mode", cmd);
     TCLAP::ValueArg<std::string> fitConfigFileArg("", "config-file", "Configuration file name containing fit parameters", false, "fit_pdf_faltb.json", "string", cmd);
-    
-    // Shared memory management
-    TCLAP::SwitchArg useSharedMemoryArg("", "shared-memory", "Save fit results into a shared memory area. The shm key must be specified", cmd);
-    TCLAP::ValueArg<key_t> sharedMemoryKeyArg("", "shm-key", "The shm key used to create the shm", false, 0, "integer", cmd);
+    TCLAP::ValueArg<std::string> effArg("", "eff-file", "File where efficiences are stored (JSON format)", false, "efficiencies.json", "string", cmd);
 
     // Workspace
     TCLAP::ValueArg<std::string> workspaceArg("", "workspace", "Use a custom workspace containing the signal pdf to use", false, "", "string", cmd);
 
-    // Fix background
-    TCLAP::SwitchArg fixBackgroundArg("", "fix-background", "Fit once with background only, then fix the background and refit background + signal", cmd);
-
-    // New background syst calculation
-    TCLAP::ValueArg<std::string> backgroundParameterNameArg("", "bkg-parameter-name", "The background parameter name to vary", false, "", "string", cmd);
-    TCLAP::ValueArg<double> backgroundParameterValueArg("", "bkg-parameter-value", "The background parameter value", false, 0., "double", cmd);
-    TCLAP::ValueArg<std::string> temporaryResultFileArg("", "temp-output-file", "A temporary filename to store result", false, "", "string", cmd);
+    TCLAP::ValueArg<std::string> outputArg("o", "output-file", "Use a custom workspace containing the signal pdf to use", false, "", "string", cmd);
 
     cmd.parse(argc, argv);
 
     BASE_PATH = pathArg.getValue();
-    OUTPUT_PATH = outputPathArg.getValue();
-
     BASE_PATH.erase(std::remove(BASE_PATH.begin(), BASE_PATH.end(), '\"'), BASE_PATH.end());
-    OUTPUT_PATH.erase(std::remove(OUTPUT_PATH.begin(), OUTPUT_PATH.end(), '\"'), OUTPUT_PATH.end());
 
     EFF_FILE = effArg.getValue();
-    DO_SYST_COMPUTATION = doSystComputationArg.getValue();
-    SAVE_SIGMA = saveSigmaArg.getValue();
-
-    ONLY_LUMI_SYST = onlyLumiSystArg.getValue();
 
     VERBOSE = verboseArg.getValue();
-    BATCH_MODE = batchArg.getValue();
 
     std::vector<std::string> inputFiles;
     if (inputFileArg.isSet()) {
@@ -285,13 +183,7 @@ int main(int argc, char** argv)
       chains[btagArg.getValue()] = loadChain(inputFiles, treeName.Data());
     }
 
-    bool doBackgroundSyst = backgroundParameterNameArg.isSet() && backgroundParameterValueArg.isSet() && temporaryResultFileArg.isSet();
-
-    fitMtt(chains, massArg.getValue(), fitArg.getValue(), fitConfigFileArg.getValue(), doLikScanArg.getValue(), writeRootArg.getValue(), saveFiguresArg.getValue(), doLimitCurveArg.getValue(), nToyArg.getValue(), doLikInToyArg.getValue(), indexArg.getValue(), systArg.getValue(), systSignArg.getValue(), systCBArg.getValue(), bkgOnlyArg.getValue(), onlyMuonArg.getValue(), btagArg.getValue(), useSharedMemoryArg.getValue(), sharedMemoryKeyArg.getValue(), workspaceArg.getValue(), fixBackgroundArg.getValue(),
-        // Background systematics
-        temporaryResultFileArg.getValue(),
-        doBackgroundSyst, backgroundParameterNameArg.getValue(), backgroundParameterValueArg.getValue()
-        );
+    fitMtt(chains, massArg.getValue(), fitConfigFileArg.getValue(), btagArg.getValue(), workspaceArg.getValue(), outputArg.getValue());
 
     for (auto& chain: chains)
       delete chain.second;
@@ -547,232 +439,6 @@ void setPdfParametersRange(const RooArgSet& observables, const RooAbsPdf& pdf, d
   delete params;
 }
 
-void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, RooAbsData& dataset, RooSimultaneous& simPdfs, std::map<std::string, RooAbsPdf*>& backgroundPdfs, int btag, bool savePlots, const std::string& prefix, const std::string& suffix, bool drawSignal, bool logToo, TFile* outputFile, bool drawOnlyData = false) {
-
-  if (outputFile == nullptr && ! savePlots)
-    return;
-
-  std::vector<std::shared_ptr<RooPlot>> plots;
-
-  int n = categories.numTypes();
-  int x = std::min(n, 2), y = (int) ceil((float) n / (float) x);
-  std::cout << n << " categories. Dividing into " << x << "; " << y << std::endl;
-
-  const float resolution = 50.;
-  const int nBinsForHisto = (observable.getMax() - observable.getMin() + 0.5) / resolution;
-
-  const int padWidth = 900;
-  const int padHeight = 900;
-  const float LUMI = 19.58;
-
-  const int canvasWidth = padWidth * x;
-  const int canvasHeight = padHeight * y;
-
-  TCanvas *canvas = new TCanvas("canvas", "mTT fit", canvasWidth, canvasHeight);
-  canvas->Divide(x, y);
-  int currentPad = 1;
-
-  Roo1DTable* table = nullptr;
-  if (outputFile) {
-    table = dataset.table(categories);
-  }
-
-  TIterator* it = categories.typeIterator();
-  RooCatType* type = nullptr;
-  while ((type = static_cast<RooCatType*>(it->Next()))) {
-    canvas->cd(currentPad++);
-
-    RooPlot* plot = observable.frame(nBinsForHisto);
-    plot->SetTitle(""); //FIXME
-
-    std::string category = type->GetName();
-    std::string cleanedCategory = TString(category).ReplaceAll(";", "_").Data(); // Root does not like ';' in names
-
-    categories = category.c_str();
-
-    std::string cut = buildCutFormula(categories);
-
-    RooDataSet* subData = static_cast<RooDataSet*>(dataset.reduce(cut.c_str()));
-    subData->plotOn(plot);
-
-    if (! drawOnlyData) {
-      simPdfs.plotOn(plot, Slice(categories), ProjWData(*subData), Components(*backgroundPdfs[category]), LineStyle(kDashed), LineColor(kRed), LineWidth(2), Range("FULL"));
-
-      if (drawSignal)
-        simPdfs.plotOn(plot, Slice(categories), ProjWData(*subData), LineColor(kBlue), LineWidth(2), Range("FULL"));
-    }
-
-    delete subData;
-
-    std::string leptonName = TString(category).Contains("muon", TString::kIgnoreCase) ? "muons" : "electrons";
-    float binningSize = (observable.getBinning().highBound() - observable.getBinning().lowBound()) / (float) nBinsForHisto;
-
-    plot->SetXTitle(TString::Format("#font[132]{#font[12]{m_{TT}} (GeV/#font[12]{c}^{2}), %s}", leptonName.c_str()));
-    plot->SetYTitle(TString::Format("#font[132]{Events / (%0.2f GeV/#font[12]{c}^{2})}", binningSize));
-    plot->SetTitleOffset(1.42, "Y");
-
-    TLatex t;
-    t.SetNDC();
-    t.SetTextSize(0.04);
-
-    gPad->SetTopMargin(0.05); 
-    gPad->SetBottomMargin(0.12); 
-    gPad->SetLeftMargin(0.17);
-    gPad->SetRightMargin(0.050);
-
-    plot->Draw();
-
-    // Find number of b-tag
-    boost::regex regex("([0-9]+)-btag");
-    boost::smatch regexResults;
-
-    if (boost::regex_search(category, regexResults, regex)) {
-      std::string result(regexResults[1].first, regexResults[2].second);
-      btag = atoi(result.c_str());
-    }
-
-    TString btagLabel = "";
-    if (btag == 2)
-      btagLabel = "#geq 2 b-tags";
-    else
-      btagLabel = TString::Format("%d b-tag", btag);
-
-    std::string leptonShortcutName = TString(category).Contains("muon", TString::kIgnoreCase) ? "#mu" : "e";
-
-    TString legendLabel = TString::Format("#font[42]{%s, #geq 4 jets, %s}", leptonShortcutName.c_str(), btagLabel.Data());
-
-    t.DrawLatex(0.53, 0.88, "#font[42]{CMS preliminary}");
-    t.DrawLatex(0.53, 0.84, TString::Format("#font[42]{%0.2f fb^{-1} at #sqrt{s}=8 TeV}", LUMI));
-    t.DrawLatex(0.53, 0.80, legendLabel);
-
-    if (outputFile) {
-      if (drawSignal && !drawOnlyData) {
-        RooHist* residual = plot->residHist(plot->nameOf(0), plot->nameOf(2));
-        RooHist* pull     = plot->pullHist(plot->nameOf(0), plot->nameOf(2));    
-
-        RooPlot* residual_frame = observable.frame();
-        residual_frame->SetXTitle(TString::Format("#font[132]{#font[12]{m_{TT}} (GeV/#font[12]{c}^{2}), %s}", leptonName.c_str()));
-        residual_frame->SetYTitle("#font[132]{Data-Fit}");
-        residual_frame->addPlotable(dynamic_cast<RooPlotable*>(residual), "P");
-
-        RooPlot* pull_frame = observable.frame();
-        pull_frame->SetXTitle(TString::Format("#font[132]{#font[12]{m_{TT}} (GeV/#font[12]{c}^{2}), %s}", leptonName.c_str()));
-        pull_frame->SetYTitle("#font[132]{Pull}");
-        pull_frame->addPlotable(dynamic_cast<RooPlotable*>(pull), "P");
-
-        outputFile->cd();
-        residual_frame->Write(TString::Format("%s_residual", cleanedCategory.c_str()));
-        pull_frame->Write(TString::Format("%s_pull", cleanedCategory.c_str()));
-
-        delete residual_frame;
-        delete pull_frame;
-      }
-
-      outputFile->cd();
-      plot->Write(TString::Format("%s_plot", cleanedCategory.c_str()));
-
-      RooRealVar nEvents("nEvents", "number of events", table->get(category.c_str()));
-      nEvents.Write(TString::Format("nEvents_%s", cleanedCategory.c_str()));
-    }
-
-    plots.push_back(std::shared_ptr<RooPlot>(plot));
-  }
-
-  delete table;
-
-  if (savePlots) {
-    canvas->Print((OUTPUT_PATH + prefix + "_fitRes_" + suffix + ".pdf").c_str());
-    canvas->Print((OUTPUT_PATH + prefix + "_fitRes_" + suffix + ".png").c_str());
-  }
-
-  if (!logToo) {
-    delete canvas;
-    return;
-  }
-
-  currentPad = 1;
-  it = categories.typeIterator();
-  type = nullptr;
-  while ((type = static_cast<RooCatType*>(it->Next()))) {
-    canvas->cd(currentPad++);
-
-    gPad->SetLogy(true);
-    canvas->SetLogy(true);
-    gPad->Modified();
-    gPad->Update();
-  }
-
-  if (savePlots) {
-    canvas->Print((OUTPUT_PATH + prefix + "_fitRes_" + suffix + "_log.pdf").c_str());
-    canvas->Print((OUTPUT_PATH + prefix + "_fitRes_" + suffix + "_log.png").c_str());
-  }
-  
-  delete canvas;
-}
-
-std::map<std::string, float> computeChi2(RooRealVar& observable, const RooSimultaneous& simPdf, RooAbsCategoryLValue& categories, RooAbsData& dataset, RooWorkspace& workspace) {
-
-  std::map<std::string, float> results;
-
-  const float resolution = 5.;
-  const int nBinsForChi2 = (observable.getMax() - observable.getMin() + 0.5) / resolution;
-  const int oldBinning = observable.getBins();
-  observable.setBins(nBinsForChi2);
-  std::cout << "Binning dataset with " << nBinsForChi2 << " bins for chi2 computation (" << observable.getMin() << " -> " << observable.getMax() << " ; resolution: " << resolution << " GeV)" << std::endl;
-
-  RooArgSet* floatingParameters = static_cast<RooArgSet*>(simPdf.getParameters(RooArgSet(observable))->selectByAttrib("Constant", false));
-  int numberOfFloatingParams = floatingParameters->getSize() - 1;
-  delete floatingParameters;
-
-  Roo1DTable* table = dataset.table(categories);
-
-  // Chi2 computation inspired from http://cmssdt.cern.ch/SDT/doxygen/CMSSW_5_1_1/doc/html/d4/d3a/GenericTnPFitter_8h_source.html, line 291
-
-  const int numberOfCategories = categories.numTypes();
-  float combinedChi2 = 0.;
-  TIterator* it = categories.typeIterator();
-  RooCatType* type = nullptr;
-  while ((type = static_cast<RooCatType*>(it->Next()))) {
-    std::cout << "For category '" << type->GetName() << "':" << std::endl;
-
-    std::string cleanedCategory = TString(type->GetName())
-      .ReplaceAll(";", "_").ReplaceAll("{", "").ReplaceAll("}", "").ReplaceAll("-", "").Data(); // For workspace names
-
-    std::string workspaceName = "global_pdf_" + cleanedCategory;
-    RooAddPdf* pdf = static_cast<RooAddPdf*>(workspace.pdf(workspaceName.c_str()));
-
-    const RooArgList& coefs = pdf->coefList();
-
-    std::cout << "\tNumber of signal events: " << ((RooAbsReal&) coefs[0]).getVal() << " out of " << table->get(type->GetName()) << std::endl;
-    std::cout << "\tNumber of background events: " << ((RooAbsReal&) coefs[1]).getVal() << " out of " << table->get(type->GetName()) << std::endl;
-
-    categories = type->GetName();
-    std::string cut = buildCutFormula(categories);
-
-    std::shared_ptr<RooAbsData> reducedDataset(dataset.reduce(Cut(cut.c_str())));
-    std::shared_ptr<RooDataHist> binnedDataset(new RooDataHist("binnedDataset", "binned dataset", RooArgSet(observable), *reducedDataset));
-
-    float chi2 = RooChi2Var("chi2", "chi2", *pdf, *binnedDataset, DataError(RooAbsData::Poisson)).getVal();
-    float chi2NDF = (chi2 / (observable.getBins() - numberOfFloatingParams / numberOfCategories));
-    std::cout << "\tChi2/NDF: " << chi2NDF << std::endl;
-
-    results[type->GetName()] = chi2NDF;
-
-    combinedChi2 += chi2;
-  }
-
-  std::cout << std::endl;
-  delete table;
-
-  combinedChi2 /= (numberOfCategories * observable.getBins() - numberOfFloatingParams);
-  std::cout << "Combined Chi2: " << combinedChi2 << std::endl;
-  results["combined"] = combinedChi2;
-
-  observable.setBins(oldBinning);
-
-  return results;
-}
-
 void mixEfficiencies(const std::map<int, double>& effs1, const std::map<int, double>& effs2, const std::string& prefix1, const std::string& prefix2, RooWorkspace& workspace) {
   for (const auto& eff1: effs1) {
     for (const auto& eff2: effs2) {
@@ -803,37 +469,15 @@ void parseConfigFile(const std::string& filename, /*RooAbsCategoryLValue& catego
   workspace.Print("v");
 }
 
-void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string fitConfigurationFile, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground,
-    // Background systematics
-    const std::string& temporaryResultFile,
-    bool doBackgroundSyst, const std::string& backgroundParameterName, double backgroundParameterValue
-    )
+void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigurationFile, int btag, const std::string& customWorkspaceFile, const std::string& outputFile)
 {
-
-  if ((syst_str != "nominal") && (syst_str != "JECup") && (syst_str != "JECdown"))
-  {
-    cout << "ERROR : Badly defined JEC configuration" << endl;
-    return;
-  }
 
   if (fitConfigurationFile == "auto" || fitConfigurationFile.empty())
     fitConfigurationFile = "fit_pdf_faltb.json";
 
-  if (! fixBackground) {
-    fixBackground = analysisFixedBackground();
-  } else {
-    std::cout << Bash::set_color(Bash::Color::RED) << "Fitting with fixed background (--fix-background flag overrides analysis configuration)" << Bash::set_color() << std::endl;
-  }
-
   std::cout << "Loading fit configuration from '" << fitConfigurationFile << "'" << std::endl;
 
-  // Systematics?
-  bool useSystematics = analysisUseSystematics(BASE_PATH);
-
   const bool combine = (btag > 2);
-
-  // Hard code some analysis
-  // THIS HAS TO BE FIXME
 
   int minBTag = 0;
   int maxBTag = 0;
@@ -895,9 +539,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
   RooCategory lepton_type("lepton_type", "lepton_type");
   lepton_type.defineType("muon", 13); 
-  if (! muonsOnly) {
-    lepton_type.defineType("electron", 11); 
-  }
+  lepton_type.defineType("electron", 11);
   mainWorkspace.import(lepton_type);
 
   RooCategory btagCategory("btag", "btag");
@@ -928,17 +570,6 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
     backgroundPdfsFromWorkspace[pdf.first] = mainWorkspace.pdf(pdf.second->getPdf().GetName());
   }
-
-  TString prefix = TString::Format("data_2012_%s_%d", syst_str.c_str(), massZprime);
-  //TString suffix = TString::Format("%s_%s", pdfSignalName.c_str(), bkgfit_str.c_str());
-  TString suffix = TString::Format("%s", analysisName.c_str());
-  TString indexJob = TString::Format("job%d", index);
-
-
-  // Updated 2012-3-20
-  // See https://hypernews.cern.ch/HyperNews/CMS/get/physics-announcements/1531.html
-  //double lumi_mu            = 4678. * 1.066; // Original: 4678; +6.6%
-  //double lumi_e             = 4682. * 1.066; // Original: 4682; +6.6%
 
   double lumi_mu = 19576.993;
   double lumi_e  = 19578.948;
@@ -975,11 +606,11 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   loadSystematics(massZprime, btag, s_sys_JEC, s_sys_PDF, s_sys_PDF_CB);
 
   if (! combine) {
-    loadEfficiencies(massZprime, syst_str, btag, sel_eff_mu[btag], sel_eff_e[btag], hlt_eff_mu[btag], hlt_eff_e[btag], s_sel_eff_mu[btag], s_sel_eff_e[btag], s_hlt_eff_mu[btag], s_hlt_eff_e[btag]);
+    loadEfficiencies(massZprime, "nominal", btag, sel_eff_mu[btag], sel_eff_e[btag], hlt_eff_mu[btag], hlt_eff_e[btag], s_sel_eff_mu[btag], s_sel_eff_e[btag], s_hlt_eff_mu[btag], s_hlt_eff_e[btag]);
   } else {
     // Load for 0, 1 and 2 btag
     for (int i = minBTag; i <= maxBTag; i++) {
-      loadEfficiencies(massZprime, syst_str, i, sel_eff_mu[i], sel_eff_e[i], hlt_eff_mu[i], hlt_eff_e[i], s_sel_eff_mu[i], s_sel_eff_e[i], s_hlt_eff_mu[i], s_hlt_eff_e[i]);
+      loadEfficiencies(massZprime, "nominal", i, sel_eff_mu[i], sel_eff_e[i], hlt_eff_mu[i], hlt_eff_e[i], s_sel_eff_mu[i], s_sel_eff_e[i], s_hlt_eff_mu[i], s_hlt_eff_e[i]);
     }
   }
 
@@ -1017,7 +648,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
     std::string pdfName = "signal_" + std::string((TString(type->GetName()).Contains("muon", TString::kIgnoreCase) ? "muon" : "electron"));
 
-    TString workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), syst_str.c_str(), massZprime, analysisName.c_str(), categoryBTag);
+    TString workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "nominal", massZprime, analysisName.c_str(), categoryBTag);
     if (customWorkspaceFile.length() > 0) {
       workspaceFile = TString::Format(customWorkspaceFile.c_str(), categoryBTag);
       std::cout << Bash::set_color(Bash::Color::BLUE) << "Using custom workspace '" << workspaceFile << "'" << Bash::set_color() << std::endl;
@@ -1049,30 +680,6 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   }
 
   std::cout << "Done." << std::endl;
-
-  if (systCB != "none") // Signal systematics mode
-  {
-    RooAbsArg* arg = mainWorkspace.arg(systCB.c_str());
-    if (! arg)
-    {
-      std::cerr << "ERROR: parameter " << systCB << " not found inside workspace!" << std::endl;
-      exit(1);
-    }
-
-    RooRealVar* var = static_cast<RooRealVar*>(arg);
-    double oldValue = var->getVal();
-    if (systCBsign == "up")
-    {
-      var->setVal(var->getVal() + var->getErrorHi());
-    }
-    else
-    {
-      // Note: getErrorLo() returns something negative.
-      var->setVal(var->getVal() + var->getErrorLo());
-    }
-
-    std::cout << systCB << " value changed from " << oldValue << " to " << var->getVal() << std::endl;
-  }
 
   // Compute total systematic error
   std::map<int, double> eff_mu;
@@ -1116,15 +723,9 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   std::map<int, double> s_yield_percent;
   std::map<int, double> s_yield_pb;
 
-  double s_lumi_mu_pb                   = 0.;
-  double b_tagging_corr_error_pb        = 0.;
-
   double systematics_error_pb           = 0.;
   double systematics_error_events       = 0.;
   double systematics_error_percent      = 0.;
-
-  s_lumi_mu_pb = sigma_ref * s_lumi_mu_percent;
-  b_tagging_corr_error_pb = sigma_ref * b_tagging_scale_factor_error;
 
   // Compute systematics errors
   // Three part, lumi, b-tagging, efficiencies
@@ -1209,22 +810,12 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
   double yield_efficiency_relative_square = s_sys_JEC * s_sys_JEC + s_sys_PDF * s_sys_PDF + s_sys_PDF_CB * s_sys_PDF_CB;
 
-  if (ONLY_LUMI_SYST) {
-    std::cout << Bash::set_color(Bash::Color::RED) << "WARNING: Using only luminosity error for systematics" << Bash::set_color() << std::endl;
-    systematics_error_percent = lumi_systematic_relative;
-  } else {
-    systematics_error_percent = sqrt(
-        yield_efficiency_relative_square + selection_systematic_relative_square
-        );
-  }
+  systematics_error_percent = sqrt(
+      yield_efficiency_relative_square + selection_systematic_relative_square
+      );
 
   systematics_error_pb = sigma_ref * systematics_error_percent;
   systematics_error_events = total_efficiency * lumi_mu * br_semil * systematics_error_pb;
-
-  if (! useSystematics) {
-    systematics_error_pb = systematics_error_events = systematics_error_percent = 0.;
-    std::cout << Bash::set_color(Bash::Color::RED) << "WARNING: Systematics are set to 0." << Bash::set_color() << std::endl;
-  }
 
   std::cout << "Luminosity: " << Bash::set_color(Bash::Color::MAGENTA) << lumi_mu << " /pb" << Bash::set_color() << std::endl;
   std::cout << "Reference cross-section: " << Bash::set_color(Bash::Color::MAGENTA) << sigma_ref << " pb" << Bash::set_color() << std::endl;
@@ -1243,10 +834,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
   std::cout << "Total systematic errors: ";
 
-  if (! useSystematics)
-    std::cout << Bash::set_color(Bash::Color::RED);
-  else
-    std::cout << Bash::set_color(Bash::Color::MAGENTA);
+  std::cout << Bash::set_color(Bash::Color::MAGENTA);
 
   std::cout << systematics_error_events << " events ; " << systematics_error_pb << " pb ; " << systematics_error_percent * 100 << " %";
 
@@ -1349,25 +937,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
   parseConfigFile(configFile, /*mainCategory,*/ mainWorkspace);
 
-  RooRealVar& nSig = *mainWorkspace.var("nSig");
-
-  // mtt global PDFs
-  /*RooRealVar nSig_mu("nSig_mu", "number of sig events", 0., -1000., 2000.);
-  RooFormulaVar nSig_e("nSig_e", "number of sig events", "nSig_mu*effRatio*lumiRatio", RooArgList(nSig_mu, effRatio, lumiRatio));
-  RooRealVar nBkg_mu("nBkg_mu", "number of bkg events", 2000., 0., 50000);
-  RooRealVar nBkg_e("nBkg_e", "number of bkg events", 2000., 0., 50000);*/
-
-  //RooAddPdf globalPdf_mu("global_PDF_mu", "sigPdf+BkgPdf", RooArgList(*sigPdf_mu, backgroundPdfs["muon"]->getPdf()), RooArgList(nSig_mu, nBkg_mu));
-  //RooAddPdf globalPdf_e("global_PDF_e", "sigPdf+BkgPdf", RooArgList(*sigPdf_e, backgroundPdfs["electron"]->getPdf()), RooArgList(nSig_e, nBkg_e));
-
-  RooSimultaneous simPdf("simPdf", "simultaneous pdf", mainCategory);
   RooSimultaneous simPdfBackgroundOnly("simPdfBackgroundOnly", "simultaneous pdf with background only pdfs", mainCategory);
-
-  if (bkgOnly)
-    std::cout << "Warning: fitting with background model only!" << std::endl;
-
-  // NO shared_ptr<> here.
-  std::map<std::string, RooAbsPdf*> globalPdfs;
 
   it = mainCategory.typeIterator();
   type = nullptr;
@@ -1376,31 +946,10 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
     std::string cleanedCategory = TString(type->GetName()).ReplaceAll(";", "_").ReplaceAll("{", "").ReplaceAll("}", "").ReplaceAll("-", "").Data(); // For workspace names
 
-    //if (muonsOnly && !TString(name).Contains("muon", TString::kIgnoreCase))
-    //  continue;
-
     std::string workspaceName = "global_pdf_" + cleanedCategory;
-    std::cout << "Looking for " << workspaceName << " inside workspace" << std::endl;
-    globalPdfs[name] = mainWorkspace.pdf(workspaceName.c_str());
-
-    const RooAbsPdf& pdf = (bkgOnly) ? *backgroundPdfsFromWorkspace[name] : *globalPdfs[name];
-
-    std::cout << "Adding pdf ";
-    pdf.Print();
-    std::cout << " for category " << name << std::endl;
-      
-    simPdf.addPdf(pdf, name.c_str());
     simPdfBackgroundOnly.addPdf(*backgroundPdfsFromWorkspace[name], name.c_str());
   }
   
-  // Create output folder
-  if (! BATCH_MODE) {
-    TString folderName = TString::Format("%s/%s_%s_%d_btag/", OUTPUT_PATH.c_str(), prefix.Data(), suffix.Data(), btag);
-    mkdir(folderName, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
-    OUTPUT_PATH = folderName;
-  }
-
   Double_t minmTTFit = minmTT + 0.0;
   Double_t maxmTTFit = maxmTT - 0.0;
   
@@ -1466,8 +1015,6 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   RooFitResult* fitResult = simPdfBackgroundOnly.fitTo(*datasetToFit, Save(), Optimize(0));
   fitResult->Print("v");
   delete fitResult;
-
-  drawHistograms(mainCategory, mtt, *dataOrig, simPdf, backgroundPdfsFromWorkspace, btag, saveFigures, std::string(prefix), std::string(suffix) + "_bkg_only", false, true, nullptr);
 
   RooWorkspace higgsWorkspace("w");
 
@@ -1537,6 +1084,10 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     higgsWorkspace.import(*pdf);
   }
 
-  higgsWorkspace.writeToFile(TString::Format("zprime_%d_workspace.root", massZprime));
+  TString outputFileName = TString::Format("zprime_%d_workspace.root", massZprime);
+  if (outputFile.length() > 0)
+    outputFileName = outputFile;
+
+  higgsWorkspace.writeToFile(outputFileName);
 }
 
