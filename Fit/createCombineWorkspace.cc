@@ -734,10 +734,8 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
   // Lumi
   const double lumi_systematic_relative = s_lumi_mu_percent;
 
-  // B-tagging, only valid whend doing only 2-btag analysis
+  // B-tagging
   double b_tagging_systematic_relative = b_tagging_scale_factor_error / b_tagging_scale_factor;
-  if (nCombinedBTag != 1 && minBTag != 2)
-    b_tagging_systematic_relative = 0.;
 
   // Efficiency
   const double trigger_scale_factor_muons_relative = trigger_scale_factor_muons_error / trigger_scale_factor_muons;
@@ -748,74 +746,40 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
 
   const double electron_scale_factor_relative = electron_scale_factor_error / electron_scale_factor;
 
-  double M = 0.;
-  double delta_M_square = 0;
+  std::map<int, double> selection_systematic_relative_square_muons;
+  std::map<int, double> selection_systematic_relative_square_electrons;
 
-  double E = 0.;
-  double delta_E_square = 0.;
+  std::map<int, double> selection_systematic_relative_muons;
+  std::map<int, double> selection_systematic_relative_electrons;
 
-  if (nCombinedBTag == 1) {
-    M = hlt_eff_mu[minBTag] * trigger_scale_factor_muons * muonID_scale_factor * muonIso_scale_factor * sel_eff_mu[minBTag];
-    E = hlt_eff_e[minBTag] * trigger_scale_factor_electrons * electron_scale_factor * sel_eff_e[minBTag];
+  for (int i = minBTag; i <= maxBTag; i++) {
 
-    delta_M_square = s_hlt_eff_mu[minBTag] * s_hlt_eff_mu[minBTag] +
-      trigger_scale_factor_muons_relative * trigger_scale_factor_muons_relative +
+    selection_systematic_relative_square_muons[i] = trigger_scale_factor_muons_relative * trigger_scale_factor_muons_relative +
       muonID_scale_factor_relative * muonID_scale_factor_relative +
-      muonIso_scale_factor_relative * muonIso_scale_factor_relative +
-      s_sel_eff_mu[minBTag] * s_sel_eff_mu[minBTag];
+      muonIso_scale_factor_relative * muonIso_scale_factor_relative + 
+      s_hlt_eff_mu[i] * s_hlt_eff_mu[i] +
+      s_sel_eff_mu[i] * s_sel_eff_mu[i];
 
-    delta_E_square = s_hlt_eff_e[minBTag] * s_hlt_eff_e[minBTag] +
-      trigger_scale_factor_electrons_relative * trigger_scale_factor_electrons_relative +
+    selection_systematic_relative_square_electrons[i] = trigger_scale_factor_electrons_relative * trigger_scale_factor_electrons_relative +
       electron_scale_factor_relative * electron_scale_factor_relative +
-      s_sel_eff_e[minBTag] * s_sel_eff_e[minBTag];
+      s_hlt_eff_e[i] * s_hlt_eff_e[i] +
+      s_sel_eff_e[i] * s_sel_eff_e[i];
 
-    if (minBTag == 2) {
-      b_tagging_systematic_relative *= 2;
-    } else if (minBTag == 1) {
-      b_tagging_systematic_relative *= pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2);
-    } else {
-      assert(false);
+    if (i == 1) {
+
+      selection_systematic_relative_square_muons[i] += pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_systematic_relative * b_tagging_systematic_relative;
+      selection_systematic_relative_square_electrons[i] += pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_systematic_relative * b_tagging_systematic_relative;
+
+    } else if (i == 2) {
+
+      selection_systematic_relative_square_muons[i] += 2 * b_tagging_systematic_relative * b_tagging_systematic_relative;
+      selection_systematic_relative_square_electrons[i] += 2 * b_tagging_systematic_relative * b_tagging_systematic_relative;
+
     }
 
-  } else if (nCombinedBTag == 2) {
-    const double a = hlt_eff_mu[2] * sel_eff_mu[2] * b_tagging_scale_factor * b_tagging_scale_factor;
-    const double b = hlt_eff_mu[1] * sel_eff_mu[1] * b_tagging_scale_factor * (1. - b_tagging_efficiency * b_tagging_scale_factor) / (1. - b_tagging_efficiency);
-
-    const double c = hlt_eff_e[2] * sel_eff_e[2] * b_tagging_scale_factor * b_tagging_scale_factor;
-    const double d = hlt_eff_mu[1] * sel_eff_e[1] * b_tagging_scale_factor * (1. - b_tagging_efficiency * b_tagging_scale_factor) / (1. - b_tagging_efficiency);
-
-    const double delta_a_square =  s_hlt_eff_mu[2] * s_hlt_eff_mu[2] + s_sel_eff_mu[2] * s_sel_eff_mu[2] + 2 * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
-    const double delta_b_square = s_hlt_eff_mu[1] * s_hlt_eff_mu[1] + s_sel_eff_mu[1] * s_sel_eff_mu[1] + pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
-
-    const double delta_c_square = s_hlt_eff_e[2] * s_hlt_eff_e[2] + s_sel_eff_e[2] * s_sel_eff_e[2] + 2 * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
-    const double delta_d_square = s_hlt_eff_e[1] * s_hlt_eff_e[1] + s_sel_eff_e[1] * s_sel_eff_e[1] + pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_scale_factor_error * b_tagging_scale_factor_error;
-
-    M = trigger_scale_factor_muons * muonID_scale_factor * muonIso_scale_factor * (a + b);
-    E = trigger_scale_factor_electrons * electron_scale_factor * (c + d);
-
-    delta_M_square = trigger_scale_factor_muons_relative * trigger_scale_factor_muons_relative +
-      muonID_scale_factor_relative * muonID_scale_factor_relative +
-      muonIso_scale_factor_relative * muonIso_scale_factor_relative +
-      ((a * a * delta_a_square + b * b * delta_b_square) / ((a + b) * (a + b)));
-
-    delta_E_square = trigger_scale_factor_electrons_relative * trigger_scale_factor_electrons_relative +
-      electron_scale_factor_relative * electron_scale_factor_relative +
-      ((c * c * delta_c_square + d * d * delta_d_square) / ((c + d) * (c + d)));
-
+    selection_systematic_relative_muons[i] = sqrt(selection_systematic_relative_square_muons[i]);
+    selection_systematic_relative_electrons[i] = sqrt(selection_systematic_relative_square_electrons[i]);
   }
-
-  double efficiency_systematic = (M * M * delta_M_square + E * E * delta_E_square) / ((E + M) * (E + M));
-
-  double selection_systematic_relative_square = lumi_systematic_relative * lumi_systematic_relative + b_tagging_systematic_relative * b_tagging_systematic_relative + efficiency_systematic;
-
-  double yield_efficiency_relative_square = s_sys_JEC * s_sys_JEC + s_sys_PDF * s_sys_PDF + s_sys_PDF_CB * s_sys_PDF_CB;
-
-  systematics_error_percent = sqrt(
-      yield_efficiency_relative_square + selection_systematic_relative_square
-      );
-
-  systematics_error_pb = sigma_ref * systematics_error_percent;
-  systematics_error_events = total_efficiency * lumi_mu * br_semil * systematics_error_pb;
 
   std::cout << "Luminosity: " << Bash::set_color(Bash::Color::MAGENTA) << lumi_mu << " /pb" << Bash::set_color() << std::endl;
   std::cout << "Reference cross-section: " << Bash::set_color(Bash::Color::MAGENTA) << sigma_ref << " pb" << Bash::set_color() << std::endl;
@@ -832,6 +796,13 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
     std::cout << "\tElectronic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << lumi_e * eff_e[i] << Bash::set_color() << std::endl;
   }
 
+  std::cout << "Efficiency systematic: " << std::endl;
+
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << "\tMuonic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << selection_systematic_relative_muons[i] * 100 << " % (" << 1 + selection_systematic_relative_muons[i] << ")" << Bash::set_color() << std::endl;
+    std::cout << "\tElectronic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << selection_systematic_relative_electrons[i] * 100 << " % (" << 1 + selection_systematic_relative_electrons[i] << ")" << Bash::set_color() << std::endl;
+  }
+
   std::cout << "Total systematic errors: ";
 
   std::cout << Bash::set_color(Bash::Color::MAGENTA);
@@ -841,15 +812,6 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
   std::cout << Bash::set_color();
 
   std::cout << std::endl << std::endl;
-  std::cout << "Systematic details: " << std::endl;
-
-  double err_base = total_efficiency * lumi_mu * br_semil;
-  std::cout << Bash::set_color(Bash::Color::BLUE) << " - Yield for " << btag << " b-tag" << Bash::set_color() << std::endl;
-  std::cout << "    - Selection: " << err_base * sigma_ref * sqrt(selection_systematic_relative_square) << " events ; " << sigma_ref * sqrt(selection_systematic_relative_square) << " pb ; " << sqrt(selection_systematic_relative_square) * 100 << " %" << std::endl;
-  std::cout << "    - JEC: " << err_base * sigma_ref * s_sys_JEC << " events ; " << sigma_ref * s_sys_JEC << " pb ; " << s_sys_JEC  * 100 << " %" << std::endl;
-  std::cout << "    - Bkg PDF: " << err_base * sigma_ref * s_sys_PDF << " events ; " << sigma_ref * s_sys_PDF << " pb ; " << s_sys_PDF * 100 << " %" << std::endl;
-  std::cout << "    - Signal PDF: " << err_base * sigma_ref * s_sys_PDF_CB << " events ; " << sigma_ref * s_sys_PDF_CB << " pb ; " << s_sys_PDF_CB * 100 << " %" << std::endl;
-  std::cout << std::endl;
 
   /*
   // Output systematics error
