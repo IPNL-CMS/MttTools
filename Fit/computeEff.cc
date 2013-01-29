@@ -17,7 +17,7 @@
 
 std::string base_path = "";
 
-void loadSelection(const std::string& jecType, int btag, const int (&masses)[4], float (&nSelectionMu)[4], float (&errNSelectionMu)[4], float (&nSelectionE)[4], float (&errNSelectionE)[4]) {
+void loadSelection(const std::string& jecType, int btag, const int (&masses)[5], float (&nSelectionMu)[5], float (&errNSelectionMu)[5], float (&nSelectionE)[5], float (&errNSelectionE)[5]) {
 
   Json::Reader reader;
   Json::Value root;
@@ -32,7 +32,7 @@ void loadSelection(const std::string& jecType, int btag, const int (&masses)[4],
 
   root = root[getAnalysisUUID()];
 
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 5; i++) {
     const int& mass = masses[i];
 
     std::stringstream ss;
@@ -103,7 +103,7 @@ class Efficiencies {
       selectionEff_mu = 0; selectionEff_e = 0;
 
       mass = m;
-      isInterpolated = (mass != 750 && mass != 1000 && mass != 1250 && mass != 1500);
+      isInterpolated = (mass != 500 && mass != 750 && mass != 1000 && mass != 1250 && mass != 1500);
     }
 
     Efficiencies() {
@@ -178,11 +178,11 @@ int main(int argc, char** argv) {
     bool ignoreInterpolated = !analysisUseInterpolation();
 
     std::map<int, Efficiencies> efficiencies;
-    for (int i = 750; i <= 1500; i += 50) {
+    for (int i = 500; i <= 1500; i += 125) {
       efficiencies[i] = Efficiencies(i);
     }
 
-    const int M[4] = {750, 1000, 1250, 1500};
+    const int M[] = {500, 750, 1000, 1250, 1500};
 
     // HLT efficiencies
     // See https://docs.google.com/spreadsheet/ccc?key=0AsI4zLOlSqcUdHhiYmFKbDIxY3YwWlJHdE9NSVhMSnc
@@ -269,7 +269,7 @@ int main(int argc, char** argv) {
         }
       }
 
-      if (! ignoreInterpolated) {
+      if (! ignoreInterpolated && i.first != 500) {
         trig_mu.SetPoint(index, i.first, i.second.effTrig_mu);
         trig_mu.SetPointError(index, 0., i.second.error_effTrig_mu);
 
@@ -288,11 +288,11 @@ int main(int argc, char** argv) {
       }
     }
 
-    TF1 triggerEff_fit_mu("sel_eff_fit_mu", "[0] + [1] * x + [2] * x * x + [3] * x * x * x", 750, 1500);
+    TF1 triggerEff_fit_mu("sel_eff_fit_mu", "pol1", 750, 1500);
     TF1* triggerEff_fit_mu_low = (TF1*) triggerEff_fit_mu.Clone("triggerEff_fit_mu_low");
     TF1* triggerEff_fit_mu_high = (TF1*) triggerEff_fit_mu.Clone("triggerEff_fit_mu_high");
 
-    TF1 triggerEff_fit_e("sel_eff_fit_e", "[0] + [1] * x + [2] * x * x + [3] * x * x * x", 750, 1500);
+    TF1 triggerEff_fit_e("sel_eff_fit_e", "pol1", 750, 1500);
     TF1* triggerEff_fit_e_low = (TF1*) triggerEff_fit_e.Clone("triggerEff_fit_e_low");
     TF1* triggerEff_fit_e_high = (TF1*) triggerEff_fit_e.Clone("triggerEff_fit_e_high");
 
@@ -308,7 +308,6 @@ int main(int argc, char** argv) {
 
     TCanvas c("c", "c", 800, 800);
     
-    /*
     {
       TMultiGraph *mg = new TMultiGraph();
 
@@ -318,24 +317,24 @@ int main(int argc, char** argv) {
 
       mg->Draw("a");
 
-      c.Print("trig_eff.root");
+      c.Print("interpolation_trigger_eff.root");
 
       delete mg;
     }
-    */
 
     //--- selection efficiencies
-    const float N0[4] = {
+    const float N0[] = {
+      237512,
       216768,
       205479,
       195664,
       197349,
     };
 
-    float Nsel_mu[4];
-    float ErrNsel_mu[4];
-    float Nsel_e[4];
-    float ErrNsel_e[4];
+    float Nsel_mu[5];
+    float ErrNsel_mu[5];
+    float Nsel_e[5];
+    float ErrNsel_e[5];
     loadSelection(jec, btag, M, Nsel_mu, ErrNsel_mu, Nsel_e, ErrNsel_e);
 
     TGraphErrors e_mu;
@@ -346,11 +345,11 @@ int main(int argc, char** argv) {
     TGraphErrors e_e_low;
     TGraphErrors e_e_high;
 
-    TF1 selectionEff_fit_mu("sel_eff_fit_mu", "[0] + [1] * x + [2] * x * x", 750, 1500);
+    TF1 selectionEff_fit_mu("sel_eff_fit_mu", "pol3", 500, 1500);
     TF1* selectionEff_fit_mu_low = (TF1*) selectionEff_fit_mu.Clone("sel_eff_fit_mu_low");
     TF1* selectionEff_fit_mu_high = (TF1*) selectionEff_fit_mu.Clone("sel_eff_fit_mu_high");
 
-    TF1 selectionEff_fit_e("sel_eff_fit_e", "[0] + [1] * x + [2] * x * x", 750, 1500);
+    TF1 selectionEff_fit_e("sel_eff_fit_e", "pol3", 500, 1500);
     TF1* selectionEff_fit_e_low = (TF1*) selectionEff_fit_e.Clone("sel_eff_fit_e_low");
     TF1* selectionEff_fit_e_high = (TF1*) selectionEff_fit_e.Clone("sel_eff_fit_e_high");
 
@@ -397,7 +396,6 @@ int main(int argc, char** argv) {
       e_e_high.Fit(selectionEff_fit_e_high, "QR");
     }
 
-    /*
     {
       TMultiGraph *mg = new TMultiGraph();
 
@@ -407,12 +405,10 @@ int main(int argc, char** argv) {
 
       mg->Draw("a");
 
-      c.Print("sel_eff.root");
+      c.Print("interpolation_selection_eff.root");
 
       delete mg;
     }
-    */
-
 
     if (! ignoreInterpolated) {
       for (auto& i: efficiencies) {
@@ -424,6 +420,9 @@ int main(int argc, char** argv) {
 
           eff.error_selectionEff_mu = fabs(selectionEff_fit_mu_high->Eval(i.first) - selectionEff_fit_mu_low->Eval(i.first)) / 2.;
           eff.error_selectionEff_e = fabs(selectionEff_fit_e_high->Eval(i.first) - selectionEff_fit_e_low->Eval(i.first)) / 2.; 
+        }
+
+        if (i.second.isInterpolated || i.first == 500) {
 
           eff.effTrig_mu = triggerEff_fit_mu.Eval(i.first);
           eff.effTrig_e = triggerEff_fit_e.Eval(i.first);
