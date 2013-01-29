@@ -31,6 +31,7 @@
 #include <TLatex.h>
 #include <TChain.h>
 #include <TGaxis.h>
+#include <TVectorD.h>
 
 #include <RooGlobalFunc.h>
 #include <RooMsgService.h>
@@ -59,6 +60,9 @@
 #include <RooDataHist.h>
 #include <RooChi2Var.h>
 #include <RooUniform.h>
+#include <RooIntegralMorph.h>
+#include <RooMomentMorph.h>
+#include <RooHistPdf.h>
 
 #include "Utils.h"
 #include <tclap/CmdLine.h>
@@ -409,6 +413,23 @@ void renameAndSetPdfParametersConst(const RooArgSet& observables, const RooAbsPd
 
   delete iter;
   delete params;
+
+  params = pdf.getComponents();
+  iter = params->createIterator();
+  var = NULL;
+  while ((var = static_cast<RooRealVar*>(iter->Next())))
+  {
+    if ((void *) var == (const void*) &pdf)
+      continue;
+
+    TString cleanedName = TString(var->GetName()).ReplaceAll("electron", "").ReplaceAll("muon", "").ReplaceAll("signal_", "");
+    TString newName = cleanedName + prefix;
+
+    var->SetNameTitle(newName, newName);
+  }
+
+  delete iter;
+  delete params;
 }
 
 void setPdfParametersConst(const RooArgSet& observables, const RooAbsPdf& pdf, bool constant)
@@ -467,6 +488,108 @@ void parseConfigFile(const std::string& filename, /*RooAbsCategoryLValue& catego
   }
 
   workspace.Print("v");
+}
+
+RooAbsPdf* getInterpolatedPdf(RooRealVar& observable, double massZprime, const std::string& jec, int btag, const std::string& categoryName, const std::string& suffix = "") {
+
+  // Interpolation
+  int lowMass = 0;
+  int highMass = 0;
+
+  const int ALGO_MOMENT_MORPH = 1;
+  const int ALGO_INTEGRAL_MORPH = 2;
+
+  int algo;
+
+  if (massZprime > 500 && massZprime < 750) {
+    lowMass = 500;
+    highMass = 750;
+    algo = ALGO_INTEGRAL_MORPH;
+  } else if (massZprime > 750 && massZprime < 1000) {
+    lowMass = 750;
+    highMass = 1000;
+    algo = ALGO_MOMENT_MORPH;
+  } else if (massZprime > 1000 && massZprime < 1250) {
+    lowMass = 1000;
+    highMass = 1250;
+    algo = ALGO_MOMENT_MORPH;
+  } else if (massZprime > 1250 && massZprime < 1500) {
+    lowMass = 1250;
+    highMass = 1500;
+    algo = ALGO_MOMENT_MORPH;
+  }/* else if (massZprime > 1500 && massZprime < 2000) {
+      lowMass = 1500;
+      highMass = 2000;
+      }*/
+
+  std::string cleanedCategory = TString(categoryName.c_str()).ReplaceAll(";", "_").ReplaceAll("{", "").ReplaceAll("}", "").ReplaceAll("-", "").Data(); // For workspace names
+
+  algo = ALGO_INTEGRAL_MORPH;
+
+  if (lowMass == 0 || highMass == 0) {
+    std::cout << "Error: please use a mass between 500 and 1500 GeV." << std::endl;
+    return NULL;
+  }
+
+  std::string analysisName = getAnalysisName(BASE_PATH);
+  std::string pdfName = "signal_" + std::string((TString(categoryName.c_str()).Contains("muon", TString::kIgnoreCase) ? "muon" : "electron"));
+
+  // Open workspaces and retrieve PDFs
+  TString lowMass_prefix = TString::Format("%s-Zprime%d_%s_%d_btag", jec.c_str(), lowMass, analysisName.c_str(), btag);
+  TString lowMass_workspaceFile = BASE_PATH + "/frit/" + lowMass_prefix + "_workspace.root";
+
+  TString highMass_prefix = TString::Format("%s-Zprime%d_%s_%d_btag", jec.c_str(), highMass, analysisName.c_str(), btag);
+  TString highMass_workspaceFile = BASE_PATH + "/frit/" + highMass_prefix + "_workspace.root";
+
+  TFile lowMass_file(lowMass_workspaceFile);
+  RooAbsPdf* lowMass_pdf = static_cast<RooWorkspace*>(lowMass_file.Get("w"))->pdf(pdfName.c_str());
+  lowMass_pdf->SetName(TString::Format("lowMass_%s", pdfName.c_str()));
+  lowMass_file.Close();
+
+  TFile highMass_file(highMass_workspaceFile);
+  RooAbsPdf* highMass_pdf = static_cast<RooWorkspace*>(highMass_file.Get("w"))->pdf(pdfName.c_str());
+  highMass_pdf->SetName(TString::Format("highMass_%s", pdfName.c_str()));
+  highMass_file.Close();
+
+  double alpha = 0.;
+  if (algo == ALGO_MOMENT_MORPH) {
+    alpha = (double) (massZprime - lowMass) / (double) (highMass - lowMass);
+  } else {
+    alpha = 1. - (double) (massZprime - lowMass) / (double) (highMass - lowMass);
+  }
+
+  RooRealVar* rAlpha = new RooRealVar("alpha", "alpha", alpha, 0, 1);
+
+  //mtt.setBins(5000, "cache");
+  //rAlpha.setBins(1000, "cache");
+  observable.setBins(5000, "cache");
+
+  // Interpolate
+  std::cout << "Interpolate ..." << std::endl;
+
+  RooAbsPdf* interpolation;
+
+  if (algo == ALGO_INTEGRAL_MORPH) {
+
+    std::cout << "Using RooIntergralMorph for interpolation" << std::endl;
+    interpolation = new RooIntegralMorph(pdfName.c_str(), pdfName.c_str(), *lowMass_pdf, *highMass_pdf, observable, *rAlpha, false);
+
+  } else {
+
+    std::cout << "Using RooMomentMorph for interpolation" << std::endl;
+    TVectorD hypoMass(2);
+    hypoMass(0) = 0; 
+    hypoMass(1) = 1;
+
+    interpolation = new RooMomentMorph(pdfName.c_str(), pdfName.c_str(), *rAlpha, RooArgList(observable), RooArgList(*lowMass_pdf, *highMass_pdf), hypoMass, RooMomentMorph::Linear);
+  }
+
+  std::cout << "Done." << std::endl;
+
+  interpolation->SetName(std::string("signal_" + categoryName).c_str());
+  renameAndSetPdfParametersConst(RooArgSet(observable), *interpolation, (suffix.length() == 0) ? cleanedCategory : suffix);
+
+  return interpolation;
 }
 
 void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigurationFile, int btag, const std::string& customWorkspaceFile, const std::string& outputFile)
@@ -532,7 +655,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
   // Create main workspace for global pdf
   RooWorkspace mainWorkspace("mainWorkspace", "main workspace");
 
-  RooRealVar mtt("mtt", "mtt", minmTT, maxmTT, "GeV/c^2");
+  RooRealVar mtt("mtt", "m_{t#bar{t}}", minmTT, maxmTT, "GeV/c^2");
   RooRealVar weight("weight", "weight", 0, 100000);
   mainWorkspace.import(mtt);
   mainWorkspace.import(weight);
@@ -648,35 +771,45 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
 
     std::string pdfName = "signal_" + std::string((TString(type->GetName()).Contains("muon", TString::kIgnoreCase) ? "muon" : "electron"));
 
-    TString workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "nominal", massZprime, analysisName.c_str(), categoryBTag);
-    if (customWorkspaceFile.length() > 0) {
-      workspaceFile = TString::Format(customWorkspaceFile.c_str(), categoryBTag);
-      std::cout << Bash::set_color(Bash::Color::BLUE) << "Using custom workspace '" << workspaceFile << "'" << Bash::set_color() << std::endl;
+    if (massZprime == 500 || massZprime == 750 || massZprime == 1000 || massZprime == 1250 || massZprime == 1500) {
+
+      TString workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "nominal", massZprime, analysisName.c_str(), categoryBTag);
+      if (customWorkspaceFile.length() > 0) {
+        workspaceFile = TString::Format(customWorkspaceFile.c_str(), categoryBTag);
+        std::cout << Bash::set_color(Bash::Color::BLUE) << "Using custom workspace '" << workspaceFile << "'" << Bash::set_color() << std::endl;
+      }
+
+      std::shared_ptr<TFile> file(TFile::Open(workspaceFile));
+      if (! file.get()) {
+        std::cerr << "ERROR: MC signal parameters file not found (Was trying to open '" << workspaceFile << "')" << std::endl;
+        exit(1);
+      }
+
+      RooWorkspace* workspace = static_cast<RooWorkspace*>(file->Get("w"));
+      if (! workspace) {
+        std::cerr << "ERROR: Workspace not found!" << std::endl;
+        exit(1);
+      }
+
+      RooAbsPdf* pdf = workspace->pdf(pdfName.c_str());
+      if (! pdf) {
+        std::cerr << "ERROR: Signal pdf " << pdfName << " not found inside workspace." << std::endl;
+        exit(1);
+      }    
+
+      pdf->SetName(std::string("signal_" + std::string(type->GetName())).c_str());
+      renameAndSetPdfParametersConst(RooArgSet(mtt), *pdf, type->GetName());
+      mainWorkspace.import(*pdf);
+
+      signalPdfsFromWorkspace[category] = mainWorkspace.pdf(pdf->GetName());
+
+    } else {
+
+      RooAbsPdf* interpolation = getInterpolatedPdf(mtt, massZprime, "nominal", categoryBTag, type->GetName());
+      mainWorkspace.import(*interpolation);
+
+      signalPdfsFromWorkspace[category] = mainWorkspace.pdf(interpolation->GetName());
     }
-
-    std::shared_ptr<TFile> file(TFile::Open(workspaceFile));
-    if (! file.get()) {
-      std::cerr << "ERROR: MC signal parameters file not found (Was trying to open '" << workspaceFile << "')" << std::endl;
-      exit(1);
-    }
-
-    RooWorkspace* workspace = static_cast<RooWorkspace*>(file->Get("w"));
-    if (! workspace) {
-      std::cerr << "ERROR: Workspace not found!" << std::endl;
-      exit(1);
-    }
-
-    RooAbsPdf* pdf = workspace->pdf(pdfName.c_str());
-    if (! pdf) {
-      std::cerr << "ERROR: Signal pdf " << pdfName << " not found inside workspace." << std::endl;
-      exit(1);
-    }    
-
-    pdf->SetName(std::string("signal_" + std::string(type->GetName())).c_str());
-    renameAndSetPdfParametersConst(RooArgSet(mtt), *pdf, type->GetName());
-    mainWorkspace.import(*pdf);
-
-    signalPdfsFromWorkspace[category] = mainWorkspace.pdf(pdf->GetName());
   }
 
   std::cout << "Done." << std::endl;
@@ -1029,21 +1162,37 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
         RooFit::RenameVariable(name, TString::Format("signal_%s", workspace_suffix.Data()))
         );
 
-    name = TString::Format("signal_%s", leptonName.c_str());
+    if (massZprime == 500 || massZprime == 750 || massZprime == 1000 || massZprime == 1250 || massZprime == 1500) {
 
-    // Import JEC up
-    TString workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "JECup", massZprime, analysisName.c_str(), extractedBTag);
-    std::shared_ptr<TFile> f(TFile::Open(workspaceFile.Data()));
-    pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(name);
-    pdf->SetName(TString::Format("signal_%s_jecUp", workspace_suffix.Data()));
-    higgsWorkspace.import(*pdf);
-    
-    // Import JEC down
-    workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "JECdown", massZprime, analysisName.c_str(), extractedBTag);
-    f.reset(TFile::Open(workspaceFile.Data()));
-    pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(name);
-    pdf->SetName(TString::Format("signal_%s_jecDown", workspace_suffix.Data()));
-    higgsWorkspace.import(*pdf);
+      name = TString::Format("signal_%s", leptonName.c_str());
+
+      // Import JEC up
+      TString workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "JECup", massZprime, analysisName.c_str(), extractedBTag);
+      std::shared_ptr<TFile> f(TFile::Open(workspaceFile.Data()));
+      pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(name);
+      pdf->SetName(TString::Format("signal_%s_jecUp", workspace_suffix.Data()));
+      higgsWorkspace.import(*pdf);
+      
+      // Import JEC down
+      workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "JECdown", massZprime, analysisName.c_str(), extractedBTag);
+      f.reset(TFile::Open(workspaceFile.Data()));
+      pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(name);
+      pdf->SetName(TString::Format("signal_%s_jecDown", workspace_suffix.Data()));
+      higgsWorkspace.import(*pdf);
+
+    } else {
+
+      // Interpolation
+      name = TString::Format("signal_%s_jecUp", workspace_suffix.Data());
+      pdf = getInterpolatedPdf(mtt, massZprime, "JECup", extractedBTag, category, name.Data());
+      pdf->SetName(name);
+      higgsWorkspace.import(*pdf);
+
+      name = TString::Format("signal_%s_jecDown", workspace_suffix.Data());
+      pdf = getInterpolatedPdf(mtt, massZprime, "JECdown", extractedBTag, category, name.Data());
+      pdf->SetName(name);
+      higgsWorkspace.import(*pdf);
+    }
   }
 
   TString outputFileName = TString::Format("zprime_%d_workspace.root", massZprime);
