@@ -234,7 +234,7 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
       dup2(fd, STDIN_FILENO);
 
       const std::string parameter = singleFile ? "-i" : "--input-list";
-      if (execl("./createCombineWorkspace", "createCombineWorkspace", "-m", massStr.c_str(), parameter.c_str(), file.c_str(), "--b-tag", btagStr.c_str(), "-o", outputCombineWorkspaceFile.Data(), NULL) < 0) {
+      if (execl("./createCombineWorkspace", "createCombineWorkspace", "-m", massStr.c_str(), parameter.c_str(), file.c_str(), "--b-tag", btagStr.c_str(), "-o", outputCombineWorkspaceFile.Data(), "--workspace", workspaceFile.Data(), NULL) < 0) {
         perror("Can't execute createCombineWorkspace");
       }
       exit(0);
