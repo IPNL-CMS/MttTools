@@ -1541,11 +1541,27 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
       std::cout << "Done." << std::endl;
 
+      interpolation->SetName("__foo__");
+      RooDataHist * binnedInterpolatedDataset = new RooDataHist("blabla", "blabla", RooArgSet(mtt));
+      interpolation->fillDataHist(binnedInterpolatedDataset, NULL, 1.);
+
+      RooHistPdf* hist_pdf = new RooHistPdf(std::string("signal_" + std::string(type->GetName())).c_str(), std::string("signal_" + std::string(type->GetName())).c_str(), RooArgSet(mtt), *binnedInterpolatedDataset);
+
+      renameAndSetPdfParametersConst(RooArgSet(mtt), *hist_pdf, type->GetName());
+      /*
+
       interpolation->SetName(std::string("signal_" + std::string(type->GetName())).c_str());
       renameAndSetPdfParametersConst(RooArgSet(mtt), *interpolation, type->GetName());
       mainWorkspace.import(*interpolation);
 
       signalPdfsFromWorkspace[category] = mainWorkspace.pdf(interpolation->GetName());
+      */
+
+      mainWorkspace.import(*hist_pdf);
+
+      signalPdfsFromWorkspace[category] = mainWorkspace.pdf(hist_pdf->GetName());
+
+
     }
   }
 

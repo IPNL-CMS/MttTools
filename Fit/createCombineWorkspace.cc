@@ -533,6 +533,7 @@ RooAbsPdf* getInterpolatedPdf(RooRealVar& observable, double massZprime, const s
 
   std::string analysisName = getAnalysisName(BASE_PATH);
   std::string pdfName = "signal_" + std::string((TString(categoryName.c_str()).Contains("muon", TString::kIgnoreCase) ? "muon" : "electron"));
+  std::string goodSuffix = (suffix.length() == 0) ? cleanedCategory : suffix;
 
   // Open workspaces and retrieve PDFs
   TString lowMass_prefix = TString::Format("%s-Zprime%d_%s_%d_btag", jec.c_str(), lowMass, analysisName.c_str(), btag);
@@ -561,7 +562,7 @@ RooAbsPdf* getInterpolatedPdf(RooRealVar& observable, double massZprime, const s
   RooRealVar* rAlpha = new RooRealVar("alpha", "alpha", alpha, 0, 1);
 
   //mtt.setBins(5000, "cache");
-  //rAlpha.setBins(1000, "cache");
+  //rAlpha->setBins(1000, "cache");
   observable.setBins(5000, "cache");
 
   // Interpolate
@@ -569,10 +570,12 @@ RooAbsPdf* getInterpolatedPdf(RooRealVar& observable, double massZprime, const s
 
   RooAbsPdf* interpolation;
 
+  TString temporaryName = TString::Format("interpolation_%s", goodSuffix.c_str());
+
   if (algo == ALGO_INTEGRAL_MORPH) {
 
     std::cout << "Using RooIntergralMorph for interpolation" << std::endl;
-    interpolation = new RooIntegralMorph(pdfName.c_str(), pdfName.c_str(), *lowMass_pdf, *highMass_pdf, observable, *rAlpha, false);
+    interpolation = new RooIntegralMorph(temporaryName, temporaryName, *lowMass_pdf, *highMass_pdf, observable, *rAlpha, false);
 
   } else {
 
@@ -581,15 +584,21 @@ RooAbsPdf* getInterpolatedPdf(RooRealVar& observable, double massZprime, const s
     hypoMass(0) = 0; 
     hypoMass(1) = 1;
 
-    interpolation = new RooMomentMorph(pdfName.c_str(), pdfName.c_str(), *rAlpha, RooArgList(observable), RooArgList(*lowMass_pdf, *highMass_pdf), hypoMass, RooMomentMorph::Linear);
+    interpolation = new RooMomentMorph(temporaryName, temporaryName, *rAlpha, RooArgList(observable), RooArgList(*lowMass_pdf, *highMass_pdf), hypoMass, RooMomentMorph::Linear);
   }
 
   std::cout << "Done." << std::endl;
 
-  interpolation->SetName(std::string("signal_" + categoryName).c_str());
-  renameAndSetPdfParametersConst(RooArgSet(observable), *interpolation, (suffix.length() == 0) ? cleanedCategory : suffix);
+  RooDataHist * binnedInterpolatedDataset = new RooDataHist(std::string("binned_dataset_signal_" + goodSuffix).c_str(), "", RooArgSet(observable));
+  interpolation->fillDataHist(binnedInterpolatedDataset, NULL, 1.);
 
-  return interpolation;
+  RooHistPdf* hist_pdf = new RooHistPdf(std::string("signal_" + categoryName).c_str(), std::string("signal_" + categoryName).c_str(), RooArgSet(observable), *binnedInterpolatedDataset);
+
+  //interpolation->SetName(std::string("signal_" + categoryName).c_str());
+  //renameAndSetPdfParametersConst(RooArgSet(observable), *interpolation, (suffix.length() == 0) ? cleanedCategory : suffix);
+  renameAndSetPdfParametersConst(RooArgSet(observable), *hist_pdf, goodSuffix);
+
+  return hist_pdf;
 }
 
 void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigurationFile, int btag, const std::string& customWorkspaceFile, const std::string& outputFile)
@@ -656,6 +665,13 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
   RooWorkspace mainWorkspace("mainWorkspace", "main workspace");
 
   RooRealVar mtt("mtt", "m_{t#bar{t}}", minmTT, maxmTT, "GeV/c^2");
+  Double_t minmTTFit = minmTT + 0.0;
+  Double_t maxmTTFit = maxmTT - 0.0;
+  mtt.setRange(minmTTFit, maxmTTFit);
+
+  // Set binning to 1 GeV
+  mtt.setBins((maxmTTFit - minmTTFit) / 4.);
+
   RooRealVar weight("weight", "weight", 0, 100000);
   mainWorkspace.import(mtt);
   mainWorkspace.import(weight);
@@ -1044,20 +1060,6 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
     std::string workspaceName = "global_pdf_" + cleanedCategory;
     simPdfBackgroundOnly.addPdf(*backgroundPdfsFromWorkspace[name], name.c_str());
   }
-  
-  Double_t minmTTFit = minmTT + 0.0;
-  Double_t maxmTTFit = maxmTT - 0.0;
-  
-  mtt.setRange(minmTTFit, maxmTTFit);
-
-  /*
-  mtt.setRange("R1", minmTTFit, massZprime - 50);
-  mtt.setRange("R2", massZprime + 50, maxmTTFit);
-  */
-
-  // Set binning to 1 GeV
-  std::cout << mtt.getBins() << std::endl;
-  mtt.setBins((maxmTTFit - minmTTFit) / 4.);
 
   RooDataSet *dataOrig = NULL;
   if (combine) {
