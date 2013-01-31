@@ -490,6 +490,17 @@ void parseConfigFile(const std::string& filename, /*RooAbsCategoryLValue& catego
   workspace.Print("v");
 }
 
+RooDataSet* binnedToUnbinnedDataset(RooDataHist& in, RooRealVar& observable, RooRealVar& weight, const std::string& name) {
+
+  RooDataSet* ds = new RooDataSet(name.c_str(), name.c_str(), RooArgSet(observable, weight), RooFit::WeightVar(weight));
+  for (int i = 0; i < in.numEntries(); i++) {
+    const RooArgSet* set = in.get(i);
+    ds->add(*set, in.weight(*set));
+  }
+
+  return ds;
+}
+
 RooAbsPdf* getInterpolatedPdf(RooRealVar& observable, double massZprime, const std::string& jec, int btag, const std::string& categoryName, const std::string& suffix = "") {
 
   // Interpolation
@@ -589,16 +600,36 @@ RooAbsPdf* getInterpolatedPdf(RooRealVar& observable, double massZprime, const s
 
   std::cout << "Done." << std::endl;
 
+  int oldBinning = observable.getBins();
+  observable.setBins(3000);
+
   RooDataHist * binnedInterpolatedDataset = new RooDataHist(std::string("binned_dataset_signal_" + goodSuffix).c_str(), "", RooArgSet(observable));
   interpolation->fillDataHist(binnedInterpolatedDataset, NULL, 1.);
 
-  RooHistPdf* hist_pdf = new RooHistPdf(std::string("signal_" + categoryName).c_str(), std::string("signal_" + categoryName).c_str(), RooArgSet(observable), *binnedInterpolatedDataset);
+  RooRealVar weight("__weight__", "__weight__", 0, 0, 100000);
+  RooDataSet* unbinned_dataset = binnedToUnbinnedDataset(*binnedInterpolatedDataset, observable, weight, "test");
+
+  RooKeysPdf* keys_pdf = new RooKeysPdf(std::string("signal_" + categoryName).c_str(), "Keys pdf for signal", observable, *unbinned_dataset, RooKeysPdf::MirrorBoth, 1);
+
+  delete unbinned_dataset;
+
+  RooPlot* p = observable.frame();
+  interpolation->plotOn(p);
+  keys_pdf->plotOn(p, RooFit::LineColor(kRed));
+
+  TCanvas c("c");
+  p->Draw();
+  c.Print("test.root");
+
+  //RooHistPdf* hist_pdf = new RooHistPdf(std::string("signal_" + categoryName).c_str(), std::string("signal_" + categoryName).c_str(), RooArgSet(observable), *binnedInterpolatedDataset);
 
   //interpolation->SetName(std::string("signal_" + categoryName).c_str());
   //renameAndSetPdfParametersConst(RooArgSet(observable), *interpolation, (suffix.length() == 0) ? cleanedCategory : suffix);
-  renameAndSetPdfParametersConst(RooArgSet(observable), *hist_pdf, goodSuffix);
+  renameAndSetPdfParametersConst(RooArgSet(observable), *keys_pdf, goodSuffix);
 
-  return hist_pdf;
+  observable.setBins(oldBinning);
+
+  return keys_pdf;
 }
 
 void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigurationFile, int btag, const std::string& customWorkspaceFile, const std::string& outputFile)
