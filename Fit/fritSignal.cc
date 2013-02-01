@@ -192,7 +192,7 @@ void saveCombinedChiSquare(int mass, const std::string& jecType, int btag, doubl
   fclose(lock);
 }
 
-void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, int nBins, RooDataSet& dataset, RooSimultaneous& simPdfs, std::map<std::string, std::shared_ptr<BaseFunction>>& backgroundPdfs, int btag, const std::string& prefix, bool log) {
+void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, int mass, bool wide, int nBins, RooDataSet& dataset, RooSimultaneous& simPdfs, std::map<std::string, std::shared_ptr<BaseFunction>>& backgroundPdfs, int btag, const std::string& prefix, bool log) {
 
   std::cout << std::endl;
   std::cout << "Drawing histograms..." << std::endl;
@@ -298,9 +298,17 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
 
     TString legendLabel = TString::Format("#font[42]{%s, #geq 4 jets, %s}", leptonShortcutName.c_str(), btagLabel.Data());
 
-    t.DrawLatex(0.53, 0.88, "#font[42]{CMS preliminary}");
-    t.DrawLatex(0.53, 0.84, TString::Format("#font[42]{%0.2f fb^{-1} at #sqrt{s}=8 TeV}", LUMI));
-    t.DrawLatex(0.53, 0.80, legendLabel);
+    double x_ = 0.53;
+    double y_ = 0.88;
+
+    if (mass > 1200) {
+      x_ = 0.22;
+      y_ = 0.25;
+    }
+
+    t.DrawLatex(x_, y_, "#font[42]{CMS preliminary}");
+    t.DrawLatex(x_, y_ - 0.04, TString::Format("#font[42]{%0.2f fb^{-1} at #sqrt{s}=8 TeV}", LUMI));
+    t.DrawLatex(x_, y_ - 0.08, legendLabel);
 
     plots.push_back(std::shared_ptr<RooPlot>(plot));
 
@@ -453,8 +461,8 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
 
   } while (! fitIsGood && fitIterations > 0);
 
-  drawHistograms(whichLepton, mtt, nBins, *dataset, simPdf, backgroundPdfs, btag, std::string(base_path + "/frit/" + prefix), false);
-  drawHistograms(whichLepton, mtt, nBins, *dataset, simPdf, backgroundPdfs, btag, std::string(base_path + "/frit/" + prefix), true);
+  drawHistograms(whichLepton, mtt, massZprime, true, nBins, *dataset, simPdf, backgroundPdfs, btag, std::string(base_path + "/frit/" + prefix), false);
+  drawHistograms(whichLepton, mtt, massZprime, true, nBins, *dataset, simPdf, backgroundPdfs, btag, std::string(base_path + "/frit/" + prefix), true);
 
   fitResult->Print("v");
 
