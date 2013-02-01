@@ -983,6 +983,62 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
     std::cout << "\tElectronic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << selection_systematic_relative_electrons[i] * 100 << " % (" << 1 + selection_systematic_relative_electrons[i] << ")" << Bash::set_color() << std::endl;
   }
 
+  std::cout << "Efficiency systematic details: " << std::endl;
+
+  int oldPre = std::cout.precision();
+  std::cout.precision(3);
+  std::cout << "Efficiency (\\%) & log normal";
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << " & " << selection_systematic_relative_muons[i] * 100 << " & " << selection_systematic_relative_electrons[i] * 100;
+  }
+  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
+
+  std::cout << "~~\\textbullet~Muon ID + iso &";
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << " & " << sqrt(muonID_scale_factor_relative * muonID_scale_factor_relative + muonIso_scale_factor_relative * muonIso_scale_factor_relative) * 100  << " & -";
+  }
+  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
+  std::cout << "~~\\textbullet~Electron ID + iso &";
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << " & - & " << sqrt(electron_scale_factor_relative * electron_scale_factor_relative) * 100;
+  }
+  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
+  std::cout << "~~\\textbullet~HLT scale factor &";
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << " & " << trigger_scale_factor_muons_relative * 100 << " & " << trigger_scale_factor_electrons_relative * 100;
+  }
+  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
+  std::cout << "~~\\textbullet~HLT efficiency &";
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << " & " << s_hlt_eff_mu[i] * 100 << " & " << s_hlt_eff_e[i] * 100;
+  }
+  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
+  std::cout << "~~\\textbullet~sel. efficiency &";
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << " & " << s_sel_eff_mu[i] * 100<< " & " << s_sel_eff_e[i] * 100;
+  }
+  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
+  std::cout << "~~\\textbullet~b-tagging scale factor &";
+  for (int i = minBTag; i <= maxBTag; i++) {
+    double a, b;
+    if (i == 1) {
+
+      a = pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_systematic_relative * b_tagging_systematic_relative;
+      b = pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_systematic_relative * b_tagging_systematic_relative;
+
+    } else if (i == 2) {
+
+      a = 2 * b_tagging_systematic_relative * b_tagging_systematic_relative;
+      b = 2 * b_tagging_systematic_relative * b_tagging_systematic_relative;
+
+    }
+
+    std::cout << " & " << sqrt(a) * 100<< " & " << sqrt(b) * 100;
+  }
+  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
+
+  std::cout.precision(oldPre);
+
   std::cout << "Total systematic errors: ";
 
   std::cout << Bash::set_color(Bash::Color::MAGENTA);
