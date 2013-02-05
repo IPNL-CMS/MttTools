@@ -16,7 +16,7 @@ PUReweighter::PUReweighter(bool isSemiMu, PUProfile profile/* = PUProfile::S10*/
     }
 
     TString dataFileNameWithSyst = TString::Format(dataFileName.c_str(), suffix.c_str());
-    TFile* dataFile = TFile::Open(dataFileNameWithSyst.c_str());
+    TFile* dataFile = TFile::Open(dataFileNameWithSyst.Data());
 
     if (! dataFile) {
       std::cerr << "Error: can't open " << dataFileNameWithSyst << ". No PU reweighting." << std::endl;
