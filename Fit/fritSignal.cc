@@ -57,7 +57,7 @@ int FIT_ERROR_LEVEL = -1;
 
 std::string base_path = "";
 
-void fritSignal(TChain* chain, const std::string& jecType, const std::string& configFile, int massZprime, int btag);
+void fritSignal(TChain* chain, const std::string& jecType, const std::string& pu, const std::string& configFile, int massZprime, int btag);
 
 void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {
 
@@ -90,10 +90,12 @@ int main(int argc, char** argv) {
     cmd.xorAdd(inputListArg, inputFileArg);
 
     TCLAP::ValueArg<std::string> jecArg("", "jec", "Run the frit for this specific jec.", false, "nominal", "string");
+    TCLAP::ValueArg<std::string> puArg("", "pileup", "Run the frit for this specific pileup syst.", false, "nominal", "string");
     TCLAP::ValueArg<int> massArg("m", "mass", "Zprime mass", true, 750, "integer");
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", true, 2, "int");
 
     cmd.add(jecArg);
+    cmd.add(puArg);
     cmd.add(massArg);
     cmd.add(btagArg);
 
@@ -114,8 +116,22 @@ int main(int argc, char** argv) {
     TChain * chain = loadChain(inputFiles, treeName.Data());
 
     std::string jec = jecArg.getValue();
+    if (jec != "nominal" && jec != "JECup" && jec != "JECdown") {
+      std::cerr << "--jec can only be 'nominal', 'JECup' or 'JECdown'" << std::endl;
+      exit(1);
+    }
 
-    fritSignal(chain, jec, configFileArg.getValue(), massArg.getValue(), btagArg.getValue());
+    std::string pu = puArg.getValue();
+    if (pu != "nominal" && pu != "up" && pu != "down") {
+      std::cerr << "--pileup can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
+
+    if (pu != "nominal" && jec != "nominal") {
+      std::cerr << "Please set --pileup and --jec separately" << std::endl;
+    }
+
+    fritSignal(chain, jec, pu, configFileArg.getValue(), massArg.getValue(), btagArg.getValue());
 
     delete chain;
 
@@ -328,7 +344,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
   std::cout << std::endl;
 }
 
-void fritSignal(TChain* chain, const std::string& jecType, const std::string& configFile, int massZprime, int btag) {
+void fritSignal(TChain* chain, const std::string& jecType, const std::string& pu, const std::string& configFile, int massZprime, int btag) {
 
   std::cout << "[" << getpid() << "] Processing for " << jecType << std::endl;
 
@@ -362,6 +378,8 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
 
   // Reduce data set
   //RooDataSet* RedData = static_cast<RooDataSet*>(dataOrig->reduce("Mtt_KF_reco > 500 && Mtt_KF_reco < 2045"));
+  //
+  dataset->Print();
 
   if (dataset->numEntries() == 0) {
     std::cerr << "[" << getpid() << "] ERROR: No entry in dataset" << std::endl;
@@ -392,7 +410,18 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& co
     pdf.second->getPdf().Print();
   }
 
-  TString prefix = TString::Format("%s-Zprime%d_%s_%d_btag", jecType.c_str(), massZprime, analysisName.c_str(), btag);
+  TString systPrefix;
+  if (jecType == "nominal" && pu == "nominal")
+    systPrefix = "nominal";
+  else if (jecType != "nominal")
+    systPrefix = jecType.c_str();
+  else {
+    if (pu == "up")
+      systPrefix = "puUp";
+    else
+      systPrefix = "puDown";
+  }
+  TString prefix = TString::Format("%s-Zprime%d_%s_%d_btag", systPrefix.Data(), massZprime, analysisName.c_str(), btag);
 
   std::map<std::string, std::shared_ptr<RooAbsPdf>> globalPdfs;
   std::map<std::string, std::shared_ptr<RooRealVar>> globalPdfsEvents;
