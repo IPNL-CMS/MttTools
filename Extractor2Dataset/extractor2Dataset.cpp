@@ -20,10 +20,9 @@ bool OVERRIDE_TYPE;
 std::string OVERRIDED_TYPE;
 PUProfile puProfile;
 
-void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight) {
+void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight, const std::string& puSyst) {
 
   TString outputFileFormated = OVERRIDE_TYPE ? outputFile : TString::Format(outputFile.c_str(), (isData) ? "" : type.c_str());
-  std::cout << outputFileFormated << std::endl;
 
   std::map<int, TTree*> outputTrees {
     {0, new TTree("dataset_0btag", "dataset for 0 b-tagged jet") },
@@ -72,7 +71,13 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
 
   PUReweighter* puReweigher = NULL;
   if (! isData) {
-    puReweigher = new PUReweighter(type == "semimu", puProfile);
+    Systematic syst = Systematic::NOMINAL;
+    if (puSyst == "up")
+      syst = Systematic::UP;
+    else if (puSyst == "down")
+      syst = Systematic::DOWN;
+
+    puReweigher = new PUReweighter(type == "semimu", puProfile, syst);
   }
 
   int64_t entries = mtt->GetEntries();
@@ -135,12 +140,12 @@ void loadChain(const std::vector<std::string>& inputFiles, TChain*& mtt, TChain*
   }
 }
 
-void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight) {
+void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight, const std::string& puSyst) {
 
   TChain* mtt = NULL, *event = NULL;
 
   loadChain(inputFiles, mtt, event);
-  reduce(mtt, event, outputFile, isData, type, max, generator_weight);
+  reduce(mtt, event, outputFile, isData, type, max, generator_weight, puSyst);
 
   delete mtt;
   delete event;
@@ -176,6 +181,7 @@ int main(int argc, char** argv)
 
     TCLAP::ValueArg<std::string> typeArg("", "type", "current inputfile type (semie or semimu)", true, "", "string", cmd);
     TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S10", "string", cmd);
+    TCLAP::ValueArg<std::string> pileupSystArg("", "pileup-syst", "PU profile to use for pileup reweigthing", false, "nominal", "string", cmd);
     TCLAP::ValueArg<int> maxEntriesArg("n", "", "Maximal number of entries to process", false, -1, "int", cmd);
     TCLAP::ValueArg<double> generatorWeightArg("", "weight", "MC generator weight", false, 1., "double", cmd);
 
@@ -189,6 +195,13 @@ int main(int argc, char** argv)
       puProfile = PUProfile::S7;
     else if (p == "s10")
       puProfile = PUProfile::S10;
+
+    std::string puSyst = pileupSystArg.getValue();
+    std::transform(puSyst.begin(), puSyst.end(), puSyst.begin(), ::tolower);
+    if (puSyst != "nominal" && puSyst != "up" && puSyst != "down") {
+      std::cerr << "--pilup-syst can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
     
     bool isData = dataArg.isSet();
 
@@ -199,7 +212,7 @@ int main(int argc, char** argv)
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue()); 
+    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue(), puSyst); 
 
   } catch (TCLAP::ArgException& e) {
     std::cout << e.what() << std::endl;

@@ -5,17 +5,17 @@ import os, subprocess, tempfile, datetime
 d = datetime.datetime.now().strftime("%d%b%y")
 
 files = [
-    #["MTT_Signal_Zprime_500_Narrow_2012_dataset_%s_JECup.root",  "Systematics/JECup/MTT_Zprime_500_Narrow_full_stat_%s.list"],
-    #["MTT_Signal_Zprime_750_Narrow_2012_dataset_%s_JECup.root",  "Systematics/JECup/MTT_Zprime_750_Narrow_full_stat_%s.list"],
-    #["MTT_Signal_Zprime_1000_Narrow_2012_dataset_%s_JECup.root", "Systematics/JECup/MTT_Zprime_1000_Narrow_full_stat_%s.list"],
-    #["MTT_Signal_Zprime_1250_Narrow_2012_dataset_%s_JECup.root", "Systematics/JECup/MTT_Zprime_1250_Narrow_full_stat_%s.list"],
-    #["MTT_Signal_Zprime_1500_Narrow_2012_dataset_%s_JECup.root", "Systematics/JECup/MTT_Zprime_1500_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_500_Narrow_2012_dataset_%s_JECup.root",  "Systematics/JECup/MTT_Zprime_500_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_750_Narrow_2012_dataset_%s_JECup.root",  "Systematics/JECup/MTT_Zprime_750_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1000_Narrow_2012_dataset_%s_JECup.root", "Systematics/JECup/MTT_Zprime_1000_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1250_Narrow_2012_dataset_%s_JECup.root", "Systematics/JECup/MTT_Zprime_1250_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1500_Narrow_2012_dataset_%s_JECup.root", "Systematics/JECup/MTT_Zprime_1500_Narrow_full_stat_%s.list"],
 
-    #["MTT_Signal_Zprime_500_Narrow_2012_dataset_%s_JECdown.root",  "Systematics/JECdown/MTT_Zprime_500_Narrow_full_stat_%s.list"],
-    #["MTT_Signal_Zprime_750_Narrow_2012_dataset_%s_JECdown.root",  "Systematics/JECdown/MTT_Zprime_750_Narrow_full_stat_%s.list"],
-    #["MTT_Signal_Zprime_1000_Narrow_2012_dataset_%s_JECdown.root", "Systematics/JECdown/MTT_Zprime_1000_Narrow_full_stat_%s.list"],
-    #["MTT_Signal_Zprime_1250_Narrow_2012_dataset_%s_JECdown.root", "Systematics/JECdown/MTT_Zprime_1250_Narrow_full_stat_%s.list"],
-    #["MTT_Signal_Zprime_1500_Narrow_2012_dataset_%s_JECdown.root", "Systematics/JECdown/MTT_Zprime_1500_Narrow_full_stat_%s.list"]
+    ["MTT_Signal_Zprime_500_Narrow_2012_dataset_%s_JECdown.root",  "Systematics/JECdown/MTT_Zprime_500_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_750_Narrow_2012_dataset_%s_JECdown.root",  "Systematics/JECdown/MTT_Zprime_750_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1000_Narrow_2012_dataset_%s_JECdown.root", "Systematics/JECdown/MTT_Zprime_1000_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1250_Narrow_2012_dataset_%s_JECdown.root", "Systematics/JECdown/MTT_Zprime_1250_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1500_Narrow_2012_dataset_%s_JECdown.root", "Systematics/JECdown/MTT_Zprime_1500_Narrow_full_stat_%s.list"]
 
     ["MTT_Signal_Zprime_500_Large_2012_dataset_%s_JECup.root",  "Systematics/JECup/MTT_Zprime_500_Large_full_stat_%s.list"],
     ["MTT_Signal_Zprime_750_Large_2012_dataset_%s_JECup.root",  "Systematics/JECup/MTT_Zprime_750_Large_full_stat_%s.list"],
@@ -28,6 +28,30 @@ files = [
     ["MTT_Signal_Zprime_1000_Large_2012_dataset_%s_JECdown.root", "Systematics/JECdown/MTT_Zprime_1000_Large_full_stat_%s.list"],
     ["MTT_Signal_Zprime_1250_Large_2012_dataset_%s_JECdown.root", "Systematics/JECdown/MTT_Zprime_1250_Large_full_stat_%s.list"],
     ["MTT_Signal_Zprime_1500_Large_2012_dataset_%s_JECdown.root", "Systematics/JECdown/MTT_Zprime_1500_Large_full_stat_%s.list"]
+
+    ["MTT_Signal_Zprime_500_Narrow_2012_dataset_%s_puUp.root",  "MC/MTT_Zprime_500_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_750_Narrow_2012_dataset_%s_puUp.root",  "MC/MTT_Zprime_750_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1000_Narrow_2012_dataset_%s_puUp.root", "MC/MTT_Zprime_1000_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1250_Narrow_2012_dataset_%s_puUp.root", "MC/MTT_Zprime_1250_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1500_Narrow_2012_dataset_%s_puUp.root", "MC/MTT_Zprime_1500_Narrow_full_stat_%s.list"],
+
+    ["MTT_Signal_Zprime_500_Narrow_2012_dataset_%s_puDown.root",  "MC/MTT_Zprime_500_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_750_Narrow_2012_dataset_%s_puDown.root",  "MC/MTT_Zprime_750_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1000_Narrow_2012_dataset_%s_puDown.root", "MC/MTT_Zprime_1000_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1250_Narrow_2012_dataset_%s_puDown.root", "MC/MTT_Zprime_1250_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1500_Narrow_2012_dataset_%s_puDown.root", "MC/MTT_Zprime_1500_Narrow_full_stat_%s.list"]
+
+    ["MTT_Signal_Zprime_500_Large_2012_dataset_%s_puUp.root",  "MC/MTT_Zprime_500_Large_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_750_Large_2012_dataset_%s_puUp.root",  "MC/MTT_Zprime_750_Large_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1000_Large_2012_dataset_%s_puUp.root", "MC/MTT_Zprime_1000_Large_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1250_Large_2012_dataset_%s_puUp.root", "MC/MTT_Zprime_1250_Large_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1500_Large_2012_dataset_%s_puUp.root", "MC/MTT_Zprime_1500_Large_full_stat_%s.list"],
+
+    ["MTT_Signal_Zprime_500_Large_2012_dataset_%s_puDown.root",  "MC/MTT_Zprime_500_Large_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_750_Large_2012_dataset_%s_puDown.root",  "MC/MTT_Zprime_750_Large_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1000_Large_2012_dataset_%s_puDown.root", "MC/MTT_Zprime_1000_Large_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1250_Large_2012_dataset_%s_puDown.root", "MC/MTT_Zprime_1250_Large_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1500_Large_2012_dataset_%s_puDown.root", "MC/MTT_Zprime_1500_Large_full_stat_%s.list"]
   ]
 
 def launch(input, output):
@@ -36,6 +60,11 @@ def launch(input, output):
     args.append("--type semie")
   elif "semimu" in input:
     args.append("--type semimu")
+
+  if "puUp" in output:
+    args.append("--pileup-syst up")
+  elif "puDown" in output:
+    args.append("--pileup-syst down")
 
   return " ".join(args)
 

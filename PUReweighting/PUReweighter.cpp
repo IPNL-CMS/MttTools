@@ -21,6 +21,8 @@ PUReweighter::PUReweighter(bool isSemiMu, PUProfile profile/* = PUProfile::S10*/
     if (! dataFile) {
       std::cerr << "Error: can't open " << dataFileNameWithSyst << ". No PU reweighting." << std::endl;
       return;
+    } else {
+      std::cout << "Using " << dataFileNameWithSyst << " for PU reweighting" << std::endl;
     }
 
     initPUProfiles();
