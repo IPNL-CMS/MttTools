@@ -8,10 +8,15 @@ enum class PUProfile : uint8_t {
   S10
 };
 
+enum class Systematic : uint8_t {
+  NOMINAL,
+  UP,
+  DOWN
+};
+
 class PUReweighter {
   public:
-    PUReweighter(bool isSemiMu, const std::string& mcName);
-    PUReweighter(bool isSemiMu, PUProfile profile = PUProfile::S10);
+    PUReweighter(bool isSemiMu, PUProfile profile = PUProfile::S10, Systematic syst = Systematic::NOMINAL);
 
     ~PUReweighter() {
       delete puHisto;

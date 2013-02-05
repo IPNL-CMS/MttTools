@@ -3,66 +3,23 @@
 #include <TFile.h>
 #include <iostream>
 
-PUReweighter::PUReweighter(bool isSemiMu, const std::string& mcName):
+PUReweighter::PUReweighter(bool isSemiMu, PUProfile profile/* = PUProfile::S10*/, Systematic syst/* = Systematic::NOMINAL*/):
   puHisto(NULL) {
     const std::string path = "../PUReweighting/";
-    const std::string dataFileName = path + ((isSemiMu) ? "pileup_Muon_full_stat_2012_08Jan13.root" : "pileup_Electron_full_stat_2012_08Jan13.root");
+    const std::string dataFileName = path + ((isSemiMu) ? "pileup_Muon_full_stat_2012_05Feb13_%s.root" : "pileup_Electron_full_stat_2012_05Feb13_%s.root");
 
-    TString mcFileName = TString::Format((path + "summer12_computed_mc_%s_pu_truth_70bins.root").c_str(), mcName.c_str());
+    std::string suffix = "nominal";
+    if (syst == Systematic::UP) {
+      suffix = "puUp";
+    } else if (syst == Systematic::DOWN) {
+      suffix = "puDown";
+    }
 
-    TFile* dataFile = TFile::Open(dataFileName.c_str());
-    TFile* mcFile = TFile::Open(mcFileName);
+    TString dataFileNameWithSyst = TString::Format(dataFileName.c_str(), suffix.c_str());
+    TFile* dataFile = TFile::Open(dataFileNameWithSyst.c_str());
 
     if (! dataFile) {
-      std::cerr << "Error: can't open " << dataFileName << ". No PU reweighting." << std::endl;
-      return;
-    }
-
-    if (! mcFile) {
-      std::cerr << "Error: can't open " << mcFileName << ". No PU reweighting." << std::endl;
-      return;
-    }
-
-    TH1* dataHisto = static_cast<TH1*>(dataFile->Get("pileup"));
-    TH1* mcHisto = static_cast<TH1*>(mcFile->Get("pileup"));
-
-    //TODO: Check for NULL ptr
-
-    // Normalize
-    dataHisto->Scale(1.0 / dataHisto->Integral());
-    mcHisto->Scale(1.0 / mcHisto->Integral());
-
-    // MC * data / MC = data, so the weights are data/MC:
-    puHisto = static_cast<TH1*>(dataHisto->Clone());
-    puHisto->Divide(mcHisto);
-    puHisto->SetDirectory(0); // "detach" the histo from the file
-
-    /*
-    std::cout << " Lumi/Pileup Reweighting: Computed Weights per In-Time Nint " << std::endl;
-
-    int NBins = puHisto->GetNbinsX();
-
-    for (int ibin = 1; ibin < NBins + 1; ++ibin) {
-      std::cout << "   " << ibin - 1 << " " << puHisto->GetBinContent(ibin) << std::endl;
-    }
-    */
-
-    dataFile->Close();
-    mcFile->Close();
-
-    delete dataFile;
-    delete mcFile;
-  }
-
-PUReweighter::PUReweighter(bool isSemiMu, PUProfile profile/* = PUProfile::S10*/):
-  puHisto(NULL) {
-    const std::string path = "../PUReweighting/";
-    const std::string dataFileName = path + ((isSemiMu) ? "pileup_Muon_full_stat_2012_08Jan13.root" : "pileup_Electron_full_stat_2012_08Jan13.root");
-
-    TFile* dataFile = TFile::Open(dataFileName.c_str());
-
-    if (! dataFile) {
-      std::cerr << "Error: can't open " << dataFileName << ". No PU reweighting." << std::endl;
+      std::cerr << "Error: can't open " << dataFileNameWithSyst << ". No PU reweighting." << std::endl;
       return;
     }
 
