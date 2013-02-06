@@ -103,7 +103,7 @@ class Efficiencies {
       selectionEff_mu = 0; selectionEff_e = 0;
 
       mass = m;
-      isInterpolated = (mass != 500 && mass != 750 && mass != 1000 && mass != 1250 && mass != 1500);
+      isInterpolated = (mass != 500 && mass != 750 && mass != 1000 && mass != 1250 && mass != 1500 && mass != 2000);
     }
 
     Efficiencies() {
@@ -178,11 +178,11 @@ int main(int argc, char** argv) {
     bool ignoreInterpolated = !analysisUseInterpolation();
 
     std::map<int, Efficiencies> efficiencies;
-    for (int i = 500; i <= 1500; i += 125) {
+    for (int i = 500; i <= 2000; i += 125) {
       efficiencies[i] = Efficiencies(i);
     }
 
-    const int M[] = {500, 750, 1000, 1250, 1500};
+    const int M[] = {500, 750, 1000, 1250, 1500, 2000};
 
     // HLT efficiencies
     // See https://docs.google.com/spreadsheet/ccc?key=0AsI4zLOlSqcUdHhiYmFKbDIxY3YwWlJHdE9NSVhMSnc
@@ -269,7 +269,7 @@ int main(int argc, char** argv) {
         }
       }
 
-      if (! ignoreInterpolated && i.first != 500) {
+      if (! ignoreInterpolated && i.first != 500 && i.first != 2000) {
         trig_mu.SetPoint(index, i.first, i.second.effTrig_mu);
         trig_mu.SetPointError(index, 0., i.second.error_effTrig_mu);
 
@@ -288,11 +288,11 @@ int main(int argc, char** argv) {
       }
     }
 
-    TF1 triggerEff_fit_mu("sel_eff_fit_mu", "pol1", 750, 1500);
+    TF1 triggerEff_fit_mu("sel_eff_fit_mu", "pol1", 500, 2000);
     TF1* triggerEff_fit_mu_low = (TF1*) triggerEff_fit_mu.Clone("triggerEff_fit_mu_low");
     TF1* triggerEff_fit_mu_high = (TF1*) triggerEff_fit_mu.Clone("triggerEff_fit_mu_high");
 
-    TF1 triggerEff_fit_e("sel_eff_fit_e", "pol1", 750, 1500);
+    TF1 triggerEff_fit_e("sel_eff_fit_e", "pol1", 500, 2000);
     TF1* triggerEff_fit_e_low = (TF1*) triggerEff_fit_e.Clone("triggerEff_fit_e_low");
     TF1* triggerEff_fit_e_high = (TF1*) triggerEff_fit_e.Clone("triggerEff_fit_e_high");
 
@@ -329,12 +329,13 @@ int main(int argc, char** argv) {
       205479,
       195664,
       197349,
+      186658
     };
 
-    float Nsel_mu[5];
-    float ErrNsel_mu[5];
-    float Nsel_e[5];
-    float ErrNsel_e[5];
+    float Nsel_mu[6];
+    float ErrNsel_mu[6];
+    float Nsel_e[6];
+    float ErrNsel_e[6];
     loadSelection(jec, btag, M, Nsel_mu, ErrNsel_mu, Nsel_e, ErrNsel_e);
 
     TGraphErrors e_mu;
@@ -345,11 +346,11 @@ int main(int argc, char** argv) {
     TGraphErrors e_e_low;
     TGraphErrors e_e_high;
 
-    TF1 selectionEff_fit_mu("sel_eff_fit_mu", "pol3", 500, 1500);
+    TF1 selectionEff_fit_mu("sel_eff_fit_mu", "pol3", 500, 2000);
     TF1* selectionEff_fit_mu_low = (TF1*) selectionEff_fit_mu.Clone("sel_eff_fit_mu_low");
     TF1* selectionEff_fit_mu_high = (TF1*) selectionEff_fit_mu.Clone("sel_eff_fit_mu_high");
 
-    TF1 selectionEff_fit_e("sel_eff_fit_e", "pol3", 500, 1500);
+    TF1 selectionEff_fit_e("sel_eff_fit_e", "pol3", 500, 2000);
     TF1* selectionEff_fit_e_low = (TF1*) selectionEff_fit_e.Clone("sel_eff_fit_e_low");
     TF1* selectionEff_fit_e_high = (TF1*) selectionEff_fit_e.Clone("sel_eff_fit_e_high");
 
@@ -422,7 +423,7 @@ int main(int argc, char** argv) {
           eff.error_selectionEff_e = fabs(selectionEff_fit_e_high->Eval(i.first) - selectionEff_fit_e_low->Eval(i.first)) / 2.; 
         }
 
-        if (i.second.isInterpolated || i.first == 500) {
+        if (i.second.isInterpolated || i.first == 500 || it.first == 2000) {
 
           eff.effTrig_mu = triggerEff_fit_mu.Eval(i.first);
           eff.effTrig_e = triggerEff_fit_e.Eval(i.first);

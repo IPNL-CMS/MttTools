@@ -96,6 +96,7 @@ int main(int argc, char** argv) {
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", true, 2, "int");
 
     cmd.add(jecArg);
+    cmd.add(jerArg);
     cmd.add(puArg);
     cmd.add(massArg);
     cmd.add(btagArg);
