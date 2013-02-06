@@ -1208,6 +1208,144 @@ void parseConfigFile(const std::string& filename, /*RooAbsCategoryLValue& catego
   workspace.Print("v");
 }
 
+RooDataSet* binnedToUnbinnedDataset(RooDataHist& in, RooRealVar& observable, RooRealVar& weight, const std::string& name) {
+
+  RooDataSet* ds = new RooDataSet(name.c_str(), name.c_str(), RooArgSet(observable, weight), RooFit::WeightVar(weight));
+  for (int i = 0; i < in.numEntries(); i++) {
+    const RooArgSet* set = in.get(i);
+    ds->add(*set, in.weight(*set));
+  }
+
+  return ds;
+}
+
+RooAbsPdf* getInterpolatedPdf(RooRealVar& observable, double massZprime, const std::string& jec, int btag, const std::string& categoryName, const std::string& suffix = "") {
+
+  // Interpolation
+  int lowMass = 0;
+  int highMass = 0;
+
+  const int ALGO_MOMENT_MORPH = 1;
+  const int ALGO_INTEGRAL_MORPH = 2;
+
+  int algo;
+
+  if (massZprime > 500 && massZprime < 750) {
+    lowMass = 500;
+    highMass = 750;
+    algo = ALGO_INTEGRAL_MORPH;
+  } else if (massZprime > 750 && massZprime < 1000) {
+    lowMass = 750;
+    highMass = 1000;
+    algo = ALGO_MOMENT_MORPH;
+  } else if (massZprime > 1000 && massZprime < 1250) {
+    lowMass = 1000;
+    highMass = 1250;
+    algo = ALGO_MOMENT_MORPH;
+  } else if (massZprime > 1250 && massZprime < 1500) {
+    lowMass = 1250;
+    highMass = 1500;
+    algo = ALGO_MOMENT_MORPH;
+  }/* else if (massZprime > 1500 && massZprime < 2000) {
+      lowMass = 1500;
+      highMass = 2000;
+      }*/
+
+  std::string cleanedCategory = TString(categoryName.c_str()).ReplaceAll(";", "_").ReplaceAll("{", "").ReplaceAll("}", "").ReplaceAll("-", "").Data(); // For workspace names
+
+  algo = ALGO_INTEGRAL_MORPH;
+
+  if (lowMass == 0 || highMass == 0) {
+    std::cout << "Error: please use a mass between 500 and 1500 GeV." << std::endl;
+    return NULL;
+  }
+
+  std::string analysisName = getAnalysisName(BASE_PATH);
+  std::string pdfName = "signal_" + std::string((TString(categoryName.c_str()).Contains("muon", TString::kIgnoreCase) ? "muon" : "electron"));
+  std::string goodSuffix = (suffix.length() == 0) ? cleanedCategory : suffix;
+
+  // Open workspaces and retrieve PDFs
+  TString lowMass_prefix = TString::Format("%s-Zprime%d_%s_%d_btag", jec.c_str(), lowMass, analysisName.c_str(), btag);
+  TString lowMass_workspaceFile = BASE_PATH + "/frit/" + lowMass_prefix + "_workspace.root";
+
+  TString highMass_prefix = TString::Format("%s-Zprime%d_%s_%d_btag", jec.c_str(), highMass, analysisName.c_str(), btag);
+  TString highMass_workspaceFile = BASE_PATH + "/frit/" + highMass_prefix + "_workspace.root";
+
+  TFile lowMass_file(lowMass_workspaceFile);
+  RooAbsPdf* lowMass_pdf = static_cast<RooWorkspace*>(lowMass_file.Get("w"))->pdf(pdfName.c_str());
+  lowMass_pdf->SetName(TString::Format("lowMass_%s", pdfName.c_str()));
+  lowMass_file.Close();
+
+  TFile highMass_file(highMass_workspaceFile);
+  RooAbsPdf* highMass_pdf = static_cast<RooWorkspace*>(highMass_file.Get("w"))->pdf(pdfName.c_str());
+  highMass_pdf->SetName(TString::Format("highMass_%s", pdfName.c_str()));
+  highMass_file.Close();
+
+  double alpha = 0.;
+  if (algo == ALGO_MOMENT_MORPH) {
+    alpha = (double) (massZprime - lowMass) / (double) (highMass - lowMass);
+  } else {
+    alpha = 1. - (double) (massZprime - lowMass) / (double) (highMass - lowMass);
+  }
+
+  RooRealVar* rAlpha = new RooRealVar("alpha", "alpha", alpha, 0, 1);
+
+  //mtt.setBins(5000, "cache");
+  //rAlpha->setBins(1000, "cache");
+  observable.setBins(5000, "cache");
+
+  // Interpolate
+  std::cout << "Interpolate ..." << std::endl;
+
+  RooAbsPdf* interpolation;
+
+  TString temporaryName = TString::Format("interpolation_%s", goodSuffix.c_str());
+
+  if (algo == ALGO_INTEGRAL_MORPH) {
+
+    std::cout << "Using RooIntergralMorph for interpolation" << std::endl;
+    interpolation = new RooIntegralMorph(temporaryName, temporaryName, *lowMass_pdf, *highMass_pdf, observable, *rAlpha, false);
+
+  } else {
+
+    std::cout << "Using RooMomentMorph for interpolation" << std::endl;
+    TVectorD hypoMass(2);
+    hypoMass(0) = 0; 
+    hypoMass(1) = 1;
+
+    interpolation = new RooMomentMorph(temporaryName, temporaryName, *rAlpha, RooArgList(observable), RooArgList(*lowMass_pdf, *highMass_pdf), hypoMass, RooMomentMorph::Linear);
+  }
+
+  std::cout << "Done." << std::endl;
+
+  int oldBinning = observable.getBins();
+  observable.setBins(3000);
+
+  RooDataHist * binnedInterpolatedDataset = new RooDataHist(std::string("binned_dataset_signal_" + goodSuffix).c_str(), "", RooArgSet(observable));
+  interpolation->fillDataHist(binnedInterpolatedDataset, NULL, 1.);
+
+  RooRealVar weight("__weight__", "__weight__", 0, 0, 100000);
+  RooDataSet* unbinned_dataset = binnedToUnbinnedDataset(*binnedInterpolatedDataset, observable, weight, "test");
+
+  RooKeysPdf* keys_pdf = new RooKeysPdf(std::string("signal_" + categoryName).c_str(), "Keys pdf for signal", observable, *unbinned_dataset, RooKeysPdf::MirrorBoth, 1);
+
+  delete unbinned_dataset;
+
+  RooPlot* p = observable.frame();
+  interpolation->plotOn(p);
+  keys_pdf->plotOn(p, RooFit::LineColor(kRed));
+
+  //RooHistPdf* hist_pdf = new RooHistPdf(std::string("signal_" + categoryName).c_str(), std::string("signal_" + categoryName).c_str(), RooArgSet(observable), *binnedInterpolatedDataset);
+
+  //interpolation->SetName(std::string("signal_" + categoryName).c_str());
+  //renameAndSetPdfParametersConst(RooArgSet(observable), *interpolation, (suffix.length() == 0) ? cleanedCategory : suffix);
+  renameAndSetPdfParametersConst(RooArgSet(observable), *keys_pdf, goodSuffix);
+
+  observable.setBins(oldBinning);
+
+  return keys_pdf;
+}
+
 void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string fitConfigurationFile, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground,
     // Background systematics
     const std::string& temporaryResultFile,
@@ -1453,115 +1591,10 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
     } else {
 
-      // Interpolation
-      int lowMass = 0;
-      int highMass = 0;
-
-      const int ALGO_MOMENT_MORPH = 1;
-      const int ALGO_INTEGRAL_MORPH = 2;
-
-      int algo;
-
-      if (massZprime > 500 && massZprime < 750) {
-        lowMass = 500;
-        highMass = 750;
-        algo = ALGO_INTEGRAL_MORPH;
-      } else if (massZprime > 750 && massZprime < 1000) {
-        lowMass = 750;
-        highMass = 1000;
-        algo = ALGO_MOMENT_MORPH;
-      } else if (massZprime > 1000 && massZprime < 1250) {
-        lowMass = 1000;
-        highMass = 1250;
-        algo = ALGO_MOMENT_MORPH;
-      } else if (massZprime > 1250 && massZprime < 1500) {
-        lowMass = 1250;
-        highMass = 1500;
-        algo = ALGO_MOMENT_MORPH;
-      }/* else if (massZprime > 1500 && massZprime < 2000) {
-          lowMass = 1500;
-          highMass = 2000;
-          }*/
-
-      algo = ALGO_INTEGRAL_MORPH;
-
-      if (lowMass == 0 || highMass == 0) {
-        std::cout << "Error: please use a mass between 500 and 1500 GeV." << std::endl;
-        return;
-      }
-
-      // Open workspaces and retrieve PDFs
-      TString lowMass_prefix = TString::Format("%s-Zprime%d_%s_%d_btag", syst_str.c_str(), lowMass, analysisName.c_str(), categoryBTag);
-      TString lowMass_workspaceFile = BASE_PATH + "/frit/" + lowMass_prefix + "_workspace.root";
-
-      TString highMass_prefix = TString::Format("%s-Zprime%d_%s_%d_btag", syst_str.c_str(), highMass, analysisName.c_str(), categoryBTag);
-      TString highMass_workspaceFile = BASE_PATH + "/frit/" + highMass_prefix + "_workspace.root";
-
-      TFile lowMass_file(lowMass_workspaceFile);
-      RooAbsPdf* lowMass_pdf = static_cast<RooWorkspace*>(lowMass_file.Get("w"))->pdf(pdfName.c_str());
-      lowMass_pdf->SetName(TString::Format("lowMass_%s_%s", pdfName.c_str(), category.c_str()));
-      lowMass_file.Close();
-
-      TFile highMass_file(highMass_workspaceFile);
-      RooAbsPdf* highMass_pdf = static_cast<RooWorkspace*>(highMass_file.Get("w"))->pdf(pdfName.c_str());
-      highMass_pdf->SetName(TString::Format("highMass_%s_%s", pdfName.c_str(), category.c_str()));
-      highMass_file.Close();
-
-      double alpha = 0.;
-      if (algo == ALGO_MOMENT_MORPH) {
-        alpha = (double) (massZprime - lowMass) / (double) (highMass - lowMass);
-      } else {
-        alpha = 1. - (double) (massZprime - lowMass) / (double) (highMass - lowMass);
-      }
-
-      RooRealVar rAlpha("alpha", "alpha", alpha, 0, 1);
-
-      mtt.setBins(5000, "cache");
-      rAlpha.setBins(1000, "cache");
-
-      // Interpolate
-      std::cout << "Interpolate ..." << std::endl;
-
-      RooAbsPdf* interpolation;
-
-      if (algo == ALGO_INTEGRAL_MORPH) {
-
-        std::cout << "Using RooIntergralMorph for interpolation" << std::endl;
-        interpolation = new RooIntegralMorph(pdfName.c_str(), pdfName.c_str(), *lowMass_pdf, *highMass_pdf, mtt, rAlpha, false);
-
-      } else {
-
-        std::cout << "Using RooMomentMorph for interpolation" << std::endl;
-        TVectorD hypoMass(2);
-        hypoMass(0) = 0; 
-        hypoMass(1) = 1;
-
-        interpolation = new RooMomentMorph(pdfName.c_str(), pdfName.c_str(), rAlpha, RooArgList(mtt), RooArgList(*lowMass_pdf, *highMass_pdf), hypoMass, RooMomentMorph::Linear);
-      }
-
-      std::cout << "Done." << std::endl;
-
-      interpolation->SetName("__foo__");
-      RooDataHist * binnedInterpolatedDataset = new RooDataHist("blabla", "blabla", RooArgSet(mtt));
-      interpolation->fillDataHist(binnedInterpolatedDataset, NULL, 1.);
-
-      RooHistPdf* hist_pdf = new RooHistPdf(std::string("signal_" + std::string(type->GetName())).c_str(), std::string("signal_" + std::string(type->GetName())).c_str(), RooArgSet(mtt), *binnedInterpolatedDataset);
-
-      renameAndSetPdfParametersConst(RooArgSet(mtt), *hist_pdf, type->GetName());
-      /*
-
-      interpolation->SetName(std::string("signal_" + std::string(type->GetName())).c_str());
-      renameAndSetPdfParametersConst(RooArgSet(mtt), *interpolation, type->GetName());
+      RooAbsPdf* interpolation = getInterpolatedPdf(mtt, massZprime, "nominal", categoryBTag, type->GetName());
       mainWorkspace.import(*interpolation);
 
       signalPdfsFromWorkspace[category] = mainWorkspace.pdf(interpolation->GetName());
-      */
-
-      mainWorkspace.import(*hist_pdf);
-
-      signalPdfsFromWorkspace[category] = mainWorkspace.pdf(hist_pdf->GetName());
-
-
     }
   }
 
