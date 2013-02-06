@@ -1269,6 +1269,35 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
       pdf->SetName(TString::Format("signal_%s_jecDown", workspace_suffix.Data()));
       higgsWorkspace.import(*pdf);
 
+      // Import PU up
+      workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "puUp", massZprime, analysisName.c_str(), extractedBTag);
+      f.reset(TFile::Open(workspaceFile.Data()));
+      pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(name);
+      pdf->SetName(TString::Format("signal_%s_puUp", workspace_suffix.Data()));
+      higgsWorkspace.import(*pdf);
+
+      // Import PU down
+      workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "puDown", massZprime, analysisName.c_str(), extractedBTag);
+      f.reset(TFile::Open(workspaceFile.Data()));
+      pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(name);
+      pdf->SetName(TString::Format("signal_%s_puDown", workspace_suffix.Data()));
+      higgsWorkspace.import(*pdf);
+
+      // Import JER up
+      workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "JERup", massZprime, analysisName.c_str(), extractedBTag);
+      f.reset(TFile::Open(workspaceFile.Data()));
+      pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(name);
+      pdf->SetName(TString::Format("signal_%s_jerUp", workspace_suffix.Data()));
+      higgsWorkspace.import(*pdf);
+
+      // Import JER down
+      workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "JERdown", massZprime, analysisName.c_str(), extractedBTag);
+      f.reset(TFile::Open(workspaceFile.Data()));
+      pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(name);
+      pdf->SetName(TString::Format("signal_%s_jerDown", workspace_suffix.Data()));
+      higgsWorkspace.import(*pdf);
+      
+
     } else {
 
       // Interpolation
