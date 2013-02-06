@@ -591,12 +591,12 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& je
     std::string name = type->GetName();
     
     if (signalPdfs[name]->isExtended()) {
-      saveParameter(massZprime, jecType, btag, name, globalPdfsEvents[name]->getVal(), globalPdfsEvents[name]->getError(), chiSquares[name]);
+      saveParameter(massZprime, systPrefix.Data(), btag, name, globalPdfsEvents[name]->getVal(), globalPdfsEvents[name]->getError(), chiSquares[name]);
     } else {
-      saveParameter(massZprime, jecType, btag, name, globalPdfsParameters[name][0]->getVal(), globalPdfsParameters[name][0]->getError(), chiSquares[name]);
+      saveParameter(massZprime, systPrefix.Data(), btag, name, globalPdfsParameters[name][0]->getVal(), globalPdfsParameters[name][0]->getError(), chiSquares[name]);
     }
   }
-  saveCombinedChiSquare(massZprime, jecType, btag, combinedChi2);
+  saveCombinedChiSquare(massZprime, systPrefix.Data(), btag, combinedChi2);
 
   // Save our signal functions into the workspace
   // We will need it for the fit on data

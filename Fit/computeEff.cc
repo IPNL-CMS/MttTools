@@ -32,7 +32,7 @@ void loadSelection(const std::string& jecType, int btag, const int (&masses)[6],
 
   root = root[getAnalysisUUID()];
 
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 6; i++) {
     const int& mass = masses[i];
 
     std::stringstream ss;
