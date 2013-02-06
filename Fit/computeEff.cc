@@ -17,7 +17,7 @@
 
 std::string base_path = "";
 
-void loadSelection(const std::string& jecType, int btag, const int (&masses)[5], float (&nSelectionMu)[5], float (&errNSelectionMu)[5], float (&nSelectionE)[5], float (&errNSelectionE)[5]) {
+void loadSelection(const std::string& jecType, int btag, const int (&masses)[6], float (&nSelectionMu)[6], float (&errNSelectionMu)[6], float (&nSelectionE)[6], float (&errNSelectionE)[6]) {
 
   Json::Reader reader;
   Json::Value root;
@@ -423,7 +423,7 @@ int main(int argc, char** argv) {
           eff.error_selectionEff_e = fabs(selectionEff_fit_e_high->Eval(i.first) - selectionEff_fit_e_low->Eval(i.first)) / 2.; 
         }
 
-        if (i.second.isInterpolated || i.first == 500 || it.first == 2000) {
+        if (i.second.isInterpolated || i.first == 500 || i.first == 2000) {
 
           eff.effTrig_mu = triggerEff_fit_mu.Eval(i.first);
           eff.effTrig_e = triggerEff_fit_e.Eval(i.first);
