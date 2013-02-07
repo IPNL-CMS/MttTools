@@ -38,7 +38,8 @@ class FAlt : public BaseFunction {
       if (mParameters.size() != 3)
         return false;
 
-      mPdf.reset(new FAltPdf(mName.c_str(), mName.c_str(), observable, *mParameters["a"], *mParameters["b"], *mParameters["c"]));
+      //mPdf.reset(new FAltPdf(mName.c_str(), mName.c_str(), observable, *mParameters["a"], *mParameters["b"], *mParameters["c"]));
+      mPdf.reset(new RooGenericPdf(mName.c_str(), mName.c_str(), "pow((1. - (@0 / 8000.)), @1) / pow((@0 / 8000.), (@2 + @3 * log(@0 / 8000.)))", RooArgList(observable, *mParameters["a"], *mParameters["b"], *mParameters["c"])));
 
       return true;
     }
@@ -72,10 +73,8 @@ class UFO : public BaseFunction {
       if (mParameters.size() != 2)
         return false;
 
-      mPdf.reset(new UFOPdf(mName.c_str(), mName.c_str(), observable, *mParameters["a"], *mParameters["b"]));
-      //mPdf.reset(new RooGenericPdf(mName.c_str(), mName.c_str(), "@3. / (1. + exp((@0 - @1) / @2))", RooArgList(observable, *mParameters["a"], *mParameters["b"], *mParameters["c"])));
-
-      mPdf->forceNumInt(true);
+      //mPdf.reset(new UFOPdf(mName.c_str(), mName.c_str(), observable, *mParameters["a"], *mParameters["b"]));
+      mPdf.reset(new RooGenericPdf(mName.c_str(), mName.c_str(), "1 / (1. + exp((@0 / 8000. - @1) / @2))", RooArgList(observable, *mParameters["a"], *mParameters["b"])));
 
       return true;
     }
