@@ -609,7 +609,7 @@ RooAbsPdf* getInterpolatedPdf(RooRealVar& observable, double massZprime, const s
   RooRealVar weight("__weight__", "__weight__", 0, 0, 100000);
   RooDataSet* unbinned_dataset = binnedToUnbinnedDataset(*binnedInterpolatedDataset, observable, weight, "test");
 
-  RooKeysPdf* keys_pdf = new RooKeysPdf(std::string("signal_" + categoryName).c_str(), "Keys pdf for signal", observable, *unbinned_dataset, RooKeysPdf::MirrorBoth, 1);
+  RooKeysPdf* keys_pdf = new RooKeysPdf(std::string("signal_" + categoryName).c_str(), "Keys pdf for signal", observable, *unbinned_dataset, RooKeysPdf::MirrorBoth, 2);
 
   delete unbinned_dataset;
 
