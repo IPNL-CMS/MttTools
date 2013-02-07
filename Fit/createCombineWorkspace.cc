@@ -614,12 +614,17 @@ RooAbsPdf* getInterpolatedPdf(RooRealVar& observable, double massZprime, const s
   delete unbinned_dataset;
 
   RooPlot* p = observable.frame();
+  
+  lowMass_pdf->plotOn(p, LineStyle(kDashed));
+  highMass_pdf->plotOn(p, LineStyle(kDashed));
   interpolation->plotOn(p);
+
   keys_pdf->plotOn(p, RooFit::LineColor(kRed));
 
   TCanvas c("c");
   p->Draw();
-  c.Print("test.root");
+  TString outputName = TString::Format("interpolation_%s_%d_%s.root", jec.c_str(), (int) massZprime, categoryName.c_str());
+  c.Print(outputName);
 
   //RooHistPdf* hist_pdf = new RooHistPdf(std::string("signal_" + categoryName).c_str(), std::string("signal_" + categoryName).c_str(), RooArgSet(observable), *binnedInterpolatedDataset);
 
