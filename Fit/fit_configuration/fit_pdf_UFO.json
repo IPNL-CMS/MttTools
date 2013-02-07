@@ -1,0 +1,51 @@
+{
+  "{muon;2-btag}": {
+    "background": {
+      "name": "UFO",
+      "parameters": "UFO"
+    }
+  },
+  "{electron;2-btag}": {
+    "background": {
+      "name": "UFO",
+      "parameters": "UFO"
+    }
+  },
+  "{muon;1-btag}": {
+    "background": {
+      "name": "UFO",
+      "parameters": "UFO"
+    }
+  },
+  "{electron;1-btag}": {
+    "background": {
+      "name": "UFO",
+      "parameters": "UFO"
+    }
+  },
+  "{muon;0-btag}": {
+    "background": {
+      "name": "UFO",
+      "parameters": "UFO"
+    }
+  },
+  "{electron;0-btag}": {
+    "background": {
+      "name": "UFO",
+      "parameters": "UFO"
+    }
+  },
+
+  "muon": {
+    "background": {
+      "name": "UFO",
+      "parameters": "UFO"
+    }
+  },
+  "electron": {
+    "background": {
+      "name": "UFO",
+      "parameters": "UFO"
+    }
+  }
+}
