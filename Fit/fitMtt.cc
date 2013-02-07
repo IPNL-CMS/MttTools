@@ -1557,7 +1557,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
     std::string pdfName = "signal_" + std::string((TString(type->GetName()).Contains("muon", TString::kIgnoreCase) ? "muon" : "electron"));
 
-    if (massZprime == 500 || massZprime == 750 || massZprime == 1000 || massZprime == 1250 || massZprime == 1500) {
+    if (massZprime == 500 || massZprime == 750 || massZprime == 1000 || massZprime == 1250 || massZprime == 1500 || massZprime == 2000) {
 
       TString workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), syst_str.c_str(), massZprime, analysisName.c_str(), categoryBTag);
       if (customWorkspaceFile.length() > 0) {

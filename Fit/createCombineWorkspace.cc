@@ -818,7 +818,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
 
     std::string pdfName = "signal_" + std::string((TString(type->GetName()).Contains("muon", TString::kIgnoreCase) ? "muon" : "electron"));
 
-    if (massZprime == 500 || massZprime == 750 || massZprime == 1000 || massZprime == 1250 || massZprime == 1500) {
+    if (massZprime == 500 || massZprime == 750 || massZprime == 1000 || massZprime == 1250 || massZprime == 1500 || massZprime == 2000) {
 
       TString workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "nominal", massZprime, analysisName.c_str(), categoryBTag);
       if (customWorkspaceFile.length() > 0) {
@@ -1251,7 +1251,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
         RooFit::RenameVariable(name, TString::Format("signal_%s", workspace_suffix.Data()))
         );
 
-    if (massZprime == 500 || massZprime == 750 || massZprime == 1000 || massZprime == 1250 || massZprime == 1500) {
+    if (massZprime == 500 || massZprime == 750 || massZprime == 1000 || massZprime == 1250 || massZprime == 1500 || massZprime == 2000) {
 
       name = TString::Format("signal_%s", leptonName.c_str());
 
@@ -1308,6 +1308,26 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
 
       name = TString::Format("signal_%s_jecDown", workspace_suffix.Data());
       pdf = getInterpolatedPdf(mtt, massZprime, "JECdown", extractedBTag, category, name.Data());
+      pdf->SetName(name);
+      higgsWorkspace.import(*pdf);
+
+      name = TString::Format("signal_%s_jerUp", workspace_suffix.Data());
+      pdf = getInterpolatedPdf(mtt, massZprime, "JERup", extractedBTag, category, name.Data());
+      pdf->SetName(name);
+      higgsWorkspace.import(*pdf);
+
+      name = TString::Format("signal_%s_jerDown", workspace_suffix.Data());
+      pdf = getInterpolatedPdf(mtt, massZprime, "JERdown", extractedBTag, category, name.Data());
+      pdf->SetName(name);
+      higgsWorkspace.import(*pdf);
+
+      name = TString::Format("signal_%s_puUp", workspace_suffix.Data());
+      pdf = getInterpolatedPdf(mtt, massZprime, "puUp", extractedBTag, category, name.Data());
+      pdf->SetName(name);
+      higgsWorkspace.import(*pdf);
+
+      name = TString::Format("signal_%s_puDown", workspace_suffix.Data());
+      pdf = getInterpolatedPdf(mtt, massZprime, "puDown", extractedBTag, category, name.Data());
       pdf->SetName(name);
       higgsWorkspace.import(*pdf);
     }
