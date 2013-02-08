@@ -16,10 +16,12 @@ double trigger_scale_factor_electrons = 0.988;
 double trigger_scale_factor_electrons_error = 0.02;
 
 double muonID_scale_factor = 0.99457;
-double muonID_scale_factor_error = 0.00035;
+//double muonID_scale_factor_error = 0.00035;
+double muonID_scale_factor_error = 5.01e-3; // With Systematic error of 0.5%
 
 double muonIso_scale_factor = 0.9975;
-double muonIso_scale_factor_error = 0.0003;
+//double muonIso_scale_factor_error = 0.0003;
+double muonIso_scale_factor_error = 2.02e-3; // With Systematic error of 0.2%
 
 double electron_scale_factor = 0.9820565;
 double electron_scale_factor_error = 0.0030953;
