@@ -51,13 +51,10 @@ void plotOverlaidKeysPdf(int mass, int btag = 2) {
 
   double x1 = 0.55, x2 = 0.85;
   double y1 = 0.65, y2 = 0.87;
-  if (mass == 1500) {
+  if (mass >= 1500) {
     x1 = 0.15;
     x2 = 0.45;
-  } else if (mass == 2000) {
-    x1 = 0.15;
-    x2 = 0.45;
-    y1 = 0.25;
+    y1 = 0.15;
     y2 = y1 + 0.22;
   }
 
