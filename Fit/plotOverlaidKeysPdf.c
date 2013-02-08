@@ -7,10 +7,11 @@ void plotOverlaidKeysPdf(int mass, int btag = 2) {
   mtt->SetTitle("m_{t#bar{t}}");
 
   TString btagTitle = "";
-  if (btag == 1)
-    bTagTitle = "1";
-  else
+  if (btag == 1) {
+    btagTitle = "one";
+  } else {
     btagTitle = "#geq 2";
+  }
 
   TString title = TString::Format("m_{t#bar{t}} - semi-%%s channel, %s b-tagged jets (GeV/c^{2})", btagTitle.Data());
 
@@ -49,14 +50,20 @@ void plotOverlaidKeysPdf(int mass, int btag = 2) {
   TString legendEntryToys = TString::Format("Generated Z' signal (%d GeV)", mass);
 
   double x1 = 0.55, x2 = 0.85;
+  double y1 = 0.65, y2 = 0.87;
   if (mass == 1500) {
     x1 = 0.15;
     x2 = 0.45;
+  } else if (mass == 2000) {
+    x1 = 0.15;
+    x2 = 0.45;
+    y1 = 0.25;
+    y2 = y1 + 0.22;
   }
 
   TString output = TString::Format("keyspdf_overlaid_%d_%d_btag_%%s.pdf", mass, btag);
 
-  TLegend *leg1 = new TLegend(x1, 0.65, x2, 0.87);
+  TLegend *leg1 = new TLegend(x1, y1, x2, y2);
   leg1->SetFillColor(kWhite);
   leg1->SetLineColor(kWhite);
   leg1->SetTextFont(42);
