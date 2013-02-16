@@ -281,8 +281,8 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
     std::string leptonName = TString(category).Contains("muon", TString::kIgnoreCase) ? "muons" : "electrons";
     float binningSize = (observable.getBinning().highBound() - observable.getBinning().lowBound()) / (float) nBins;
 
-    plot->SetXTitle(TString::Format("#font[132]{#font[12]{m_{TT}} (GeV/#font[12]{c}^{2}), %s}", leptonName.c_str()));
-    plot->SetYTitle(TString::Format("#font[132]{Events/(%0.2f GeV/#font[12]{c}^{2})}", binningSize));
+    plot->SetXTitle(TString::Format("#font[132]{#font[12]{M_{t#bar{t}}} (GeV), %s}", leptonName.c_str()));
+    plot->SetYTitle(TString::Format("#font[132]{Events/(%0.0f GeV)}", binningSize));
     plot->SetTitleOffset(1.42, "Y");
     plot->SetNdivisions(505);
 

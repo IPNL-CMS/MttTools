@@ -949,6 +949,8 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, Ro
   int x = std::min(n, 2), y = (int) ceil((float) n / (float) x);
   std::cout << n << " categories. Dividing into " << x << "; " << y << std::endl;
 
+  //x = 4; y = 1;
+
   const float resolution = 50.;
   const int nBinsForHisto = (observable.getMax() - observable.getMin() + 0.5) / resolution;
 
@@ -987,10 +989,11 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, Ro
     subData->plotOn(plot);
 
     if (! drawOnlyData) {
-      simPdfs.plotOn(plot, Slice(categories), ProjWData(*subData), Components(*backgroundPdfs[category]), LineStyle(kDashed), LineColor(kRed), LineWidth(2), Range("FULL"));
 
       if (drawSignal)
-        simPdfs.plotOn(plot, Slice(categories), ProjWData(*subData), LineColor(kBlue), LineWidth(2), Range("FULL"));
+        simPdfs.plotOn(plot, Slice(categories), ProjWData(*subData), LineColor(kBlue), LineWidth(1), Range("FULL"));
+
+      simPdfs.plotOn(plot, Slice(categories), ProjWData(*subData), Components(*backgroundPdfs[category]), LineStyle(kDashed), LineColor(kRed), LineWidth(1), Range("FULL"));
     }
 
     delete subData;
@@ -998,8 +1001,8 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, Ro
     std::string leptonName = TString(category).Contains("muon", TString::kIgnoreCase) ? "muons" : "electrons";
     float binningSize = (observable.getBinning().highBound() - observable.getBinning().lowBound()) / (float) nBinsForHisto;
 
-    plot->SetXTitle(TString::Format("#font[132]{#font[12]{m_{TT}} (GeV/#font[12]{c}^{2}), %s}", leptonName.c_str()));
-    plot->SetYTitle(TString::Format("#font[132]{Events / (%0.2f GeV/#font[12]{c}^{2})}", binningSize));
+    plot->SetXTitle(TString::Format("#font[132]{#font[12]{M_{t#bar{t}}} (GeV), %s}", leptonName.c_str()));
+    plot->SetYTitle(TString::Format("#font[132]{Events / (%0.0f GeV)}", binningSize));
     plot->SetTitleOffset(1.42, "Y");
 
     TLatex t;
@@ -1428,8 +1431,21 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   Float_t minmTT = 550;
   Float_t maxmTT = 2000;
 
-  RooRealVar mtt("mtt", "mtt", minmTT, maxmTT, "GeV/c^2");
+  RooRealVar mtt("mtt", "M_{t#bar{t}}", minmTT, maxmTT, "GeV");
   RooRealVar weight("weight", "weight", 0, 100000);
+
+  Double_t minmTTFit = minmTT + 0.0;
+  Double_t maxmTTFit = maxmTT - 0.0;
+  
+  mtt.setRange(minmTTFit, maxmTTFit);
+
+  mtt.setRange("R1", minmTTFit, massZprime - 50);
+  mtt.setRange("R2", massZprime + 50, maxmTTFit);
+
+  // Set binning to 1 GeV
+  std::cout << mtt.getBins() << std::endl;
+  mtt.setBins((maxmTTFit - minmTTFit) / 4.);
+  mtt.setBins(5000, "cache");
 
   RooCategory lepton_type("lepton_type", "lepton_type");
   lepton_type.defineType("muon", 13);
@@ -1937,7 +1953,8 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     std::cout << "Looking for " << workspaceName << " inside workspace" << std::endl;
     globalPdfs[name] = mainWorkspace.pdf(workspaceName.c_str());
 
-    const RooAbsPdf& pdf = (bkgOnly) ? *backgroundPdfsFromWorkspace[name] : *globalPdfs[name];
+    //const RooAbsPdf& pdf = (bkgOnly) ? *backgroundPdfsFromWorkspace[name] : *globalPdfs[name];
+    const RooAbsPdf& pdf = *globalPdfs[name];
 
     std::cout << "Adding pdf ";
     pdf.Print();
@@ -1945,6 +1962,10 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       
     simPdf.addPdf(pdf, name.c_str());
     simPdfBackgroundOnly.addPdf(*backgroundPdfsFromWorkspace[name], name.c_str());
+  }
+
+  if (bkgOnly) {
+    nSig.setConstant(true);
   }
   
   // Create output folder
@@ -1954,19 +1975,6 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
     OUTPUT_PATH = folderName;
   }
-
-  Double_t minmTTFit = minmTT + 0.0;
-  Double_t maxmTTFit = maxmTT - 0.0;
-  
-  mtt.setRange(minmTTFit, maxmTTFit);
-
-  mtt.setRange("R1", minmTTFit, massZprime - 50);
-  mtt.setRange("R2", massZprime + 50, maxmTTFit);
-
-  // Set binning to 1 GeV
-  std::cout << mtt.getBins() << std::endl;
-  mtt.setBins((maxmTTFit - minmTTFit) / 1.);
-  mtt.setBins(5000, "cache");
 
   if (fit)
   {
@@ -2025,6 +2033,21 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
 
     RooFitResult *fitResult = nullptr;
+
+    //Set range parameters
+
+    // First, fit with background only pdfs
+    fitResult = simPdfBackgroundOnly.fitTo(*datasetToFit, Save(), Optimize(0));
+    fitResult->Print("v");
+    delete fitResult;
+
+    it = mainCategory.typeIterator();
+    type = nullptr;
+    while ((type = static_cast<RooCatType*>(it->Next()))) {
+      TString name = TString::Format("background_%s", type->GetName());
+      RooAbsPdf* pdf = mainWorkspace.pdf(name);
+      setPdfParametersRange(RooArgSet(mtt), *pdf, 10);
+    }
    
     //if (! doBackgroundSyst) {
       std::cout << "Background only ..." << std::endl;
@@ -2032,10 +2055,14 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       // First, fit with background only pdfs
       //simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
       //simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
-      fitResult = simPdfBackgroundOnly.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(1), Minimizer("Minuit2", "migrad"));
+      fitResult = simPdfBackgroundOnly.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(1), Minimizer(
+            "Minuit2", "Migrad")
+      );
 
       fitResult->Print("v");
       delete fitResult;
+
+      drawHistograms(mainCategory, mtt, *dataOrig, simPdf, backgroundPdfsFromWorkspace, btag, saveFigures, std::string(prefix), std::string(suffix) + "_bkg_only", false, true, nullptr);
     //}
     
     /*
@@ -2073,7 +2100,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     // And refit
     //simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
     //simPdf.fitTo(*datasetToFit, Optimize(0), Strategy(2));
-    fitResult = simPdf.fitTo(*datasetToFit, Save(), Optimize(1), Strategy(1), Minimizer("Minuit2", "migrad"));
+    fitResult = simPdf.fitTo(*datasetToFit, Save(), /*Optimize(1), */Strategy(1), Minimizer("Minuit2", "migrad"));
     fitResult->Print("v");
 
     // Correlations between parameters of a same function
