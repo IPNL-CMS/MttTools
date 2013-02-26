@@ -12,14 +12,11 @@ HeadSuf       = h
 #INCLUDES = -I$(ROOFIT_INCLUDE)/ -I$(CMSSW_BASE)/src/JetMETCorrections/GammaJetFilter/bin/ -I$(boost_header_LOC_INCLUDE)
 #INCLUDES = -I$(shell root-config --incdir)
 
-ROOTSYS  ?= ERROR_RootSysIsNotDefined
-
 ROOTCFLAGS = $(shell root-config --cflags)
-ROOTLIBS   = $(shell root-config --libs) -lMinuit -lRooFitCore -lRooFit
+ROOTLIBS   = $(shell root-config --libs)
 
 CXX           = g++
-#CXXFLAGS	    = -O2 -Wall -Werror -fPIC -std=c++0x
-CXXFLAGS	    = -g -Wall -Werror -fPIC -std=c++0x
+CXXFLAGS	    = -O2 -Wall -Werror -fPIC -std=c++0x
 LD			      = g++
 LDFLAGS		    = $(shell root-config --ldflags) -Wl,--as-needed
 SOFLAGS		    = 
@@ -47,7 +44,7 @@ clean:
 	@rm *.o;
 
 extractor2Dataset: extractor2Dataset.o ../PUReweighting/PUReweighter.o
-	$(LD) $(LIBS) $(SOFLAGS) $(LDFLAGS) $+ -o $@
+	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<

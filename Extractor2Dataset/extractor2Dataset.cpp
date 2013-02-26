@@ -30,7 +30,7 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
       {2, new TTree("dataset_2btag", "dataset for at least 2 b-tagged jets") }
   };
 
-  float mtt_afterChi2, pt_1stJet, pt_2ndJet, bestSolChi2;
+  float mtt_afterChi2, pt_1stJet, pt_2ndJet, bestSolChi2, weight;
   int isSel, nBtaggedJets_CSVM;
 
   mtt->SetBranchAddress("mtt_AfterChi2", &mtt_afterChi2, NULL);
@@ -42,6 +42,11 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
     mtt->SetBranchAddress("nBtaggedJets_TCHET", &nBtaggedJets_CSVM, NULL);
   else
     mtt->SetBranchAddress("nBtaggedJets_CSVM", &nBtaggedJets_CSVM, NULL);
+  if (isData)
+    mtt->SetBranchAddress("weight", &weight, NULL);
+  else
+    weight = 1;
+
 
   mtt->SetBranchStatus("*", 0);
   mtt->SetBranchStatus("mtt_AfterChi2", 1);
@@ -53,6 +58,8 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
     mtt->SetBranchStatus("nBtaggedJets_TCHET", 1);
   else
     mtt->SetBranchStatus("nBtaggedJets_CSVM", 1);
+  if (isData)
+    mtt->SetBranchStatus("weight", 1);
 
   float n_trueInteractions;
 
@@ -61,11 +68,11 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
   event->SetBranchStatus("*", 0);
   event->SetBranchStatus("nTrueInteractions", 1);
 
-  float weight;
+  float output_weight;
   int lepton = (type == "semimu") ? 13 : 11;
   for (auto& outputTree: outputTrees) {
     outputTree.second->Branch("mtt", &mtt_afterChi2, "mtt/F");
-    outputTree.second->Branch("weight", &weight, "weight/F");
+    outputTree.second->Branch("weight", &output_weight, "weight/F");
     outputTree.second->Branch("lepton_type", &lepton, "lepton_type/I");
   }
 
@@ -106,9 +113,11 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
       if (max > 0 && selectedEntries[index] >= max)
         continue;
 
-      weight = 1.;
+      output_weight = 1.;
       if (! isData) {
-        weight = puReweigher->weight(n_trueInteractions) * generator_weight;
+        output_weight *= puReweigher->weight(n_trueInteractions) * generator_weight;
+      } else {
+        output_weight *= weight;
       }
 
       outputTrees[index]->Fill();
