@@ -15,17 +15,17 @@ HeadSuf       = h
 ROOTSYS  ?= ERROR_RootSysIsNotDefined
 
 ROOTCFLAGS = $(shell root-config --cflags)
-ROOTLIBS   = $(shell root-config --libs) -lMinuit -lRooFitCore -lRooFit
+ROOTLIBS   = $(shell root-config --libs)
 
 CXX           = g++
-CXXFLAGS	    = -O2 -Wall -Werror -fPIC --std=c++0x
+CXXFLAGS	    = -O2 -Wall -fPIC --std=c++0x
 LD			      = g++
-LDFLAGS		    = $(shell root-config --ldflags) -Wl,--as-needed
+LDFLAGS		    = -fPIC $(shell root-config --ldflags)
 SOFLAGS		    = 
 AR            = ar
 ARFLAGS       = -cq
 
-LDDIR         = $(shell echo "-L" $$LD_LIBRARY_PATH | sed -e 's/:/ -L/g') -L$(ROOFIT_LIBDIR)/ -L../lib/
+LDDIR         = -L$(shell root-config --libdir)
 
 CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/
 LIBS  		    = $(LDDIR) $(ROOTLIBS)# -lAnalysis -lTreeAnalyzer_PhotonJet
@@ -49,7 +49,7 @@ clean:
 	@rm ../PUReweighting/*.o;
 
 process_all: Extractor2Histos.o ../PUReweighting/PUReweighter.o  process_all.o
-	$(LD) $(LIBS) $(SOFLAGS) $(LDFLAGS) $+ -o $@
+	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS) 
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<

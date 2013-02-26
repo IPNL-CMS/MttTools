@@ -112,9 +112,10 @@ void Extractor2Histos::Loop()
     GetEntry(jentry);
 
     double eventWeight = 1.;
-    if (mIsMC)
-    {
+    if (mIsMC) {
       eventWeight *= puReweighter.weight(n_trueInteractions);
+    } else {
+      eventWeight *= m_weight;
     }
 
     hNTrueInt_nosel->Fill(n_trueInteractions, eventWeight);
@@ -370,6 +371,7 @@ void Extractor2Histos::Init()
   SetBranchAddress(fMTT, "mLepTop_AfterChi2andKF", &mLepTop_AfterChi2andKF, &b_mLepTop_AfterChi2andKF);
   SetBranchAddress(fMTT, "mHadTop_AfterChi2andKF", &mHadTop_AfterChi2andKF, &b_mHadTop_AfterChi2andKF);
   //SetBranchAddress(fMTT, "mtt_AfterChi2andKF", &mtt_AfterChi2andKF, &b_mtt_AfterChi2andKF);
+  SetBranchAddress(fMTT, "weight", &m_weight, NULL);
 
   if (fMTT->GetBranch("trigger_passed")) {
     SetBranchAddress(fMTT, "trigger_passed", &m_triggerPassed, NULL);

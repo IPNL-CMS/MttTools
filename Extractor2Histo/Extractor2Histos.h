@@ -117,6 +117,7 @@ class Extractor2Histos {
 
     int             n_vertices;
     float           n_trueInteractions;
+    float           m_weight;
 
     TString         mOutputFile;
     TString         mInputFile;
