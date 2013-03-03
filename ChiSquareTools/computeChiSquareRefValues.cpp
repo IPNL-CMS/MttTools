@@ -480,7 +480,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
               TLorentzVector neutrino = *neutrinoP4;
               KinFit::PzNeutrino(*leptonP4, neutrino, *firstJetP4);
 
-              h_ptSystem_wrong->Fill((neutrino + *leptonP4 + *firstJetP4 + *secondJetP4 + *thirdJetP4 + *fourthJetP4).M());
+              h_ptSystem_wrong->Fill((neutrino + *leptonP4 + *firstJetP4 + *secondJetP4 + *thirdJetP4 + *fourthJetP4).Pt());
 
               double htFrac = firstJetP4->Pt() + secondJetP4->Pt() + thirdJetP4->Pt() + fourthJetP4->Pt();
               double denom = 0;
