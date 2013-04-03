@@ -331,7 +331,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
     }
 
     t.DrawLatex(x_, y_, "#font[42]{CMS preliminary}");
-    t.DrawLatex(x_, y_ - 0.04, TString::Format("#font[42]{%0.2f fb^{-1} at #sqrt{s}=8 TeV}", LUMI));
+    t.DrawLatex(x_, y_ - 0.04, "#font[42]{simulation at #sqrt{s}=8 TeV}");
     t.DrawLatex(x_, y_ - 0.08, legendLabel);
 
     plots.push_back(std::shared_ptr<RooPlot>(plot));
