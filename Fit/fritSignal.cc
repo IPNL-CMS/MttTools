@@ -57,7 +57,7 @@ int FIT_ERROR_LEVEL = -1;
 
 std::string base_path = "";
 
-void fritSignal(TChain* chain, const std::string& jecType, const std::string& jer, const std::string& pu, const std::string& configFile, int massZprime, int btag);
+void fritSignal(TChain* chain, const std::string& jecType, const std::string& jer, const std::string& pu, const std::string& pdf, const std::string& configFile, int massZprime, int btag);
 
 void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {
 
@@ -92,12 +92,14 @@ int main(int argc, char** argv) {
     TCLAP::ValueArg<std::string> jecArg("", "jec", "Run the frit for this specific jec.", false, "nominal", "string");
     TCLAP::ValueArg<std::string> jerArg("", "jer", "Run the frit for this specific jer.", false, "nominal", "string");
     TCLAP::ValueArg<std::string> puArg("", "pileup", "Run the frit for this specific pileup syst.", false, "nominal", "string");
+    TCLAP::ValueArg<std::string> pdfArg("", "pdf", "Run the frit for this specific pdf syst.", false, "nominal", "string");
     TCLAP::ValueArg<int> massArg("m", "mass", "Zprime mass", true, 750, "integer");
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", true, 2, "int");
 
     cmd.add(jecArg);
     cmd.add(jerArg);
     cmd.add(puArg);
+    cmd.add(pdfArg);
     cmd.add(massArg);
     cmd.add(btagArg);
 
@@ -129,17 +131,23 @@ int main(int argc, char** argv) {
       exit(1);
     }
 
+    std::string pdf = pdfArg.getValue();
+    if (pdf != "nominal" && pdf != "up" && pdf != "down") {
+      std::cerr << "--pdf can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
+
     std::string jer = jerArg.getValue();
     if (jer != "nominal" && jer != "up" && jer != "down") {
       std::cerr << "--jer can only be 'nominal', 'up' or 'down'" << std::endl;
       exit(1);
     }
 
-    if (pu != "nominal" && jec != "nominal") {
-      std::cerr << "Please set --pileup and --jec separately" << std::endl;
+    if (pu != "nominal" && jec != "nominal" && pdf != "nominal") {
+      std::cerr << "Please set --pileup, --jec and --pdf separately" << std::endl;
     }
 
-    fritSignal(chain, jec, jer, pu, configFileArg.getValue(), massArg.getValue(), btagArg.getValue());
+    fritSignal(chain, jec, jer, pu, pdf, configFileArg.getValue(), massArg.getValue(), btagArg.getValue());
 
     delete chain;
 
@@ -352,7 +360,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
   std::cout << std::endl;
 }
 
-void fritSignal(TChain* chain, const std::string& jecType, const std::string& jer, const std::string& pu, const std::string& configFile, int massZprime, int btag) {
+void fritSignal(TChain* chain, const std::string& jecType, const std::string& jer, const std::string& pu, const std::string& pdfSyst, const std::string& configFile, int massZprime, int btag) {
 
   std::cout << "[" << getpid() << "] Processing for " << jecType << std::endl;
 
@@ -419,17 +427,22 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& je
   }
 
   TString systPrefix;
-  if (jecType == "nominal" && pu == "nominal" && jer == "nominal")
+  if (jecType == "nominal" && pu == "nominal" && jer == "nominal" && pdfSyst == "nominal")
     systPrefix = "nominal";
   else if (jecType != "nominal")
     systPrefix = jecType.c_str();
   else if (jer != "nominal") {
     systPrefix = TString::Format("JER%s", jer.c_str());
-  } else {
+  } else if (pu != "nominal") {
     if (pu == "up")
       systPrefix = "puUp";
     else
       systPrefix = "puDown";
+  } else if (pdfSyst != "nominal") {
+    if (pdfSyst == "up")
+      systPrefix = "pdfUp";
+    else
+      systPrefix = "pdfDown";
   }
   TString prefix = TString::Format("%s-Zprime%d_%s_%d_btag", systPrefix.Data(), massZprime, analysisName.c_str(), btag);
 
