@@ -20,7 +20,7 @@ bool OVERRIDE_TYPE;
 std::string OVERRIDED_TYPE;
 PUProfile puProfile;
 
-void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight, const std::string& puSyst) {
+void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight, const std::string& puSyst, const std::string& pdfSyst) {
 
   TString outputFileFormated = OVERRIDE_TYPE ? outputFile : TString::Format(outputFile.c_str(), (isData) ? "" : type.c_str());
 
@@ -87,6 +87,13 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
     puReweigher = new PUReweighter(type == "semimu", puProfile, syst);
   }
 
+  std::vector<float>* pdfWeights = NULL;
+  bool doPDFSyst = pdfSyst != "nominal";
+  if (doPDFSyst) {
+    mtt->SetBranchStatus("pdf_weights", 1);
+    mtt->SetBranchAddress("pdf_weights", &pdfWeights);
+  }
+
   int64_t entries = mtt->GetEntries();
 
   std::map<int, int64_t> selectedEntries;
@@ -117,7 +124,28 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
       if (! isData) {
         output_weight *= puReweigher->weight(n_trueInteractions) * generator_weight;
       } else {
-        output_weight *= weight;
+        //output_weight *= weight;
+      }
+
+      if (doPDFSyst) {
+        // 40 pdf systematics
+        double sum = 0;
+        for (int i = 0; i < 20; i++) {
+          int up_index = 2 * i;
+          int down_index = up_index + 1;
+
+          double up = (*pdfWeights)[up_index];
+          double down = (*pdfWeights)[down_index];
+
+          if (pdfSyst == "up") {
+            sum += pow(std::max(std::max(up - 1, down - 1), 0.), 2);
+          } else {
+            sum += pow(std::max(std::max(1 - up, 1 - down), 0.), 2);
+          }
+        }
+
+        double pdf_weight = sqrt(sum);
+        output_weight *= pdf_weight / 1.645;
       }
 
       outputTrees[index]->Fill();
@@ -149,12 +177,12 @@ void loadChain(const std::vector<std::string>& inputFiles, TChain*& mtt, TChain*
   }
 }
 
-void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight, const std::string& puSyst) {
+void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight, const std::string& puSyst, const std::string& pdfSyst) {
 
   TChain* mtt = NULL, *event = NULL;
 
   loadChain(inputFiles, mtt, event);
-  reduce(mtt, event, outputFile, isData, type, max, generator_weight, puSyst);
+  reduce(mtt, event, outputFile, isData, type, max, generator_weight, puSyst, pdfSyst);
 
   delete mtt;
   delete event;
@@ -194,6 +222,8 @@ int main(int argc, char** argv)
     TCLAP::ValueArg<int> maxEntriesArg("n", "", "Maximal number of entries to process", false, -1, "int", cmd);
     TCLAP::ValueArg<double> generatorWeightArg("", "weight", "MC generator weight", false, 1., "double", cmd);
 
+    TCLAP::ValueArg<std::string> pdfSystArg("", "pdf-syst", "PDF systematic to compute", false, "nominal", "string", cmd);
+
     cmd.parse(argc, argv);
 
     std::string p = pileupArg.getValue();
@@ -211,6 +241,13 @@ int main(int argc, char** argv)
       std::cerr << "--pilup-syst can only be 'nominal', 'up' or 'down'" << std::endl;
       exit(1);
     }
+
+    std::string pdfSyst = pdfSystArg.getValue();
+    std::transform(pdfSyst.begin(), pdfSyst.end(), pdfSyst.begin(), ::tolower);
+    if (pdfSyst != "nominal" && pdfSyst != "up" && pdfSyst != "down") {
+      std::cerr << "--pdf-syst can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
     
     bool isData = dataArg.isSet();
 
@@ -221,7 +258,7 @@ int main(int argc, char** argv)
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue(), puSyst); 
+    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue(), puSyst, pdfSyst); 
 
   } catch (TCLAP::ArgException& e) {
     std::cout << e.what() << std::endl;
