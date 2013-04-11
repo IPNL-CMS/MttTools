@@ -966,94 +966,6 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
     selection_systematic_relative_electrons[i] = sqrt(selection_systematic_relative_square_electrons[i]);
   }
 
-  std::cout << "Luminosity: " << Bash::set_color(Bash::Color::MAGENTA) << lumi_mu << " /pb" << Bash::set_color() << std::endl;
-  std::cout << "Reference cross-section: " << Bash::set_color(Bash::Color::MAGENTA) << sigma_ref << " pb" << Bash::set_color() << std::endl;
-  std::cout << "Total efficiency (selection * trigger * SFs): " << std::endl;
-
-  for (int i = minBTag; i <= maxBTag; i++) {
-    std::cout << "\tMuonic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << eff_mu[i] * 100 << " %" << Bash::set_color() << std::endl;
-    std::cout << "\tElectronic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << eff_e[i] * 100 << " %" << Bash::set_color() << std::endl;
-  }
-  std::cout << "Expected number of signal events: " << std::endl;
-
-  for (int i = minBTag; i <= maxBTag; i++) {
-    std::cout << "\tMuonic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << lumi_mu * eff_mu[i] << Bash::set_color() << std::endl;
-    std::cout << "\tElectronic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << lumi_e * eff_e[i] << Bash::set_color() << std::endl;
-  }
-
-  std::cout << "Efficiency systematic: " << std::endl;
-
-  for (int i = minBTag; i <= maxBTag; i++) {
-    std::cout << "\tMuonic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << selection_systematic_relative_muons[i] * 100 << " % (" << 1 + selection_systematic_relative_muons[i] << ")" << Bash::set_color() << std::endl;
-    std::cout << "\tElectronic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << selection_systematic_relative_electrons[i] * 100 << " % (" << 1 + selection_systematic_relative_electrons[i] << ")" << Bash::set_color() << std::endl;
-  }
-
-  std::cout << "Efficiency systematic details: " << std::endl;
-
-  int oldPre = std::cout.precision();
-  std::cout.precision(3);
-  std::cout << "Efficiency (\\%) & log normal";
-  for (int i = minBTag; i <= maxBTag; i++) {
-    std::cout << " & " << selection_systematic_relative_muons[i] * 100 << " & " << selection_systematic_relative_electrons[i] * 100;
-  }
-  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
-
-  std::cout << "~~\\textbullet~Muon ID + iso &";
-  for (int i = minBTag; i <= maxBTag; i++) {
-    std::cout << " & " << sqrt(muonID_scale_factor_relative * muonID_scale_factor_relative + muonIso_scale_factor_relative * muonIso_scale_factor_relative) * 100  << " & -";
-  }
-  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
-  std::cout << "~~\\textbullet~Electron ID + iso &";
-  for (int i = minBTag; i <= maxBTag; i++) {
-    std::cout << " & - & " << sqrt(electron_scale_factor_relative * electron_scale_factor_relative) * 100;
-  }
-  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
-  std::cout << "~~\\textbullet~HLT scale factor &";
-  for (int i = minBTag; i <= maxBTag; i++) {
-    std::cout << " & " << trigger_scale_factor_muons_relative * 100 << " & " << trigger_scale_factor_electrons_relative * 100;
-  }
-  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
-  std::cout << "~~\\textbullet~HLT efficiency &";
-  for (int i = minBTag; i <= maxBTag; i++) {
-    std::cout << " & " << s_hlt_eff_mu[i] * 100 << " & " << s_hlt_eff_e[i] * 100;
-  }
-  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
-  std::cout << "~~\\textbullet~sel. efficiency &";
-  for (int i = minBTag; i <= maxBTag; i++) {
-    std::cout << " & " << s_sel_eff_mu[i] * 100<< " & " << s_sel_eff_e[i] * 100;
-  }
-  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
-  std::cout << "~~\\textbullet~b-tagging scale factor &";
-  for (int i = minBTag; i <= maxBTag; i++) {
-    double a, b;
-    if (i == 1) {
-
-      a = pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_systematic_relative * b_tagging_systematic_relative;
-      b = pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_systematic_relative * b_tagging_systematic_relative;
-
-    } else if (i == 2) {
-
-      a = 2 * b_tagging_systematic_relative * b_tagging_systematic_relative;
-      b = 2 * b_tagging_systematic_relative * b_tagging_systematic_relative;
-
-    }
-
-    std::cout << " & " << sqrt(a) * 100<< " & " << sqrt(b) * 100;
-  }
-  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
-
-  std::cout.precision(oldPre);
-
-  std::cout << "Total systematic errors: ";
-
-  std::cout << Bash::set_color(Bash::Color::MAGENTA);
-
-  std::cout << systematics_error_events << " events ; " << systematics_error_pb << " pb ; " << systematics_error_percent * 100 << " %";
-
-  std::cout << Bash::set_color();
-
-  std::cout << std::endl << std::endl;
-
   /*
   // Output systematics error
   if (! combine) {
@@ -1199,6 +1111,125 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
   //std::shared_ptr<RooAbsData> datasetToFit(dataOrig); // Unbinned likelihood
 
   std::cout << "Dataset entries: " << dataOrig->numEntries() << std::endl;
+
+  std::cout << "Luminosity: " << Bash::set_color(Bash::Color::MAGENTA) << lumi_mu << " /pb" << Bash::set_color() << std::endl;
+  std::cout << "Reference cross-section: " << Bash::set_color(Bash::Color::MAGENTA) << sigma_ref << " pb" << Bash::set_color() << std::endl;
+  std::cout << "Total efficiency (selection * trigger * SFs): " << std::endl;
+
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << "\tMuonic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << eff_mu[i] * 100 << " %" << Bash::set_color() << std::endl;
+    std::cout << "\tElectronic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << eff_e[i] * 100 << " %" << Bash::set_color() << std::endl;
+  }
+  std::cout << "Expected number of signal events: " << std::endl;
+
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << "\tMuonic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << lumi_mu * eff_mu[i] << Bash::set_color() << std::endl;
+    std::cout << "\tElectronic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << lumi_e * eff_e[i] << Bash::set_color() << std::endl;
+  }
+
+  std::cout << "Efficiency systematic: " << std::endl;
+
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << "\tMuonic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << selection_systematic_relative_muons[i] * 100 << " % (" << 1 + selection_systematic_relative_muons[i] << ")" << Bash::set_color() << std::endl;
+    std::cout << "\tElectronic channel, " << i << " b-tag: " << Bash::set_color(Bash::Color::MAGENTA) << selection_systematic_relative_electrons[i] * 100 << " % (" << 1 + selection_systematic_relative_electrons[i] << ")" << Bash::set_color() << std::endl;
+  }
+
+  std::cout << std::endl;
+
+  // Bash code for datacards
+  Roo1DTable* table = dataOrig->table(superCategory);
+  for (int i = minBTag; i <= maxBTag; i++) {
+
+    int index = (i == 1) ? 0 : 2;
+    TString filename = TString::Format("datacard_%d_%dbtag.txt", massZprime, i);
+
+    superCategory.setIndex(index);
+
+    std::cout << "sed -i \"6s/.*/observation ";
+    int nMu = table->get(superCategory.getLabel());
+    std::cout << nMu;
+
+    std::cout << "     ";
+
+    superCategory.setIndex(index + 1);
+    int nE = table->get(superCategory.getLabel());
+    std::cout << nE;
+
+    std::cout << "/\" " << filename.Data() << std::endl;
+
+    std::cout << "sed -i \"13s/.*/rate        ";
+    std::cout << lumi_mu * eff_mu[i] << "   " << nMu << "         " << lumi_e * eff_e[i] << "   " << nE << "/\" " << filename.Data() << std::endl;
+
+    std::cout << "sed -i \"s/eff.*/eff  lnN    ";
+    std::cout <<  1 + selection_systematic_relative_muons[i] << "   -             " << 1 + selection_systematic_relative_electrons[i] << "   -/\" " << filename.Data() << std::endl;
+  }
+
+  std::cout << "Efficiency systematic details: " << std::endl;
+
+  int oldPre = std::cout.precision();
+  std::cout.precision(3);
+  std::cout << "Efficiency (\\%) & log normal";
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << " & " << selection_systematic_relative_muons[i] * 100 << " & " << selection_systematic_relative_electrons[i] * 100;
+  }
+  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
+
+  std::cout << "~~\\textbullet~Muon ID + iso &";
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << " & " << sqrt(muonID_scale_factor_relative * muonID_scale_factor_relative + muonIso_scale_factor_relative * muonIso_scale_factor_relative) * 100  << " & -";
+  }
+  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
+  std::cout << "~~\\textbullet~Electron ID + iso &";
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << " & - & " << sqrt(electron_scale_factor_relative * electron_scale_factor_relative) * 100;
+  }
+  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
+  std::cout << "~~\\textbullet~HLT scale factor &";
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << " & " << trigger_scale_factor_muons_relative * 100 << " & " << trigger_scale_factor_electrons_relative * 100;
+  }
+  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
+  std::cout << "~~\\textbullet~HLT efficiency &";
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << " & " << s_hlt_eff_mu[i] * 100 << " & " << s_hlt_eff_e[i] * 100;
+  }
+  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
+  std::cout << "~~\\textbullet~sel. efficiency &";
+  for (int i = minBTag; i <= maxBTag; i++) {
+    std::cout << " & " << s_sel_eff_mu[i] * 100<< " & " << s_sel_eff_e[i] * 100;
+  }
+  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
+  std::cout << "~~\\textbullet~b-tagging scale factor &";
+  for (int i = minBTag; i <= maxBTag; i++) {
+    double a, b;
+    if (i == 1) {
+
+      a = pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_systematic_relative * b_tagging_systematic_relative;
+      b = pow((1 - 2 * b_tagging_efficiency * b_tagging_scale_factor) / (1 - b_tagging_efficiency * b_tagging_scale_factor), 2) * b_tagging_systematic_relative * b_tagging_systematic_relative;
+
+    } else if (i == 2) {
+
+      a = 2 * b_tagging_systematic_relative * b_tagging_systematic_relative;
+      b = 2 * b_tagging_systematic_relative * b_tagging_systematic_relative;
+
+    }
+
+    std::cout << " & " << sqrt(a) * 100<< " & " << sqrt(b) * 100;
+  }
+  std::cout << "\\\\" << std::endl << "\\hline" << std::endl;
+
+  std::cout.precision(oldPre);
+
+  std::cout << "Total systematic errors: ";
+
+  std::cout << Bash::set_color(Bash::Color::MAGENTA);
+
+  std::cout << systematics_error_events << " events ; " << systematics_error_pb << " pb ; " << systematics_error_percent * 100 << " %";
+
+  std::cout << Bash::set_color();
+
+  std::cout << std::endl << std::endl;
+
 
   // First, fit with background only pdfs
   RooFitResult* fitResult = simPdfBackgroundOnly.fitTo(*datasetToFit, Save(), Optimize(0));
