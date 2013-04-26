@@ -38,6 +38,8 @@ void doPlot(int mass, int btag, int syst) {
     systStr = "jer";
   else if (syst == 3)
     systStr = "pu";
+  else if (syst == 4)
+    systStr = "pdf";
 
   std::cout << systStr << std::endl;
 
@@ -73,6 +75,8 @@ void doPlot(int mass, int btag, int syst) {
     systStrPretty = "JER";
   else if (syst == 3)
     systStrPretty = "PU";
+  else if (syst == 4)
+    systStrPretty = "PDF";
 
   TString legendEntry = TString::Format("Nominal Z' signal (%d GeV)", mass);
   TString legendEntryUp = TString::Format("Z' signal with %s syst. shifted up  (%d GeV)", systStrPretty.Data(), mass);
@@ -117,4 +121,7 @@ void plotShapeSystematics(int mass) {
 
   doPlot(mass, 1, 3);
   doPlot(mass, 2, 3);
+
+  doPlot(mass, 1, 4);
+  doPlot(mass, 2, 4);
 }

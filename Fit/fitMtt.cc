@@ -944,6 +944,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, Ro
     return;
 
   std::vector<std::shared_ptr<RooPlot>> plots;
+  std::vector<std::shared_ptr<TPad>> pads;
 
   int n = categories.numTypes();
   int x = std::min(n, 2), y = (int) ceil((float) n / (float) x);
@@ -973,10 +974,13 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, Ro
   TIterator* it = categories.typeIterator();
   RooCatType* type = nullptr;
   while ((type = static_cast<RooCatType*>(it->Next()))) {
-    canvas->cd(currentPad++);
+    canvas->cd(currentPad);
 
     RooPlot* plot = observable.frame(nBinsForHisto);
+    RooPlot* zoom_plot = observable.frame(nBinsForHisto);
+
     plot->SetTitle(""); //FIXME
+    zoom_plot->SetTitle("");
 
     std::string category = type->GetName();
     std::string cleanedCategory = TString(category).ReplaceAll(";", "_").Data(); // Root does not like ';' in names
@@ -987,13 +991,17 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, Ro
 
     RooDataSet* subData = static_cast<RooDataSet*>(dataset.reduce(cut.c_str()));
     subData->plotOn(plot);
+    subData->plotOn(zoom_plot);
 
     if (! drawOnlyData) {
 
-      if (drawSignal)
+      if (drawSignal) {
         simPdfs.plotOn(plot, Slice(categories), ProjWData(*subData), LineColor(kBlue), LineWidth(1), Range("FULL"));
+        simPdfs.plotOn(zoom_plot, Slice(categories), ProjWData(*subData), LineColor(kBlue), LineWidth(1), Range("FULL"));
+      }
 
       simPdfs.plotOn(plot, Slice(categories), ProjWData(*subData), Components(*backgroundPdfs[category]), LineStyle(kDashed), LineColor(kRed), LineWidth(1), Range("FULL"));
+      simPdfs.plotOn(zoom_plot, Slice(categories), ProjWData(*subData), Components(*backgroundPdfs[category]), LineStyle(kDashed), LineColor(kRed), LineWidth(2), Range("FULL"));
     }
 
     delete subData;
@@ -1014,7 +1022,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, Ro
     gPad->SetLeftMargin(0.17);
     gPad->SetRightMargin(0.050);
 
-    plot->Draw();
+    plot->Draw(); 
 
     // Find number of b-tag
     boost::regex regex("([0-9]+)-btag");
@@ -1024,6 +1032,36 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, Ro
       std::string result(regexResults[1].first, regexResults[2].second);
       btag = atoi(result.c_str());
     }
+
+    TString padName = TString::Format("pad_zoom_%d", currentPad);
+
+    double x1 = 0.18, y1 = 0.14, x2 = 0.57, y2 = 0.52;
+
+    /*
+    if (btag == 2) {
+      x1 += 0.337;
+      x2 += 0.337;
+      y1 += 0.42;
+      y2 += 0.42;
+    }
+    */
+
+    /*
+    TPad* pad = new TPad(padName, "zoom", x1, y1, x2, y2);
+    pad->Draw();
+    pad->cd();
+    pad->SetLogy(true);
+    pad->SetRightMargin(0);
+
+    zoom_plot->SetAxisRange(550, 900, "X");
+    zoom_plot->SetMinimum(1000);
+    zoom_plot->SetTitleSize(0, "X");
+    zoom_plot->SetTitleSize(0, "Y");
+    zoom_plot->Draw();
+    */
+
+    canvas->cd(currentPad);
+
 
     TString btagLabel = "";
     if (btag == 2)
@@ -1035,9 +1073,19 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, Ro
 
     TString legendLabel = TString::Format("#font[42]{%s, #geq 4 jets, %s}", leptonShortcutName.c_str(), btagLabel.Data());
 
-    t.DrawLatex(0.53, 0.88, "#font[42]{CMS preliminary}");
-    t.DrawLatex(0.53, 0.84, TString::Format("#font[42]{%0.2f fb^{-1} at #sqrt{s}=8 TeV}", LUMI));
-    t.DrawLatex(0.53, 0.80, legendLabel);
+    x1 = 0.53;
+    y1 = 0.88;
+
+    /*
+    if (btag == 2) {
+      x1 -= 0.31;
+      y1 -= 0.60;
+    }
+    */
+
+    t.DrawLatex(x1, y1, "#font[42]{CMS preliminary}");
+    t.DrawLatex(x1, y1 - 0.04, TString::Format("#font[42]{%0.2f fb^{-1} at #sqrt{s}=8 TeV}", LUMI));
+    t.DrawLatex(x1, y1 - 2 * 0.04, legendLabel);
 
     if (outputFile) {
       if (drawSignal && !drawOnlyData) {
@@ -1070,6 +1118,8 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, Ro
     }
 
     plots.push_back(std::shared_ptr<RooPlot>(plot));
+
+    currentPad++;
   }
 
   delete table;
@@ -2055,7 +2105,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       // First, fit with background only pdfs
       //simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
       //simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
-      fitResult = simPdfBackgroundOnly.fitTo(*datasetToFit, Save(), Optimize(0), Strategy(1), Minimizer(
+      fitResult = simPdfBackgroundOnly.fitTo(*datasetToFit, Save(),/*, Optimize(0),*/ Strategy(1), Minimizer(
             "Minuit2", "Migrad")
       );
 

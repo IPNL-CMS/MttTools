@@ -1,5 +1,5 @@
 # Which libraries to include
-USERLIBS= $(shell root-config --libs) -lRooFitCore -lRooFit -lFoam -lMinuit -lMathMore
+USERLIBS= $(shell root-config --libs) -lRooFitCore -lRooFit -lFoam -lMinuit
 #USERLIBS= $(shell root-config --libs) -lRooFit
 
 ifdef CMSSW_RELEASE_BASE

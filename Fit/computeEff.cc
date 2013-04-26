@@ -17,7 +17,7 @@
 
 std::string base_path = "";
 
-void loadSelection(const std::string& jecType, int btag, const int (&masses)[6], float (&nSelectionMu)[6], float (&errNSelectionMu)[6], float (&nSelectionE)[6], float (&errNSelectionE)[6]) {
+void loadSelection(const std::string& syst, int btag, const int (&masses)[6], float (&nSelectionMu)[6], float (&errNSelectionMu)[6], float (&nSelectionE)[6], float (&errNSelectionE)[6]) {
 
   Json::Reader reader;
   Json::Value root;
@@ -50,8 +50,8 @@ void loadSelection(const std::string& jecType, int btag, const int (&masses)[6],
 
     Json::Value massNode = root[strMass][btagStr];
 
-    if (! massNode.isMember(jecType)) {
-      std::cerr << "ERROR: '" << jecType << "' not found for m=" << mass << " in JSON file. Setting to 0." << std::endl;
+    if (! massNode.isMember(syst)) {
+      std::cerr << "ERROR: '" << syst << "' not found for m=" << mass << " in JSON file. Setting to 0." << std::endl;
       
       nSelectionMu[i] = 0;
       errNSelectionMu[i] = 0;
@@ -61,13 +61,13 @@ void loadSelection(const std::string& jecType, int btag, const int (&masses)[6],
       continue;
     }
 
-    Json::Value jecNode = massNode[jecType];
+    Json::Value systNode = massNode[syst];
 
-    nSelectionMu[i] = jecNode["muon"]["events"].asDouble();
-    errNSelectionMu[i] = jecNode["muon"]["error"].asDouble();
+    nSelectionMu[i] = systNode["muon"]["events"].asDouble();
+    errNSelectionMu[i] = systNode["muon"]["error"].asDouble();
 
-    nSelectionE[i] = jecNode["electron"]["events"].asDouble();
-    errNSelectionE[i] = jecNode["electron"]["error"].asDouble();
+    nSelectionE[i] = systNode["electron"]["events"].asDouble();
+    errNSelectionE[i] = systNode["electron"]["error"].asDouble();
   }
 }
 
@@ -160,14 +160,47 @@ int main(int argc, char** argv) {
     TCLAP::CmdLine cmd("Compute efficiencies", ' ', "0.1");
 
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", false, 2, "int", cmd);
-    TCLAP::ValueArg<std::string> jecArg("", "jec", "Type of JEC", false, "nominal", "nominal/JECup/JECdown", cmd);
+
+    TCLAP::ValueArg<std::string> jecArg("", "jec", "JEC", false, "nominal", "nominal/JECup/JECdown", cmd);
+    TCLAP::ValueArg<std::string> jerArg("", "jer", "JER", false, "nominal", "nominal/JECup/JECdown", cmd);
+    TCLAP::ValueArg<std::string> puArg("", "pu", "PU", false, "nominal", "nominal/JECup/JECdown", cmd);
+    TCLAP::ValueArg<std::string> pdfArg("", "pdf", "PDF", false, "nominal", "nominal/JECup/JECdown", cmd);
 
     // TCLAP::SwitchArg ignoreInterpolatedArg("", "ignore-interpolated", "Ignore interpolated mass for extrapolation", cmd, false);
 
     cmd.parse(argc, argv);
 
     int btag = btagArg.getValue();
+
     std::string jec = jecArg.getValue();
+    std::string jer = jerArg.getValue();
+    std::string pu = puArg.getValue();
+    std::string pdf = pdfArg.getValue();
+
+    std::string syst = "nominal";
+    if (jec != "nominal" || jer != "nominal" || pu != "nominal" || pdf != "nominal") {
+      if (jec != "nominal") {
+        if (jec == "up")
+          syst = "JECup";
+        else
+          syst = "JECdown";
+      } else if (jer != "nominal") {
+        if (jer == "up")
+          syst = "JERup";
+        else
+          syst = "JERdown";
+      } else if (pu != "nominal") {
+        if (pu == "up")
+          syst = "puUp";
+        else
+          syst = "puDown";
+      } else if (pdf != "nominal") {
+        if (pdf == "up")
+          syst = "pdfUp";
+        else
+          syst = "pdfDown";
+      }
+    }
 
     std::stringstream stream;
     stream << btag;
@@ -324,19 +357,19 @@ int main(int argc, char** argv) {
 
     //--- selection efficiencies
     const float N0[] = {
-      237512,
-      216768,
-      205479,
-      195664,
+      238028,
+      217629,
+      206846,
+      197422,
       197349,
-      186658
+      189522
     };
 
     float Nsel_mu[6];
     float ErrNsel_mu[6];
     float Nsel_e[6];
     float ErrNsel_e[6];
-    loadSelection(jec, btag, M, Nsel_mu, ErrNsel_mu, Nsel_e, ErrNsel_e);
+    loadSelection(syst, btag, M, Nsel_mu, ErrNsel_mu, Nsel_e, ErrNsel_e);
 
     TGraphErrors e_mu;
     TGraphErrors e_mu_low;
@@ -346,11 +379,11 @@ int main(int argc, char** argv) {
     TGraphErrors e_e_low;
     TGraphErrors e_e_high;
 
-    TF1 selectionEff_fit_mu("sel_eff_fit_mu", "pol3", 500, 2000);
+    TF1 selectionEff_fit_mu("sel_eff_fit_mu", "pol3", 750, 2000);
     TF1* selectionEff_fit_mu_low = (TF1*) selectionEff_fit_mu.Clone("sel_eff_fit_mu_low");
     TF1* selectionEff_fit_mu_high = (TF1*) selectionEff_fit_mu.Clone("sel_eff_fit_mu_high");
 
-    TF1 selectionEff_fit_e("sel_eff_fit_e", "pol3", 500, 2000);
+    TF1 selectionEff_fit_e("sel_eff_fit_e", "pol3", 750, 2000);
     TF1* selectionEff_fit_e_low = (TF1*) selectionEff_fit_e.Clone("sel_eff_fit_e_low");
     TF1* selectionEff_fit_e_high = (TF1*) selectionEff_fit_e.Clone("sel_eff_fit_e_high");
 
@@ -367,7 +400,7 @@ int main(int argc, char** argv) {
         eff.error_selectionEff_mu = ErrNsel_mu[index] / N0[index];
         eff.error_selectionEff_e = ErrNsel_e[index] / N0[index];
 
-        if (! ignoreInterpolated) {
+        if (! ignoreInterpolated && i.first != 500) {
           e_mu.SetPoint(index, i.first, i.second.selectionEff_mu);
           e_mu.SetPointError(index, 0, i.second.error_selectionEff_mu);
 
@@ -446,7 +479,7 @@ int main(int argc, char** argv) {
       ss << i.first;
       std::string mass = ss.str();
 
-      root[getAnalysisUUID()][mass][btagStr][jec] = i.second.getAsJSON();
+      root[getAnalysisUUID()][mass][btagStr][syst] = i.second.getAsJSON();
       std::cout << i.second << std::endl;
       std::cout << std::endl;
     }
@@ -457,7 +490,7 @@ int main(int argc, char** argv) {
     output.close();
     std::cout << "Efficiencies saved as 'efficiences.json'" << std::endl;
 
-    if (jec == "nominal") {
+    if (jec == "nominal" && pu == "nominal" && jer == "nominal" && pdf == "nominal") {
       TString noteFilename = TString::Format("%s/efficiencies_table_%s_%d_btag.tex", base_path.c_str(), getAnalysisName().c_str(), btagArg.getValue());
 
       // table latex pour la note :

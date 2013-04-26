@@ -200,7 +200,7 @@ int main(int argc, char** argv)
 }
 
 void loadEfficiencies(int mass, const std::string& jecType, int btag, double& a, double& b, double& c, double& d, double& e,
-    double& f, double& g, double& h)
+    double& f, double& g, double& h, bool silent = false)
 {
 
   std::string path = (BASE_PATH + EFF_FILE);
@@ -256,7 +256,8 @@ void loadEfficiencies(int mass, const std::string& jecType, int btag, double& a,
   g = effNode[6].asDouble();
   h = effNode[7].asDouble();
 
-  std::cout << "Efficiencies loaded successfully for " << mass << ":" << jecType << std::endl;
+  if (! silent)
+    std::cout << "Efficiencies loaded successfully for " << mass << ":" << jecType << std::endl;
 }
 
 void loadSigmaRef(int mass, int btag, double& sigma)
@@ -1163,6 +1164,74 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
     std::cout << "sed -i \"s/eff.*/eff  lnN    ";
     std::cout <<  1 + selection_systematic_relative_muons[i] << "   -             " << 1 + selection_systematic_relative_electrons[i] << "   -/\" " << filename.Data() << std::endl;
   }
+
+  std::cout << std::endl << "--- Bash code for systematics datacards ---" << std::endl;
+
+  std::vector<std::string> systematics = {"jecUp", "jecDown", "jerUp", "jerDown", "puUp", "puDown", "pdfUp", "pdfDown"};
+  std::vector<std::string> systematicsName = {"JECup", "JECdown", "JERup", "JERdown", "puUp", "puDown", "pdfUp", "pdfDown"};
+
+  int index_syst = -1;
+  for (const std::string& syst: systematics) {
+    index_syst++;
+
+    std::map<int, double> sel_eff_mu_syst; // Selection efficiency in semi-mu channel for each b-tag
+    std::map<int, double> sel_eff_e_syst; // Selection efficiency in semi-e channel for each b-tag
+
+    std::map<int, double> hlt_eff_mu_syst; // HLT efficiency in semi-mu channel for each b-tag
+    std::map<int, double> hlt_eff_e_syst; // HLT efficiency in semi-e channel for each b-tag
+
+    std::map<int, double> s_sel_eff_mu_syst; // = Δ(nSig_mu) / nSig_mu ; relative error
+    std::map<int, double> s_sel_eff_e_syst;
+
+    std::map<int, double> s_hlt_eff_mu_syst; // ?
+    std::map<int, double> s_hlt_eff_e_syst; // ?
+
+    // Get efficiency for systematic
+    std::map<int, double> eff_mu_syst;
+    std::map<int, double> eff_e_syst;
+
+    for (int i = minBTag; i <= maxBTag; i++) {
+
+      loadEfficiencies(massZprime, systematicsName[index_syst], i, sel_eff_mu_syst[i], sel_eff_e_syst[i], hlt_eff_mu_syst[i], hlt_eff_e_syst[i], s_sel_eff_mu_syst[i], s_sel_eff_e_syst[i], s_hlt_eff_mu_syst[i], s_hlt_eff_e_syst[i], true);
+    
+    }
+
+    eff_mu_syst[1] = computeEfficiencyMuons_1btag(sel_eff_mu_syst[1], hlt_eff_mu_syst[1]);
+    eff_e_syst[1]  = computeEfficiencyElectrons_1btag(sel_eff_e_syst[1], hlt_eff_e_syst[1]);
+
+    eff_mu_syst[2] = computeEfficiencyMuons_2btag(sel_eff_mu_syst[2], hlt_eff_mu_syst[2]);
+    eff_e_syst[2]  = computeEfficiencyElectrons_2btag(sel_eff_e_syst[2], hlt_eff_e_syst[2]);
+
+    std::vector<double> rates_signal;
+    std::vector<double> rates_bkg;
+
+    for (int i = minBTag; i <= maxBTag; i++) {
+
+      int index = (i == 1) ? 0 : 2;
+
+      superCategory.setIndex(index);
+      int nMu = table->get(superCategory.getLabel());
+      rates_bkg.push_back(nMu);
+
+      superCategory.setIndex(index + 1);
+      int nE = table->get(superCategory.getLabel());
+      rates_bkg.push_back(nE);
+
+      rates_signal.push_back(lumi_mu * eff_mu_syst[i]);
+      rates_signal.push_back(lumi_e * eff_e_syst[i]);
+    }
+
+    TString filename = TString::Format("datacard_%d_1+2btag_%s.txt", massZprime, syst.c_str());
+    // rate                            338.7670    34595.0000  329.8970    33136.0000  306.8130    22908.0000  287.9590    20387.0000
+    std::cout << "sed -i \"25s/.*/rate        " << rates_signal[0] << "    " << rates_bkg[0]
+                                        << "  " << rates_signal[1] << "    " << rates_bkg[1]
+                                        << "  " << rates_signal[2] << "    " << rates_bkg[2]
+                                        << "  " << rates_signal[3] << "    " << rates_bkg[3] << "/\" " << filename.Data() << std::endl;
+
+  }
+
+  std::cout << std::endl;
+  delete table;
 
   std::cout << "Efficiency systematic details: " << std::endl;
 
