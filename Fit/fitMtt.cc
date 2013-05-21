@@ -136,7 +136,7 @@ void saveTemporaryResult(const std::string& outputFile, double result) {
   file.close();
 }
 
-void fitMtt(std::map<int, TChain*> chains, int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground,
+void fitMtt(std::map<int, TChain*> chains, int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground, bool saveWorkspace,
     // Background systematics
     const std::string& temporaryResultFile,
     bool doBackgroundSyst, const std::string& backgroundParameterName, double backgroundParameterValue
@@ -245,6 +245,8 @@ int main(int argc, char** argv)
     // Fix background
     TCLAP::SwitchArg fixBackgroundArg("", "fix-background", "Fit once with background only, then fix the background and refit background + signal", cmd);
 
+    TCLAP::SwitchArg saveWorkspaceArg("", "save-workspace", "Save the workspace for redoing plot after", cmd);
+
     // New background syst calculation
     TCLAP::ValueArg<std::string> backgroundParameterNameArg("", "bkg-parameter-name", "The background parameter name to vary", false, "", "string", cmd);
     TCLAP::ValueArg<double> backgroundParameterValueArg("", "bkg-parameter-value", "The background parameter value", false, 0., "double", cmd);
@@ -290,7 +292,7 @@ int main(int argc, char** argv)
 
     bool doBackgroundSyst = backgroundParameterNameArg.isSet() && backgroundParameterValueArg.isSet() && temporaryResultFileArg.isSet();
 
-    fitMtt(chains, massArg.getValue(), fitArg.getValue(), fitConfigFileArg.getValue(), doLikScanArg.getValue(), writeRootArg.getValue(), saveFiguresArg.getValue(), doLimitCurveArg.getValue(), nToyArg.getValue(), doLikInToyArg.getValue(), indexArg.getValue(), systArg.getValue(), systSignArg.getValue(), systCBArg.getValue(), bkgOnlyArg.getValue(), onlyMuonArg.getValue(), btagArg.getValue(), useSharedMemoryArg.getValue(), sharedMemoryKeyArg.getValue(), workspaceArg.getValue(), fixBackgroundArg.getValue(),
+    fitMtt(chains, massArg.getValue(), fitArg.getValue(), fitConfigFileArg.getValue(), doLikScanArg.getValue(), writeRootArg.getValue(), saveFiguresArg.getValue(), doLimitCurveArg.getValue(), nToyArg.getValue(), doLikInToyArg.getValue(), indexArg.getValue(), systArg.getValue(), systSignArg.getValue(), systCBArg.getValue(), bkgOnlyArg.getValue(), onlyMuonArg.getValue(), btagArg.getValue(), useSharedMemoryArg.getValue(), sharedMemoryKeyArg.getValue(), workspaceArg.getValue(), fixBackgroundArg.getValue(), saveWorkspaceArg.getValue(),
         // Background systematics
         temporaryResultFileArg.getValue(),
         doBackgroundSyst, backgroundParameterNameArg.getValue(), backgroundParameterValueArg.getValue()
@@ -1399,7 +1401,7 @@ RooAbsPdf* getInterpolatedPdf(RooRealVar& observable, double massZprime, const s
   return keys_pdf;
 }
 
-void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string fitConfigurationFile, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground,
+void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string fitConfigurationFile, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground, bool saveWorkspace,
     // Background systematics
     const std::string& temporaryResultFile,
     bool doBackgroundSyst, const std::string& backgroundParameterName, double backgroundParameterValue
@@ -2086,7 +2088,8 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
     //Set range parameters
 
-    // First, fit with background only pdfs
+    /*
+    // Do a baground only fit, and limit parameters to +/- 10 sigmas
     fitResult = simPdfBackgroundOnly.fitTo(*datasetToFit, Save(), Optimize(0));
     fitResult->Print("v");
     delete fitResult;
@@ -2098,6 +2101,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       RooAbsPdf* pdf = mainWorkspace.pdf(name);
       setPdfParametersRange(RooArgSet(mtt), *pdf, 10);
     }
+    */
    
     //if (! doBackgroundSyst) {
       std::cout << "Background only ..." << std::endl;
@@ -2174,7 +2178,187 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     */
 
     std::cout << "Done." << std::endl;
+    
+    if (saveWorkspace) {
+      // Save fitted pdf and datasets in order to redo some plots
+      RooWorkspace higgsWorkspace("w");
 
+      it = mainCategory.typeIterator();
+      type = nullptr;
+      while ((type = static_cast<RooCatType*>(it->Next()))) {
+
+        std::string category = type->GetName();
+        std::string cleanedCategory = TString(type->GetName()).ReplaceAll(";", "_").ReplaceAll("{", "").ReplaceAll("}", "").ReplaceAll("-", "").Data(); // For workspace names
+
+        mainCategory = category.c_str();
+        std::string cut = buildCutFormula(mainCategory);
+        std::cout << "Cut: " << cut << std::endl;
+
+        std::string workspaceName = "global_pdf_" + cleanedCategory;
+
+        std::string leptonName = TString(category).Contains("muon", TString::kIgnoreCase) ? "muon" : "electron";
+        std::string leptonNameShort = TString(category).Contains("muon", TString::kIgnoreCase) ? "mu" : "e";
+        static boost::regex regex("([0-9]+)-btag");
+        boost::smatch regexResults;
+
+        int extractedBTag = -1;
+        if (boost::regex_search(category, regexResults, regex)) {
+          std::string result(regexResults[1].first, regexResults[2].second);
+          extractedBTag = atoi(result.c_str());
+        }
+        if (extractedBTag < 0)
+          extractedBTag = btag;
+
+        TString workspace_suffix = TString::Format("%s_%db", leptonNameShort.c_str(), extractedBTag);
+
+        RooAbsData* dataset_reduced = datasetToFit->reduce(RooArgSet(mtt), cut.c_str());
+        higgsWorkspace.import(*dataset_reduced, RooFit::Rename(TString::Format("data_obs_%s", workspace_suffix.Data())));
+
+        TString name = TString::Format("n_signal_%s", category.c_str());
+
+        // Get number of fitted signal events
+        RooAddPdf* globalPdf = dynamic_cast<RooAddPdf*>(mainWorkspace.pdf(workspaceName.c_str()));
+        higgsWorkspace.import(
+            *globalPdf,
+            RooFit::RecycleConflictNodes(),
+            RooFit::RenameVariable(workspaceName.c_str(), TString::Format("global_pdf_%s", workspace_suffix.Data()))
+            );
+
+        RooAbsPdf* pdf = NULL;
+        /*
+        // Import background
+        name = TString::Format("background_%s", category.c_str());
+        RooAbsPdf* pdf = mainWorkspace.pdf(name);
+        setPdfParametersRange(RooArgSet(mtt), *pdf, 10);
+        higgsWorkspace.import(
+         *pdf,
+         RooFit::RenameVariable(name, TString::Format("background_%s", workspace_suffix.Data()))
+         );
+
+        // Import signal
+        name = TString::Format("signal_%s", category.c_str());
+        pdf = mainWorkspace.pdf(name);
+        setPdfParametersRange(RooArgSet(mtt), *pdf, 10);
+        higgsWorkspace.import(
+         *pdf,
+         RooFit::RenameVariable(name, TString::Format("signal_%s", workspace_suffix.Data()))
+         );
+         */
+
+
+        if (massZprime == 500 || massZprime == 750 || massZprime == 1000 || massZprime == 1250 || massZprime == 1500 || massZprime == 2000) {
+
+          name = TString::Format("signal_%s", leptonName.c_str());
+
+          // Import JEC up
+          TString workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "JECup", massZprime, analysisName.c_str(), extractedBTag);
+          std::shared_ptr<TFile> f(TFile::Open(workspaceFile.Data()));
+          pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(name);
+          pdf->SetName(TString::Format("signal_%s_jecUp", workspace_suffix.Data()));
+          higgsWorkspace.import(*pdf);
+
+          // Import JEC down
+          workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "JECdown", massZprime, analysisName.c_str(), extractedBTag);
+          f.reset(TFile::Open(workspaceFile.Data()));
+          pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(name);
+          pdf->SetName(TString::Format("signal_%s_jecDown", workspace_suffix.Data()));
+          higgsWorkspace.import(*pdf);
+
+          // Import PU up
+          workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "puUp", massZprime, analysisName.c_str(), extractedBTag);
+          f.reset(TFile::Open(workspaceFile.Data()));
+          pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(name);
+          pdf->SetName(TString::Format("signal_%s_puUp", workspace_suffix.Data()));
+          higgsWorkspace.import(*pdf);
+
+          // Import PU down
+          workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "puDown", massZprime, analysisName.c_str(), extractedBTag);
+          f.reset(TFile::Open(workspaceFile.Data()));
+          pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(name);
+          pdf->SetName(TString::Format("signal_%s_puDown", workspace_suffix.Data()));
+          higgsWorkspace.import(*pdf);
+
+          // Import JER up
+          workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "JERup", massZprime, analysisName.c_str(), extractedBTag);
+          f.reset(TFile::Open(workspaceFile.Data()));
+          pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(name);
+          pdf->SetName(TString::Format("signal_%s_jerUp", workspace_suffix.Data()));
+          higgsWorkspace.import(*pdf);
+
+          // Import JER down
+          workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "JERdown", massZprime, analysisName.c_str(), extractedBTag);
+          f.reset(TFile::Open(workspaceFile.Data()));
+          pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(name);
+          pdf->SetName(TString::Format("signal_%s_jerDown", workspace_suffix.Data()));
+          higgsWorkspace.import(*pdf);
+
+          // Import PDF up
+          workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "pdfUp", massZprime, analysisName.c_str(), extractedBTag);
+          f.reset(TFile::Open(workspaceFile.Data()));
+          pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(name);
+          pdf->SetName(TString::Format("signal_%s_pdfUp", workspace_suffix.Data()));
+          higgsWorkspace.import(*pdf);
+
+          // Import PDF down
+          workspaceFile = TString::Format("%s/frit/%s-Zprime%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), "pdfDown", massZprime, analysisName.c_str(), extractedBTag);
+          f.reset(TFile::Open(workspaceFile.Data()));
+          pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(name);
+          pdf->SetName(TString::Format("signal_%s_pdfDown", workspace_suffix.Data()));
+          higgsWorkspace.import(*pdf);
+
+
+        } else {
+
+          // Interpolation
+          name = TString::Format("signal_%s_jecUp", workspace_suffix.Data());
+          pdf = getInterpolatedPdf(mtt, massZprime, "JECup", extractedBTag, category, name.Data());
+          pdf->SetName(name);
+          higgsWorkspace.import(*pdf);
+
+          name = TString::Format("signal_%s_jecDown", workspace_suffix.Data());
+          pdf = getInterpolatedPdf(mtt, massZprime, "JECdown", extractedBTag, category, name.Data());
+          pdf->SetName(name);
+          higgsWorkspace.import(*pdf);
+
+          name = TString::Format("signal_%s_jerUp", workspace_suffix.Data());
+          pdf = getInterpolatedPdf(mtt, massZprime, "JERup", extractedBTag, category, name.Data());
+          pdf->SetName(name);
+          higgsWorkspace.import(*pdf);
+
+          name = TString::Format("signal_%s_jerDown", workspace_suffix.Data());
+          pdf = getInterpolatedPdf(mtt, massZprime, "JERdown", extractedBTag, category, name.Data());
+          pdf->SetName(name);
+          higgsWorkspace.import(*pdf);
+
+          name = TString::Format("signal_%s_puUp", workspace_suffix.Data());
+          pdf = getInterpolatedPdf(mtt, massZprime, "puUp", extractedBTag, category, name.Data());
+          pdf->SetName(name);
+          higgsWorkspace.import(*pdf);
+
+          name = TString::Format("signal_%s_puDown", workspace_suffix.Data());
+          pdf = getInterpolatedPdf(mtt, massZprime, "puDown", extractedBTag, category, name.Data());
+          pdf->SetName(name);
+          higgsWorkspace.import(*pdf);
+
+          name = TString::Format("signal_%s_pdfUp", workspace_suffix.Data());
+          pdf = getInterpolatedPdf(mtt, massZprime, "pdfUp", extractedBTag, category, name.Data());
+          pdf->SetName(name);
+          higgsWorkspace.import(*pdf);
+
+          name = TString::Format("signal_%s_pdfDown", workspace_suffix.Data());
+          pdf = getInterpolatedPdf(mtt, massZprime, "pdfDown", extractedBTag, category, name.Data());
+          pdf->SetName(name);
+          higgsWorkspace.import(*pdf);
+        }
+      }
+
+      TString outputFileName = TString::Format("zprime_%d_workspace_after_fit.root", massZprime);
+      //if (outputFile.length() > 0)
+      //outputFileName = outputFile;
+
+      higgsWorkspace.writeToFile(outputFileName);
+    }
+    
     drawHistograms(mainCategory, mtt, *dataOrig, simPdf, backgroundPdfsFromWorkspace, btag, saveFigures, std::string(prefix), std::string(suffix), !bkgOnly, true, outputFile);
 
     if (SAVE_SIGMA) {

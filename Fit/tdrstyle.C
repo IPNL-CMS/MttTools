@@ -91,7 +91,7 @@ void setTDRStyle() {
 // For the Global title:
 
   tdrStyle->SetOptTitle(0);
-  tdrStyle->SetTitleFont(42);
+  tdrStyle->SetTitleFont(62);
   tdrStyle->SetTitleColor(1);
   tdrStyle->SetTitleTextColor(1);
   tdrStyle->SetTitleFillColor(10);
