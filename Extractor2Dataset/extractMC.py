@@ -6,17 +6,26 @@ import os, subprocess, tempfile, datetime
 d = datetime.datetime.now().strftime("%d%b%y")
 
 files = [
-    #["MTT_Signal_Zprime_500_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_500_Narrow_full_stat_%s.list"],
-    #["MTT_Signal_Zprime_750_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_750_Narrow_full_stat_%s.list"],
-    #["MTT_Signal_Zprime_1000_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_1000_Narrow_full_stat_%s.list"],
-    #["MTT_Signal_Zprime_1250_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_1250_Narrow_full_stat_%s.list"],
-    #["MTT_Signal_Zprime_1500_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_1500_Narrow_full_stat_%s.list"]
+    ["MTT_Signal_Zprime_500_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_500_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_750_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_750_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1000_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_1000_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1250_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_1250_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_1500_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_1500_Narrow_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_2000_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_2000_Narrow_full_stat_%s.list"],
 
     ["MTT_Signal_Zprime_500_Large_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_500_Large_full_stat_%s.list"],
     ["MTT_Signal_Zprime_750_Large_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_750_Large_full_stat_%s.list"],
     ["MTT_Signal_Zprime_1000_Large_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_1000_Large_full_stat_%s.list"],
     ["MTT_Signal_Zprime_1250_Large_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_1250_Large_full_stat_%s.list"],
-    ["MTT_Signal_Zprime_1500_Large_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_1500_Large_full_stat_%s.list"]
+    ["MTT_Signal_Zprime_1500_Large_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_1500_Large_full_stat_%s.list"],
+    ["MTT_Signal_Zprime_2000_Large_2012_dataset_%s_nominal.root", "MC/MTT_Zprime_2000_Large_full_stat_%s.list"],
+
+    # KK Gluons
+    ["MTT_Signal_Zprime_750_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_RSGluon700_02Mar13_%s.list"],
+    ["MTT_Signal_Zprime_1000_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_RSGluon1000_02Mar13_%s.list"],
+    ["MTT_Signal_Zprime_1250_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_RSGluon1200_02Mar13_%s.list"],
+    ["MTT_Signal_Zprime_1500_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_RSGluon1500_02Mar13_%s.list"],
+    ["MTT_Signal_Zprime_2000_Narrow_2012_dataset_%s_nominal.root", "MC/MTT_RSGluon2000_02Mar13_%s.list"],
 
     #["MTT_MC_TTJets_powheg_18Jan13_dataset_%s_nominal.root", "MC/MTT_TT_powheg_18Jan13_%s.list", 20729745, 234.],
     #["MTT_MC_TTJets_MassiveBinDECAY_19Dec12_dataset_%s_nominal.root", "MC/MTT_TTJets_MassiveBinDECAY_19Dec12_%s.list", 6908904., 234.],

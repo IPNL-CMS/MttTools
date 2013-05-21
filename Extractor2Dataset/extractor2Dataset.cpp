@@ -128,14 +128,19 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
       }
 
       if (doPDFSyst) {
-        // 40 pdf systematics
+        // 4? pdf systematics
         double sum = 0;
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < (pdfWeights->size() / 2); i++) {
           int up_index = 2 * i;
           int down_index = up_index + 1;
 
           double up = (*pdfWeights)[up_index];
           double down = (*pdfWeights)[down_index];
+
+          /*
+          std::cout << "up weight: " << up << std::endl;
+          std::cout << "down weight: " << down << std::endl;
+          */
 
           if (pdfSyst == "up") {
             sum += pow(std::max(std::max(up - 1, down - 1), 0.), 2);
@@ -145,7 +150,11 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
         }
 
         double pdf_weight = sqrt(sum);
-        output_weight *= pdf_weight / 1.645;
+        //std::cout << "event weight: " << pdf_weight << std::endl;
+        if (pdfSyst == "down")
+          pdf_weight *= -1;
+
+        output_weight *= (pdf_weight / 1.645) + 1;
       }
 
       outputTrees[index]->Fill();

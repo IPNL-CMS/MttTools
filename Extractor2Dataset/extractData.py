@@ -5,8 +5,8 @@ import os, subprocess, datetime
 d = datetime.datetime.now().strftime("%d%b%y")
 
 inputs = [
-    ["MTT_Muons_2012_%s.root" % d, "input_data_semimu.list", "semimu"],
-    ["MTT_Electrons_2012_%s.root" % d, "input_data_semie.list", "semie"]
+    ["MTT_Muons_2012_%s.root" % d, "input/input_data_semimu.list", "semimu"],
+    ["MTT_Electrons_2012_%s.root" % d, "input/input_data_semie.list", "semie"]
     ]
 
 jobs = []
@@ -32,5 +32,5 @@ for output in inputs:
 
 subprocess.call(args)
 
-for output in inputs:
-  os.remove(output[0])
+#for output in inputs:
+#  os.remove(output[0])
