@@ -959,7 +959,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, Ro
 
   const int padWidth = 900;
   const int padHeight = 900;
-  const float LUMI = 19.58;
+  const float LUMI = 19.5;
 
   const int canvasWidth = padWidth * x;
   const int canvasHeight = padHeight * y;
@@ -1543,15 +1543,11 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   TString indexJob = TString::Format("job%d", index);
 
 
-  // Updated 2012-3-20
-  // See https://hypernews.cern.ch/HyperNews/CMS/get/physics-announcements/1531.html
-  //double lumi_mu            = 4678. * 1.066; // Original: 4678; +6.6%
-  //double lumi_e             = 4682. * 1.066; // Original: 4682; +6.6%
+  // Luminosity updated for full 2012 run, with PIXEL calculation
+  double lumi_mu = 19457.318;
+  double lumi_e  = 19460.273;
 
-  double lumi_mu = 19576.993;
-  double lumi_e  = 19578.948;
-
-  double s_lumi_mu_percent  = 4.4 / 100.; // 2.2%
+  double s_lumi_mu_percent  = 2.6 / 100.; // 2.6%
 
   Double_t br_semil = 1.0; //0.14815; now included in the efficiency
 

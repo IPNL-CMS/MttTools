@@ -747,10 +747,11 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
     backgroundPdfsFromWorkspace[pdf.first] = mainWorkspace.pdf(pdf.second->getPdf().GetName());
   }
 
-  double lumi_mu = 19576.993;
-  double lumi_e  = 19578.948;
+  // Luminosity updated for full 2012 run, with PIXEL calculation
+  double lumi_mu = 19457.318;
+  double lumi_e  = 19460.273;
 
-  double s_lumi_mu_percent  = 4.4 / 100.; // 2.2%
+  double s_lumi_mu_percent  = 2.6 / 100.; // 2.6%
 
   Double_t br_semil = 1.0; //0.14815; now included in the efficiency
 
