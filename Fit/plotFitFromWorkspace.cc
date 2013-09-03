@@ -1,6 +1,7 @@
 {
 #include "tdrstyle.C"
   setTDRStyle();
+  gStyle->SetErrorX(0);
   RooWorkspace* w = (RooWorkspace*) _file0->Get("w");
 
   // Datasets*
@@ -35,14 +36,21 @@
 
   RooAddPdf merged_pdf("merged_pdf", "", RooArgList(*global_pdf_mu_1b, *global_pdf_mu_2b, *global_pdf_e_1b, *global_pdf_e_2b), RooArgList(mu_1b_frac, mu_2b_frac, e_1b_frac, e_2b_frac));
 
-  RooPlot* plot = mtt->frame(nBinsForHisto);
-  merged_dataset.plotOn(plot, RooFit::Name("data"));
+  // Fit result for error band
+  RooFitResult* fitResult = static_cast<RooFitResult*>(w->genobj("fit_results"));
 
-  // Signal + background
-  merged_pdf->plotOn(plot, RooFit::LineColor(kBlue), RooFit::LineWidth(1), RooFit::Name("sig_bkg"));
+  RooPlot* plot = mtt->frame(nBinsForHisto);
+  merged_dataset.plotOn(plot, RooFit::Name("data"), RooFit::DrawOption("P Z"), RooFit::LineWidth(2), RooFit::XErrorSize(0));
 
   // Background only
-  merged_pdf->plotOn(plot, RooFit::LineColor(kRed), RooFit::LineStyle(kDashed), RooFit::Components("background_{electron;1-btag},background_{electron;2-btag},background_{muon;1-btag},background_{muon;2-btag}"), RooFit::Name("bkg"));
+  merged_pdf->plotOn(plot, RooFit::LineColor(kRed), RooFit::LineStyle(kSolid), RooFit::Components("background_{electron;1-btag},background_{electron;2-btag},background_{muon;1-btag},background_{muon;2-btag}"), RooFit::Name("bkg"), RooFit::VisualizeError(*fitResult, 1), RooFit::FillColor(kOrange));
+  merged_pdf->plotOn(plot, RooFit::LineColor(kRed), RooFit::LineStyle(kSolid), RooFit::Components("background_{electron;1-btag},background_{electron;2-btag},background_{muon;1-btag},background_{muon;2-btag}"), RooFit::Name("bkg"));
+
+  merged_dataset.plotOn(plot, RooFit::Name("data"), RooFit::DrawOption("P Z same"), RooFit::XErrorSize(0));
+
+  // Signal + background
+  //merged_pdf->plotOn(plot, RooFit::LineColor(kBlue), RooFit::LineWidth(1), RooFit::Name("sig_bkg"));
+
 
   // Draw signal only
   double totalSignalEvents = 288.8890 + 275.0030 + 259.0330 + 247.6470;
@@ -64,17 +72,17 @@
 
   RooAddPdf merged_ext_signal_pdf("merged_ext_signal_pdf", "", RooArgList(ext_signal_pdf_mu_1b, ext_signal_pdf_mu_2b, ext_signal_pdf_e_1b, ext_signal_pdf_e_2b));
 
-  merged_ext_signal_pdf.plotOn(plot, RooFit::LineColor(39), RooFit::LineStyle(8), RooFit::LineWidth(2), RooFit::Normalization(totalSignalEvents, RooAbsReal::NumEvent), RooFit::Name("sig"));
+  merged_ext_signal_pdf.plotOn(plot, RooFit::LineColor(kBlue), RooFit::LineStyle(kDashed), RooFit::LineWidth(2), RooFit::Normalization(totalSignalEvents, RooAbsReal::NumEvent), RooFit::Name("sig"));
 
   float binningSize = (mtt.getBinning().highBound() - mtt.getBinning().lowBound()) / (float) nBinsForHisto;
 
   plot->SetTitleOffset(1.3, "Y");
   plot->SetTitleOffset(1, "X");
 
-  plot->SetXTitle("#font[62]{M_{t#bar{t}} [GeV/c^{2}]}");
+  plot->SetXTitle("#font[62]{(d)       M_{t#bar{t}} [GeV/c^{2}]}");
 
   //plot->SetYTitle("#font[62]{event yield}");
-  plot->SetYTitle("#font[62]{Events}");
+  plot->SetYTitle("#font[62]{Events / 50 GeV}");
 
   // Y title with bin size
   //{
@@ -84,7 +92,7 @@
 
   plot->SetTitleSize(0.06, "XZ");
 
-  plot->GetXaxis()->SetNdivisions(5, true);
+  plot->GetXaxis()->SetNdivisions(510, true);
   plot->GetYaxis()->SetRangeUser(13, 1e5);
 
   plot->Draw();
@@ -104,28 +112,34 @@
   //t.DrawLatex(0.552013, 0.845, "#font[62]{m_{Z'} = 750 GeV, 1.2% width}");
   t.DrawLatex(0.199664, 0.82, "#font[62]{e+#mu, N_{b-tag} #geq 1}");
 
-  TLegend* title = new TLegend(0.15, 0.91, 0.95, 0.96);
+  TLegend* title = new TLegend(0.15, 0.93, 0.95, 0.98);
   title->SetBorderSize(0);
   title->SetTextAlign(31);
   title->SetTextFont(62);
   title->SetFillColor(10);
   title->SetLineColor(1);
   title->SetMargin(0.12);
-  title->SetHeader("CMS, 19.6 fb^{-1}, #sqrt{s} = 8 TeV");
+  title->SetTextSize(0.06);
+  title->SetHeader("CMS, L = 19.6 fb^{-1}, #sqrt{s} = 8 TeV");
   title->Draw();
 
-  TLegend *leg1 = new TLegend(0.54,0.597902,0.927852,0.818182);
+  //TLegend *leg1 = new TLegend(0.54,0.575175,0.927852,0.86014);
+  TLegend *leg1 = new TLegend(0.54,0.65,0.927852,0.86014);
   leg1->SetFillColor(kWhite);
   leg1->SetLineColor(kWhite);
   leg1->SetBorderSize(0);
   leg1->SetTextFont(62);
   leg1->SetMargin(0.20);
-  leg1->AddEntry("data","CMS data 2012", "P");
-  leg1->AddEntry("sig_bkg", "Signal + background","L");
-  leg1->AddEntry("bkg", "Background only", "L");
-  leg1->AddEntry("sig", "Z' 750 Gev/c^{2} (1%)", "L");
-  leg1->SetTextSize(0.036);
+  leg1->AddEntry("data","Data", "P");
+  //leg1->AddEntry("sig_bkg", "Signal + bkg","L");
+  leg1->AddEntry("bkg", "Background", "L");
+  leg1->AddEntry("sig", "Z' 750 GeV", "L");
+  leg1->SetTextSize(0.055);
   leg1->Draw();
+
+  TLine eb(0.54, 0.54, 0.6, 0.6);
+  eb.SetLineWidth(2);
+  eb.DrawLineNDC(0.579, 0.807, 0.579, 0.843);
 
   gPad->SetLogy();
   gPad->Modified();
