@@ -2183,6 +2183,9 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       // Save fitted pdf and datasets in order to redo some plots
       RooWorkspace higgsWorkspace("w");
 
+      fitResult->SetName("fit_results");
+      higgsWorkspace.import(*fitResult);
+
       it = mainCategory.typeIterator();
       type = nullptr;
       while ((type = static_cast<RooCatType*>(it->Next()))) {
