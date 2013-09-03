@@ -149,7 +149,7 @@ int main(int argc, char** argv)
     TCLAP::ValueArg<std::string> pathArg("", "path", "Folder where to load files", false, default_base_path, "string", cmd);
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", false, 2, "int", cmd);
     TCLAP::SwitchArg verboseArg("v", "verbose", "Verbose mode", cmd);
-    TCLAP::ValueArg<std::string> fitConfigFileArg("", "config-file", "Configuration file name containing fit parameters", false, "fit_pdf_faltb.json", "string", cmd);
+    TCLAP::ValueArg<std::string> fitConfigFileArg("", "config-file", "Configuration file name containing fit parameters", false, "fit_pdf_falt.json", "string", cmd);
     TCLAP::ValueArg<std::string> effArg("", "eff-file", "File where efficiences are stored (JSON format)", false, "efficiencies.json", "string", cmd);
 
     // Workspace
@@ -642,7 +642,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, string fitConfigu
 {
 
   if (fitConfigurationFile == "auto" || fitConfigurationFile.empty())
-    fitConfigurationFile = "fit_pdf_faltb.json";
+    fitConfigurationFile = "fit_pdf_falt.json";
 
   std::cout << "Loading fit configuration from '" << fitConfigurationFile << "'" << std::endl;
 

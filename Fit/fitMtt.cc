@@ -233,7 +233,7 @@ int main(int argc, char** argv)
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", false, 2, "int", cmd);
     TCLAP::SwitchArg verboseArg("v", "verbose", "Verbose mode", cmd);
     TCLAP::SwitchArg batchArg("", "batch", "Run in batch mode", cmd);
-    TCLAP::ValueArg<std::string> fitConfigFileArg("", "config-file", "Configuration file name containing fit parameters", false, "fit_pdf_faltb.json", "string", cmd);
+    TCLAP::ValueArg<std::string> fitConfigFileArg("", "config-file", "Configuration file name containing fit parameters", false, "fit_pdf_falt.json", "string", cmd);
     
     // Shared memory management
     TCLAP::SwitchArg useSharedMemoryArg("", "shared-memory", "Save fit results into a shared memory area. The shm key must be specified", cmd);
@@ -1415,7 +1415,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   }
 
   if (fitConfigurationFile == "auto" || fitConfigurationFile.empty())
-    fitConfigurationFile = "fit_pdf_faltb.json";
+    fitConfigurationFile = "fit_pdf_falt.json";
 
   if (! fixBackground) {
     fixBackground = analysisFixedBackground();
