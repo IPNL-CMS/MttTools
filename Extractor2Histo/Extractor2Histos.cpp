@@ -4,8 +4,10 @@
 #include <TCanvas.h>
 #include <vector>
 #include <TProfile.h>
+#include <fstream>
 
 #include "../PUReweighting/PUReweighter.h"
+#include "tclap/CmdLine.h"
 
 void Extractor2Histos::Loop()
 {
@@ -47,6 +49,7 @@ void Extractor2Histos::Loop()
   TH1D *hmthad = new TH1D("hmthad", "", 150, 120., 300.);
   
   TH1D *hmtt_MC = new TH1D("hmtt_MC", "", 250, 0., 2500.);
+  TH1D *hmtt_MC_nosel = new TH1D("hmtt_MC_nosel", "", 250, 0., 2500.);
 
   TH1D *hmttSelected_btag_sel = new TH1D("hmttSelected_btag_sel", "", 250, 0., 2500.);
   TH1D *hmttSelected_btag_sel_mass_cut = new TH1D("hmttSelected_btag_sel_mass_cut", "", 250, 0., 2500.);
@@ -87,7 +90,10 @@ void Extractor2Histos::Loop()
 
   hmtlep->SetXTitle("leptonic m_{t} [GeV/c^{2}]");
   hmthad->SetXTitle("hadronic m_{t} [GeV/c^{2}]");
-  hmtt_MC ->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
+  
+  hmtt_MC->SetXTitle("m_{t#bar{t}} (gen level) [GeV/c^{2}]");
+  hmtt_MC_nosel->SetXTitle("m_{t#bar{t}} (gen level) [GeV/c^{2}]");
+
   hmttSelected_btag_sel->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
   hmttSelected_btag_sel_mass_cut->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
   hNGoodMuons->SetXTitle("Num good #mu");
@@ -102,7 +108,7 @@ void Extractor2Histos::Loop()
   //PUReweighter puReweighter(mIsSemiMu, mDataset);
   PUReweighter puReweighter(mIsSemiMu);
 
-  std::cout << "Processing " << mInputFile << " ..." << std::endl;
+  std::cout << "Processing..." << std::endl;
 
   for (Long64_t jentry = 0; jentry < nentries; jentry++)
   {
@@ -119,6 +125,7 @@ void Extractor2Histos::Loop()
     }
 
     hNTrueInt_nosel->Fill(n_trueInteractions, eventWeight);
+    hmtt_MC_nosel->Fill(MC_mtt, eventWeight);
 
     if (!mIsMC && !m_triggerPassed) {
       continue;
@@ -191,8 +198,8 @@ void Extractor2Histos::Loop()
         else
           hElRelIso->Fill(elRelIso[0], eventWeight);
 
-        hmtlep->Fill(mLepTop_AfterChi2andKF, eventWeight);
-        hmthad->Fill(mHadTop_AfterChi2andKF, eventWeight);
+        hmtlep->Fill(mLepTop_AfterChi2, eventWeight);
+        hmthad->Fill(mHadTop_AfterChi2, eventWeight);
 
         hmtt_MC->Fill(MC_mtt, eventWeight);
 
@@ -207,7 +214,7 @@ void Extractor2Histos::Loop()
     }
   }
 
-  TFile * output = TFile::Open(mOutputFile, "recreate");
+  TFile * output = TFile::Open(mOutputFile.c_str(), "recreate");
   output->cd();
 
   hNVtx_noweight->Write();
@@ -244,6 +251,7 @@ void Extractor2Histos::Loop()
   hmtlep->Write();
   hmthad->Write();
   hmtt_MC->Write();
+  hmtt_MC_nosel->Write();
 
   hmttSelected_btag_sel->Write();
   hmttSelected_btag_sel_mass_cut->Write();
@@ -262,29 +270,26 @@ void Extractor2Histos::Loop()
 
 }
 
-Extractor2Histos::Extractor2Histos(TString fIn, TString fOut, const std::string& dataset, bool isSemiMu, bool isMC, int btag) : fMTT(0), fVertices(0), fEvent(0)
+void loadChain(const std::vector<std::string>& inputFiles, const std::string& treeName, TChain*& output) {
+
+  output = new TChain(treeName.c_str());
+
+  for (const std::string& file: inputFiles) {
+    output->Add(file.c_str());
+  }
+}
+
+Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag) : fMTT(0), fVertices(0), fEvent(0)
 {
-  mDataset = dataset;
   mIsSemiMu = isSemiMu;
   mIsMC = isMC;
-  mOutputFile = fOut;
-  mInputFile = fIn;
+  mOutputFile = outputFile;
   mBTag = btag;
 
-  TFile* f = TFile::Open(fIn);
-  if (! f) {
-    std::cerr << "Error: can't open " << fIn << std::endl;
-    return;
-  }
-
-  // Get Mtt tree
-  fMTT = static_cast<TTree*>(f->Get("Mtt"));
-
-  // Get Vertices tree
-  fVertices = static_cast<TTree*>(f->Get("Vertices"));
-
-  // Get event tree
-  fEvent = static_cast<TTree*>(f->Get("event"));
+  // Get trees
+  loadChain(inputFiles, "Mtt", fMTT);
+  loadChain(inputFiles, "Vertices", fVertices);
+  loadChain(inputFiles, "event", fEvent);
 
   Init();
 }
@@ -365,11 +370,11 @@ void Extractor2Histos::Init()
   //SetBranchAddress(fMTT, "KFChi2", &KFChi2, &b_KFChi2);
   SetBranchAddress(fMTT, "numComb", &numComb, &b_numComb);
   //SetBranchAddress(fMTT, "solChi2", solChi2, &b_solChi2);
-  //SetBranchAddress(fMTT, "mLepTop_AfterChi2", &mLepTop_AfterChi2, &b_mLepTop_AfterChi2);
-  //SetBranchAddress(fMTT, "mHadTop_AfterChi2", &mHadTop_AfterChi2, &b_mHadTop_AfterChi2);
+  SetBranchAddress(fMTT, "mLepTop_AfterChi2", &mLepTop_AfterChi2, &b_mLepTop_AfterChi2);
+  SetBranchAddress(fMTT, "mHadTop_AfterChi2", &mHadTop_AfterChi2, &b_mHadTop_AfterChi2);
   SetBranchAddress(fMTT, "mtt_AfterChi2", &mtt_AfterChi2, &b_mtt_AfterChi2);
-  SetBranchAddress(fMTT, "mLepTop_AfterChi2andKF", &mLepTop_AfterChi2andKF, &b_mLepTop_AfterChi2andKF);
-  SetBranchAddress(fMTT, "mHadTop_AfterChi2andKF", &mHadTop_AfterChi2andKF, &b_mHadTop_AfterChi2andKF);
+  //SetBranchAddress(fMTT, "mLepTop_AfterChi2andKF", &mLepTop_AfterChi2andKF, &b_mLepTop_AfterChi2andKF);
+  //SetBranchAddress(fMTT, "mHadTop_AfterChi2andKF", &mHadTop_AfterChi2andKF, &b_mHadTop_AfterChi2andKF);
   //SetBranchAddress(fMTT, "mtt_AfterChi2andKF", &mtt_AfterChi2andKF, &b_mtt_AfterChi2andKF);
   SetBranchAddress(fMTT, "weight", &m_weight, NULL);
 
@@ -389,4 +394,95 @@ void Extractor2Histos::Init()
   fEvent->SetBranchAddress("nTrueInteractions", &n_trueInteractions, NULL);
   fEvent->SetBranchStatus("*", 0);
   fEvent->SetBranchStatus("nTrueInteractions", 1);
+}
+
+void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {
+
+  ifstream ifs(filename.c_str());
+  std::string line;
+
+  while (getline(ifs, line))
+    files.push_back(line);
+
+  ifs.close();
+}
+
+int main(int argc, char** argv) {
+
+  try {
+
+    TCLAP::CmdLine cmd("Convert extractor tuples to histograms", ' ', "0.1");
+
+    TCLAP::ValueArg<std::string> inputListArg("", "input-list", "A text file containing a list of input files", true, "", "string");
+    TCLAP::ValueArg<std::string> inputFileArg("i", "input-file", "The input file", true, "", "string");
+
+    cmd.xorAdd(inputListArg, inputFileArg);
+
+    TCLAP::ValueArg<std::string> outputFileArg("o", "output-file", "output file", true, "", "string", cmd);
+
+    TCLAP::SwitchArg dataArg("", "data", "Is this data?", false);
+    TCLAP::SwitchArg mcArg("", "mc", "Is this mc?", false);
+
+    cmd.xorAdd(dataArg, mcArg);
+
+    TCLAP::SwitchArg semimuArg("", "semimu", "Is this semi-mu channel?", false);
+    TCLAP::SwitchArg semieArg("", "semie", "Is this semi-e channel?", false);
+
+    cmd.xorAdd(semimuArg, semieArg);
+
+    TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jet to require", true, 2, "int", cmd);
+
+    TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S10", "string", cmd);
+
+    TCLAP::ValueArg<std::string> pileupSystArg("", "pileup-syst", "PU profile to use for pileup reweigthing", false, "nominal", "string", cmd);
+    TCLAP::ValueArg<std::string> pdfSystArg("", "pdf-syst", "PDF systematic to compute", false, "nominal", "string", cmd);
+
+
+    TCLAP::ValueArg<int> maxEntriesArg("n", "", "Maximal number of entries to process", false, -1, "int", cmd);
+    TCLAP::ValueArg<double> generatorWeightArg("", "weight", "MC generator weight", false, 1., "double", cmd);
+
+    cmd.parse(argc, argv);
+
+    PUProfile puProfile;
+    std::string p = pileupArg.getValue();
+    std::transform(p.begin(), p.end(), p.begin(), ::tolower);
+    if (p == "s6")
+      puProfile = PUProfile::S6;
+    else if (p == "s7")
+      puProfile = PUProfile::S7;
+    else if (p == "s10")
+      puProfile = PUProfile::S10;
+
+    std::string puSyst = pileupSystArg.getValue();
+    std::transform(puSyst.begin(), puSyst.end(), puSyst.begin(), ::tolower);
+    if (puSyst != "nominal" && puSyst != "up" && puSyst != "down") {
+      std::cerr << "--pilup-syst can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
+
+    std::string pdfSyst = pdfSystArg.getValue();
+    std::transform(pdfSyst.begin(), pdfSyst.end(), pdfSyst.begin(), ::tolower);
+    if (pdfSyst != "nominal" && pdfSyst != "up" && pdfSyst != "down") {
+      std::cerr << "--pdf-syst can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
+    
+    bool isData = dataArg.isSet();
+
+    std::vector<std::string> inputFiles;
+    if (inputFileArg.isSet()) {
+      inputFiles.push_back(inputFileArg.getValue());
+    } else {
+      loadInputFiles(inputListArg.getValue(), inputFiles);
+    }
+    
+    Extractor2Histos convertor(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData, btagArg.getValue());
+    convertor.Loop();
+
+  } catch (TCLAP::ArgException &e) {
+    std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
+    return 1;
+  }
+
+  return 0;
 }

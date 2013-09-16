@@ -23,9 +23,9 @@ class TBranch;
 
 class Extractor2Histos {
   public :
-    TTree          *fMTT;   //!pointer to the analyzed TTree or TChain
-    TTree          *fVertices;
-    TTree          *fEvent;
+    TChain          *fMTT;   //!pointer to the analyzed TChain or TChain
+    TChain          *fVertices;
+    TChain          *fEvent;
     Int_t           fCurrent; //!current Tree number in a TChain
 
     std::string     mDataset;
@@ -119,12 +119,12 @@ class Extractor2Histos {
     float           n_trueInteractions;
     float           m_weight;
 
-    TString         mOutputFile;
-    TString         mInputFile;
+    std::string     mOutputFile;
 
     int             mBTag;
 
-    Extractor2Histos(TString fIn, TString fOut, const std::string& dataset, bool isSemiMu, bool isMC, int btag);
+    Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag);
+
     virtual ~Extractor2Histos();
     virtual Int_t    GetEntry(Long64_t entry);
     virtual void     Loop();

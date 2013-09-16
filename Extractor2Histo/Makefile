@@ -41,14 +41,14 @@ SOBJECTS	= $(SOURCES:.$(SrcSuf)=.$(DllSuf))
 ###
 
 #all: drawPhotonJet_2bkg drawPhotonJetExtrap draw_all_methods_vs_pt draw_all_methods_vs_npv draw_crosschecks
-all: process_all
+all: extractorToHisto
 
 clean:
 	@rm *.o;
 	@rm *.d;
 	@rm ../PUReweighting/*.o;
 
-process_all: Extractor2Histos.o ../PUReweighting/PUReweighter.o  process_all.o
+extractorToHisto: Extractor2Histos.o ../PUReweighting/PUReweighter.o
 	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS) 
 
 %.o: %.cpp
@@ -63,4 +63,4 @@ process_all: Extractor2Histos.o ../PUReweighting/PUReweighter.o  process_all.o
 
 ifneq ($(MAKECMDGOALS), clean) 
 -include $(DEPENDS) 
-endif 
+endif
