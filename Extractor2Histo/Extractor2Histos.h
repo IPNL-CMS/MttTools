@@ -10,6 +10,7 @@
 #include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
+#include <TClonesArray.h>
 
 #include <iostream>
 
@@ -26,11 +27,30 @@ class Extractor2Histos {
     TChain          *fMTT;   //!pointer to the analyzed TChain or TChain
     TChain          *fVertices;
     TChain          *fEvent;
+    TChain          *fLooseMuons;
+    TChain          *fJet;
     Int_t           fCurrent; //!current Tree number in a TChain
 
     std::string     mDataset;
     bool            mIsMC;
     bool            mIsSemiMu;
+
+    Float_t         MC_boost_tt;
+
+    float           MC_pt_tt;
+    float           MC_eta_tt;
+    //float           MC_pt_tt_com;
+    //float           MC_eta_tt_com;
+
+    //float           MC_top1Pt;
+    //float           MC_top2Pt;
+    //float           MC_top1Pt_com;
+    //float           MC_top2Pt_com;
+
+    //float           MC_top1Eta;
+    //float           MC_top2Eta;
+    //float           MC_top1Eta_com;
+    //float           MC_top2Eta_com;
 
     // Declaration of leaf types
     Int_t           MC_channel;
@@ -39,11 +59,13 @@ class Extractor2Histos {
     Int_t           nGoodMuons;
     Int_t           nLooseGoodMuons;
     Float_t         muonPt[MAX_ARRAY_SIZE];   //[nGoodMuons]
+    Float_t         muonEta[MAX_ARRAY_SIZE];   //[nGoodMuons]
     Float_t         p_2DDrMin[MAX_ARRAY_SIZE];   //[nGoodMuons]
     Float_t         p_2DpTrel[MAX_ARRAY_SIZE];   //[nGoodMuons]
     Float_t         muRelIso[MAX_ARRAY_SIZE];   //[nGoodMuons]
     Int_t           nGoodElectrons;
     Float_t         electronPt[MAX_ARRAY_SIZE];   //[nGoodElectrons]
+    Float_t         electronEta[MAX_ARRAY_SIZE];   //[nGoodElectrons]
     Float_t         elRelIso[MAX_ARRAY_SIZE];   //[nGoodElectrons]
     Int_t           hyperTight1MC[MAX_ARRAY_SIZE];   //[nGoodElectrons]
     Float_t         p_1stjetpt;
@@ -68,6 +90,13 @@ class Extractor2Histos {
     Float_t         mLepTop_AfterChi2andKF;
     Float_t         mHadTop_AfterChi2andKF;
     Float_t         mtt_AfterChi2andKF;
+    Float_t         lepTopPt_AfterChi2;
+    Float_t         lepTopEta_AfterChi2;
+    Float_t         hadTopPt_AfterChi2;
+    Float_t         hadTopEta_AfterChi2;
+    Float_t         pt_tt_AfterChi2;
+    Float_t         eta_tt_AfterChi2;
+    Float_t         beta_tt_AfterChi2;
 
     bool            m_triggerPassed;
 
@@ -122,6 +151,12 @@ class Extractor2Histos {
     std::string     mOutputFile;
 
     int             mBTag;
+
+    int             n_muons;
+    float           muon_relIso[100];
+    TClonesArray*   muon_p4;
+
+    TClonesArray*   jet_p4;
 
     Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag);
 
