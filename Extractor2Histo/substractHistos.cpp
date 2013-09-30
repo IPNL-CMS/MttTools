@@ -14,6 +14,7 @@
 
 #include "yaml-cpp/yaml.h"
 
+#include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
 
 // Load libdpm at startup, on order to be sure that rfio files are working
@@ -104,9 +105,14 @@ int main(int argc, char** argv) {
     }
 
     boost::filesystem::path root(configArg.getValue());
+
+    boost::regex re("_semi(mu|e)");
+
+    std::string first_inputFile = boost::regex_replace(inputFiles[0], re, "");
+    std::string second_inputFile = boost::regex_replace(inputFiles[1], re, "");
     
-    boost::filesystem::path f1 (inputFiles[0]);
-    boost::filesystem::path f2 (inputFiles[1]);
+    boost::filesystem::path f1 (first_inputFile);
+    boost::filesystem::path f2 (second_inputFile);
 
     f1 = root / f1.filename();
     f2 = root / f2.filename();

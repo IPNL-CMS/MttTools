@@ -27,7 +27,7 @@ AR            = ar
 ARFLAGS       = -cq
 
 CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/ -I../external/include/ -I$(shell echo $(BOOST_ROOT))/include
-LIBS  		    = $(ROOTLIBS) -lboost_filesystem
+LIBS  		    = $(ROOTLIBS) -lboost_filesystem -lboost_regex
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
 SOURCES		= $(wildcard *.$(SrcSuf))
