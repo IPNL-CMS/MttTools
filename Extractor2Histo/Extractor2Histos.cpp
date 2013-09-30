@@ -153,8 +153,14 @@ void Extractor2Histos::Loop()
   TH1D *hPtTT_beforesel = new TH1D("hPtTT_beforesel", "", 60, 0., 600.);
   TH1D *hEtaTT_beforesel = new TH1D("hEtaTT_beforesel", "", 50, -2*M_PI, 2*M_PI);
 
-  TH1D *hDeltaPhiTops_gen = new TH1D("hDeltaPhiTops_gen", "", 50, -4*M_PI, 4*M_PI);
-  TH1D *hDeltaPhiTops_reco_fullsel = new TH1D("hDeltaPhiTops_reco_fullsel", "", 50, -4*M_PI, 4*M_PI);
+  TH1D *hDeltaPhiTops_gen = new TH1D("hDeltaPhiTops_gen", "", 50, 0, M_PI);
+  TH1D *hDeltaPhiTops_reco_fullsel = new TH1D("hDeltaPhiTops_reco_fullsel", "", 50, 0, M_PI);
+
+  TH1D *hDeltaEtaTops_gen = new TH1D("hDeltaEtaTops_gen", "", 50, -3*M_PI, 3*M_PI);
+  TH1D *hDeltaEtaTops_reco_fullsel = new TH1D("hDeltaEtaTops_reco_fullsel", "", 50, -3*M_PI, 3*M_PI);
+
+  TH1D *hDeltaRTops_gen = new TH1D("hDeltaRTops_gen", "", 50, 0, 10);
+  TH1D *hDeltaRTops_reco_fullsel = new TH1D("hDeltaRTops_reco_fullsel", "", 50, 0, 10);
 
   if (mIsSemiMu) {
     hLeptonPt->SetXTitle("#mu p_{T} [GeV/c]");
@@ -198,6 +204,7 @@ void Extractor2Histos::Loop()
   hNBtaggedJets_beforesel->SetXTitle("Num TCHEL jets");
 
   Long64_t nentries = fMTT->GetEntries();
+  //nentries = 10000;
 
   //PUReweighter puReweighter(mIsSemiMu, mDataset);
   PUReweighter puReweighter(mIsSemiMu);
@@ -269,7 +276,9 @@ void Extractor2Histos::Loop()
     hEtaTT_gen->Fill(MC_eta_tt, eventWeight);
     //hEtaTT_com_gen->Fill(MC_eta_tt_com, eventWeight);
 
-    hDeltaPhiTops_gen->Fill(gen_top1_p4->DeltaPhi(*gen_top2_p4), eventWeight);
+    hDeltaPhiTops_gen->Fill(fabs(gen_top1_p4->DeltaPhi(*gen_top2_p4)), eventWeight);
+    hDeltaEtaTops_gen->Fill(gen_top1_p4->Eta() - gen_top2_p4->Eta(), eventWeight);
+    hDeltaRTops_gen->Fill(gen_top1_p4->DeltaR(*gen_top2_p4), eventWeight);
 
     if (n_muons > 0) {
       hMuRelIso_nosel->Fill(muon_relIso[0], eventWeight); 
@@ -397,7 +406,9 @@ void Extractor2Histos::Loop()
         hmttSelected_btag_sel->Fill(mtt_AfterChi2, eventWeight);
         pMttResolution_btag_sel->Fill(MC_mtt , mtt_AfterChi2, eventWeight);
 
-        hDeltaPhiTops_reco_fullsel->Fill(lepTopP4_AfterChi2->DeltaPhi(*hadTopP4_AfterChi2), eventWeight);
+        hDeltaPhiTops_reco_fullsel->Fill(fabs(lepTopP4_AfterChi2->DeltaPhi(*hadTopP4_AfterChi2)), eventWeight);
+        hDeltaEtaTops_reco_fullsel->Fill(lepTopP4_AfterChi2->Eta() - hadTopP4_AfterChi2->Eta(), eventWeight);
+        hDeltaRTops_reco_fullsel->Fill(lepTopP4_AfterChi2->DeltaR(*hadTopP4_AfterChi2), eventWeight);
 
         if (mtt_AfterChi2 > 500)
         {
