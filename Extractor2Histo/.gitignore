@@ -1,2 +1,4 @@
-process_all
 inputs/*
+MC/*
+plots/*
+extractorToHisto
