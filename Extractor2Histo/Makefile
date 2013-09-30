@@ -15,20 +15,19 @@ HeadSuf       = h
 ROOTSYS  ?= ERROR_RootSysIsNotDefined
 
 ROOTCFLAGS = $(shell root-config --cflags)
-ROOTLIBS   = $(shell root-config --libs)
+ROOTLIBS   = $(shell root-config --noldflags --libs)
 
 CXX           = g++
-CXXFLAGS	    = -O2 -Wall -fPIC --std=c++0x
+CXXFLAGS	    = -O2 -g -Wall -fPIC --std=c++0x
 LD			      = g++
-LDFLAGS		    = -fPIC $(shell root-config --ldflags)
+LDDIR         = -L$(shell root-config --libdir) -L../external/lib -L$(BOOST_ROOT)/lib/
+LDFLAGS		    = -fPIC $(shell root-config --ldflags) $(LDDIR)
 SOFLAGS		    = 
 AR            = ar
 ARFLAGS       = -cq
 
-LDDIR         = -L$(shell root-config --libdir)
-
-CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/
-LIBS  		    = $(LDDIR) $(ROOTLIBS)# -lAnalysis -lTreeAnalyzer_PhotonJet
+CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/ -I../external/include/ -I$(shell echo $(BOOST_ROOT))/include
+LIBS  		    = $(ROOTLIBS) -lboost_filesystem
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
 SOURCES		= $(wildcard *.$(SrcSuf))
@@ -40,8 +39,7 @@ SOBJECTS	= $(SOURCES:.$(SrcSuf)=.$(DllSuf))
 
 ###
 
-#all: drawPhotonJet_2bkg drawPhotonJetExtrap draw_all_methods_vs_pt draw_all_methods_vs_npv draw_crosschecks
-all: extractorToHisto
+all: extractorToHisto substractHistos
 
 clean:
 	@rm *.o;
@@ -49,7 +47,10 @@ clean:
 	@rm ../PUReweighting/*.o;
 
 extractorToHisto: Extractor2Histos.o ../PUReweighting/PUReweighter.o
-	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS) 
+	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS)
+
+substractHistos: substractHistos.o
+	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ -Wl,-Bstatic -lyaml-cpp -Wl,-Bdynamic $(LIBS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
