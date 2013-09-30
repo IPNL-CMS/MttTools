@@ -1,6 +1,8 @@
 #include "PUReweighter.h"
 
 #include <TFile.h>
+#include <TDirectory.h>
+
 #include <iostream>
 
 PUReweighter::PUReweighter(bool isSemiMu, PUProfile profile/* = PUProfile::S10*/, Systematic syst/* = Systematic::NOMINAL*/):
@@ -14,6 +16,8 @@ PUReweighter::PUReweighter(bool isSemiMu, PUProfile profile/* = PUProfile::S10*/
     } else if (syst == Systematic::DOWN) {
       suffix = "puDown";
     }
+
+    TDirectory* currentDirectory = gDirectory;
 
     TString dataFileNameWithSyst = TString::Format(dataFileName.c_str(), suffix.c_str());
     TFile* dataFile = TFile::Open(dataFileNameWithSyst.Data());
@@ -67,6 +71,8 @@ PUReweighter::PUReweighter(bool isSemiMu, PUProfile profile/* = PUProfile::S10*/
 
     delete dataFile;
     delete mcHisto;
+
+    gDirectory = currentDirectory;
   }
 
 double PUReweighter::weight(float interactions) const {
