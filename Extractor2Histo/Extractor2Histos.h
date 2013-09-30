@@ -11,6 +11,7 @@
 #include <TChain.h>
 #include <TFile.h>
 #include <TClonesArray.h>
+#include <TLorentzVector.h>
 
 #include <iostream>
 
@@ -99,6 +100,12 @@ class Extractor2Histos {
     Float_t         beta_tt_AfterChi2;
 
     bool            m_triggerPassed;
+
+    TLorentzVector* gen_top1_p4;
+    TLorentzVector* gen_top2_p4;
+
+    TLorentzVector* lepTopP4_AfterChi2;
+    TLorentzVector* hadTopP4_AfterChi2;
 
     // List of branches
     TBranch        *b_MC_channel;   //!

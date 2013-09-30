@@ -10,11 +10,26 @@
 #include "../PUReweighting/PUReweighter.h"
 #include "tclap/CmdLine.h"
 
+// Load libdpm at startup, on order to be sure that rfio files are working
+#include <dlfcn.h>
+struct Dummy
+{
+  Dummy()
+  {
+    dlopen("libdpm.so", RTLD_NOW|RTLD_GLOBAL);
+  }
+};
+static Dummy foo;
+
 const int nBins = 15; 
 const double bins[] = {340, 360, 380, 400, 420, 460, 500, 550, 600, 650, 750, 850, 950, 1050, 1200, 1400, 1600};
 
 void Extractor2Histos::Loop()
 {
+  // Create the output file first in order that each histogram
+  // associate itself with this file
+  TFile * output = TFile::Open(mOutputFile.c_str(), "recreate");
+  output->cd();
 
   TH1::SetDefaultSumw2(true);
 
@@ -138,6 +153,9 @@ void Extractor2Histos::Loop()
   TH1D *hPtTT_beforesel = new TH1D("hPtTT_beforesel", "", 60, 0., 600.);
   TH1D *hEtaTT_beforesel = new TH1D("hEtaTT_beforesel", "", 50, -2*M_PI, 2*M_PI);
 
+  TH1D *hDeltaPhiTops_gen = new TH1D("hDeltaPhiTops_gen", "", 50, -4*M_PI, 4*M_PI);
+  TH1D *hDeltaPhiTops_reco_fullsel = new TH1D("hDeltaPhiTops_reco_fullsel", "", 50, -4*M_PI, 4*M_PI);
+
   if (mIsSemiMu) {
     hLeptonPt->SetXTitle("#mu p_{T} [GeV/c]");
     hLeptonPt_beforesel->SetXTitle("#mu p_{T} [GeV/c]");
@@ -251,6 +269,8 @@ void Extractor2Histos::Loop()
     hEtaTT_gen->Fill(MC_eta_tt, eventWeight);
     //hEtaTT_com_gen->Fill(MC_eta_tt_com, eventWeight);
 
+    hDeltaPhiTops_gen->Fill(gen_top1_p4->DeltaPhi(*gen_top2_p4), eventWeight);
+
     if (n_muons > 0) {
       hMuRelIso_nosel->Fill(muon_relIso[0], eventWeight); 
 
@@ -289,7 +309,6 @@ void Extractor2Histos::Loop()
 
     if (isSel == 1 && numComb > 0)
     {
-
       h_mtt_gen_beforesel->Fill(MC_mtt, eventWeight);
 
       hNGoodJets_beforesel->Fill(nJets, eventWeight);
@@ -378,6 +397,8 @@ void Extractor2Histos::Loop()
         hmttSelected_btag_sel->Fill(mtt_AfterChi2, eventWeight);
         pMttResolution_btag_sel->Fill(MC_mtt , mtt_AfterChi2, eventWeight);
 
+        hDeltaPhiTops_reco_fullsel->Fill(lepTopP4_AfterChi2->DeltaPhi(*hadTopP4_AfterChi2), eventWeight);
+
         if (mtt_AfterChi2 > 500)
         {
           hmttSelected_btag_sel_mass_cut->Fill(mtt_AfterChi2, eventWeight);
@@ -386,125 +407,7 @@ void Extractor2Histos::Loop()
     }
   }
 
-  TFile * output = TFile::Open(mOutputFile.c_str(), "recreate");
-  output->cd();
-
-  hNVtx_noweight->Write();
-  hNVtx->Write();
-  hNVtx_beforesel->Write();
-
-  hNTrueInt_nosel->Write();
-  hNTrueInt->Write();
-
-  hIsSel->Write();
-
-  h_mtt_gen_no_sel->Write();
-  h_mtt_gen_beforesel->Write();
-  h_mtt_gen->Write();
-
-  h_mtt_resolution->Write();
-
-  hLeptonPt->Write();
-  hLeptonPt_beforesel->Write();
-  hLeptonPt_nosel->Write();
-
-  hLeptonEta->Write();
-  hLeptonEta_beforesel->Write();
-  hLeptonEta_nosel->Write();
-
-  hLeptTopPt->Write();
-  hLeptTopPt_beforesel->Write();
-  hLeptTopPt_nosel->Write();
-
-  hLeptTopEta->Write();
-  hLeptTopEta_beforesel->Write();
-  hLeptTopEta_nosel->Write();
-
-  hHadrTopPt->Write();
-  hHadrTopPt_beforesel->Write();
-  hHadrTopPt_nosel->Write();
-
-  hHadrTopEta->Write();
-  hHadrTopEta_beforesel->Write();
-  hHadrTopEta_nosel->Write();
-
-  //hTopPt_gen->Write();
-  //hTopEta_gen->Write();
-  //hTopPt_com_gen->Write();
-  //hTopEta_com_gen->Write();
-
-  hBoostTT_gen->Write();
-  hPtTT_gen->Write();
-  hEtaTT_gen->Write();
-  //hPtTT_com_gen->Write();
-  //hEtaTT_com_gen->Write();
-
-  hMuRelIso->Write();
-  hMuRelIso_beforesel->Write();
-  hMuRelIso_nosel->Write();
-
-  hElRelIso->Write();
-  hElRelIso_beforesel->Write();
-
-  h1stjetpt->Write();
-  h1stjetpt_beforesel->Write();
-  h1stjetpt_nosel->Write();
-
-  h2ndjetpt->Write();
-  h2ndjetpt_beforesel->Write();
-  h2ndjetpt_nosel->Write();
-
-  h3rdjetpt->Write();
-  h3rdjetpt_beforesel->Write();
-  h3rdjetpt_nosel->Write();
-
-  h4thjetpt->Write();
-  h4thjetpt_beforesel->Write();
-  h4thjetpt_nosel->Write();
-
-  h1stjeteta->Write();
-  h1stjeteta_beforesel->Write();
-  h1stjeteta_nosel->Write();
-
-  h2ndjeteta->Write();
-  h2ndjeteta_beforesel->Write();
-  h2ndjeteta_nosel->Write();
-
-  h3rdjeteta->Write();
-  h3rdjeteta_beforesel->Write();
-  h3rdjeteta_nosel->Write();
-
-  h4thjeteta->Write();
-  h4thjeteta_beforesel->Write();
-  h4thjeteta_nosel->Write();
-
-  hMET_beforesel->Write();
-  hMET_nosel->Write();
-  hMET->Write();
-
-  hmtlep->Write();
-  hmthad->Write();
-
-  hmttSelected_btag_sel->Write();
-  hmttSelected_btag_sel_mass_cut->Write();
-
-  hNGoodMuons->Write();
-  hNGoodJets->Write();
-  hNGoodJets_beforesel->Write();
-
-  hNBtaggedJets->Write();
-  hNBtaggedJets_beforesel->Write();
-
-  pMttResolution_btag_sel->Write();
-
-  hBoostTT->Write();
-  hPtTT->Write();
-  hEtaTT->Write();
-
-  hBoostTT_beforesel->Write();
-  hPtTT_beforesel->Write();
-  hEtaTT_beforesel->Write();
-
+  output->Write();
   output->Close();
   delete output;
 }
@@ -576,9 +479,9 @@ void Extractor2Histos::SetBranchAddress(TTree* t, const char* branchName, void* 
 void Extractor2Histos::Init()
 {
   fCurrent = -1;
-  fMTT->SetMakeClass(1);
 
   fMTT->SetBranchStatus("*", 0);
+
   SetBranchAddress(fMTT, "MC_mtt", &MC_mtt, &b_MC_mtt);
   SetBranchAddress(fMTT, "MC_beta_tt", &MC_boost_tt, NULL);
 
@@ -661,6 +564,24 @@ void Extractor2Histos::Init()
     // Backward compatibilty
     m_triggerPassed = true;
   }
+
+  lepTopP4_AfterChi2 = NULL;
+  hadTopP4_AfterChi2 = NULL;
+
+  fMTT->SetBranchAddress("lepTopP4_AfterChi2.", &lepTopP4_AfterChi2);
+  fMTT->SetBranchAddress("hadTopP4_AfterChi2.", &hadTopP4_AfterChi2);
+
+  fMTT->SetBranchStatus("lepTopP4_AfterChi2*", 1);
+  fMTT->SetBranchStatus("hadTopP4_AfterChi2*", 1);
+
+  gen_top1_p4 = NULL;
+  gen_top2_p4 = NULL;
+
+  fMTT->SetBranchAddress("MC_Top1_p4.", &gen_top1_p4);
+  fMTT->SetBranchAddress("MC_Top2_p4.", &gen_top2_p4);
+
+  fMTT->SetBranchStatus("MC_Top1_p4*", 1);
+  fMTT->SetBranchStatus("MC_Top2_p4*", 1);
 
   fVertices->SetMakeClass(1);
   fVertices->SetBranchAddress("n_vertices", &n_vertices, NULL);
