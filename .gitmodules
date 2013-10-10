@@ -1,0 +1,3 @@
+[submodule "plotIt"]
+	path = plotIt
+	url = git@github.com:IPNL-CMS/plotIt.git
