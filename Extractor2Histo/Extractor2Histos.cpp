@@ -33,33 +33,33 @@ void Extractor2Histos::Loop()
 
   TH1::SetDefaultSumw2(true);
 
-  TH1D *hNVtx_noweight = new TH1D("hNVtx_noweight", "", 70, 0., 70);
-  TH1D *hNVtx = new TH1D("hNVtx", "", 70, 0., 70);
-  TH1D *hNVtx_beforesel = new TH1D("hNVtx_beforesel", "", 70, 0., 70);
+  TH1D *hNVtx_noweight = new TH1D("nVertex_reco_fullsel_noweight", "", 70, 0., 70);
+  TH1D *hNVtx = new TH1D("nVertex_reco_fullsel", "", 70, 0., 70);
+  TH1D *hNVtx_chi2sel = new TH1D("nVertex_reco_chi2sel", "", 70, 0., 70);
 
-  TH1D *hIsSel = new TH1D("hIsSel", "", 10, 0, 10);
+  TH1D *hIsSel = new TH1D("isSel", "", 10, 0, 10);
 
-  TH1D *hNTrueInt = new TH1D("hNTrueInt", "", 70, 0., 70);
-  TH1D *hNTrueInt_nosel = new TH1D("hNTrueInt_nosel", "", 70, 0., 70);
+  TH1D *hNTrueInt = new TH1D("nTrueInt_reco_fullsel", "", 70, 0., 70);
+  TH1D *hNTrueInt_nosel = new TH1D("nTrueInt_reco_nosel", "", 70, 0., 70);
 
-  TH1D *hLeptonPt = new TH1D("hLeptonPt", "", 50, 20., 200.);
-  TH1D *hLeptonPt_beforesel = new TH1D("hLeptonPt_beforesel", "", 50, 20., 200.);
-  TH1D *hLeptonPt_nosel = new TH1D("hLeptonPt_nosel", "", 100, 0., 200.);
+  TH1D *hLeptonPt = new TH1D("leptonPt_reco_fullsel", "", 50, 20., 200.);
+  TH1D *hLeptonPt_chi2sel = new TH1D("leptonPt_reco_chi2sel", "", 50, 20., 200.);
+  TH1D *hLeptonPt_nosel = new TH1D("leptonPt_reco_nosel", "", 100, 0., 200.);
 
-  TH1D *hLeptonEta = new TH1D("hLeptonEta", "", 100, -2*M_PI, 2*M_PI);
-  TH1D *hLeptonEta_beforesel = new TH1D("hLeptonEta_beforesel", "", 100, -2*M_PI, 2*M_PI);
-  TH1D *hLeptonEta_nosel = new TH1D("hLeptonEta_nosel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hLeptonEta = new TH1D("leptonEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hLeptonEta_chi2sel = new TH1D("leptonEta_reco_chi2sel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hLeptonEta_nosel = new TH1D("leptonEta_reco_nosel", "", 100, -2*M_PI, 2*M_PI);
 
-  TH1D *hLeptTopPt = new TH1D("hLeptTopPt", "", 60, 20., 600.);
-  TH1D *hLeptTopPt_beforesel = new TH1D("hLeptTopPt_beforesel", "", 60, 20., 600.);
-  TH1D *hLeptTopPt_nosel = new TH1D("hLeptTopPt_nosel", "", 60, 20., 600.);
+  TH1D *hLeptTopPt = new TH1D("leptTopPt_reco_fullsel", "", 60, 20., 600.);
+  TH1D *hLeptTopPt_chi2sel = new TH1D("leptTopPt_reco_chi2sel", "", 60, 20., 600.);
+  TH1D *hLeptTopPt_nosel = new TH1D("leptTopPt_reco_nosel", "", 60, 20., 600.);
 
   //TH1D *hTopPt_gen = new TH1D("hTopPt_gen", "", 60, 20., 600.);
   //TH1D *hTopEta_gen = new TH1D("hTopEta_gen", "", 50, -2*M_PI, 2*M_PI);
 
-  TH1D *hBoostTT_gen = new TH1D("hBoostTT_gen", "", 50, 0., 1.);
-  TH1D *hPtTT_gen = new TH1D("hPtTT_gen", "", 60, 0., 600.);
-  TH1D *hEtaTT_gen = new TH1D("hEtaTT_gen", "", 50, -2*M_PI, 2*M_PI);
+  TH1D *hBoostTT_gen = new TH1D("boostTT_gen", "", 50, 0., 1.);
+  TH1D *hPtTT_gen = new TH1D("ptTT_gen", "", 60, 0., 600.);
+  TH1D *hEtaTT_gen = new TH1D("etaTT_gen", "", 50, -2*M_PI, 2*M_PI);
 
   //TH1D *hTopPt_com_gen = new TH1D("hTopPt_com_gen", "", 60, 20., 600.);
   //TH1D *hTopEta_com_gen = new TH1D("hTopEta_com_gen", "", 50, -2*M_PI, 2*M_PI);
@@ -67,141 +67,173 @@ void Extractor2Histos::Loop()
   //TH1D *hPtTT_com_gen = new TH1D("hPtTT_com_gen", "", 60, 0., 600.);
   //TH1D *hEtaTT_com_gen = new TH1D("hEtaTT_com_gen", "", 50, -2*M_PI, 2*M_PI);
 
-  TH1D *hLeptTopEta = new TH1D("hLeptTopEta", "", 100, -2*M_PI, 2*M_PI);
-  TH1D *hLeptTopEta_beforesel = new TH1D("hLeptTopEta_beforesel", "", 50, -2*M_PI, 2*M_PI);
-  TH1D *hLeptTopEta_nosel = new TH1D("hLeptTopEta_nosel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hLeptTopEta = new TH1D("leptTopEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hLeptTopEta_chi2sel = new TH1D("leptTopEta_reco_chi2sel", "", 50, -2*M_PI, 2*M_PI);
+  TH1D *hLeptTopEta_nosel = new TH1D("leptTopEta_reco_nosel", "", 100, -2*M_PI, 2*M_PI);
 
-  TH1D *hHadrTopPt = new TH1D("hHadrTopPt", "", 60, 20., 600.);
-  TH1D *hHadrTopPt_beforesel = new TH1D("hHadrTopPt_beforesel", "", 60, 20., 600.);
-  TH1D *hHadrTopPt_nosel = new TH1D("hHadrTopPt_nosel", "", 60, 20., 600.);
+  TH1D *hHadrTopPt = new TH1D("hadrTopPt_reco_fullsel", "", 60, 20., 600.);
+  TH1D *hHadrTopPt_chi2sel = new TH1D("hadrTopPt_reco_chi2sel", "", 60, 20., 600.);
+  TH1D *hHadrTopPt_nosel = new TH1D("hadrTopPt_reco_nosel", "", 60, 20., 600.);
 
-  TH1D *hHadrTopEta = new TH1D("hHadrTopEta", "", 100, -2*M_PI, 2*M_PI);
-  TH1D *hHadrTopEta_beforesel = new TH1D("hHadrTopEta_beforesel", "", 50, -2*M_PI, 2*M_PI);
-  TH1D *hHadrTopEta_nosel = new TH1D("hHadrTopEta_nosel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hHadrTopEta = new TH1D("hadrTopEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hHadrTopEta_chi2sel = new TH1D("hadrTopEta_reco_chi2sel", "", 50, -2*M_PI, 2*M_PI);
+  TH1D *hHadrTopEta_nosel = new TH1D("hadrTopEta_reco_nosel", "", 100, -2*M_PI, 2*M_PI);
 
-  TH1D *hMuRelIso = new TH1D("hMuRelIso", "", 50, 0., 0.15);
-  TH1D *hMuRelIso_beforesel = new TH1D("hMuRelIso_beforesel", "", 50, 0., 0.15);
-  TH1D *hMuRelIso_nosel = new TH1D("hMuRelIso_nosel", "", 70, 0., 1);
+  TH1D *hMuRelIso = new TH1D("muRelIso_reco_fullsel", "", 50, 0., 0.15);
+  TH1D *hMuRelIso_chi2sel = new TH1D("muRelIso_reco_chi2sel", "", 50, 0., 0.15);
+  TH1D *hMuRelIso_nosel = new TH1D("muRelIso_reco_nosel", "", 70, 0., 1);
 
-  TH1D *hElRelIso = new TH1D("hElRelIso", "", 50, 0., 0.15);
-  TH1D *hElRelIso_beforesel = new TH1D("hElRelIso_beforesel", "", 50, 0., 0.15);
+  TH1D *hElRelIso = new TH1D("elRelIso_reco_fullsel", "", 50, 0., 0.15);
+  TH1D *hElRelIso_chi2sel = new TH1D("elRelIso_reco_chi2sel", "", 50, 0., 0.15);
 
-  TH1D *h1stjetpt = new TH1D("h1stjetpt", "", 100, 70., 640.);
-  TH1D *h1stjetpt_nosel = new TH1D("h1stjetpt_nosel", "", 100, 0., 640.);
-  TH1D *h1stjetpt_beforesel = new TH1D("h1stjetpt_beforesel", "", 100, 0., 640.);
+  TH1D *hFirstJetPt = new TH1D("firstJetPt_reco_fullsel", "", 100, 70., 640.);
+  TH1D *hFirstJetPt_nosel = new TH1D("firstJetPt_reco_nosel", "", 100, 0., 640.);
+  TH1D *hFirstJetPt_chi2sel = new TH1D("firstJetPt_reco_chi2sel", "", 100, 0., 640.);
 
-  TH1D *h2ndjetpt = new TH1D("h2ndjetpt", "", 100, 50., 620.);
-  TH1D *h2ndjetpt_beforesel = new TH1D("h2ndjetpt_beforesel", "", 100, 0., 620.);
-  TH1D *h2ndjetpt_nosel = new TH1D("h2ndjetpt_nosel", "", 100, 0., 620.);
+  TH1D *hSecondJetPt = new TH1D("secondJetPt_reco_fullsel", "", 100, 50., 620.);
+  TH1D *hSecondJetPt_chi2sel = new TH1D("secondJetPt_reco_chi2sel", "", 100, 0., 620.);
+  TH1D *hSecondJetPt_nosel = new TH1D("secondJetPt_reco_nosel", "", 100, 0., 620.);
 
-  TH1D *h3rdjetpt = new TH1D("h3rdjetpt", "", 50, 30., 300.);
-  TH1D *h3rdjetpt_beforesel = new TH1D("h3rdjetpt_beforesel", "", 50, 0., 300.);
-  TH1D *h3rdjetpt_nosel = new TH1D("h3rdjetpt_nosel", "", 50, 0., 300.);
+  TH1D *hThirdJetPt = new TH1D("thirdJetPt_reco_fullsel", "", 50, 30., 300.);
+  TH1D *hThirdJetPt_chi2sel = new TH1D("thirdJetPt_reco_chi2sel", "", 50, 0., 300.);
+  TH1D *hThirdJetPt_nosel = new TH1D("thirdJetPt_reco_nosel", "", 50, 0., 300.);
 
-  TH1D *h4thjetpt = new TH1D("h4thjetpt", "", 50, 30., 300.);
-  TH1D *h4thjetpt_beforesel = new TH1D("h4thjetpt_beforesel", "", 50, 0., 300.);
-  TH1D *h4thjetpt_nosel = new TH1D("h4thjetpt_nosel", "", 50, 0., 300.);
+  TH1D *hFourthJetPt = new TH1D("fourthJetPt_reco_fullsel", "", 50, 30., 300.);
+  TH1D *hFourthJetPt_chi2sel = new TH1D("fourthJetPt_reco_chi2sel", "", 50, 0., 300.);
+  TH1D *hFourthJetPt_nosel = new TH1D("fourthJetPt_reco_nosel", "", 50, 0., 300.);
 
-  TH1D *h1stjeteta = new TH1D("h1stjeteta", "", 100, -2*M_PI, 2*M_PI);
-  TH1D *h1stjeteta_nosel = new TH1D("h1stjeteta_nosel", "", 100, -2*M_PI, 2*M_PI);
-  TH1D *h1stjeteta_beforesel = new TH1D("h1stjeteta_beforesel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hFirstJetEta = new TH1D("firstJetEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hFirstJetEta_nosel = new TH1D("firstJetEta_reco_nosel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hFirstJetEta_chi2sel = new TH1D("firstJetEta_reco_chi2sel", "", 100, -2*M_PI, 2*M_PI);
 
-  TH1D *h2ndjeteta = new TH1D("h2ndjeteta", "", 100, -2*M_PI, 2*M_PI);
-  TH1D *h2ndjeteta_beforesel = new TH1D("h2ndjeteta_beforesel", "", 100, -2*M_PI, 2*M_PI);
-  TH1D *h2ndjeteta_nosel = new TH1D("h2ndjeteta_nosel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hSecondJetEta = new TH1D("secondJetEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hSecondJetEta_chi2sel = new TH1D("secondJetEta_reco_chi2sel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hSecondJetEta_nosel = new TH1D("secondJetEta_reco_nosel", "", 100, -2*M_PI, 2*M_PI);
 
-  TH1D *h3rdjeteta = new TH1D("h3rdjeteta", "", 100, -2*M_PI, 2*M_PI);
-  TH1D *h3rdjeteta_beforesel = new TH1D("h3rdjeteta_beforesel", "", 100, -2*M_PI, 2*M_PI);
-  TH1D *h3rdjeteta_nosel = new TH1D("h3rdjeteta_nosel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hThirdJetEta = new TH1D("thirdJetEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hThirdJetEta_chi2sel = new TH1D("thirdJetEta_reco_chi2sel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hThirdJetEta_nosel = new TH1D("thirdJetEta_reco_nosel", "", 100, -2*M_PI, 2*M_PI);
 
-  TH1D *h4thjeteta = new TH1D("h4thjeteta", "", 100, -2*M_PI, 2*M_PI);
-  TH1D *h4thjeteta_beforesel = new TH1D("h4thjeteta_beforesel", "", 100, -2*M_PI, 2*M_PI);
-  TH1D *h4thjeteta_nosel = new TH1D("h4thjeteta_nosel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hFourthJetEta = new TH1D("fourthJetEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hFourthJetEta_chi2sel = new TH1D("fourthJetEta_reco_chi2sel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hFourthJetEta_nosel = new TH1D("fourthJetEta_reco_nosel", "", 100, -2*M_PI, 2*M_PI);
 
-  TH1D *hMET = new TH1D("hMET", "", 100, 20., 400.);
-  TH1D *hMET_nosel = new TH1D("hMET_nosel", "", 100, 0., 400.);
-  TH1D *hMET_beforesel = new TH1D("hMET_beforesel", "", 100, 20., 400.);
+  TH1D *hMET = new TH1D("MET_reco_fullsel", "", 100, 20., 400.);
+  TH1D *hMET_nosel = new TH1D("MET_reco_nosel", "", 100, 0., 400.);
+  TH1D *hMET_chi2sel = new TH1D("MET_reco_chi2sel", "", 100, 20., 400.);
 
-  TH1D *hmtlep = new TH1D("hmtlep", "", 100, 120., 240.);
-  TH1D *hmthad = new TH1D("hmthad", "", 150, 120., 300.);
+  TH1D *hmtlep = new TH1D("mtLep_reco_fullsel", "", 100, 120., 240.);
+  TH1D *hmthad = new TH1D("mtHad_reco_fullsel", "", 150, 120., 300.);
   
-  TH1D *hmttSelected_btag_sel = new TH1D("hmttSelected_btag_sel", "", 250, 0., 2500.);
-  TH1D *hmttSelected_btag_sel_mass_cut = new TH1D("hmttSelected_btag_sel_mass_cut", "", 250, 0., 2500.);
+  TH1D *hmttSelected_btag_sel = new TH1D("mttSelected_btag_sel_reco_fullsel", "", 250, 0., 2500.);
+  TH1D *hmttSelected_btag_sel_mass_cut = new TH1D("mttSelected_btag_sel_mass_cut_reco_fullsel", "", 250, 0., 2500.);
 
-  TH1D *hNGoodMuons = new TH1D("hNGoodMuons", "", 5, -0.5, 4.5);
+  TH1D *hNGoodJets = new TH1D("nGoodJets_reco_fullsel", "", 6, 3.5, 9.5);
+  TH1D *hNGoodJets_chi2sel = new TH1D("nGoodJets_reco_chi2sel", "", 6, 3.5, 9.5);
 
-  TH1D *hNGoodJets = new TH1D("hNGoodJets", "", 6, 3.5, 9.5);
-  TH1D *hNGoodJets_beforesel = new TH1D("hNGoodJets_beforesel", "", 6, 3.5, 9.5);
+  TH1D *hNBtaggedJets = new TH1D("nBTaggedJets_reco_fullsel", "", 5, -0.5, 4.5);
+  TH1D *hNBtaggedJets_chi2sel = new TH1D("nBTaggedJets_reco_chi2sel", "", 5, -0.5, 4.5);
 
-  TH1D *hNBtaggedJets = new TH1D("hNBtaggedJets", "", 5, -0.5, 4.5);
-  TH1D *hNBtaggedJets_beforesel = new TH1D("hNBtaggedJets_beforesel", "", 5, -0.5, 4.5);
+  TH1D *h_mtt_gen_no_sel = new TH1D("mtt_gen_nosel", "", 500, 0., 2500.);
+  TH1D *h_mtt_gen_chi2sel = new TH1D("mtt_gen_chi2sel", "", 500, 0., 2500.);
+  TH1D *h_mtt_gen = new TH1D("mtt_gen_fullsel", "", 500, 0, 2500.);
 
-  TH1D *h_mtt_gen_no_sel = new TH1D("h_mtt_gen_no_sel", "", 500, 0., 2500.);
-  TH1D *h_mtt_gen_beforesel = new TH1D("h_mtt_gen_beforesel", "", 500, 0., 2500.);
-  TH1D *h_mtt_gen = new TH1D("h_mtt_gen", "", 500, 0, 2500.);
-
-  TH1D *h_mtt_resolution = new TH1D("h_mtt_resolution", "", 100, -600., 600.);
+  TH1D *h_mtt_resolution = new TH1D("mtt_resolution", "", 100, -600., 600.);
 
   TProfile *pMttResolution_btag_sel = new TProfile("pMttResolution_btag_sel", "", nBins, bins);
   pMttResolution_btag_sel->SetXTitle("m_{t#bar{t}}^{gen} [GeV/c^{2}]");
 
-  TH1D *hBoostTT = new TH1D("hBoostTT", "", 50, 0., 1.);
-  TH1D *hPtTT = new TH1D("hPtTT", "", 60, 0., 600.);
-  TH1D *hEtaTT = new TH1D("hEtaTT", "", 50, -2*M_PI, 2*M_PI);
+  TH1D *hBoostTT = new TH1D("boostTT_reco_fullsel", "", 50, 0., 1.);
+  TH1D *hPtTT = new TH1D("ptTT_reco_fullsel", "", 60, 0., 600.);
+  TH1D *hEtaTT = new TH1D("etaTT_reco_fullsel", "", 50, -2*M_PI, 2*M_PI);
 
-  TH1D *hBoostTT_beforesel = new TH1D("hBoostTT_beforesel", "", 50, 0., 1.);
-  TH1D *hPtTT_beforesel = new TH1D("hPtTT_beforesel", "", 60, 0., 600.);
-  TH1D *hEtaTT_beforesel = new TH1D("hEtaTT_beforesel", "", 50, -2*M_PI, 2*M_PI);
+  TH1D *hBoostTT_chi2sel = new TH1D("boostTT_reco_chi2sel", "", 50, 0., 1.);
+  TH1D *hPtTT_chi2sel = new TH1D("ptTT_reco_chi2sel", "", 60, 0., 600.);
+  TH1D *hEtaTT_chi2sel = new TH1D("etaTT_reco_chi2sel", "", 50, -2*M_PI, 2*M_PI);
 
-  TH1D *hDeltaPhiTops_gen = new TH1D("hDeltaPhiTops_gen", "", 50, 0, M_PI);
-  TH1D *hDeltaPhiTops_reco_fullsel = new TH1D("hDeltaPhiTops_reco_fullsel", "", 50, 0, M_PI);
+  TH1D *hDeltaPhiTops_gen = new TH1D("deltaPhiTops_gen", "", 50, 0, M_PI);
+  TH1D *hDeltaPhiTops_reco_fullsel = new TH1D("deltaPhiTops_reco_fullsel", "", 50, 0, M_PI);
 
-  TH1D *hDeltaEtaTops_gen = new TH1D("hDeltaEtaTops_gen", "", 50, -3*M_PI, 3*M_PI);
-  TH1D *hDeltaEtaTops_reco_fullsel = new TH1D("hDeltaEtaTops_reco_fullsel", "", 50, -3*M_PI, 3*M_PI);
+  TH1D *hDeltaEtaTops_gen = new TH1D("deltaEtaTops_gen", "", 50, -3*M_PI, 3*M_PI);
+  TH1D *hDeltaEtaTops_reco_fullsel = new TH1D("deltaEtaTops_reco_fullsel", "", 50, -3*M_PI, 3*M_PI);
 
-  TH1D *hDeltaRTops_gen = new TH1D("hDeltaRTops_gen", "", 50, 0, 10);
-  TH1D *hDeltaRTops_reco_fullsel = new TH1D("hDeltaRTops_reco_fullsel", "", 50, 0, 10);
+  TH1D *hDeltaRTops_gen = new TH1D("deltaRTops_gen", "", 50, 0, 10);
+  TH1D *hDeltaRTops_reco_fullsel = new TH1D("deltaRTops_reco_fullsel", "", 50, 0, 10);
+
+  /******
+   * Leptonic side
+   */
+  TH1* hDeltaPhiLeptonNeutrino_gen = new TH1D("deltaPhiLeptonNeutrino_gen", "", 50, 0, M_PI);
+
+  TH1* hDeltaRLeptonNeutrino_gen = new TH1D("deltaRLeptonNeutrino_gen", "", 50, 0, 10);
+
+  TH1* hDeltaEtaLeptonNeutrino_gen = new TH1D("deltaEtaLeptonNeutrino_gen", "", 50, -3*M_PI, 3*M_PI);
+
+  // W 
+  TH1* hLeptonicWPt_gen = new TH1D("ptWLeptonic_gen", "", 60, 0, 600.);
+  TH1* hLeptonicWEta_gen = new TH1D("etaWLeptonic_gen", "", 50, -3*M_PI, 3*M_PI);
+
+  /*****
+   * Hadronic side
+   */
+  TH1* hDeltaPhiTwoLightJets_gen = new TH1D("deltaPhiTwoLightJets_gen", "", 50, 0, M_PI);
+  TH1* hDeltaRTwoLightJets_gen = new TH1D("deltaRTwoLightJets_gen", "", 50, 0, 10);
+  TH1* hDeltaEtaTwoLightJets_gen = new TH1D("deltaEtaTwoLightJets_gen", "", 50, -3*M_PI, 3.*M_PI);
+
+  // W 
+  TH1* hHadronicWPt_gen = new TH1D("ptWHadronic_gen", "", 60, 0, 600.);
+  TH1* hHadronicWEta_gen = new TH1D("etaWHadronic_gen", "", 50, -3*M_PI, 3*M_PI);
+
+
+  TH1* hDeltaPhiW_gen = new TH1D("deltaPhiW_gen", "", 50, 0, M_PI);
+  TH1* hDeltaRW_gen = new TH1D("deltaRW_gen", "", 50, 0, 10);
+  TH1* hDeltaEtaW_gen = new TH1D("deltaEtaW_gen", "", 50, -3*M_PI, 3.*M_PI);
+
+
+  TH1* hHT_reco_nosel = new TH1D("HT_reco_nosel", "", 100, 0, 1000);
+  TH1* hHT30_reco_nosel = new TH1D("HT30_reco_nosel", "", 100, 0, 1000);
+
+  TH1* hHTFull_reco_nosel = new TH1D("HTFull_reco_nosel", "", 100, 0, 1000);
 
   if (mIsSemiMu) {
     hLeptonPt->SetXTitle("#mu p_{T} [GeV/c]");
-    hLeptonPt_beforesel->SetXTitle("#mu p_{T} [GeV/c]");
+    hLeptonPt_chi2sel->SetXTitle("#mu p_{T} [GeV/c]");
   } else {
-    hLeptonPt_beforesel->SetXTitle("e p_{T} [GeV/c]");
+    hLeptonPt_chi2sel->SetXTitle("e p_{T} [GeV/c]");
     hLeptonPt->SetXTitle("e p_{T} [GeV/c]");
   }
 
-  h1stjetpt->SetXTitle("1^{st} jet p_{T} [GeV/c]");
-  h1stjetpt_nosel->SetXTitle("1^{st} jet p_{T} [GeV/c]");
-  h1stjetpt_beforesel->SetXTitle("1^{st} jet p_{T} [GeV/c]");
+  hFirstJetPt->SetXTitle("1^{st} jet p_{T} [GeV/c]");
+  hFirstJetPt_nosel->SetXTitle("1^{st} jet p_{T} [GeV/c]");
+  hFirstJetPt_chi2sel->SetXTitle("1^{st} jet p_{T} [GeV/c]");
 
-  h2ndjetpt->SetXTitle("2^{nd} jet p_{T} [GeV/c]");
-  h2ndjetpt_beforesel->SetXTitle("2^{nd} jet p_{T} [GeV/c]");
+  hSecondJetPt->SetXTitle("2^{nd} jet p_{T} [GeV/c]");
+  hSecondJetPt_chi2sel->SetXTitle("2^{nd} jet p_{T} [GeV/c]");
 
-  h3rdjetpt->SetXTitle("3^{rd} jet p_{T} [GeV/c]");
-  h3rdjetpt_beforesel->SetXTitle("3^{rd} jet p_{T} [GeV/c]");
+  hThirdJetPt->SetXTitle("3^{rd} jet p_{T} [GeV/c]");
+  hThirdJetPt_chi2sel->SetXTitle("3^{rd} jet p_{T} [GeV/c]");
 
-  h4thjetpt_beforesel->SetXTitle("4^{th} jet p_{T} [GeV/c]");
+  hFourthJetPt_chi2sel->SetXTitle("4^{th} jet p_{T} [GeV/c]");
 
   hMET->SetXTitle("MET [GeV]");
-  hMET_beforesel->SetXTitle("MET [GeV]");
+  hMET_chi2sel->SetXTitle("MET [GeV]");
 
   hmtlep->SetXTitle("leptonic m_{t} [GeV/c^{2}]");
   hmthad->SetXTitle("hadronic m_{t} [GeV/c^{2}]");
 
   h_mtt_gen_no_sel->SetXTitle("m_{t#bar{t}}^{gen} [GeV/c^{2}]");
-  h_mtt_gen_beforesel->SetXTitle("m_{t#bar{t}}^{gen} [GeV/c^{2}]");
+  h_mtt_gen_chi2sel->SetXTitle("m_{t#bar{t}}^{gen} [GeV/c^{2}]");
   h_mtt_gen->SetXTitle("m_{t#bar{t}}^{gen} [GeV/c^{2}]");
 
   h_mtt_resolution->SetXTitle("m_{t#bar{t}}^{reco} - m_{t#bar{t}}^{gen} [GeV/c^{2}]");
 
   hmttSelected_btag_sel->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
   hmttSelected_btag_sel_mass_cut->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
-  hNGoodMuons->SetXTitle("Num good #mu");
   hNGoodJets->SetXTitle("Num good jets");
-  hNGoodJets_beforesel->SetXTitle("Num good jets");
+  hNGoodJets_chi2sel->SetXTitle("Num good jets");
 
   hNBtaggedJets->SetXTitle("Num TCHEL jets");
-  hNBtaggedJets_beforesel->SetXTitle("Num TCHEL jets");
+  hNBtaggedJets_chi2sel->SetXTitle("Num TCHEL jets");
 
   Long64_t nentries = fMTT->GetEntries();
   //nentries = 10000;
@@ -231,32 +263,95 @@ void Extractor2Histos::Loop()
       continue;
     }
 
+    if (MC_channel == 1 || MC_channel == 2) {
+      TLorentzVector leptonic_W(0., 0., 0., 0.);
+      if (gen_lepton_p4->Pt() != 0 && gen_neutrino_p4->Pt() != 0) {
+        hDeltaPhiLeptonNeutrino_gen->Fill(fabs(gen_lepton_p4->DeltaPhi(*gen_neutrino_p4)), eventWeight);
+        hDeltaRLeptonNeutrino_gen->Fill(gen_lepton_p4->DeltaR(*gen_neutrino_p4), eventWeight);
+        hDeltaEtaLeptonNeutrino_gen->Fill(gen_lepton_p4->Eta() - gen_neutrino_p4->Eta(), eventWeight);
+
+        leptonic_W = *gen_lepton_p4 + *gen_neutrino_p4;
+        hLeptonicWPt_gen->Fill(leptonic_W.Pt(), eventWeight);
+        hLeptonicWEta_gen->Fill(leptonic_W.Eta(), eventWeight);
+      }
+
+      TLorentzVector hadronic_W(0., 0., 0., 0.);
+      if (gen_lightJet1_p4->Pt() != 0 && gen_lightJet2_p4->Pt() != 0) {
+        hDeltaPhiTwoLightJets_gen->Fill(fabs(gen_lightJet1_p4->DeltaPhi(*gen_lightJet2_p4)), eventWeight);
+        hDeltaRTwoLightJets_gen->Fill(gen_lightJet1_p4->DeltaR(*gen_lightJet2_p4), eventWeight);
+        hDeltaEtaTwoLightJets_gen->Fill(gen_lightJet1_p4->Eta() - gen_lightJet2_p4->Eta(), eventWeight);
+
+        hadronic_W = *gen_lightJet1_p4 + *gen_lightJet2_p4;
+        hHadronicWPt_gen->Fill(leptonic_W.Pt(), eventWeight);
+        hHadronicWEta_gen->Fill(leptonic_W.Eta(), eventWeight);
+      }
+
+      if (leptonic_W.Pt() != 0 && hadronic_W.Pt() != 0) {
+        hDeltaPhiW_gen->Fill(fabs(leptonic_W.DeltaPhi(hadronic_W)), eventWeight);
+        hDeltaRW_gen->Fill(leptonic_W.DeltaR(hadronic_W), eventWeight);
+        hDeltaEtaW_gen->Fill(leptonic_W.Eta() - hadronic_W.Eta(), eventWeight);
+      }
+    }
+
     hIsSel->Fill(isSel, eventWeight);
     h_mtt_gen_no_sel->Fill(MC_mtt, eventWeight);
     hMET_nosel->Fill(MET, eventWeight);
     if (jet_p4->GetEntriesFast() > 0) {
       TLorentzVector* p4 = (TLorentzVector*) (*jet_p4)[0];
-      h1stjetpt_nosel->Fill(p4->Pt(), eventWeight);
-      h1stjeteta_nosel->Fill(p4->Eta(), eventWeight);
+      hFirstJetPt_nosel->Fill(p4->Pt(), eventWeight);
+      hFirstJetEta_nosel->Fill(p4->Eta(), eventWeight);
     }
 
     if (jet_p4->GetEntriesFast() > 1) {
       TLorentzVector* p4 = (TLorentzVector*) (*jet_p4)[1];
-      h2ndjetpt_nosel->Fill(p4->Pt(), eventWeight);
-      h2ndjeteta_nosel->Fill(p4->Eta(), eventWeight);
+      hSecondJetPt_nosel->Fill(p4->Pt(), eventWeight);
+      hSecondJetEta_nosel->Fill(p4->Eta(), eventWeight);
     }
 
     if (jet_p4->GetEntriesFast() > 2) {
       TLorentzVector* p4 = (TLorentzVector*) (*jet_p4)[2];
-      h3rdjetpt_nosel->Fill(p4->Pt(), eventWeight);
-      h3rdjeteta_nosel->Fill(p4->Eta(), eventWeight);
+      hThirdJetPt_nosel->Fill(p4->Pt(), eventWeight);
+      hThirdJetEta_nosel->Fill(p4->Eta(), eventWeight);
     }
 
     if (jet_p4->GetEntriesFast() > 3) {
       TLorentzVector* p4 = (TLorentzVector*) (*jet_p4)[3];
-      h4thjeteta_nosel->Fill(p4->Eta(), eventWeight);
-      h4thjetpt_nosel->Fill(p4->Pt(), eventWeight);
+      hFourthJetPt_nosel->Fill(p4->Eta(), eventWeight);
+      hFourthJetEta_nosel->Fill(p4->Pt(), eventWeight);
     }
+
+    float HT = 0;
+    float HT30 = 0;
+    for (uint32_t i = 0; i < jet_p4->GetEntriesFast(); i++) {
+      float pt = ((TLorentzVector*) (*jet_p4)[i])->Pt();
+
+      HT += pt;
+      if (pt > 30)
+        HT30 += pt;
+    }
+
+    double ptLepton = 0;
+    double etaLepton = 0;
+    double ptLeptonCut = 0;
+    if (mIsSemiMu) {
+      if (nGoodMuons > 0) {
+        ptLepton = muonPt[0];
+        etaLepton = muonEta[0];
+        ptLeptonCut = 25.;
+      }
+    } else {
+      if (nGoodElectrons > 0) {
+        ptLepton = electronPt[0];
+        etaLepton = electronEta[0];
+        ptLeptonCut = 30.;
+      }
+    }
+
+    float HTFull = HT + ptLepton + MET;
+
+    hHT_reco_nosel->Fill(HT, eventWeight);
+    hHT30_reco_nosel->Fill(HT30, eventWeight);
+    hHTFull_reco_nosel->Fill(HTFull, eventWeight);
 
     //hTopPt_gen->Fill(MC_top1Pt, eventWeight);
     //hTopPt_gen->Fill(MC_top2Pt, eventWeight);
@@ -294,65 +389,54 @@ void Extractor2Histos::Loop()
     hHadrTopPt_nosel->Fill(hadTopPt_AfterChi2, eventWeight);
     hHadrTopEta_nosel->Fill(hadTopEta_AfterChi2, eventWeight);
 
-    double ptLepton = -1;
-    double etaLepton = -1;
-    double ptLeptonCut = -1;
     if (mIsSemiMu)
     {
       if (nGoodMuons <= 0)
         continue;
-
-      ptLepton = muonPt[0];
-      etaLepton = muonEta[0];
-      ptLeptonCut = 25.;
     }
     else
     {
       if (nGoodElectrons <= 0)
         continue;
-
-      ptLepton = electronPt[0];
-      etaLepton = electronEta[0];
-      ptLeptonCut = 30.;
     }
 
     if (isSel == 1 && numComb > 0)
     {
-      h_mtt_gen_beforesel->Fill(MC_mtt, eventWeight);
+      h_mtt_gen_chi2sel->Fill(MC_mtt, eventWeight);
 
-      hNGoodJets_beforesel->Fill(nJets, eventWeight);
-      hNBtaggedJets_beforesel->Fill(nBtaggedJets_CSVM, eventWeight);
+      hNGoodJets_chi2sel->Fill(nJets, eventWeight);
+      hNBtaggedJets_chi2sel->Fill(nBtaggedJets_CSVM, eventWeight);
 
-      hLeptonPt_beforesel->Fill(ptLepton, eventWeight);
-      hLeptonEta_beforesel->Fill(etaLepton, eventWeight);
+      hLeptonPt_chi2sel->Fill(ptLepton, eventWeight);
+      hLeptonEta_chi2sel->Fill(etaLepton, eventWeight);
       if (mIsSemiMu)
-        hMuRelIso_beforesel->Fill(muRelIso[0], eventWeight);
+        hMuRelIso_chi2sel->Fill(muRelIso[0], eventWeight);
       else
-        hElRelIso_beforesel->Fill(elRelIso[0], eventWeight);
+        hElRelIso_chi2sel->Fill(elRelIso[0], eventWeight);
       
-      hMET_beforesel->Fill(MET, eventWeight);
+      hMET_chi2sel->Fill(MET, eventWeight);
 
-      hLeptTopPt_beforesel->Fill(lepTopPt_AfterChi2, eventWeight);
-      hLeptTopEta_beforesel->Fill(lepTopEta_AfterChi2, eventWeight);
+      hLeptTopPt_chi2sel->Fill(lepTopPt_AfterChi2, eventWeight);
+      hLeptTopEta_chi2sel->Fill(lepTopEta_AfterChi2, eventWeight);
 
-      hHadrTopPt_beforesel->Fill(hadTopPt_AfterChi2, eventWeight);
-      hHadrTopEta_beforesel->Fill(hadTopEta_AfterChi2, eventWeight);
+      hHadrTopPt_chi2sel->Fill(hadTopPt_AfterChi2, eventWeight);
+      hHadrTopEta_chi2sel->Fill(hadTopEta_AfterChi2, eventWeight);
 
-      h1stjetpt_beforesel->Fill(p_1stjetpt, eventWeight);
-      h2ndjetpt_beforesel->Fill(p_2ndjetpt, eventWeight);
-      h3rdjetpt_beforesel->Fill(p_3rdjetpt, eventWeight);
-      h4thjetpt_beforesel->Fill(p_4thjetpt, eventWeight);
+      hFirstJetPt_chi2sel->Fill(p_1stjetpt, eventWeight);
+      hSecondJetPt_chi2sel->Fill(p_2ndjetpt, eventWeight);
+      hThirdJetPt_chi2sel->Fill(p_3rdjetpt, eventWeight);
+      hFourthJetPt_chi2sel->Fill(p_4thjetpt, eventWeight);
 
-      h1stjeteta_beforesel->Fill(jetEta[0], eventWeight);
-      h2ndjeteta_beforesel->Fill(jetEta[1], eventWeight);
-      h3rdjeteta_beforesel->Fill(jetEta[2], eventWeight);
-      h4thjeteta_beforesel->Fill(jetEta[3], eventWeight);
+      hFirstJetEta_chi2sel->Fill(jetEta[0], eventWeight);
+      hSecondJetEta_chi2sel->Fill(jetEta[1], eventWeight);
+      hThirdJetEta_chi2sel->Fill(jetEta[2], eventWeight);
+      hFourthJetEta_chi2sel->Fill(jetEta[3], eventWeight);
 
-      hNVtx_beforesel->Fill(n_vertices, eventWeight);
+      hNVtx_chi2sel->Fill(n_vertices, eventWeight);
 
-      hBoostTT_beforesel->Fill(beta_tt_AfterChi2, eventWeight);
-      hPtTT_beforesel->Fill(pt_tt_AfterChi2, eventWeight);
-      hEtaTT_beforesel->Fill(eta_tt_AfterChi2, eventWeight);
+      hBoostTT_chi2sel->Fill(beta_tt_AfterChi2, eventWeight);
+      hPtTT_chi2sel->Fill(pt_tt_AfterChi2, eventWeight);
+      hEtaTT_chi2sel->Fill(eta_tt_AfterChi2, eventWeight);
 
       bool btagSel = false;
       if (mBTag == 1)
@@ -360,9 +444,8 @@ void Extractor2Histos::Loop()
       else if (mBTag == 2)
         btagSel = nBtaggedJets_CSVM > 1;
 
-      if (ptLepton > ptLeptonCut && btagSel && p_1stjetpt > 70. && p_2ndjetpt > 50 && mtt_AfterChi2 > 0. && bestSolChi2 < 500)
+      if (ptLepton > ptLeptonCut && btagSel && p_1stjetpt > 70. && p_2ndjetpt > 50 && mtt_AfterChi2 > 0. && (isinf(bestSolChi2) || bestSolChi2 < 500))
       {
-
         hBoostTT->Fill(beta_tt_AfterChi2, eventWeight);
         hPtTT->Fill(pt_tt_AfterChi2, eventWeight);
         hEtaTT->Fill(eta_tt_AfterChi2, eventWeight);
@@ -372,14 +455,14 @@ void Extractor2Histos::Loop()
 
         hLeptonPt->Fill(ptLepton, eventWeight);
         hLeptonEta->Fill(etaLepton, eventWeight);
-        h1stjetpt->Fill(p_1stjetpt, eventWeight);
-        h2ndjetpt->Fill(p_2ndjetpt, eventWeight);
-        h3rdjetpt->Fill(p_3rdjetpt, eventWeight);
-        h4thjetpt->Fill(p_4thjetpt, eventWeight);
-        h1stjeteta->Fill(jetEta[0], eventWeight);
-        h2ndjeteta->Fill(jetEta[1], eventWeight);
-        h3rdjeteta->Fill(jetEta[2], eventWeight);
-        h4thjeteta->Fill(jetEta[3], eventWeight);
+        hFirstJetPt->Fill(p_1stjetpt, eventWeight);
+        hSecondJetPt->Fill(p_2ndjetpt, eventWeight);
+        hThirdJetPt->Fill(p_3rdjetpt, eventWeight);
+        hFourthJetPt->Fill(p_4thjetpt, eventWeight);
+        hFirstJetEta->Fill(jetEta[0], eventWeight);
+        hSecondJetEta->Fill(jetEta[1], eventWeight);
+        hThirdJetEta->Fill(jetEta[2], eventWeight);
+        hFourthJetEta->Fill(jetEta[3], eventWeight);
         hMET->Fill(MET, eventWeight);
 
         hLeptTopPt->Fill(lepTopPt_AfterChi2, eventWeight);
@@ -493,6 +576,7 @@ void Extractor2Histos::Init()
 
   fMTT->SetBranchStatus("*", 0);
 
+  SetBranchAddress(fMTT, "MC_channel", &MC_channel, NULL);
   SetBranchAddress(fMTT, "MC_mtt", &MC_mtt, &b_MC_mtt);
   SetBranchAddress(fMTT, "MC_beta_tt", &MC_boost_tt, NULL);
 
@@ -579,30 +663,52 @@ void Extractor2Histos::Init()
   lepTopP4_AfterChi2 = NULL;
   hadTopP4_AfterChi2 = NULL;
 
-  fMTT->SetBranchAddress("lepTopP4_AfterChi2.", &lepTopP4_AfterChi2);
-  fMTT->SetBranchAddress("hadTopP4_AfterChi2.", &hadTopP4_AfterChi2);
-
   fMTT->SetBranchStatus("lepTopP4_AfterChi2*", 1);
   fMTT->SetBranchStatus("hadTopP4_AfterChi2*", 1);
+  fMTT->SetBranchAddress("lepTopP4_AfterChi2.", &lepTopP4_AfterChi2);
+  fMTT->SetBranchAddress("hadTopP4_AfterChi2.", &hadTopP4_AfterChi2);
 
   gen_top1_p4 = NULL;
   gen_top2_p4 = NULL;
 
+  fMTT->SetBranchStatus("MC_Top1_p4*", 1);
+  fMTT->SetBranchStatus("MC_Top2_p4*", 1);
   fMTT->SetBranchAddress("MC_Top1_p4.", &gen_top1_p4);
   fMTT->SetBranchAddress("MC_Top2_p4.", &gen_top2_p4);
 
-  fMTT->SetBranchStatus("MC_Top1_p4*", 1);
-  fMTT->SetBranchStatus("MC_Top2_p4*", 1);
+  gen_lepton_p4 = NULL;
+  gen_neutrino_p4 = NULL;
+
+  fMTT->SetBranchStatus("MC_lepton_p4*", 1);
+  fMTT->SetBranchStatus("MC_neutrino_p4*", 1);
+  fMTT->SetBranchAddress("MC_lepton_p4.", &gen_lepton_p4);
+  fMTT->SetBranchAddress("MC_neutrino_p4.", &gen_neutrino_p4);
+
+  gen_leptonic_B_p4 = NULL;
+  gen_hadronic_B_p4 = NULL;
+
+  fMTT->SetBranchStatus("MC_leptonic_B_p4*", 1);
+  fMTT->SetBranchStatus("MC_hadronic_B_p4*", 1);
+  fMTT->SetBranchAddress("MC_leptonic_B_p4.", &gen_leptonic_B_p4);
+  fMTT->SetBranchAddress("MC_hadronic_B_p4.", &gen_hadronic_B_p4);
+
+  gen_lightJet1_p4 = NULL;
+  gen_lightJet2_p4 = NULL;
+
+  fMTT->SetBranchStatus("MC_lightJet1_B_p4*", 1);
+  fMTT->SetBranchStatus("MC_lightJet2_B_p4*", 1);
+  fMTT->SetBranchAddress("MC_lightJet1_B_p4.", &gen_lightJet1_p4);
+  fMTT->SetBranchAddress("MC_lightJet2_B_p4.", &gen_lightJet2_p4);
 
   fVertices->SetMakeClass(1);
-  fVertices->SetBranchAddress("n_vertices", &n_vertices, NULL);
   fVertices->SetBranchStatus("*", 0);
   fVertices->SetBranchStatus("n_vertices", 1);
+  fVertices->SetBranchAddress("n_vertices", &n_vertices, NULL);
 
   fEvent->SetMakeClass(1);
-  fEvent->SetBranchAddress("nTrueInteractions", &n_trueInteractions, NULL);
   fEvent->SetBranchStatus("*", 0);
   fEvent->SetBranchStatus("nTrueInteractions", 1);
+  fEvent->SetBranchAddress("nTrueInteractions", &n_trueInteractions, NULL);
 
   muon_p4 = NULL;
   fLooseMuons->SetMakeClass(1);
