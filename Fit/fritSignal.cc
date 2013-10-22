@@ -57,7 +57,7 @@ int FIT_ERROR_LEVEL = -1;
 
 std::string base_path = "";
 
-void fritSignal(TChain* chain, const std::string& jecType, const std::string& jer, const std::string& pu, const std::string& pdf, const std::string& configFile, int massZprime, int btag);
+void fritSignal(TChain* chain, const std::string& jecType, const std::string& jer, const std::string& pu, const std::string& pdf, const std::string& configFile, int massZprime, int btag, bool saveWorkspace);
 
 void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {
 
@@ -105,6 +105,8 @@ int main(int argc, char** argv) {
 
     TCLAP::ValueArg<std::string> configFileArg("", "config-file", "Fit configuration file", false, "frit_pdf.json", "string", cmd);
 
+    TCLAP::SwitchArg saveWorkspaceArg("", "save-workspace", "Save the workspace for redoing plot after", cmd);
+
     cmd.parse(argc, argv);
 
     std::vector<std::string> inputFiles;
@@ -147,7 +149,7 @@ int main(int argc, char** argv) {
       std::cerr << "Please set --pileup, --jec and --pdf separately" << std::endl;
     }
 
-    fritSignal(chain, jec, jer, pu, pdf, configFileArg.getValue(), massArg.getValue(), btagArg.getValue());
+    fritSignal(chain, jec, jer, pu, pdf, configFileArg.getValue(), massArg.getValue(), btagArg.getValue(), saveWorkspaceArg.getValue());
 
     delete chain;
 
@@ -360,7 +362,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
   std::cout << std::endl;
 }
 
-void fritSignal(TChain* chain, const std::string& jecType, const std::string& jer, const std::string& pu, const std::string& pdfSyst, const std::string& configFile, int massZprime, int btag) {
+void fritSignal(TChain* chain, const std::string& jecType, const std::string& jer, const std::string& pu, const std::string& pdfSyst, const std::string& configFile, int massZprime, int btag, bool saveWorkspace) {
 
   std::cout << "[" << getpid() << "] Processing for " << jecType << std::endl;
 
@@ -517,6 +519,69 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& je
   drawHistograms(whichLepton, mtt, massZprime, true, nBins, *dataset, simPdf, backgroundPdfs, btag, std::string(base_path + "/frit/" + prefix), true);
 
   fitResult->Print("v");
+
+  if (saveWorkspace) {
+    // Save fitted pdf and datasets in order to redo some plots
+    RooWorkspace workspace("w");
+
+    fitResult->SetName("fit_results");
+    workspace.import(*fitResult);
+
+    it = whichLepton.typeIterator();
+    type = nullptr;
+    while ((type = static_cast<RooCatType*>(it->Next()))) {
+
+      std::string category = type->GetName();
+      std::string cleanedCategory = TString(type->GetName()).ReplaceAll(";", "_").ReplaceAll("{", "").ReplaceAll("}", "").ReplaceAll("-", "").Data(); // For workspace names
+
+      whichLepton.setLabel(category.c_str());
+      std::string cut = buildCutFormula(whichLepton);
+      std::cout << "Cut: " << cut << std::endl;
+
+      std::string workspaceName = "global_pdf_" + cleanedCategory;
+
+      std::string leptonName = TString(category).Contains("muon", TString::kIgnoreCase) ? "muon" : "electron";
+      std::string leptonNameShort = TString(category).Contains("muon", TString::kIgnoreCase) ? "mu" : "e";
+
+      TString workspace_suffix = TString::Format("%s", leptonNameShort.c_str());
+
+      RooAbsData* dataset_reduced = dataset->reduce(RooArgSet(mtt), cut.c_str());
+      workspace.import(*dataset_reduced, RooFit::Rename(TString::Format("data_obs_%s", workspace_suffix.Data())));
+
+      TString name = TString::Format("n_signal_%s", category.c_str());
+
+      // Get number of fitted signal events
+      RooAbsPdf* globalPdf = globalPdfs[leptonName].get();
+      workspace.import(
+          *globalPdf,
+          RooFit::RecycleConflictNodes(),
+          RooFit::RenameVariable(leptonName.c_str(), TString::Format("global_pdf_%s", workspace_suffix.Data()))
+          );
+
+      /*
+      // Import background
+      name = TString::Format("background_%s", category.c_str());
+      RooAbsPdf* pdf = mainWorkspace.pdf(name);
+      setPdfParametersRange(RooArgSet(mtt), *pdf, 10);
+      higgsWorkspace.import(
+       *pdf,
+       RooFit::RenameVariable(name, TString::Format("background_%s", workspace_suffix.Data()))
+       );
+
+      // Import signal
+      name = TString::Format("signal_%s", category.c_str());
+      pdf = mainWorkspace.pdf(name);
+      setPdfParametersRange(RooArgSet(mtt), *pdf, 10);
+      higgsWorkspace.import(
+       *pdf,
+       RooFit::RenameVariable(name, TString::Format("signal_%s", workspace_suffix.Data()))
+       );
+       */
+
+      TString outputFileName = TString::Format("zprime_signal_%d_workspace_after_frit_%d_btag.root", massZprime, btag);
+      workspace.writeToFile(outputFileName);
+    }
+  }
 
   // Compute Chi2
   // We need to transform our unbinned dataset to a binned one
