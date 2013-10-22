@@ -130,7 +130,7 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
       if (doPDFSyst) {
         // 4? pdf systematics
         double sum = 0;
-        for (int i = 0; i < (pdfWeights->size() / 2); i++) {
+        for (unsigned int i = 0; i < (pdfWeights->size() / 2); i++) {
           int up_index = 2 * i;
           int down_index = up_index + 1;
 

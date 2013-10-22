@@ -37,7 +37,7 @@ PUReweighter::PUReweighter(bool isSemiMu, PUProfile profile/* = PUProfile::S10*/
     // Create MC PU histogram
     TH1D* mcHisto = new TH1D("pileup_mc", "pileup", 70, 0, 70);
     mcHisto->SetDirectory(NULL);
-    for (int i = 1; i <= mcHisto->GetNbinsX(); i++) {
+    for (unsigned int i = 1; i <= (unsigned int) mcHisto->GetNbinsX(); i++) {
       double coef = (i - 1) < profile_coefs.size() ? profile_coefs[i - 1] : 0.;
       if (profile == PUProfile::S7 && i <= 4)
         coef = 0; // For low PU runs
