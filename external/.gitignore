@@ -1,3 +1,5 @@
 lib
 include
 yaml-*
+share
+tclap*
