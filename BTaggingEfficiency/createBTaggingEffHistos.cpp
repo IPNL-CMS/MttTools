@@ -6,6 +6,7 @@
 #include <TProfile.h>
 #include <fstream>
 #include <TLorentzVector.h>
+#include <TGraphAsymmErrors.h>
 
 #include "../PUReweighting/PUReweighter.h"
 #include "tclap/CmdLine.h"
@@ -89,10 +90,53 @@ void createBTaggingEffHistos(const std::vector<std::string>& files, const std::s
   c_fakerate->Divide(h_n_gen_cjets);
   light_fakerate->Divide(h_n_gen_lightjets);
 
+  // Compute efficiencies for each bin.
+  // Use a bayesian method to compute the error
+  // See http://www.pp.rhul.ac.uk/~cowan/stat/notes/efferr.pdf section 4 for more details
+
+  std::vector<TGraphAsymmErrors*> effs;
+  for (int i = 1; i <= h_n_gen_bjets->GetNbinsY(); i++) {
+
+    float eta_low = h_n_gen_bjets->GetYaxis()->GetBinLowEdge(i);
+    float eta_high = h_n_gen_bjets->GetYaxis()->GetBinUpEdge(i);
+
+    TGraphAsymmErrors* btagging_eff = new TGraphAsymmErrors();
+    btagging_eff->SetName(TString::Format("btagging_efficiency_bayes_%.2f_%.2f", eta_low, eta_high));
+
+    TGraphAsymmErrors* c_fakerate_bayes = new TGraphAsymmErrors();
+    c_fakerate_bayes->SetName(TString::Format("cjets_fakerate_bayes_%.2f_%.2f", eta_low, eta_high));
+
+    TGraphAsymmErrors* light_fakerate_bayes = new TGraphAsymmErrors();
+    light_fakerate_bayes->SetName(TString::Format("lightjets_fakerate_bayes_%.2f_%.2f", eta_low, eta_high));
+    
+    // Project each histogram
+    TH1* h_n_gen_bjets_proj = h_n_gen_bjets->ProjectionX("n_gen_bjets", i, i);
+    TH1* h_n_reco_bjets_proj = h_n_reco_bjets->ProjectionX("n_reco_bjets", i, i);
+    btagging_eff->Divide(h_n_reco_bjets_proj, h_n_gen_bjets_proj, "b(1,1) mode");
+
+    TH1* h_n_gen_cjets_proj = h_n_gen_cjets->ProjectionX("n_gen_cjets", i, i);
+    TH1* h_n_reco_bjets_in_cjets_proj = h_n_reco_bjets_in_cjets->ProjectionX("n_reco_bjets_in_cjets", i, i);
+    c_fakerate_bayes->Divide(h_n_reco_bjets_in_cjets_proj, h_n_gen_cjets_proj, "b(1,1) mode");
+
+    TH1* h_n_gen_lightjets_proj = h_n_gen_lightjets->ProjectionX("n_gen_lightjets", i, i);
+    TH1* h_n_reco_bjets_in_lightjets_proj = h_n_reco_bjets_in_lightjets->ProjectionX("n_reco_bjets_in_lightjets", i, i);
+    light_fakerate_bayes->Divide(h_n_reco_bjets_in_lightjets_proj, h_n_gen_lightjets_proj, "b(1,1) mode");
+
+    effs.push_back(btagging_eff);
+    effs.push_back(c_fakerate_bayes);
+    effs.push_back(light_fakerate_bayes);
+  }
+
   TFile* f = TFile::Open(outputFile.c_str(), "recreate");
+  //btagging_efficiency->Write();
+  //c_fakerate->Write();
+  //light_fakerate->Write();
+  btagging_efficiency->SetName("binning");
+  btagging_efficiency->Reset();
   btagging_efficiency->Write();
-  c_fakerate->Write();
-  light_fakerate->Write();
+  for (TGraphAsymmErrors* eff: effs)
+    eff->Write();
+
   f->Close();
   delete f;
 }
