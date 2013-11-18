@@ -270,7 +270,7 @@ void createBDTTrees::Loop()
     background_weight = 1. / (numberOfCombinaison - 1);
 
     background_weight *= eventWeight;
-    signal_weight *= eventWeight;
+    signal_weight = eventWeight;
 
     if (numberOfCombinaison <= 0)
       continue;
@@ -358,7 +358,6 @@ void createBDTTrees::Loop()
               background_tree->Fill();
             }
           }
-
         }
       }
     }
@@ -446,6 +445,7 @@ void createBDTTrees::Init()
   fMTT->SetBranchStatus("*", 0);
 
   SetBranchAddress(fMTT, "MC_channel", &MC_channel, NULL);
+  SetBranchAddress(fMTT, "isSel", &isSel, NULL);
   SetBranchAddress(fMTT, "eventIsAssociable", &eventIsAssociable, NULL);
 
   SetBranchAddress(fMTT, "MC_leptonicBIndex", &MC_leptonicBIndex, NULL);
