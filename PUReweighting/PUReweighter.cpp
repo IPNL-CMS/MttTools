@@ -8,7 +8,7 @@
 PUReweighter::PUReweighter(bool isSemiMu, PUProfile profile/* = PUProfile::S10*/, Systematic syst/* = Systematic::NOMINAL*/):
   puHisto(NULL) {
     const std::string path = "../PUReweighting/";
-    const std::string dataFileName = path + ((isSemiMu) ? "pileup_Muon_full_stat_2012_05Feb13_%s.root" : "pileup_Electron_full_stat_2012_05Feb13_%s.root");
+    const std::string dataFileName = path + ((isSemiMu) ? "pileup_SingleMu_full_stat_19Nov13_%s.root" : "pileup_SingleElectron_full_stat_19Nov13_%s.root");
 
     std::string suffix = "nominal";
     if (syst == Systematic::UP) {
@@ -35,7 +35,7 @@ PUReweighter::PUReweighter(bool isSemiMu, PUProfile profile/* = PUProfile::S10*/
     TH1* dataHisto = static_cast<TH1*>(dataFile->Get("pileup"));
 
     // Create MC PU histogram
-    TH1D* mcHisto = new TH1D("pileup_mc", "pileup", 70, 0, 70);
+    TH1D* mcHisto = new TH1D("pileup_mc", "pileup", 100, 0, 100);
     mcHisto->SetDirectory(NULL);
     for (unsigned int i = 1; i <= (unsigned int) mcHisto->GetNbinsX(); i++) {
       double coef = (i - 1) < profile_coefs.size() ? profile_coefs[i - 1] : 0.;
