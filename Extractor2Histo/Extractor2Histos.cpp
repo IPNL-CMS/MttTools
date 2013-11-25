@@ -2,11 +2,14 @@
 #include <TH2.h>
 #include <TStyle.h>
 #include <TCanvas.h>
+#include <TRandom2.h>
 #include <vector>
 #include <TProfile.h>
 #include <fstream>
+#include <memory>
 #include <TLorentzVector.h>
 
+#include "TopTriggerEfficiencyProvider.h"
 #include "../PUReweighting/PUReweighter.h"
 #include "tclap/CmdLine.h"
 
@@ -32,6 +35,18 @@ void Extractor2Histos::Loop()
   output->cd();
 
   TH1::SetDefaultSumw2(true);
+
+  TH1D *hWeight = new TH1D("weight", "", 50, 0, 5);
+  TH1D *hWeight_fullsel = new TH1D("weight_fullsel", "", 50, 0, 5);
+  TH1D *hLeptonWeight = new TH1D("lepton_weight", "", 50, 0, 5);
+  TH1D *hBTagWeight = new TH1D("btag_weight", "", 50, 0, 5);
+  TH1D *hTriggerWeight = new TH1D("trigger_weight", "", 50, 0, 1);
+  TH1D *hPUWeight = new TH1D("PU_weight", "", 50, 0, 5);
+  TH1D *hGeneratorWeight = new TH1D("generator_weight", "", 100, -2, 2);
+
+  TH1D *hRunPeriod = new TH1D("run_period", "", 2, 0, 2);
+  hRunPeriod->GetXaxis()->SetBinLabel(1, "Run2012 A+B");
+  hRunPeriod->GetXaxis()->SetBinLabel(2, "Run2012 C+D");
 
   TH1D *hNVtx_noweight = new TH1D("nVertex_reco_fullsel_noweight", "", 70, 0., 70);
   TH1D *hNVtx = new TH1D("nVertex_reco_fullsel", "", 70, 0., 70);
@@ -243,6 +258,36 @@ void Extractor2Histos::Loop()
 
   std::cout << "Processing..." << std::endl;
 
+  // 2012 luminosity
+  float lumi_run2012_A = 0;
+  float lumi_run2012_B = 0;
+  float lumi_run2012_C = 0;
+  float lumi_run2012_D = 0;
+
+  if (mIsSemiMu) {
+    lumi_run2012_A = 0.876225;
+    lumi_run2012_B = 4.412;
+    lumi_run2012_C = 7.044;
+    lumi_run2012_D = 7.368;
+  } else {
+    lumi_run2012_A = 0.876225;
+    lumi_run2012_B = 4.399;
+    lumi_run2012_C = 7.022;
+    lumi_run2012_D = 7.369;
+  }
+
+  float lumi_run2012_AB = lumi_run2012_A + lumi_run2012_B;
+  float lumi_run2012_CD = lumi_run2012_C + lumi_run2012_D;
+  float lumi_total = lumi_run2012_AB + lumi_run2012_CD;
+
+  float lumi_run2012_AB_over_total = lumi_run2012_AB / lumi_total;
+
+  std::shared_ptr<TopTriggerEfficiencyProvider> m_trigger_efficiency_provider = std::make_shared<TopTriggerEfficiencyProvider>();
+  TRandom2 random_generator;
+
+  uint64_t positive_events = 0;
+  uint64_t negative_events = 0;
+
   for (Long64_t jentry = 0; jentry < nentries; jentry++)
   {
     if (jentry % 100000 == 0)
@@ -250,52 +295,127 @@ void Extractor2Histos::Loop()
 
     GetEntry(jentry);
 
-    double eventWeight = 1.;
+    // Choose if we are run2012 A+B, or C+D
+    bool isRun2012AB = false;
     if (mIsMC) {
-      eventWeight *= puReweighter.weight(n_trueInteractions);
+      double r = random_generator.Rndm();
+      if (r < lumi_run2012_AB_over_total)
+        isRun2012AB = true;
+
+      if (mIsMC) {
+        hRunPeriod->Fill( isRun2012AB ? 0 : 1 );
+      }
     } else {
-      eventWeight *= m_weight;
+      isRun2012AB = (run <= 196531);
     }
 
+    if (generator_weight > 0)
+      positive_events++;
+    else
+      negative_events++;
+
+    // First, fill gen value
+    if (mIsMC && (MC_channel == 1 || MC_channel == 2)) {
+      TLorentzVector leptonic_W(0., 0., 0., 0.);
+      if (gen_lepton_p4->Pt() != 0 && gen_neutrino_p4->Pt() != 0) {
+        hDeltaPhiLeptonNeutrino_gen->Fill(fabs(gen_lepton_p4->DeltaPhi(*gen_neutrino_p4)));
+        hDeltaRLeptonNeutrino_gen->Fill(gen_lepton_p4->DeltaR(*gen_neutrino_p4));
+        hDeltaEtaLeptonNeutrino_gen->Fill(gen_lepton_p4->Eta() - gen_neutrino_p4->Eta());
+
+        leptonic_W = *gen_lepton_p4 + *gen_neutrino_p4;
+        hLeptonicWPt_gen->Fill(leptonic_W.Pt());
+        hLeptonicWEta_gen->Fill(leptonic_W.Eta());
+      }
+
+      TLorentzVector hadronic_W(0., 0., 0., 0.);
+      if (gen_lightJet1_p4->Pt() != 0 && gen_lightJet2_p4->Pt() != 0) {
+        hDeltaPhiTwoLightJets_gen->Fill(fabs(gen_lightJet1_p4->DeltaPhi(*gen_lightJet2_p4)));
+        hDeltaRTwoLightJets_gen->Fill(gen_lightJet1_p4->DeltaR(*gen_lightJet2_p4));
+        hDeltaEtaTwoLightJets_gen->Fill(gen_lightJet1_p4->Eta() - gen_lightJet2_p4->Eta());
+
+        hadronic_W = *gen_lightJet1_p4 + *gen_lightJet2_p4;
+        hHadronicWPt_gen->Fill(leptonic_W.Pt());
+        hHadronicWEta_gen->Fill(leptonic_W.Eta());
+      }
+
+      if (leptonic_W.Pt() != 0 && hadronic_W.Pt() != 0) {
+        hDeltaPhiW_gen->Fill(fabs(leptonic_W.DeltaPhi(hadronic_W)));
+        hDeltaRW_gen->Fill(leptonic_W.DeltaR(hadronic_W));
+        hDeltaEtaW_gen->Fill(leptonic_W.Eta() - hadronic_W.Eta());
+      }
+    }
+
+
+    double ptLepton = 0;
+    double etaLepton = 0;
+    double ptLeptonCut = 0;
+    double etaSCLepton = 0;
+    if (mIsSemiMu) {
+      if (nGoodMuons > 0) {
+        ptLepton = muonPt[0];
+        etaLepton = muonEta[0];
+        ptLeptonCut = 25.;
+        etaSCLepton = etaLepton;
+      }
+    } else {
+      if (nGoodElectrons > 0) {
+        ptLepton = electronPt[0];
+        etaLepton = electronEta[0];
+        ptLeptonCut = 30.;
+        etaSCLepton = electron_SCEta[selectedLeptonIndex_AfterChi2];
+      }
+    }
+
+    if (std::isnan(m_lepton_weight)) {
+      std::cout << "Warning: lepton weight is NaN" << std::endl;
+      m_lepton_weight = 1.;
+    } else if (std::isinf(m_lepton_weight)) {
+      std::cout << "Warning: lepton weight is Inf" << std::endl;
+      m_lepton_weight = 1.;
+    }
+
+    if (std::isnan(m_btag_weight)) {
+      std::cout << "Warning: btag weight is NaN" << std::endl;
+      m_btag_weight = 1.;
+    } else if (std::isinf(m_btag_weight)) {
+      std::cout << "Warning: btag weight is Inf" << std::endl;
+      m_btag_weight = 1.;
+    }
+
+    double eventWeight = 1.;
+    if (mIsMC) {
+      float puWeight = puReweighter.weight(n_trueInteractions);
+
+      hLeptonWeight->Fill(m_lepton_weight);
+      hBTagWeight->Fill(m_btag_weight);
+      hGeneratorWeight->Fill(generator_weight);
+      hPUWeight->Fill(puWeight);
+
+      eventWeight *= puWeight;
+      eventWeight *= generator_weight;
+      eventWeight *= m_lepton_weight;
+      eventWeight *= m_btag_weight;
+    }
+
+    if (std::isnan(eventWeight)) {
+      std::cout << "Warning: event weight is NaN" << std::endl;
+      eventWeight = 1.;
+    }
+
+    hWeight->Fill(eventWeight);
+
     hNTrueInt_nosel->Fill(n_trueInteractions, eventWeight);
+    hIsSel->Fill(isSel, eventWeight);
+    if (mIsMC && (MC_channel != 0)) {
+      h_mtt_gen_no_sel->Fill(MC_mtt, generator_weight);
+    }
+
+    hMET_nosel->Fill(MET, eventWeight);
 
     if (!mIsMC && !m_triggerPassed) {
       continue;
     }
 
-    if (MC_channel == 1 || MC_channel == 2) {
-      TLorentzVector leptonic_W(0., 0., 0., 0.);
-      if (gen_lepton_p4->Pt() != 0 && gen_neutrino_p4->Pt() != 0) {
-        hDeltaPhiLeptonNeutrino_gen->Fill(fabs(gen_lepton_p4->DeltaPhi(*gen_neutrino_p4)), eventWeight);
-        hDeltaRLeptonNeutrino_gen->Fill(gen_lepton_p4->DeltaR(*gen_neutrino_p4), eventWeight);
-        hDeltaEtaLeptonNeutrino_gen->Fill(gen_lepton_p4->Eta() - gen_neutrino_p4->Eta(), eventWeight);
-
-        leptonic_W = *gen_lepton_p4 + *gen_neutrino_p4;
-        hLeptonicWPt_gen->Fill(leptonic_W.Pt(), eventWeight);
-        hLeptonicWEta_gen->Fill(leptonic_W.Eta(), eventWeight);
-      }
-
-      TLorentzVector hadronic_W(0., 0., 0., 0.);
-      if (gen_lightJet1_p4->Pt() != 0 && gen_lightJet2_p4->Pt() != 0) {
-        hDeltaPhiTwoLightJets_gen->Fill(fabs(gen_lightJet1_p4->DeltaPhi(*gen_lightJet2_p4)), eventWeight);
-        hDeltaRTwoLightJets_gen->Fill(gen_lightJet1_p4->DeltaR(*gen_lightJet2_p4), eventWeight);
-        hDeltaEtaTwoLightJets_gen->Fill(gen_lightJet1_p4->Eta() - gen_lightJet2_p4->Eta(), eventWeight);
-
-        hadronic_W = *gen_lightJet1_p4 + *gen_lightJet2_p4;
-        hHadronicWPt_gen->Fill(leptonic_W.Pt(), eventWeight);
-        hHadronicWEta_gen->Fill(leptonic_W.Eta(), eventWeight);
-      }
-
-      if (leptonic_W.Pt() != 0 && hadronic_W.Pt() != 0) {
-        hDeltaPhiW_gen->Fill(fabs(leptonic_W.DeltaPhi(hadronic_W)), eventWeight);
-        hDeltaRW_gen->Fill(leptonic_W.DeltaR(hadronic_W), eventWeight);
-        hDeltaEtaW_gen->Fill(leptonic_W.Eta() - hadronic_W.Eta(), eventWeight);
-      }
-    }
-
-    hIsSel->Fill(isSel, eventWeight);
-    h_mtt_gen_no_sel->Fill(MC_mtt, eventWeight);
-    hMET_nosel->Fill(MET, eventWeight);
     if (jet_p4->GetEntriesFast() > 0) {
       TLorentzVector* p4 = (TLorentzVector*) (*jet_p4)[0];
       hFirstJetPt_nosel->Fill(p4->Pt(), eventWeight);
@@ -330,23 +450,6 @@ void Extractor2Histos::Loop()
         HT30 += pt;
     }
 
-    double ptLepton = 0;
-    double etaLepton = 0;
-    double ptLeptonCut = 0;
-    if (mIsSemiMu) {
-      if (nGoodMuons > 0) {
-        ptLepton = muonPt[0];
-        etaLepton = muonEta[0];
-        ptLeptonCut = 25.;
-      }
-    } else {
-      if (nGoodElectrons > 0) {
-        ptLepton = electronPt[0];
-        etaLepton = electronEta[0];
-        ptLeptonCut = 30.;
-      }
-    }
-
     float HTFull = HT + ptLepton + MET;
 
     hHT_reco_nosel->Fill(HT, eventWeight);
@@ -363,17 +466,20 @@ void Extractor2Histos::Loop()
     //hTopEta_com_gen->Fill(MC_top1Eta_com, eventWeight);
     //hTopEta_com_gen->Fill(MC_top2Eta_com, eventWeight);
 
-    hBoostTT_gen->Fill(MC_boost_tt, eventWeight);
+    if (mIsMC && MC_channel != 0)
+      hBoostTT_gen->Fill(MC_boost_tt);
 
-    hPtTT_gen->Fill(MC_pt_tt, eventWeight);
-    //hPtTT_com_gen->Fill(MC_pt_tt_com, eventWeight);
+    if (mIsMC && MC_channel != 0) {
+      hPtTT_gen->Fill(MC_pt_tt);
+      //hPtTT_com_gen->Fill(MC_pt_tt_com, eventWeight);
 
-    hEtaTT_gen->Fill(MC_eta_tt, eventWeight);
-    //hEtaTT_com_gen->Fill(MC_eta_tt_com, eventWeight);
+      hEtaTT_gen->Fill(MC_eta_tt);
+      //hEtaTT_com_gen->Fill(MC_eta_tt_com, eventWeight);
 
-    hDeltaPhiTops_gen->Fill(fabs(gen_top1_p4->DeltaPhi(*gen_top2_p4)), eventWeight);
-    hDeltaEtaTops_gen->Fill(gen_top1_p4->Eta() - gen_top2_p4->Eta(), eventWeight);
-    hDeltaRTops_gen->Fill(gen_top1_p4->DeltaR(*gen_top2_p4), eventWeight);
+      hDeltaPhiTops_gen->Fill(fabs(gen_top1_p4->DeltaPhi(*gen_top2_p4)));
+      hDeltaEtaTops_gen->Fill(gen_top1_p4->Eta() - gen_top2_p4->Eta());
+      hDeltaRTops_gen->Fill(gen_top1_p4->DeltaR(*gen_top2_p4));
+    }
 
     if (n_muons > 0) {
       hMuRelIso_nosel->Fill(muon_relIso[0], eventWeight); 
@@ -402,7 +508,8 @@ void Extractor2Histos::Loop()
 
     if (isSel == 1 && numComb > 0)
     {
-      h_mtt_gen_chi2sel->Fill(MC_mtt, eventWeight);
+      if (mIsMC && MC_channel != 0)
+        h_mtt_gen_chi2sel->Fill(MC_mtt, generator_weight);
 
       hNGoodJets_chi2sel->Fill(nJets, eventWeight);
       hNBtaggedJets_chi2sel->Fill(nBtaggedJets_CSVM, eventWeight);
@@ -444,14 +551,38 @@ void Extractor2Histos::Loop()
       else if (mBTag == 2)
         btagSel = nBtaggedJets_CSVM > 1;
 
-      if (ptLepton > ptLeptonCut && btagSel && p_1stjetpt > 70. && p_2ndjetpt > 50 && mtt_AfterChi2 > 0. && (isinf(bestSolChi2) || bestSolChi2 < 500))
+      float firstJetCut = 0, secondJetCut = 0, thirdJetCut = 0;
+      if (isRun2012AB) {
+        firstJetCut = 45;
+        secondJetCut = 45;
+        thirdJetCut = 45;
+      } else {
+        firstJetCut = 55;
+        secondJetCut = 45;
+        thirdJetCut = 35;
+      }
+
+      if (ptLepton > ptLeptonCut && btagSel && p_1stjetpt > firstJetCut && p_2ndjetpt > secondJetCut && p_3rdjetpt > thirdJetCut && mtt_AfterChi2 > 0. && (isinf(bestSolChi2) || bestSolChi2 < 500))
       {
+
+        if (mIsMC) {
+          // Compute trigger weight
+          double triggerWeight = m_trigger_efficiency_provider->get_weight(ptLepton, etaSCLepton, p_4thjetpt, jetEta[3], n_vertices, nJets, mIsSemiMu, TopTriggerEfficiencyProvider::NOMINAL)[0];
+          hTriggerWeight->Fill(triggerWeight);
+
+          eventWeight *= triggerWeight;
+
+          hWeight_fullsel->Fill(eventWeight);
+        }
+
         hBoostTT->Fill(beta_tt_AfterChi2, eventWeight);
         hPtTT->Fill(pt_tt_AfterChi2, eventWeight);
         hEtaTT->Fill(eta_tt_AfterChi2, eventWeight);
 
-        h_mtt_gen->Fill(MC_mtt, eventWeight);
-        h_mtt_resolution->Fill(mtt_AfterChi2 - MC_mtt, eventWeight);
+        if (mIsMC && MC_channel != 0) {
+          h_mtt_gen->Fill(MC_mtt, generator_weight);
+          h_mtt_resolution->Fill(mtt_AfterChi2 - MC_mtt, eventWeight);
+        }
 
         hLeptonPt->Fill(ptLepton, eventWeight);
         hLeptonEta->Fill(etaLepton, eventWeight);
@@ -528,6 +659,7 @@ Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, c
   loadChain(inputFiles, "event", fEvent);
   loadChain(inputFiles, "muon_loose_PF", fLooseMuons);
   loadChain(inputFiles, "jet_PF", fJet);
+  loadChain(inputFiles, "electron_PF", fElectrons);
 
 
   Init();
@@ -561,6 +693,9 @@ Int_t Extractor2Histos::GetEntry(Long64_t entry)
 
   if (fJet)
     fJet->GetEntry(entry);
+
+  if (fElectrons)
+    fElectrons->GetEntry(entry);
 
   return 1;
 }
@@ -635,7 +770,7 @@ void Extractor2Histos::Init()
   SetBranchAddress(fMTT, "bestSolChi2", &bestSolChi2, &b_bestSolChi2);
   //SetBranchAddress(fMTT, "isBestSolMatched", &isBestSolMatched, &b_isBestSolMatched);
   //SetBranchAddress(fMTT, "KFChi2", &KFChi2, &b_KFChi2);
-  SetBranchAddress(fMTT, "numComb", &numComb, &b_numComb);
+  SetBranchAddress(fMTT, "numComb_chi2", &numComb, &b_numComb);
   //SetBranchAddress(fMTT, "solChi2", solChi2, &b_solChi2);
   SetBranchAddress(fMTT, "mLepTop_AfterChi2", &mLepTop_AfterChi2, &b_mLepTop_AfterChi2);
   SetBranchAddress(fMTT, "mHadTop_AfterChi2", &mHadTop_AfterChi2, &b_mHadTop_AfterChi2);
@@ -651,7 +786,9 @@ void Extractor2Histos::Init()
   //SetBranchAddress(fMTT, "mLepTop_AfterChi2andKF", &mLepTop_AfterChi2andKF, &b_mLepTop_AfterChi2andKF);
   //SetBranchAddress(fMTT, "mHadTop_AfterChi2andKF", &mHadTop_AfterChi2andKF, &b_mHadTop_AfterChi2andKF);
   //SetBranchAddress(fMTT, "mtt_AfterChi2andKF", &mtt_AfterChi2andKF, &b_mtt_AfterChi2andKF);
-  SetBranchAddress(fMTT, "weight", &m_weight, NULL);
+  SetBranchAddress(fMTT, "lepton_weight", &m_lepton_weight, NULL);
+  SetBranchAddress(fMTT, "btag_weight", &m_btag_weight, NULL);
+  SetBranchAddress(fMTT, "selectedLeptonIndex_AfterChi2", &selectedLeptonIndex_AfterChi2, NULL);
 
   if (fMTT->GetBranch("trigger_passed")) {
     SetBranchAddress(fMTT, "trigger_passed", &m_triggerPassed, NULL);
@@ -710,6 +847,17 @@ void Extractor2Histos::Init()
   fEvent->SetBranchStatus("nTrueInteractions", 1);
   fEvent->SetBranchAddress("nTrueInteractions", &n_trueInteractions, NULL);
 
+  if (fEvent->GetBranch("generator_weight")) {
+    fEvent->SetBranchStatus("generator_weight", 1);
+    fEvent->SetBranchAddress("generator_weight", &generator_weight, NULL);
+  } else {
+    generator_weight = 1;
+  }
+
+  run = 0;
+  fEvent->SetBranchStatus("run", 1);
+  fEvent->SetBranchAddress("run", &run, NULL);
+
   muon_p4 = NULL;
   fLooseMuons->SetMakeClass(1);
   fLooseMuons->SetBranchStatus("*", 0);
@@ -719,6 +867,10 @@ void Extractor2Histos::Init()
   fLooseMuons->SetBranchAddress("muon_4vector", &muon_p4, NULL);
   fLooseMuons->SetBranchAddress("n_muons", &n_muons, NULL);
   fLooseMuons->SetBranchAddress("muon_deltaBetaCorrectedRelIsolation", &muon_relIso, NULL);
+
+  fElectrons->SetBranchStatus("*", 0);
+  fElectrons->SetBranchStatus("electron_SCEta", 1);
+  fElectrons->SetBranchAddress("electron_SCEta", &electron_SCEta);
 
   jet_p4 = NULL;
   fJet->SetMakeClass(1);

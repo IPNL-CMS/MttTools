@@ -30,6 +30,7 @@ class Extractor2Histos {
     TChain          *fEvent;
     TChain          *fLooseMuons;
     TChain          *fJet;
+    TChain          *fElectrons;
     Int_t           fCurrent; //!current Tree number in a TChain
 
     std::string     mDataset;
@@ -98,6 +99,7 @@ class Extractor2Histos {
     Float_t         pt_tt_AfterChi2;
     Float_t         eta_tt_AfterChi2;
     Float_t         beta_tt_AfterChi2;
+    int             selectedLeptonIndex_AfterChi2;
 
     bool            m_triggerPassed;
 
@@ -162,7 +164,11 @@ class Extractor2Histos {
 
     int             n_vertices;
     float           n_trueInteractions;
-    float           m_weight;
+    uint32_t        run;
+    float           m_lepton_weight;
+    float           m_btag_weight;
+    float           generator_weight;
+
 
     std::string     mOutputFile;
 
@@ -171,6 +177,8 @@ class Extractor2Histos {
     int             n_muons;
     float           muon_relIso[100];
     TClonesArray*   muon_p4;
+
+    float           electron_SCEta[100];
 
     TClonesArray*   jet_p4;
 

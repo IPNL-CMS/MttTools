@@ -46,7 +46,7 @@ clean:
 	@rm *.d;
 	@rm ../PUReweighting/*.o;
 
-extractorToHisto: Extractor2Histos.o ../PUReweighting/PUReweighter.o
+extractorToHisto: TopTriggerEfficiencyProvider.o Extractor2Histos.o ../PUReweighting/PUReweighter.o
 	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS)
 
 substractHistos: substractHistos.o
