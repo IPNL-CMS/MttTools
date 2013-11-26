@@ -39,7 +39,7 @@ void Extractor2Histos::Loop()
   TH1D *hWeight = new TH1D("weight", "", 50, 0, 5);
   TH1D *hWeight_fullsel = new TH1D("weight_fullsel", "", 50, 0, 5);
   TH1D *hLeptonWeight = new TH1D("lepton_weight", "", 50, 0, 5);
-  TH1D *hBTagWeight = new TH1D("btag_weight", "", 50, 0, 5);
+  TH1D *hBTagWeight = new TH1D("btag_weight", "", 100, 0, 2);
   TH1D *hTriggerWeight = new TH1D("trigger_weight", "", 50, 0, 1);
   TH1D *hPUWeight = new TH1D("PU_weight", "", 50, 0, 5);
   TH1D *hGeneratorWeight = new TH1D("generator_weight", "", 100, -2, 2);
