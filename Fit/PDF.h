@@ -8,6 +8,8 @@
 #include <RooChebychev.h>
 #include <RooListProxy.h>
 
+#include <Math/PdfFuncMathCore.h>
+
 class LaurentPdf : public RooAbsPdf {
   public:
     LaurentPdf() {} ; 
@@ -231,5 +233,69 @@ class PowPdf : public RooAbsPdf {
 
     double evaluate() const {
       return pow(x, -1. * a);
+    };
+};
+
+class GammaPlusLogNormalPdf : public RooAbsPdf {
+  public:
+    GammaPlusLogNormalPdf() {};
+    GammaPlusLogNormalPdf(const char *name, const char *title, RooAbsReal& _x,
+                                                // Gamma PDF
+                                                RooAbsReal& _alpha, RooAbsReal& _theta,
+                                                // Log normal PDF
+                                                /*RooAbsReal& _mu,*/ RooAbsReal& _sigma,
+                                                // Various
+                                                RooAbsReal& _shift, RooAbsReal& _sum):
+      RooAbsPdf(name, title),
+      x("x", "x", this, _x),
+      alpha("alpha", "alpha", this, _alpha),
+      theta("theta", "theta", this, _theta),
+      //mu("mu", "mu", this, _mu),
+      sigma("sigma", "sigma", this, _sigma),
+      shift("shift", "shift", this, _shift),
+      sum("sum", "sum", this, _sum) {};
+
+    GammaPlusLogNormalPdf(const GammaPlusLogNormalPdf& other, const char* name = NULL):
+      RooAbsPdf(other, name),
+      x("x", this, other.x),
+      alpha("alpha", this, other.alpha),
+      theta("theta", this, other.theta),
+      //mu("mu", this, other.mu),
+      sigma("sigma", this, other.sigma),
+      shift("shift", this, other.shift),
+      sum("sum", this, other.sum) {};
+
+    virtual TObject* clone(const char* newname) const { return new GammaPlusLogNormalPdf(*this, newname); }
+    inline virtual ~GammaPlusLogNormalPdf() { }
+
+  protected:
+
+    RooRealProxy x;
+
+    // Gamma PDF
+    RooRealProxy alpha; // On Wikipedia, it's 'k'
+    RooRealProxy theta;
+
+    // Log normal PDF
+    //RooRealProxy mu;
+    RooRealProxy sigma;
+
+    RooRealProxy shift;
+    RooRealProxy sum;
+
+    double evaluate() const {
+
+      // Constrain 'mu' with other parameters
+
+      // Mode of lognormal distribution: M_log = exp(mu - sigma^2)
+      // Mode of gamma distribution: M_gamma = (alpha - 1) * theta
+      // Impose M_log == M_gamma
+
+      double constrained_mu = std::log((alpha - 1) * theta) + sigma * sigma;
+
+      double lognormal = ROOT::Math::lognormal_pdf(x, constrained_mu, sigma, shift);
+      double gamma = ROOT::Math::gamma_pdf(x, alpha, theta, shift);
+
+      return sum * lognormal + (1. - sum) * gamma;
     };
 };

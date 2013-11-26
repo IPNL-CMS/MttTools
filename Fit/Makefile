@@ -2,20 +2,10 @@
 USERLIBS= $(shell root-config --libs) -lRooFitCore -lRooFit -lFoam -lMinuit
 #USERLIBS= $(shell root-config --libs) -lRooFit
 
-ifdef CMSSW_RELEASE_BASE
-# Where to search for the libraries
-UNPATCHED_CMSSW_RELEASE_BASE=$(shell cat $(CMSSW_RELEASE_BASE)/config/toolbox/$(SCRAM_ARCH)/tools/selected/cmssw.xml | grep 'name=\"CMSSW_BASE\"' | awk -F' ' '{print $$3};' | awk -F'\"' '{print $$2;}')
-USERLIBDIRS= -L$(CMSSW_BASE)/lib/$(SCRAM_ARCH) \
-	-L$(CMSSW_RELEASE_BASE)/lib/$(SCRAM_ARCH) \
-	-L$(UNPATCHED_CMSSW_RELEASE_BASE)/lib/$(SCRAM_ARCH) -L$(ROOFITSYS)/lib -L.
-
-INCDIRS = -I$(shell root-config --incdir) -I$(ROOFITSYS)/include -I$(shell pwd)/include/
-else
-USERLIBDIRS = $(root-config --libdir) -L.
+USERLIBDIRS = $(root-config --libdir) -L$(BOOST_ROOT)/lib -L.
 
 # Where to search for the include files.
-INCDIRS = -I$(shell root-config --incdir) -I$(shell pwd)/include/ -I.
-endif
+INCDIRS = -I$(shell root-config --incdir) -I$(shell pwd)/include/ -I$(BOOST_ROOT)/include -I.
 
 CC = gcc
 CXX = g++

@@ -96,3 +96,26 @@ class Exp : public BaseFunction {
       return true;
     };
 };
+
+class GammaPlusLogNormal : public BaseFunction {
+  public:
+    GammaPlusLogNormal(const std::string& name)
+      : BaseFunction(name) {}
+
+  protected:
+    virtual bool createPdf(RooRealVar& observable) {
+
+      if (mParameters.size() != 5)
+        return false;
+
+      mPdf.reset(new GammaPlusLogNormalPdf(mName.c_str(), mName.c_str(), observable,
+            // Gamma PDF
+            *mParameters["alpha"], *mParameters["theta"],
+            // Log normal PDF
+            /**mParameters["mu"],*/ *mParameters["sigma"],
+            // Various
+            *mParameters["shift"], *mParameters["sum"]));
+
+      return true;
+    }
+};
