@@ -127,10 +127,32 @@ void createBTaggingEffHistos(const std::vector<std::string>& files, const std::s
     effs.push_back(light_fakerate_bayes);
   }
 
+  TH1* h_n_reco_bjets_proj = h_n_reco_bjets->ProjectionX("n_reco_bjets", 1, 3);
+  TH1* h_n_gen_bjets_proj = h_n_gen_bjets->ProjectionX("n_gen_bjets", 1, 3);
+  h_n_reco_bjets_proj->Divide(h_n_gen_bjets_proj);
+  h_n_reco_bjets_proj->SetName("btagging_efficiency_pt");
+
+  TH1* h_n_reco_bjets_in_cjets_proj = h_n_reco_bjets_in_cjets->ProjectionX("n_reco_cjets", 1, 3);
+  TH1* h_n_gen_cjets_proj = h_n_gen_cjets->ProjectionX("n_gen_cjets", 1, 3);
+  h_n_reco_bjets_in_cjets_proj->Divide(h_n_gen_cjets_proj);
+  h_n_reco_bjets_in_cjets_proj->SetName("cjets_fakerate_pt");
+
+  TH1* h_n_reco_bjets_in_lightjets_proj = h_n_reco_bjets_in_lightjets->ProjectionX("n_reco_cjets", 1, 3);
+  TH1* h_n_gen_lightjets_proj = h_n_gen_lightjets->ProjectionX("n_gen_lightjets", 1, 3);
+  h_n_reco_bjets_in_lightjets_proj->Divide(h_n_gen_lightjets_proj);
+  h_n_reco_bjets_in_lightjets_proj->SetName("lightjets_fakerate_pt");
+
   TFile* f = TFile::Open(outputFile.c_str(), "recreate");
-  //btagging_efficiency->Write();
-  //c_fakerate->Write();
-  //light_fakerate->Write();
+
+  h_n_reco_bjets_proj->Write();
+  h_n_reco_bjets_in_cjets_proj->Write();
+  h_n_reco_bjets_in_lightjets_proj->Write();
+
+  btagging_efficiency->Write();
+  c_fakerate->Write();
+  light_fakerate->Write();
+
+  btagging_efficiency = (TH2*) btagging_efficiency->Clone();
   btagging_efficiency->SetName("binning");
   btagging_efficiency->Reset();
   btagging_efficiency->Write();
