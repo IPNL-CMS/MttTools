@@ -140,8 +140,8 @@ void Extractor2Histos::Loop()
   TH1D *hmtlep = new TH1D("mtLep_reco_fullsel", "", 100, 120., 240.);
   TH1D *hmthad = new TH1D("mtHad_reco_fullsel", "", 150, 120., 300.);
   
-  TH1D *hmttSelected_btag_sel = new TH1D("mttSelected_btag_sel_reco_fullsel", "", 250, 0., 2500.);
-  TH1D *hmttSelected_btag_sel_mass_cut = new TH1D("mttSelected_btag_sel_mass_cut_reco_fullsel", "", 250, 0., 2500.);
+  TH1D *hmttSelected_btag_sel = new TH1D("mttSelected_btag_sel_reco_fullsel", "", 150, 0., 1500.);
+  TH1D *hmttSelected_btag_sel_mass_cut = new TH1D("mttSelected_btag_sel_mass_cut_reco_fullsel", "", 150, 0., 1500.);
 
   TH1D *hNGoodJets = new TH1D("nGoodJets_reco_fullsel", "", 6, 3.5, 9.5);
   TH1D *hNGoodJets_chi2sel = new TH1D("nGoodJets_reco_chi2sel", "", 6, 3.5, 9.5);
@@ -149,9 +149,9 @@ void Extractor2Histos::Loop()
   TH1D *hNBtaggedJets = new TH1D("nBTaggedJets_reco_fullsel", "", 5, -0.5, 4.5);
   TH1D *hNBtaggedJets_chi2sel = new TH1D("nBTaggedJets_reco_chi2sel", "", 5, -0.5, 4.5);
 
-  TH1D *h_mtt_gen_no_sel = new TH1D("mtt_gen_nosel", "", 500, 0., 2500.);
-  TH1D *h_mtt_gen_chi2sel = new TH1D("mtt_gen_chi2sel", "", 500, 0., 2500.);
-  TH1D *h_mtt_gen = new TH1D("mtt_gen_fullsel", "", 500, 0, 2500.);
+  TH1D *h_mtt_gen_no_sel = new TH1D("mtt_gen_nosel", "", 300, 0., 1500.);
+  TH1D *h_mtt_gen_chi2sel = new TH1D("mtt_gen_chi2sel", "", 300, 0., 1500.);
+  TH1D *h_mtt_gen = new TH1D("mtt_gen_fullsel", "", 300, 0, 1500.);
 
   TH1D *h_mtt_resolution = new TH1D("mtt_resolution", "", 100, -600., 600.);
 
@@ -394,7 +394,7 @@ void Extractor2Histos::Loop()
       eventWeight *= puWeight;
       eventWeight *= generator_weight;
       eventWeight *= m_lepton_weight;
-      eventWeight *= m_btag_weight;
+      //eventWeight *= m_btag_weight;
     }
 
     if (std::isnan(eventWeight)) {
