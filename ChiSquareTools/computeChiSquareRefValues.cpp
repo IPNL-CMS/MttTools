@@ -18,6 +18,7 @@
 #include <TF1.h>
 #include <TROOT.h>
 #include <TCut.h>
+#include <TRandom2.h>
 
 #include "KinFit.h"
 #include <tclap/CmdLine.h>
@@ -195,6 +196,39 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
   TH1* h_ptSystem_wrong  = new TH1F("pt_system_wrong", "tt system pt (wrong selection)", 200, 0, 800);
   TH1* h_htFrac_wrong  = new TH1F("ht_frac_wrong", "HT frac (wrong selection)", 50, 0, 1);
 
+  // 2012 luminosity
+  float mu_lumi_run2012_A = 0;
+  float mu_lumi_run2012_B = 0;
+  float mu_lumi_run2012_C = 0;
+  float mu_lumi_run2012_D = 0;
+
+  float e_lumi_run2012_A = 0;
+  float e_lumi_run2012_B = 0;
+  float e_lumi_run2012_C = 0;
+  float e_lumi_run2012_D = 0;
+
+  mu_lumi_run2012_A = 0.876225;
+  mu_lumi_run2012_B = 4.412;
+  mu_lumi_run2012_C = 7.044;
+  mu_lumi_run2012_D = 7.368;
+
+  e_lumi_run2012_A = 0.876225;
+  e_lumi_run2012_B = 4.399;
+  e_lumi_run2012_C = 7.022;
+  e_lumi_run2012_D = 7.369;
+
+  float mu_lumi_run2012_AB = mu_lumi_run2012_A + mu_lumi_run2012_B;
+  float mu_lumi_run2012_CD = mu_lumi_run2012_C + mu_lumi_run2012_D;
+  float mu_lumi_total = mu_lumi_run2012_AB + mu_lumi_run2012_CD;
+
+  float e_lumi_run2012_AB = e_lumi_run2012_A + e_lumi_run2012_B;
+  float e_lumi_run2012_CD = e_lumi_run2012_C + e_lumi_run2012_D;
+  float e_lumi_total = e_lumi_run2012_AB + e_lumi_run2012_CD;
+
+  float mu_lumi_run2012_AB_over_total = mu_lumi_run2012_AB / mu_lumi_total;
+  float e_lumi_run2012_AB_over_total = e_lumi_run2012_AB / e_lumi_total;
+
+  TRandom2 random_generator;
 
   uint64_t selectedEntries = 0;
   uint64_t selectedEntriesBeforeMatching = 0;
@@ -213,7 +247,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
     electrons->GetEntry(entry);
 
     if (((entry + 1) % 100000) == 0) {
-      std::cout << "Processing entry " << entry + 1 << " out of " << entries << std::endl;
+      std::cout << "Processing entry " << entry + 1 << " out of " << entries << " (" << (entry + 1) / (float) entries * 100 << "%)" << std::endl;
     }
 
     bool keepEvent = true;
@@ -412,7 +446,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
     for (int j1 = 0; j1 < n_jets; j1++) {
       //int j1_mcIndex = m_jet_MCIndex[j1];
       TLorentzVector* firstJetP4 = static_cast<TLorentzVector*>((*m_jet_lorentzvector)[j1]);
-      if (firstJetP4->Pt() < 30)
+      if (firstJetP4->Pt() < 30 || firstJetP4->Eta() > 2.4)
         continue;
 
       if (j1 != recoLeptonicBIndex) {
@@ -433,7 +467,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
 
         //int j2_mcIndex = m_jet_MCIndex[j2];
         TLorentzVector* secondJetP4 = static_cast<TLorentzVector*>((*m_jet_lorentzvector)[j2]);
-        if (secondJetP4->Pt() < 30)
+        if (secondJetP4->Pt() < 30 || secondJetP4->Eta() > 2.4)
           continue;
 
         if ((j1 != recoFirstJetIndex && j2 != recoSecondJetIndex) ||
@@ -448,7 +482,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
             continue;
 
           TLorentzVector* thirdJetP4 = static_cast<TLorentzVector*>((*m_jet_lorentzvector)[j3]);
-          if (thirdJetP4->Pt() < 30)
+          if (thirdJetP4->Pt() < 30 || thirdJetP4->Eta() > 2.4)
             continue;
 
           //int j3_mcIndex = m_jet_MCIndex[j3];
@@ -466,7 +500,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
               continue;
 
             TLorentzVector* fourthJetP4 = static_cast<TLorentzVector*>((*m_jet_lorentzvector)[j4]);
-            if (fourthJetP4->Pt() < 30)
+            if (fourthJetP4->Pt() < 30 || fourthJetP4->Eta() > 2.4)
               continue;
 
             //int j4_mcIndex = m_jet_MCIndex[j4];
@@ -500,6 +534,28 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
 
     selectedEntriesAfterMatching++;
 
+    // Choose if we are run2012 A+B, or C+D
+    bool isRun2012AB = false;
+    double r = random_generator.Rndm();
+
+    if (isSemiMu && r < mu_lumi_run2012_AB_over_total)
+      isRun2012AB = true;
+    else if (!isSemiMu && r < e_lumi_run2012_AB_over_total)
+      isRun2012AB = true;
+
+        //hRunPeriod->Fill( isRun2012AB ? 0 : 1 );
+
+    float firstJetCut = 0, secondJetCut = 0, thirdJetCut = 0;
+    if (isRun2012AB) {
+      firstJetCut = 45;
+      secondJetCut = 45;
+      thirdJetCut = 45;
+    } else {
+      firstJetCut = 55;
+      secondJetCut = 45;
+      thirdJetCut = 35;
+    }
+
     // Selection. Pt > 70 50 30 30, eta < 2.4
 
     TLorentzVector* firstJetP4 = static_cast<TLorentzVector*>((*m_jet_lorentzvector)[recoFirstJetIndex]);
@@ -510,7 +566,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
     std::vector<double> pts = {firstJetP4->Pt(), secondJetP4->Pt(), hadronicBP4->Pt(), leptonicBP4->Pt()};
     std::sort(pts.begin(), pts.end());
 
-    if (pts[3] < 70 || pts[2] < 50 || pts[1] < 30 || pts[0] < 30)
+    if (pts[3] < firstJetCut || pts[2] < secondJetCut || pts[1] < thirdJetCut || pts[0] < 30)
       continue;
 
     if (fabs(firstJetP4->Eta()) > 2.4 || fabs(secondJetP4->Eta()) > 2.4 || fabs(hadronicBP4->Eta()) > 2.4 || fabs(leptonicBP4->Eta()) > 2.4)
