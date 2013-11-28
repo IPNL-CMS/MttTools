@@ -95,7 +95,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
 
   TClonesArray *m_MC_lorentzvector;
   int   m_n_MCs;
-  //int   m_MC_index[m_MCs_MAX];
+  int   m_MC_index[m_MCs_MAX];
   //int   m_MC_status[m_MCs_MAX];
   int   m_MC_type[m_MCs_MAX];
   int   m_MC_imot1[m_MCs_MAX];
@@ -115,7 +115,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
 
   SetBranchAddress(MC, "n_MCs",  &m_n_MCs);
   SetBranchAddress(MC, "MC_4vector", &m_MC_lorentzvector);
-  //SetBranchAddress(MC, "MC_index",   &m_MC_index);
+  SetBranchAddress(MC, "MC_index",   &m_MC_index);
   SetBranchAddress(MC, "MC_type",    &m_MC_type);
   SetBranchAddress(MC, "MC_mot1",    &m_MC_imot1);
   //SetBranchAddress(MC, "MC_mot2",    &m_MC_imot2);
@@ -271,35 +271,47 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
       }
     }
 
+    auto patIndexToExtractorIndex = [&](int patIndex) {
+      for (int i = 0; i < m_n_MCs ; i++) {
+        if (m_MC_index[i] == patIndex)
+          return i;
+      }
+
+      return -1;
+    };
+
     for (int i = 0; i < m_n_MCs; i++) {
-      // We are only interested in particles in final states:
-      // - leptons / neutrinos & jets
-      // All theses particles have for mother a W and for grand mother a top
-      if (m_MC_imot1[i] == -1 || m_MC_imot1[m_MC_imot1[i]] == -1)
+
+      int motherIndex = patIndexToExtractorIndex(m_MC_imot1[i]);
+      int grandMotherIndex = -1;
+      if (motherIndex != -1)
+        grandMotherIndex = patIndexToExtractorIndex(m_MC_imot1[motherIndex]);
+
+      if (motherIndex == -1 || grandMotherIndex == -1)
         continue;
 
-      if (fabs(m_MC_type[m_MC_imot1[i]]) == ID_T ||
-          fabs(m_MC_type[m_MC_imot1[m_MC_imot1[i]]]) == ID_T)  {
+      // Look only event coming (directly / indirectly) from a top
+      if (abs(m_MC_type[motherIndex]) == ID_T || abs(m_MC_type[grandMotherIndex]) == ID_T)  {
 
-
+        int type = abs(m_MC_type[i]);
         // W? Continue
-        if (fabs(m_MC_type[i]) == ID_W)
+        if (type == ID_W)
           continue;
 
         // Only semi-mu or semi-e events are interesting, so throw away event with a tau
-        if (fabs(m_MC_type[i]) == ID_TAU) {
+        if (type == ID_TAU) {
           keepEvent = false;
           break;
         }
 
-        switch ((int) fabs(m_MC_type[i])) {
+        switch (type) {
           case ID_E:
             if (leptonIndex != -1) {
               keepEvent = false;
               break;
             }
-            isSemiMu = false;
             leptonIndex = i;
+            isSemiMu = false;
             break;
 
           case ID_MU:
@@ -307,8 +319,8 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
               keepEvent = false;
               break;
             }
-            isSemiMu = true;
             leptonIndex = i;
+            isSemiMu = true;
             break;
 
           case ID_NEUTRINO_E:
@@ -320,7 +332,12 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
             }
             neutrinoIndex = i;
 
-            leptonicTopIndex = m_MC_imot1[m_MC_imot1[i]];
+            // In some case, Madgraph does not output a W in the LHE
+            if (abs(m_MC_type[grandMotherIndex]) == ID_T)
+              leptonicTopIndex = grandMotherIndex;
+            else
+              leptonicTopIndex = motherIndex;
+
             break;
 
           case ID_B:
@@ -356,11 +373,13 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
     if (leptonIndex == -1 || neutrinoIndex == -1 || leptonicBIndex == -1 || hadronicBIndex == -1 || firstJetIndex == -1 || secondJetIndex == -1)
       keepEvent = false;
 
-    if (! keepEvent)
+    if (! keepEvent) {
+      leptonIndex = leptonicBIndex = hadronicBIndex = neutrinoIndex = firstJetIndex = secondJetIndex = leptonicTopIndex = -1;
       continue;
+    }
 
     // Reorder B jet indexes
-    if (m_MC_imot1[leptonicBIndex] != leptonicTopIndex) {
+    if (patIndexToExtractorIndex(m_MC_imot1[leptonicBIndex]) != leptonicTopIndex) {
       // Wrong combinaison, swap
       std::swap(leptonicBIndex, hadronicBIndex);
     }
@@ -625,17 +644,17 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
   //TF1* top_gaussian = new TF1("f1", "gaus", 0, 2000);
   //TF1* top_gaussian = new TF1("f1", bw, 0, 2000, 3);
   top_gaussian->SetParameter(0, 500);
-  top_gaussian->SetParameter(1, 180);
+  top_gaussian->SetParameter(1, 173);
   top_gaussian->SetParameter(2, 40);
 
   TF1* top_gaussian_lept_e = new TF1("f3", "gaus", 130, 200);
   //TF1* top_gaussian_lept_e = new TF1("f3", bw, 120, 240, 3);
   top_gaussian_lept_e->SetParameter(0, 500);
-  top_gaussian_lept_e->SetParameter(1, 180);
+  top_gaussian_lept_e->SetParameter(1, 173);
   top_gaussian_lept_e->SetParameter(2, 40);
 
   TF1* top_gaussian_lept_mu = new TF1("f4", "gaus", 130, 200);
-  top_gaussian_lept_mu->SetParameter(1, 180);
+  top_gaussian_lept_mu->SetParameter(1, 173);
 
   TF1* w_gaussian = new TF1("f2", "gaus", 70, 100);
   //TF1* w_gaussian = new TF1("f2", "gaus", 0, 2000);

@@ -77,26 +77,29 @@ void printEff(double efficiency, int n) {
   }
 }
 
-void loadChain(const std::vector<std::string>& inputFiles, TChain*& mc, TChain*& event, TChain*& jets, TChain*& MET, TChain*& muons, TChain*& electrons, TChain*& mtt) {
+void loadChain(const std::vector<std::string>& inputFiles, TChain*& jets, TChain*& mtt) {
   std::cout << "Opening files..." << std::endl;
 
-  mc = new TChain("MC");
-  event = new TChain("event");
+  //mc = new TChain("MC");
+  //event = new TChain("event");
   jets = new TChain("jet_PF");
-  MET = new TChain("MET_PF");
-  muons = new TChain("muon_PF");
-  electrons = new TChain("electron_PF");
+  //MET = new TChain("MET_PF");
+  //muons = new TChain("muon_PF");
+  //electrons = new TChain("electron_PF");
   mtt = new TChain("Mtt");
 
   for (const std::string& file: inputFiles) {
-    mc->Add(file.c_str());
-    event->Add(file.c_str());
+    //mc->Add(file.c_str());
+    //event->Add(file.c_str());
     jets->Add(file.c_str());
-    MET->Add(file.c_str());
-    muons->Add(file.c_str());
-    electrons->Add(file.c_str());
+    //MET->Add(file.c_str());
+    //muons->Add(file.c_str());
+    //electrons->Add(file.c_str());
     mtt->Add(file.c_str());
   }
+
+  jets->SetCacheSize(30*1024*1024);
+  mtt->SetCacheSize(30*1024*1024);
 
   std::cout << "... done." << std::endl;
 }
@@ -229,14 +232,14 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
   jets_efficiency_vs_mtt = new TH1F("jets_efficiency_vs_mtt", "Efficiency;Generated m_{tt};Jet selection efficiency", nBins, bins);
 
   TChain* MC = NULL, *event = NULL, *jets = NULL, *MET = NULL, *muons = NULL, *electrons = NULL, *mtt = NULL;
-  loadChain(inputFiles, MC, event, jets, MET, muons, electrons, mtt);
+  loadChain(inputFiles, jets, mtt);
 
-  MC->SetBranchStatus("*", 0);
-  event->SetBranchStatus("*", 0);
+  //MC->SetBranchStatus("*", 0);
+  //event->SetBranchStatus("*", 0);
   jets->SetBranchStatus("*", 0);
-  MET->SetBranchStatus("*", 0);
-  muons->SetBranchStatus("*", 0);
-  electrons->SetBranchStatus("*", 0);
+  //MET->SetBranchStatus("*", 0);
+  //muons->SetBranchStatus("*", 0);
+  //electrons->SetBranchStatus("*", 0);
   mtt->SetBranchStatus("*", 0);
 
   // Jets
@@ -251,15 +254,15 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
   SetBranchAddress(mtt, "MC_hadronicSecondJetIndex", &genSecondJetIndex);
 
   int selectedLeptonicBIndex, selectedHadronicBIndex, selectedFirstJetIndex, selectedSecondJetIndex;
-  SetBranchAddress(mtt, "selectedLeptonicBIndex", &selectedLeptonicBIndex);
-  SetBranchAddress(mtt, "selectedHadronicBIndex", &selectedHadronicBIndex);
-  SetBranchAddress(mtt, "selectedHadronicFirstJetIndex", &selectedFirstJetIndex);
-  SetBranchAddress(mtt, "selectedHadronicSecondJetIndex", &selectedSecondJetIndex);
+  SetBranchAddress(mtt, "selectedLeptonicBIndex_AfterChi2", &selectedLeptonicBIndex);
+  SetBranchAddress(mtt, "selectedHadronicBIndex_AfterChi2", &selectedHadronicBIndex);
+  SetBranchAddress(mtt, "selectedHadronicFirstJetIndex_AfterChi2", &selectedFirstJetIndex);
+  SetBranchAddress(mtt, "selectedHadronicSecondJetIndex_AfterChi2", &selectedSecondJetIndex);
 
   int numComb, channel;
   SetBranchAddress(mtt, "MC_channel", &channel);
   //SetBranchAddress(mtt, "isSel", &isSel);
-  SetBranchAddress(mtt, "numComb", &numComb);
+  SetBranchAddress(mtt, "numComb_chi2", &numComb);
   SetBranchAddress(mtt, "MC_mtt", &MC_mtt);
 
   uint64_t jets_selectedEntries = 0;
@@ -268,20 +271,20 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
   uint64_t possibleMatchableEntries = 0;
   uint64_t matchableEntries = 0;
 
-  uint64_t entries = MC->GetEntries();
+  uint64_t entries = mtt->GetEntries();
   //uint64_t entries = 0;
 
   for (uint64_t entry = 0; entry < entries; entry++) {
-    MC->GetEntry(entry);
-    event->GetEntry(entry);
+    //MC->GetEntry(entry);
+    //event->GetEntry(entry);
     jets->GetEntry(entry);
-    MET->GetEntry(entry);
-    muons->GetEntry(entry);
-    electrons->GetEntry(entry);
+    //MET->GetEntry(entry);
+    //muons->GetEntry(entry);
+    //electrons->GetEntry(entry);
     mtt->GetEntry(entry);
 
     if (((entry) % 100000) == 0) {
-      std::cout << "Processing entry " << entry + 1 << " out of " << entries << std::endl;
+      std::cout << "Processing entry " << entry + 1 << " out of " << entries << " (" << (entry + 1) / (float) entries * 100 << "%)" << std::endl;
     }
 
     if (genLeptonicBIndex == -1 || genHadronicBIndex == -1 || genFirstJetIndex == -1 || genHadronicBIndex == -1)
