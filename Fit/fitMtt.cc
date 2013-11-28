@@ -954,7 +954,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, Ro
 
   //x = 4; y = 1;
 
-  const float resolution = 50.;
+  const float resolution = 25.;
   const int nBinsForHisto = (observable.getMax() - observable.getMin() + 0.5) / resolution;
 
   const int padWidth = 900;
@@ -1480,8 +1480,8 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   }
 
   //fit region
-  Float_t minmTT = 550;
-  Float_t maxmTT = 2000;
+  Float_t minmTT = 300;
+  Float_t maxmTT = 1100;
 
   RooRealVar mtt("mtt", "M_{t#bar{t}}", minmTT, maxmTT, "GeV");
   RooRealVar weight("weight", "weight", 0, 100000);
@@ -2105,8 +2105,10 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       // First, fit with background only pdfs
       //simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
       //simPdfBackgroundOnly.fitTo(*datasetToFit, Optimize(0), Strategy(2));
+      //fitResult = simPdfBackgroundOnly.fitTo(*datasetToFit, Save(),/*, Optimize(0),*/ Strategy(1), Minimizer(
+      //      "Minuit2", "Migrad")
       fitResult = simPdfBackgroundOnly.fitTo(*datasetToFit, Save(),/*, Optimize(0),*/ Strategy(1), Minimizer(
-            "Minuit2", "Migrad")
+            "Minuit", "Migrad")
       );
 
       fitResult->Print("v");

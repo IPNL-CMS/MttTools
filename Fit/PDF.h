@@ -299,3 +299,49 @@ class GammaPlusLogNormalPdf : public RooAbsPdf {
       return sum * lognormal + (1. - sum) * gamma;
     };
 };
+
+class GammaPdf : public RooAbsPdf {
+  public:
+    GammaPdf() {};
+    GammaPdf(const char *name, const char *title, RooAbsReal& _x,
+                                                // Gamma PDF
+                                                RooAbsReal& _alpha, RooAbsReal& _theta,
+                                                // Various
+                                                RooAbsReal& _shift):
+      RooAbsPdf(name, title),
+      x("x", "x", this, _x),
+      alpha("alpha", "alpha", this, _alpha),
+      theta("theta", "theta", this, _theta),
+      shift("shift", "shift", this, _shift) {};
+
+    GammaPdf(const GammaPdf& other, const char* name = NULL):
+      RooAbsPdf(other, name),
+      x("x", this, other.x),
+      alpha("alpha", this, other.alpha),
+      theta("theta", this, other.theta),
+      shift("shift", this, other.shift) {};
+
+    virtual TObject* clone(const char* newname) const { return new GammaPdf(*this, newname); }
+    inline virtual ~GammaPdf() { }
+
+  protected:
+
+    RooRealProxy x;
+
+    // Gamma PDF
+    RooRealProxy alpha; // On Wikipedia, it's 'k'
+    RooRealProxy theta;
+
+    RooRealProxy shift;
+
+    double evaluate() const {
+
+
+      // Mode of gamma distribution: M_gamma = (alpha - 1) * theta
+
+      double gamma = ROOT::Math::gamma_pdf(x, alpha, theta, shift);
+
+      return gamma;
+    };
+};
+

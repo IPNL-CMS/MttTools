@@ -40,6 +40,9 @@ std::shared_ptr<BaseFunction> getPdf(const std::string& name, const std::string&
   if (name == "gamma_lognormal")
     return std::make_shared<GammaPlusLogNormal>(pdfName);
 
+  if (name == "gamma")
+    return std::make_shared<Gamma>(pdfName);
+
   return nullptr;
 }
 
