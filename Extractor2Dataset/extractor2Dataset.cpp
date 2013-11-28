@@ -11,6 +11,7 @@
 
 #include <TChain.h>
 #include <TFile.h>
+#include <TRandom2.h>
 
 #include <tclap/CmdLine.h>
 
@@ -30,43 +31,48 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
       {2, new TTree("dataset_2btag", "dataset for at least 2 b-tagged jets") }
   };
 
-  float mtt_afterChi2, pt_1stJet, pt_2ndJet, bestSolChi2, weight;
+  float mtt_afterChi2, pt_1stJet, pt_2ndJet, pt_3rdJet, bestSolChi2, weight;
   int isSel, nBtaggedJets_CSVM;
-
-  mtt->SetBranchAddress("mtt_AfterChi2", &mtt_afterChi2, NULL);
-  mtt->SetBranchAddress("1stjetpt", &pt_1stJet, NULL);
-  mtt->SetBranchAddress("2ndjetpt", &pt_2ndJet, NULL);
-  mtt->SetBranchAddress("bestSolChi2", &bestSolChi2, NULL);
-  mtt->SetBranchAddress("isSel", &isSel, NULL);
-  if (puProfile == PUProfile::S6)
-    mtt->SetBranchAddress("nBtaggedJets_TCHET", &nBtaggedJets_CSVM, NULL);
-  else
-    mtt->SetBranchAddress("nBtaggedJets_CSVM", &nBtaggedJets_CSVM, NULL);
-  if (isData)
-    mtt->SetBranchAddress("weight", &weight, NULL);
-  else
-    weight = 1;
-
+  uint32_t run = 0;
 
   mtt->SetBranchStatus("*", 0);
   mtt->SetBranchStatus("mtt_AfterChi2", 1);
   mtt->SetBranchStatus("1stjetpt", 1);
   mtt->SetBranchStatus("2ndjetpt", 1);
+  mtt->SetBranchStatus("3rdjetpt", 1);
   mtt->SetBranchStatus("bestSolChi2", 1);
   mtt->SetBranchStatus("isSel", 1);
   if (puProfile == PUProfile::S6)
     mtt->SetBranchStatus("nBtaggedJets_TCHET", 1);
   else
     mtt->SetBranchStatus("nBtaggedJets_CSVM", 1);
-  if (isData)
+  if (! isData)
     mtt->SetBranchStatus("weight", 1);
+
+  mtt->SetBranchAddress("mtt_AfterChi2", &mtt_afterChi2, NULL);
+  mtt->SetBranchAddress("1stjetpt", &pt_1stJet, NULL);
+  mtt->SetBranchAddress("2ndjetpt", &pt_2ndJet, NULL);
+  mtt->SetBranchAddress("3rdjetpt", &pt_3rdJet, NULL);
+  mtt->SetBranchAddress("bestSolChi2", &bestSolChi2, NULL);
+  mtt->SetBranchAddress("isSel", &isSel, NULL);
+  if (puProfile == PUProfile::S6)
+    mtt->SetBranchAddress("nBtaggedJets_TCHET", &nBtaggedJets_CSVM, NULL);
+  else
+    mtt->SetBranchAddress("nBtaggedJets_CSVM", &nBtaggedJets_CSVM, NULL);
+  if (!isData)
+    mtt->SetBranchAddress("weight", &weight, NULL);
+  else
+    weight = 1;
+
 
   float n_trueInteractions;
 
-  event->SetBranchAddress("nTrueInteractions", &n_trueInteractions, NULL);
-
   event->SetBranchStatus("*", 0);
   event->SetBranchStatus("nTrueInteractions", 1);
+  event->SetBranchStatus("run", 1);
+
+  event->SetBranchAddress("nTrueInteractions", &n_trueInteractions, NULL);
+  event->SetBranchAddress("run", &run, NULL);
 
   float output_weight;
   int lepton = (type == "semimu") ? 13 : 11;
@@ -98,6 +104,33 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
 
   std::map<int, int64_t> selectedEntries;
 
+   // 2012 luminosity
+  float lumi_run2012_A = 0;
+  float lumi_run2012_B = 0;
+  float lumi_run2012_C = 0;
+  float lumi_run2012_D = 0;
+
+  if (type == "semimu") {
+    lumi_run2012_A = 0.876225;
+    lumi_run2012_B = 4.412;
+    lumi_run2012_C = 7.044;
+    lumi_run2012_D = 7.368;
+  } else {
+    lumi_run2012_A = 0.876225;
+    lumi_run2012_B = 4.399;
+    lumi_run2012_C = 7.022;
+    lumi_run2012_D = 7.369;
+  }
+
+  float lumi_run2012_AB = lumi_run2012_A + lumi_run2012_B;
+  float lumi_run2012_CD = lumi_run2012_C + lumi_run2012_D;
+  float lumi_total = lumi_run2012_AB + lumi_run2012_CD;
+
+  float lumi_run2012_AB_over_total = lumi_run2012_AB / lumi_total;
+
+  //std::shared_ptr<TopTriggerEfficiencyProvider> m_trigger_efficiency_provider = std::make_shared<TopTriggerEfficiencyProvider>();
+  TRandom2 random_generator;
+
   for (int64_t i = 0; i < entries; i++) {
     mtt->GetEntry(i);
     event->GetEntry(i);
@@ -106,8 +139,34 @@ void reduce(TChain* mtt, TChain* event, const std::string& outputFile, bool isDa
       std::cout << "Processing event #" << i + 1 << " over " << entries << " (" << (float) i / entries * 100 << " %)" << std::endl;
     }
 
+    // Choose if we are run2012 A+B, or C+D
+    bool isRun2012AB = false;
+    if (! isData) {
+      double r = random_generator.Rndm();
+      if (r < lumi_run2012_AB_over_total)
+        isRun2012AB = true;
+
+      //if (mIsMC) {
+      //hRunPeriod->Fill( isRun2012AB ? 0 : 1 );
+    //}
+    } else {
+      isRun2012AB = (run <= 196531);
+    }
+
+    float firstJetCut = 0, secondJetCut = 0, thirdJetCut = 0;
+    if (isRun2012AB) {
+      firstJetCut = 45;
+      secondJetCut = 45;
+      thirdJetCut = 45;
+    } else {
+      firstJetCut = 55;
+      secondJetCut = 45;
+      thirdJetCut = 35;
+    }
+
+    // Lepton selection done on Extractor
     // Selection
-    if (isSel == 1 && pt_1stJet > 70. && pt_2ndJet > 50. && mtt_afterChi2 > 0. && bestSolChi2 < 500.) {
+    if (isSel == 1 && pt_1stJet > firstJetCut && pt_2ndJet > secondJetCut && pt_3rdJet > thirdJetCut && mtt_afterChi2 > 0. && bestSolChi2 < 500.) {
       // Good event
       int index;
       if (nBtaggedJets_CSVM == 0)
@@ -184,6 +243,9 @@ void loadChain(const std::vector<std::string>& inputFiles, TChain*& mtt, TChain*
     mtt->Add(file.c_str());
     event->Add(file.c_str());
   }
+
+  event->SetCacheSize(30*1024*1024);
+  mtt->SetCacheSize(30*1024*1024);
 }
 
 void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight, const std::string& puSyst, const std::string& pdfSyst) {
