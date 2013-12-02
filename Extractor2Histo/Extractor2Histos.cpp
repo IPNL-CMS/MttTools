@@ -7,6 +7,8 @@
 #include <TProfile.h>
 #include <fstream>
 #include <memory>
+#include <chrono>
+#include <ctime>
 #include <TLorentzVector.h>
 
 #include "TopTriggerEfficiencyProvider.h"
@@ -26,6 +28,10 @@ static Dummy foo;
 
 const int nBins = 15; 
 const double bins[] = {340, 360, 380, 400, 420, 460, 500, 550, 600, 650, 750, 850, 950, 1050, 1200, 1400, 1600};
+
+TLorentzVector* getP4(TClonesArray* array, int index) {
+  return (TLorentzVector*) array->At(index);
+}
 
 void Extractor2Histos::Loop()
 {
@@ -51,8 +57,11 @@ void Extractor2Histos::Loop()
   TH1D *hNVtx_noweight = new TH1D("nVertex_reco_fullsel_noweight", "", 70, 0., 70);
   TH1D *hNVtx = new TH1D("nVertex_reco_fullsel", "", 70, 0., 70);
   TH1D *hNVtx_chi2sel = new TH1D("nVertex_reco_chi2sel", "", 70, 0., 70);
+  TH1D *hNVtx_nosel = new TH1D("nVertex_reco_nosel", "", 70, 0., 70);
 
   TH1D *hIsSel = new TH1D("isSel", "", 10, 0, 10);
+  TH1D *hBestSolChi2 = new TH1D("bestSolChi2", "", 400, 0, 1000);
+  TH1D *hBestSolChi2_fullsel = new TH1D("bestSolChi2_fullsel", "", 400, 0, 500);
 
   TH1D *hNTrueInt = new TH1D("nTrueInt_reco_fullsel", "", 70, 0., 70);
   TH1D *hNTrueInt_nosel = new TH1D("nTrueInt_reco_nosel", "", 70, 0., 70);
@@ -67,32 +76,19 @@ void Extractor2Histos::Loop()
 
   TH1D *hLeptTopPt = new TH1D("leptTopPt_reco_fullsel", "", 60, 20., 600.);
   TH1D *hLeptTopPt_chi2sel = new TH1D("leptTopPt_reco_chi2sel", "", 60, 20., 600.);
-  TH1D *hLeptTopPt_nosel = new TH1D("leptTopPt_reco_nosel", "", 60, 20., 600.);
-
-  //TH1D *hTopPt_gen = new TH1D("hTopPt_gen", "", 60, 20., 600.);
-  //TH1D *hTopEta_gen = new TH1D("hTopEta_gen", "", 50, -2*M_PI, 2*M_PI);
 
   TH1D *hBoostTT_gen = new TH1D("boostTT_gen", "", 50, 0., 1.);
   TH1D *hPtTT_gen = new TH1D("ptTT_gen", "", 60, 0., 600.);
   TH1D *hEtaTT_gen = new TH1D("etaTT_gen", "", 50, -2*M_PI, 2*M_PI);
 
-  //TH1D *hTopPt_com_gen = new TH1D("hTopPt_com_gen", "", 60, 20., 600.);
-  //TH1D *hTopEta_com_gen = new TH1D("hTopEta_com_gen", "", 50, -2*M_PI, 2*M_PI);
-
-  //TH1D *hPtTT_com_gen = new TH1D("hPtTT_com_gen", "", 60, 0., 600.);
-  //TH1D *hEtaTT_com_gen = new TH1D("hEtaTT_com_gen", "", 50, -2*M_PI, 2*M_PI);
-
   TH1D *hLeptTopEta = new TH1D("leptTopEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
   TH1D *hLeptTopEta_chi2sel = new TH1D("leptTopEta_reco_chi2sel", "", 50, -2*M_PI, 2*M_PI);
-  TH1D *hLeptTopEta_nosel = new TH1D("leptTopEta_reco_nosel", "", 100, -2*M_PI, 2*M_PI);
 
   TH1D *hHadrTopPt = new TH1D("hadrTopPt_reco_fullsel", "", 60, 20., 600.);
   TH1D *hHadrTopPt_chi2sel = new TH1D("hadrTopPt_reco_chi2sel", "", 60, 20., 600.);
-  TH1D *hHadrTopPt_nosel = new TH1D("hadrTopPt_reco_nosel", "", 60, 20., 600.);
 
   TH1D *hHadrTopEta = new TH1D("hadrTopEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
   TH1D *hHadrTopEta_chi2sel = new TH1D("hadrTopEta_reco_chi2sel", "", 50, -2*M_PI, 2*M_PI);
-  TH1D *hHadrTopEta_nosel = new TH1D("hadrTopEta_reco_nosel", "", 100, -2*M_PI, 2*M_PI);
 
   TH1D *hMuRelIso = new TH1D("muRelIso_reco_fullsel", "", 50, 0., 0.15);
   TH1D *hMuRelIso_chi2sel = new TH1D("muRelIso_reco_chi2sel", "", 50, 0., 0.15);
@@ -149,7 +145,7 @@ void Extractor2Histos::Loop()
   TH1D *hNBtaggedJets = new TH1D("nBTaggedJets_reco_fullsel", "", 5, -0.5, 4.5);
   TH1D *hNBtaggedJets_chi2sel = new TH1D("nBTaggedJets_reco_chi2sel", "", 5, -0.5, 4.5);
 
-  TH1D *h_mtt_gen_no_sel = new TH1D("mtt_gen_nosel", "", 300, 0., 1500.);
+  TH1D *h_mtt_gen_nosel = new TH1D("mtt_gen_nosel", "", 300, 0., 1500.);
   TH1D *h_mtt_gen_chi2sel = new TH1D("mtt_gen_chi2sel", "", 300, 0., 1500.);
   TH1D *h_mtt_gen = new TH1D("mtt_gen_fullsel", "", 300, 0, 1500.);
 
@@ -236,7 +232,7 @@ void Extractor2Histos::Loop()
   hmtlep->SetXTitle("leptonic m_{t} [GeV/c^{2}]");
   hmthad->SetXTitle("hadronic m_{t} [GeV/c^{2}]");
 
-  h_mtt_gen_no_sel->SetXTitle("m_{t#bar{t}}^{gen} [GeV/c^{2}]");
+  h_mtt_gen_nosel->SetXTitle("m_{t#bar{t}}^{gen} [GeV/c^{2}]");
   h_mtt_gen_chi2sel->SetXTitle("m_{t#bar{t}}^{gen} [GeV/c^{2}]");
   h_mtt_gen->SetXTitle("m_{t#bar{t}}^{gen} [GeV/c^{2}]");
 
@@ -288,10 +284,15 @@ void Extractor2Histos::Loop()
   uint64_t positive_events = 0;
   uint64_t negative_events = 0;
 
+  std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now(), end;
   for (Long64_t jentry = 0; jentry < nentries; jentry++)
   {
-    if (jentry % 100000 == 0)
-      std::cout << "Processing entry #" << (jentry + 1) << " over " << nentries << " (" << (float) jentry / nentries * 100 << "%)" << std::endl;
+    if (jentry % 100000 == 0) {
+      end = std::chrono::system_clock::now();
+      float msec = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+      std::cout << "Processing entry #" << (jentry + 1) << " over " << nentries << " (" << (float) jentry / nentries * 100 << "% - " << msec / 1000. << "s)" << std::endl;
+      start = std::chrono::system_clock::now();
+    }
 
     GetEntry(jentry);
 
@@ -313,59 +314,9 @@ void Extractor2Histos::Loop()
       positive_events++;
     else
       negative_events++;
+    
 
-    // First, fill gen value
-    if (mIsMC && (MC_channel == 1 || MC_channel == 2)) {
-      TLorentzVector leptonic_W(0., 0., 0., 0.);
-      if (gen_lepton_p4->Pt() != 0 && gen_neutrino_p4->Pt() != 0) {
-        hDeltaPhiLeptonNeutrino_gen->Fill(fabs(gen_lepton_p4->DeltaPhi(*gen_neutrino_p4)));
-        hDeltaRLeptonNeutrino_gen->Fill(gen_lepton_p4->DeltaR(*gen_neutrino_p4));
-        hDeltaEtaLeptonNeutrino_gen->Fill(gen_lepton_p4->Eta() - gen_neutrino_p4->Eta());
-
-        leptonic_W = *gen_lepton_p4 + *gen_neutrino_p4;
-        hLeptonicWPt_gen->Fill(leptonic_W.Pt());
-        hLeptonicWEta_gen->Fill(leptonic_W.Eta());
-      }
-
-      TLorentzVector hadronic_W(0., 0., 0., 0.);
-      if (gen_lightJet1_p4->Pt() != 0 && gen_lightJet2_p4->Pt() != 0) {
-        hDeltaPhiTwoLightJets_gen->Fill(fabs(gen_lightJet1_p4->DeltaPhi(*gen_lightJet2_p4)));
-        hDeltaRTwoLightJets_gen->Fill(gen_lightJet1_p4->DeltaR(*gen_lightJet2_p4));
-        hDeltaEtaTwoLightJets_gen->Fill(gen_lightJet1_p4->Eta() - gen_lightJet2_p4->Eta());
-
-        hadronic_W = *gen_lightJet1_p4 + *gen_lightJet2_p4;
-        hHadronicWPt_gen->Fill(leptonic_W.Pt());
-        hHadronicWEta_gen->Fill(leptonic_W.Eta());
-      }
-
-      if (leptonic_W.Pt() != 0 && hadronic_W.Pt() != 0) {
-        hDeltaPhiW_gen->Fill(fabs(leptonic_W.DeltaPhi(hadronic_W)));
-        hDeltaRW_gen->Fill(leptonic_W.DeltaR(hadronic_W));
-        hDeltaEtaW_gen->Fill(leptonic_W.Eta() - hadronic_W.Eta());
-      }
-    }
-
-
-    double ptLepton = 0;
-    double etaLepton = 0;
-    double ptLeptonCut = 0;
-    double etaSCLepton = 0;
-    if (mIsSemiMu) {
-      if (nGoodMuons > 0) {
-        ptLepton = muonPt[0];
-        etaLepton = muonEta[0];
-        ptLeptonCut = 25.;
-        etaSCLepton = etaLepton;
-      }
-    } else {
-      if (nGoodElectrons > 0) {
-        ptLepton = electronPt[0];
-        etaLepton = electronEta[0];
-        ptLeptonCut = 30.;
-        etaSCLepton = electron_SCEta[selectedLeptonIndex_AfterChi2];
-      }
-    }
-
+    // Compute event weight
     if (std::isnan(m_lepton_weight)) {
       std::cout << "Warning: lepton weight is NaN" << std::endl;
       m_lepton_weight = 1.;
@@ -394,7 +345,7 @@ void Extractor2Histos::Loop()
       eventWeight *= puWeight;
       eventWeight *= generator_weight;
       eventWeight *= m_lepton_weight;
-      //eventWeight *= m_btag_weight;
+      eventWeight *= m_btag_weight;
     }
 
     if (std::isnan(eventWeight)) {
@@ -404,17 +355,74 @@ void Extractor2Histos::Loop()
 
     hWeight->Fill(eventWeight);
 
-    hNTrueInt_nosel->Fill(n_trueInteractions, eventWeight);
-    hIsSel->Fill(isSel, eventWeight);
+    // Fill gen value
     if (mIsMC && (MC_channel != 0)) {
-      h_mtt_gen_no_sel->Fill(MC_mtt, generator_weight);
+      h_mtt_gen_nosel->Fill(MC_mtt, eventWeight);
+      hBoostTT_gen->Fill(MC_boost_tt, eventWeight);
+
+      hPtTT_gen->Fill(MC_pt_tt, eventWeight);
+      hEtaTT_gen->Fill(MC_eta_tt, eventWeight);
+      hDeltaPhiTops_gen->Fill(fabs(getP4(gen_top1_p4, 0)->DeltaPhi(*getP4(gen_top2_p4, 0))), eventWeight);
+      hDeltaEtaTops_gen->Fill(getP4(gen_top1_p4, 0)->Eta() - getP4(gen_top2_p4, 0)->Eta(), eventWeight);
+      hDeltaRTops_gen->Fill(getP4(gen_top1_p4, 0)->DeltaR(*getP4(gen_top2_p4, 0)), eventWeight);
     }
 
-    hMET_nosel->Fill(MET, eventWeight);
+    if (mIsMC && (MC_channel == 1 || MC_channel == 2)) {
+      TLorentzVector leptonic_W(0., 0., 0., 0.);
+      if (gen_lepton_p4->GetEntriesFast() && gen_neutrino_p4->GetEntriesFast()) {
+        hDeltaPhiLeptonNeutrino_gen->Fill(fabs(getP4(gen_lepton_p4, 0)->DeltaPhi(*getP4(gen_neutrino_p4, 0))), eventWeight);
+        hDeltaRLeptonNeutrino_gen->Fill(getP4(gen_lepton_p4, 0)->DeltaR(*getP4(gen_neutrino_p4, 0)), eventWeight);
+        hDeltaEtaLeptonNeutrino_gen->Fill(getP4(gen_lepton_p4, 0)->Eta() - getP4(gen_neutrino_p4, 0)->Eta(), eventWeight);
+
+        leptonic_W = *getP4(gen_lepton_p4, 0) + *getP4(gen_neutrino_p4, 0);
+        hLeptonicWPt_gen->Fill(leptonic_W.Pt(), eventWeight);
+        hLeptonicWEta_gen->Fill(leptonic_W.Eta(), eventWeight);
+      }
+
+      TLorentzVector hadronic_W(0., 0., 0., 0.);
+      if (gen_lightJet1_p4->GetEntriesFast() && gen_lightJet2_p4->GetEntriesFast()) {
+        hDeltaPhiTwoLightJets_gen->Fill(fabs(getP4(gen_lightJet1_p4, 0)->DeltaPhi(*getP4(gen_lightJet2_p4, 0))), eventWeight);
+        hDeltaRTwoLightJets_gen->Fill(getP4(gen_lightJet1_p4, 0)->DeltaR(*getP4(gen_lightJet2_p4, 0)), eventWeight);
+        hDeltaEtaTwoLightJets_gen->Fill(getP4(gen_lightJet1_p4, 0)->Eta() - getP4(gen_lightJet2_p4, 0)->Eta(), eventWeight);
+
+        hadronic_W = *getP4(gen_lightJet1_p4, 0) + *getP4(gen_lightJet2_p4, 0);
+        hHadronicWPt_gen->Fill(leptonic_W.Pt(), eventWeight);
+        hHadronicWEta_gen->Fill(leptonic_W.Eta(), eventWeight);
+      }
+
+      if (leptonic_W.Pt() != 0 && hadronic_W.Pt() != 0) {
+        hDeltaPhiW_gen->Fill(fabs(leptonic_W.DeltaPhi(hadronic_W)), eventWeight);
+        hDeltaRW_gen->Fill(leptonic_W.DeltaR(hadronic_W), eventWeight);
+        hDeltaEtaW_gen->Fill(leptonic_W.Eta() - hadronic_W.Eta(), eventWeight);
+      }
+    }
 
     if (!mIsMC && !m_triggerPassed) {
       continue;
     }
+
+    double ptLepton = 0;
+    double etaLepton = 0;
+    double ptLeptonCut = 0;
+    if (mIsSemiMu) {
+      if (nGoodMuons > 0) {
+        ptLepton = muonPt[0];
+        etaLepton = muonEta[0];
+        ptLeptonCut = 26.;
+      }
+    } else {
+      if (nGoodElectrons > 0) {
+        ptLepton = electronPt[0];
+        etaLepton = electronEta[0];
+        ptLeptonCut = 30.;
+      }
+    }
+
+    hNTrueInt_nosel->Fill(n_trueInteractions, eventWeight);
+    hNVtx_nosel->Fill(n_vertices, eventWeight);
+    hIsSel->Fill(isSel, eventWeight);
+
+    hMET_nosel->Fill(MET, eventWeight);
 
     if (jet_p4->GetEntriesFast() > 0) {
       TLorentzVector* p4 = (TLorentzVector*) (*jet_p4)[0];
@@ -442,7 +450,7 @@ void Extractor2Histos::Loop()
 
     float HT = 0;
     float HT30 = 0;
-    for (uint32_t i = 0; i < jet_p4->GetEntriesFast(); i++) {
+    for (uint32_t i = 0; i < (uint32_t) jet_p4->GetEntriesFast(); i++) {
       float pt = ((TLorentzVector*) (*jet_p4)[i])->Pt();
 
       HT += pt;
@@ -456,31 +464,6 @@ void Extractor2Histos::Loop()
     hHT30_reco_nosel->Fill(HT30, eventWeight);
     hHTFull_reco_nosel->Fill(HTFull, eventWeight);
 
-    //hTopPt_gen->Fill(MC_top1Pt, eventWeight);
-    //hTopPt_gen->Fill(MC_top2Pt, eventWeight);
-    //hTopPt_com_gen->Fill(MC_top1Pt_com, eventWeight);
-    //hTopPt_com_gen->Fill(MC_top2Pt_com, eventWeight);
-
-    //hTopEta_gen->Fill(MC_top1Eta, eventWeight);
-    //hTopEta_gen->Fill(MC_top2Eta, eventWeight);
-    //hTopEta_com_gen->Fill(MC_top1Eta_com, eventWeight);
-    //hTopEta_com_gen->Fill(MC_top2Eta_com, eventWeight);
-
-    if (mIsMC && MC_channel != 0)
-      hBoostTT_gen->Fill(MC_boost_tt);
-
-    if (mIsMC && MC_channel != 0) {
-      hPtTT_gen->Fill(MC_pt_tt);
-      //hPtTT_com_gen->Fill(MC_pt_tt_com, eventWeight);
-
-      hEtaTT_gen->Fill(MC_eta_tt);
-      //hEtaTT_com_gen->Fill(MC_eta_tt_com, eventWeight);
-
-      hDeltaPhiTops_gen->Fill(fabs(gen_top1_p4->DeltaPhi(*gen_top2_p4)));
-      hDeltaEtaTops_gen->Fill(gen_top1_p4->Eta() - gen_top2_p4->Eta());
-      hDeltaRTops_gen->Fill(gen_top1_p4->DeltaR(*gen_top2_p4));
-    }
-
     if (n_muons > 0) {
       hMuRelIso_nosel->Fill(muon_relIso[0], eventWeight); 
 
@@ -488,12 +471,6 @@ void Extractor2Histos::Loop()
       hLeptonEta_nosel->Fill(p4->Eta(), eventWeight);
       hLeptonPt_nosel->Fill(p4->Pt(), eventWeight);
     }
-
-    hLeptTopPt_nosel->Fill(lepTopPt_AfterChi2, eventWeight);
-    hLeptTopEta_nosel->Fill(lepTopEta_AfterChi2, eventWeight);
-
-    hHadrTopPt_nosel->Fill(hadTopPt_AfterChi2, eventWeight);
-    hHadrTopEta_nosel->Fill(hadTopEta_AfterChi2, eventWeight);
 
     if (mIsSemiMu)
     {
@@ -504,13 +481,23 @@ void Extractor2Histos::Loop()
     {
       if (nGoodElectrons <= 0)
         continue;
+
+      // The TOP reference selection exclude electron with
+      // SuperCluster eta between 1.4442 and 1.5660
+      // The TopTrigger efficiency does the same thing, but
+      // using electron eta instead of SuperCluster eta.
+      // Redo a cut here on electron eta
+      // FIXME?
+      if (fabs(etaLepton) >= 1.442 && fabs(etaLepton) < 1.5660)
+        continue;
     }
 
     if (isSel == 1 && numComb > 0)
     {
       if (mIsMC && MC_channel != 0)
-        h_mtt_gen_chi2sel->Fill(MC_mtt, generator_weight);
+        h_mtt_gen_chi2sel->Fill(MC_mtt, eventWeight);
 
+      hBestSolChi2->Fill(bestSolChi2, eventWeight);
       hNGoodJets_chi2sel->Fill(nJets, eventWeight);
       hNBtaggedJets_chi2sel->Fill(nBtaggedJets_CSVM, eventWeight);
 
@@ -566,8 +553,20 @@ void Extractor2Histos::Loop()
       {
 
         if (mIsMC) {
+          if (isRun2012AB) {
+            m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunA, lumi_run2012_A);
+            m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunB, lumi_run2012_B);
+            m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunC, 0);
+            m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunD, 0);
+          } else {
+            m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunA, 0);
+            m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunB, 0);
+            m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunC, lumi_run2012_C);
+            m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunD, lumi_run2012_D);
+          }
+
           // Compute trigger weight
-          double triggerWeight = m_trigger_efficiency_provider->get_weight(ptLepton, etaSCLepton, p_4thjetpt, jetEta[3], n_vertices, nJets, mIsSemiMu, TopTriggerEfficiencyProvider::NOMINAL)[0];
+          double triggerWeight = m_trigger_efficiency_provider->get_weight(ptLepton, etaLepton, p_4thjetpt, jetEta[3], n_vertices, nJets, mIsSemiMu, TopTriggerEfficiencyProvider::NOMINAL)[0];
           hTriggerWeight->Fill(triggerWeight);
 
           eventWeight *= triggerWeight;
@@ -575,12 +574,13 @@ void Extractor2Histos::Loop()
           hWeight_fullsel->Fill(eventWeight);
         }
 
+        hBestSolChi2_fullsel->Fill(bestSolChi2, eventWeight);
         hBoostTT->Fill(beta_tt_AfterChi2, eventWeight);
         hPtTT->Fill(pt_tt_AfterChi2, eventWeight);
         hEtaTT->Fill(eta_tt_AfterChi2, eventWeight);
 
         if (mIsMC && MC_channel != 0) {
-          h_mtt_gen->Fill(MC_mtt, generator_weight);
+          h_mtt_gen->Fill(MC_mtt, eventWeight);
           h_mtt_resolution->Fill(mtt_AfterChi2 - MC_mtt, eventWeight);
         }
 
@@ -620,9 +620,9 @@ void Extractor2Histos::Loop()
         hmttSelected_btag_sel->Fill(mtt_AfterChi2, eventWeight);
         pMttResolution_btag_sel->Fill(MC_mtt , mtt_AfterChi2, eventWeight);
 
-        hDeltaPhiTops_reco_fullsel->Fill(fabs(lepTopP4_AfterChi2->DeltaPhi(*hadTopP4_AfterChi2)), eventWeight);
-        hDeltaEtaTops_reco_fullsel->Fill(lepTopP4_AfterChi2->Eta() - hadTopP4_AfterChi2->Eta(), eventWeight);
-        hDeltaRTops_reco_fullsel->Fill(lepTopP4_AfterChi2->DeltaR(*hadTopP4_AfterChi2), eventWeight);
+        hDeltaPhiTops_reco_fullsel->Fill(fabs(getP4(lepTopP4_AfterChi2, 0)->DeltaPhi(*getP4(hadTopP4_AfterChi2, 0))), eventWeight);
+        hDeltaEtaTops_reco_fullsel->Fill(getP4(lepTopP4_AfterChi2, 0)->Eta() - getP4(hadTopP4_AfterChi2, 0)->Eta(), eventWeight);
+        hDeltaRTops_reco_fullsel->Fill(getP4(lepTopP4_AfterChi2, 0)->DeltaR(*getP4(hadTopP4_AfterChi2, 0)), eventWeight);
 
         if (mtt_AfterChi2 > 500)
         {
@@ -644,6 +644,8 @@ void loadChain(const std::vector<std::string>& inputFiles, const std::string& tr
   for (const std::string& file: inputFiles) {
     output->Add(file.c_str());
   }
+
+  output->SetCacheSize(30*1024*1024);
 }
 
 Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag) : fMTT(0), fVertices(0), fEvent(0)
@@ -659,7 +661,7 @@ Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, c
   loadChain(inputFiles, "event", fEvent);
   loadChain(inputFiles, "muon_loose_PF", fLooseMuons);
   loadChain(inputFiles, "jet_PF", fJet);
-  loadChain(inputFiles, "electron_PF", fElectrons);
+  //loadChain(inputFiles, "electron_PF", fElectrons);
 
 
   Init();
@@ -694,8 +696,8 @@ Int_t Extractor2Histos::GetEntry(Long64_t entry)
   if (fJet)
     fJet->GetEntry(entry);
 
-  if (fElectrons)
-    fElectrons->GetEntry(entry);
+  //if (fElectrons)
+    //fElectrons->GetEntry(entry);
 
   return 1;
 }
@@ -800,42 +802,50 @@ void Extractor2Histos::Init()
   lepTopP4_AfterChi2 = NULL;
   hadTopP4_AfterChi2 = NULL;
 
-  fMTT->SetBranchStatus("lepTopP4_AfterChi2*", 1);
-  fMTT->SetBranchStatus("hadTopP4_AfterChi2*", 1);
-  fMTT->SetBranchAddress("lepTopP4_AfterChi2.", &lepTopP4_AfterChi2);
-  fMTT->SetBranchAddress("hadTopP4_AfterChi2.", &hadTopP4_AfterChi2);
+  fMTT->SetBranchStatus("lepTopP4_AfterChi2", 1);
+  fMTT->SetBranchStatus("hadTopP4_AfterChi2", 1);
+  fMTT->SetBranchAddress("lepTopP4_AfterChi2", &lepTopP4_AfterChi2);
+  fMTT->SetBranchAddress("hadTopP4_AfterChi2", &hadTopP4_AfterChi2);
 
   gen_top1_p4 = NULL;
   gen_top2_p4 = NULL;
 
-  fMTT->SetBranchStatus("MC_Top1_p4*", 1);
-  fMTT->SetBranchStatus("MC_Top2_p4*", 1);
-  fMTT->SetBranchAddress("MC_Top1_p4.", &gen_top1_p4);
-  fMTT->SetBranchAddress("MC_Top2_p4.", &gen_top2_p4);
+  if (mIsMC) {
+    fMTT->SetBranchStatus("MC_Top1_p4", 1);
+    fMTT->SetBranchStatus("MC_Top2_p4", 1);
+    fMTT->SetBranchAddress("MC_Top1_p4", &gen_top1_p4);
+    fMTT->SetBranchAddress("MC_Top2_p4", &gen_top2_p4);
+  }
 
   gen_lepton_p4 = NULL;
   gen_neutrino_p4 = NULL;
 
-  fMTT->SetBranchStatus("MC_lepton_p4*", 1);
-  fMTT->SetBranchStatus("MC_neutrino_p4*", 1);
-  fMTT->SetBranchAddress("MC_lepton_p4.", &gen_lepton_p4);
-  fMTT->SetBranchAddress("MC_neutrino_p4.", &gen_neutrino_p4);
+  if (mIsMC) {
+    fMTT->SetBranchStatus("MC_lepton_p4", 1);
+    fMTT->SetBranchStatus("MC_neutrino_p4", 1);
+    fMTT->SetBranchAddress("MC_lepton_p4", &gen_lepton_p4);
+    fMTT->SetBranchAddress("MC_neutrino_p4", &gen_neutrino_p4);
+  }
 
   gen_leptonic_B_p4 = NULL;
   gen_hadronic_B_p4 = NULL;
 
-  fMTT->SetBranchStatus("MC_leptonic_B_p4*", 1);
-  fMTT->SetBranchStatus("MC_hadronic_B_p4*", 1);
-  fMTT->SetBranchAddress("MC_leptonic_B_p4.", &gen_leptonic_B_p4);
-  fMTT->SetBranchAddress("MC_hadronic_B_p4.", &gen_hadronic_B_p4);
+  if (mIsMC) {
+    fMTT->SetBranchStatus("MC_leptonic_B_p4", 1);
+    fMTT->SetBranchStatus("MC_hadronic_B_p4", 1);
+    fMTT->SetBranchAddress("MC_leptonic_B_p4", &gen_leptonic_B_p4);
+    fMTT->SetBranchAddress("MC_hadronic_B_p4", &gen_hadronic_B_p4);
+  }
 
   gen_lightJet1_p4 = NULL;
   gen_lightJet2_p4 = NULL;
 
-  fMTT->SetBranchStatus("MC_lightJet1_B_p4*", 1);
-  fMTT->SetBranchStatus("MC_lightJet2_B_p4*", 1);
-  fMTT->SetBranchAddress("MC_lightJet1_B_p4.", &gen_lightJet1_p4);
-  fMTT->SetBranchAddress("MC_lightJet2_B_p4.", &gen_lightJet2_p4);
+  if (mIsMC) {
+    fMTT->SetBranchStatus("MC_lightJet1_B_p4", 1);
+    fMTT->SetBranchStatus("MC_lightJet2_B_p4", 1);
+    fMTT->SetBranchAddress("MC_lightJet1_B_p4", &gen_lightJet1_p4);
+    fMTT->SetBranchAddress("MC_lightJet2_B_p4", &gen_lightJet2_p4);
+  }
 
   fVertices->SetMakeClass(1);
   fVertices->SetBranchStatus("*", 0);
@@ -868,9 +878,9 @@ void Extractor2Histos::Init()
   fLooseMuons->SetBranchAddress("n_muons", &n_muons, NULL);
   fLooseMuons->SetBranchAddress("muon_deltaBetaCorrectedRelIsolation", &muon_relIso, NULL);
 
-  fElectrons->SetBranchStatus("*", 0);
-  fElectrons->SetBranchStatus("electron_SCEta", 1);
-  fElectrons->SetBranchAddress("electron_SCEta", &electron_SCEta);
+  //fElectrons->SetBranchStatus("*", 0);
+  //fElectrons->SetBranchStatus("electron_SCEta", 1);
+  //fElectrons->SetBranchAddress("electron_SCEta", &electron_SCEta);
 
   jet_p4 = NULL;
   fJet->SetMakeClass(1);

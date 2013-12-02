@@ -103,20 +103,20 @@ class Extractor2Histos {
 
     bool            m_triggerPassed;
 
-    TLorentzVector* gen_top1_p4;
-    TLorentzVector* gen_top2_p4;
+    TClonesArray* gen_top1_p4;
+    TClonesArray* gen_top2_p4;
 
-    TLorentzVector* gen_lepton_p4;
-    TLorentzVector* gen_neutrino_p4;
+    TClonesArray* gen_lepton_p4;
+    TClonesArray* gen_neutrino_p4;
 
-    TLorentzVector* gen_leptonic_B_p4;
-    TLorentzVector* gen_hadronic_B_p4;
+    TClonesArray* gen_leptonic_B_p4;
+    TClonesArray* gen_hadronic_B_p4;
 
-    TLorentzVector* gen_lightJet1_p4;
-    TLorentzVector* gen_lightJet2_p4;
+    TClonesArray* gen_lightJet1_p4;
+    TClonesArray* gen_lightJet2_p4;
 
-    TLorentzVector* lepTopP4_AfterChi2;
-    TLorentzVector* hadTopP4_AfterChi2;
+    TClonesArray* lepTopP4_AfterChi2;
+    TClonesArray* hadTopP4_AfterChi2;
 
     // List of branches
     TBranch        *b_MC_channel;   //!
