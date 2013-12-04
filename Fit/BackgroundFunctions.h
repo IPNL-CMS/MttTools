@@ -119,3 +119,25 @@ class GammaPlusLogNormal : public BaseFunction {
       return true;
     }
 };
+
+class Gamma : public BaseFunction {
+  public:
+    Gamma(const std::string& name)
+      : BaseFunction(name) {}
+
+  protected:
+    virtual bool createPdf(RooRealVar& observable) {
+
+      if (mParameters.size() != 3)
+        return false;
+
+      mPdf.reset(new GammaPdf(mName.c_str(), mName.c_str(), observable,
+            // Gamma PDF
+            *mParameters["alpha"], *mParameters["theta"],
+            // Various
+            *mParameters["shift"]));
+
+      return true;
+    }
+};
+
