@@ -86,20 +86,16 @@ class Extractor2Histos {
     Float_t         KFChi2;
     Int_t           numComb;
     Float_t         solChi2[MAX_ARRAY_SIZE];   //[numComb]
-    Float_t         mLepTop_AfterChi2;
-    Float_t         mHadTop_AfterChi2;
-    Float_t         mtt_AfterChi2;
-    Float_t         mLepTop_AfterChi2andKF;
-    Float_t         mHadTop_AfterChi2andKF;
-    Float_t         mtt_AfterChi2andKF;
-    Float_t         lepTopPt_AfterChi2;
-    Float_t         lepTopEta_AfterChi2;
-    Float_t         hadTopPt_AfterChi2;
-    Float_t         hadTopEta_AfterChi2;
-    Float_t         pt_tt_AfterChi2;
-    Float_t         eta_tt_AfterChi2;
-    Float_t         beta_tt_AfterChi2;
-    int             selectedLeptonIndex_AfterChi2;
+    Float_t         mLepTop_AfterReco;
+    Float_t         mHadTop_AfterReco;
+    Float_t         mtt_AfterReco;
+    Float_t         lepTopPt_AfterReco;
+    Float_t         lepTopEta_AfterReco;
+    Float_t         hadTopPt_AfterReco;
+    Float_t         hadTopEta_AfterReco;
+    Float_t         pt_tt_AfterReco;
+    Float_t         eta_tt_AfterReco;
+    Float_t         beta_tt_AfterReco;
 
     bool            m_triggerPassed;
 
@@ -115,8 +111,8 @@ class Extractor2Histos {
     TClonesArray* gen_lightJet1_p4;
     TClonesArray* gen_lightJet2_p4;
 
-    TClonesArray* lepTopP4_AfterChi2;
-    TClonesArray* hadTopP4_AfterChi2;
+    TClonesArray* lepTopP4_AfterReco;
+    TClonesArray* hadTopP4_AfterReco;
 
     // List of branches
     TBranch        *b_MC_channel;   //!
@@ -155,12 +151,6 @@ class Extractor2Histos {
     TBranch        *b_KFChi2;   //!
     TBranch        *b_numComb;   //!
     TBranch        *b_solChi2;   //!
-    TBranch        *b_mLepTop_AfterChi2;   //!
-    TBranch        *b_mHadTop_AfterChi2;   //!
-    TBranch        *b_mtt_AfterChi2;   //!
-    TBranch        *b_mLepTop_AfterChi2andKF;   //!
-    TBranch        *b_mHadTop_AfterChi2andKF;   //!
-    TBranch        *b_mtt_AfterChi2andKF;   //!
 
     int             n_vertices;
     float           n_trueInteractions;
@@ -173,6 +163,8 @@ class Extractor2Histos {
     std::string     mOutputFile;
 
     int             mBTag;
+    bool            mSkim;
+    bool            mUseMVA = false;
 
     int             n_muons;
     float           muon_relIso[100];
@@ -182,11 +174,11 @@ class Extractor2Histos {
 
     TClonesArray*   jet_p4;
 
-    Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag);
+    Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool useMVA);
 
     virtual ~Extractor2Histos();
     virtual Int_t    GetEntry(Long64_t entry);
     virtual void     Loop();
     virtual void     Init();
-    void SetBranchAddress(TTree* t, const char* branchName, void* ptr, TBranch** branch);
+    void SetBranchAddress(TTree* t, const char* branchName, void* ptr, TBranch** branch = NULL);
 };

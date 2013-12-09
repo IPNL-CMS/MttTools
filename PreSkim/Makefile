@@ -26,7 +26,7 @@ SOFLAGS		    =
 AR            = ar
 ARFLAGS       = -cq
 
-CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../external/ -I../include/ -I../external/include/ -I$(shell echo $(BOOST_ROOT))/include
+CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/ -I../external/include/ -I$(shell echo $(BOOST_ROOT))/include
 LIBS  		    = $(ROOTLIBS) -lboost_filesystem -lboost_regex
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
@@ -39,19 +39,15 @@ SOBJECTS	= $(SOURCES:.$(SrcSuf)=.$(DllSuf))
 
 ###
 
-all: extractorToHisto substractHistos
+all: preSkim
 
 clean:
 	@rm *.o;
 	@rm *.d;
 	@rm ../PUReweighting/*.o;
-	@rm ../external/*.o;
 
-extractorToHisto: ../external/TopTriggerEfficiencyProvider.o Extractor2Histos.o ../PUReweighting/PUReweighter.o
+preSkim: preSkim.o ../PUReweighting/PUReweighter.o
 	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS)
-
-substractHistos: substractHistos.o
-	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ -Wl,-Bstatic -lyaml-cpp -Wl,-Bdynamic $(LIBS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
