@@ -3,3 +3,5 @@ MC/*
 plots/*
 extractorToHisto
 substractHistos
+lists/*
+skims/*
