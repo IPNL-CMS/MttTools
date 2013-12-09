@@ -25,7 +25,7 @@ ARFLAGS       = -cq
 
 LDDIR         = $(shell echo "-L" $$LD_LIBRARY_PATH | sed -e 's/:/ -L/g') -L$(ROOFIT_LIBDIR)/ -L../lib/
 
-CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/
+CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/ -I../external/
 LIBS  		    = $(LDDIR) $(ROOTLIBS) 
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
@@ -43,7 +43,7 @@ all: extractor2Dataset
 clean:
 	@rm *.o;
 
-extractor2Dataset: extractor2Dataset.o ../PUReweighting/PUReweighter.o
+extractor2Dataset: extractor2Dataset.o ../PUReweighting/PUReweighter.o ../external/TopTriggerEfficiencyProvider.o
 	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS)
 
 %.o: %.cpp
