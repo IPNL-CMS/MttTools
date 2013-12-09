@@ -17,7 +17,7 @@
 
 std::string base_path = "";
 
-void loadSelection(const std::string& syst, int btag, const int (&masses)[6], float (&nSelectionMu)[6], float (&errNSelectionMu)[6], float (&nSelectionE)[6], float (&errNSelectionE)[6]) {
+void loadSelection(const std::string& syst, int btag, const std::vector<int>& masses, std::vector<float> &nSelectionMu, std::vector<float>& errNSelectionMu, std::vector<float> &nSelectionE, std::vector<float>& errNSelectionE) {
 
   Json::Reader reader;
   Json::Value root;
@@ -30,44 +30,51 @@ void loadSelection(const std::string& syst, int btag, const int (&masses)[6], fl
     exit(1);
   }
 
+  nSelectionMu.resize(masses.size());
+  nSelectionE.resize(masses.size());
+  errNSelectionMu.resize(masses.size());
+  errNSelectionE.resize(masses.size());
+
   root = root[getAnalysisUUID()];
 
-  for (int i = 0; i < 6; i++) {
-    const int& mass = masses[i];
+  std::stringstream ss;
+  ss.str(std::string());
+  ss << btag;
+  std::string btagStr = ss.str();
 
-    std::stringstream ss;
-    ss << mass;
-    std::string strMass = ss.str();
-
-    ss.clear(); ss.str(std::string());
-    ss << btag;
-    std::string btagStr = ss.str();
-
-    if (! root.isMember(strMass)) {
-      std::cerr << "ERROR: mass '" << mass << "' not found in JSON file. Exiting." << std::endl;
-      exit(1);
+  for (auto& member: root.getMemberNames()) {
+    int index = -1;
+    for (uint32_t i = 0; i < masses.size(); i++) {
+      if (masses[i] == std::stoi(member)) {
+        index = i;
+        break;
+      }
     }
 
-    Json::Value massNode = root[strMass][btagStr];
+    if (index == -1) {
+      std::cerr << "ERROR: mass " << member << " is not supported" << std::endl;
+    }
+
+    Json::Value massNode = root[member][btagStr];
 
     if (! massNode.isMember(syst)) {
-      std::cerr << "ERROR: '" << syst << "' not found for m=" << mass << " in JSON file. Setting to 0." << std::endl;
+      std::cerr << "ERROR: '" << syst << "' not found for m=" << member << " in JSON file. Setting to 0." << std::endl;
       
-      nSelectionMu[i] = 0;
-      errNSelectionMu[i] = 0;
-      nSelectionE[i] = 0;
-      errNSelectionE[i] = 0;
+      nSelectionMu[index] = 0;
+      errNSelectionMu[index] = 0;
+      nSelectionE[index] = 0;
+      errNSelectionE[index] = 0;
 
       continue;
     }
 
     Json::Value systNode = massNode[syst];
 
-    nSelectionMu[i] = systNode["muon"]["events"].asDouble();
-    errNSelectionMu[i] = systNode["muon"]["error"].asDouble();
+    nSelectionMu[index] = systNode["muon"]["integral"].asDouble();
+    errNSelectionMu[index] = systNode["muon"]["error"].asDouble();
 
-    nSelectionE[i] = systNode["electron"]["events"].asDouble();
-    errNSelectionE[i] = systNode["electron"]["error"].asDouble();
+    nSelectionE[index] = systNode["electron"]["integral"].asDouble();
+    errNSelectionE[index] = systNode["electron"]["error"].asDouble();
   }
 }
 
@@ -103,7 +110,7 @@ class Efficiencies {
       selectionEff_mu = 0; selectionEff_e = 0;
 
       mass = m;
-      isInterpolated = (mass != 500 && mass != 750 && mass != 1000 && mass != 1250 && mass != 1500 && mass != 2000);
+      isInterpolated = (mass != 500 && mass != 700);
     }
 
     Efficiencies() {
@@ -125,15 +132,11 @@ class Efficiencies {
 
     Json::Value getAsJSON() {
       
-      Json::Value array(Json::arrayValue);
-      array.append(selectionEff_mu);
-      array.append(selectionEff_e);
-      array.append(effTrig_mu);
-      array.append(effTrig_e);
-      array.append(error_selectionEff_mu / selectionEff_mu);
-      array.append(error_selectionEff_e / selectionEff_e);
-      array.append(error_effTrig_mu / effTrig_mu);
-      array.append(error_effTrig_e / effTrig_e);
+      Json::Value array(Json::objectValue);
+      array["eff_mu"] = selectionEff_mu;
+      array["eff_e"] = selectionEff_e;
+      array["error_eff_mu"] = error_selectionEff_mu;
+      array["error_eff_e"] = error_selectionEff_e;
 
       return array;
     }
@@ -142,14 +145,10 @@ class Efficiencies {
 };
 
 std::ostream& operator<<(std::ostream& stream, const Efficiencies& eff) {
-  stream << "M_Z' = " << eff.mass<< std::endl;
-  stream << "Selection efficiency: "
-    << '\t' << "muon = " << eff.selectionEff_mu << " +/- " << eff.error_selectionEff_mu 
-    << '\t' << "electron = " << eff.selectionEff_e << " +/- " << eff.error_selectionEff_e;
+  stream << "Selection efficiency for M = " << eff.mass<< std::endl;
+  stream << '\t' << " - semi-mu channel: " << eff.selectionEff_mu * 100 << "% +/- " << eff.error_selectionEff_mu * 100 << "%" << std::endl;
+  stream << '\t' << " - semi-e channel:  " << eff.selectionEff_e * 100 << "% +/- " << eff.error_selectionEff_e * 100 << "%" << std::endl;
   stream << std::endl;
-  stream << "Trigger efficiency: "
-    << '\t' << "muon = " << eff.effTrig_mu << " +/- " << eff.error_effTrig_mu 
-    << '\t' << "electron = " << eff.effTrig_e << " +/- " << eff.error_effTrig_e;
 
   return stream;
 }
@@ -211,165 +210,35 @@ int main(int argc, char** argv) {
     bool ignoreInterpolated = !analysisUseInterpolation();
 
     std::map<int, Efficiencies> efficiencies;
-    for (int i = 500; i <= 2000; i += 125) {
-      efficiencies[i] = Efficiencies(i);
-    }
-
-    const int M[] = {500, 750, 1000, 1250, 1500, 2000};
-
-    // HLT efficiencies
-    // See https://docs.google.com/spreadsheet/ccc?key=0AsI4zLOlSqcUdHhiYmFKbDIxY3YwWlJHdE9NSVhMSnc
-    // and https://docs.google.com/spreadsheet/ccc?key=0AsI4zLOlSqcUdEkySy11MFlYczNRcE9BNTZvTjRFMWc
-    // for details about effiencies
-
-    TGraphErrors trig_e;
-    TGraphErrors trig_e_low;
-    TGraphErrors trig_e_high;
-
-    TGraphErrors trig_mu;
-    TGraphErrors trig_mu_low;
-    TGraphErrors trig_mu_high;
-
-    int index = 0;
-
-    for (auto& i: efficiencies) {
-
-      if (i.second.isInterpolated)
-        continue;
-
-      if (btag == 1) {
-        switch (i.first) {
-          case 750:
-
-            i.second.effTrig_mu = 0.915122446654598;
-            i.second.effTrig_e = 0.96969953545322;
-            i.second.error_effTrig_mu = 0.004642381230494;
-            i.second.error_effTrig_e = 0.002879505024457;
-            break;
-          case 1000:
-
-            i.second.effTrig_mu = 0.918923622827662;
-            i.second.effTrig_e = 0.95921905206221;
-            i.second.error_effTrig_mu = 0.004375487331033;
-            i.second.error_effTrig_e = 0.003205576076252;
-            break;
-          case 1250:
-
-            i.second.effTrig_mu = 0.912991926623528;
-            i.second.effTrig_e = 0.96208121973835;
-            i.second.error_effTrig_mu = 0.004608858750741;
-            i.second.error_effTrig_e = 0.003105605567111;
-            break;
-          case 1500:
-
-            i.second.effTrig_mu = 0.921745651170932;
-            i.second.effTrig_e = 0.95439771390689;
-            i.second.error_effTrig_mu = 0.004688169399042;
-            i.second.error_effTrig_e = 0.003656738673623;
-            break;
-        }
-
-      } else if (btag == 2) {
-        switch (i.first) {
-          case 750:
-
-            i.second.effTrig_mu = 0.917163304486474;
-            i.second.effTrig_e = 0.962889078839;
-            i.second.error_effTrig_mu = 0.004446650436803;
-            i.second.error_effTrig_e = 0.003200162475621;
-            break;
-          case 1000:
-
-            i.second.effTrig_mu = 0.920284402024634;
-            i.second.effTrig_e = 0.97122799548137;
-            i.second.error_effTrig_mu = 0.004263819222257;
-            i.second.error_effTrig_e = 0.002739894204469;
-            break;
-          case 1250:
-
-            i.second.effTrig_mu = 0.906055190143938;
-            i.second.effTrig_e = 0.96165533977795;
-            i.second.error_effTrig_mu = 0.004919248449977;
-            i.second.error_effTrig_e = 0.003277588820738;
-            break;
-          case 1500:
-
-            i.second.effTrig_mu = 0.920540646888956;
-            i.second.effTrig_e = 0.95867889687774;
-            i.second.error_effTrig_mu = 0.005035374383869;
-            i.second.error_effTrig_e = 0.003762430369621;
-            break;
-        }
-      }
-
-      if (! ignoreInterpolated && i.first != 500 && i.first != 2000) {
-        trig_mu.SetPoint(index, i.first, i.second.effTrig_mu);
-        trig_mu.SetPointError(index, 0., i.second.error_effTrig_mu);
-
-        trig_mu_low.SetPoint(index, i.first, i.second.effTrig_mu - i.second.error_effTrig_mu);
-        trig_mu_low.SetPointError(index, 0., i.second.error_effTrig_mu); // Needed for fit
-        trig_mu_high.SetPoint(index, i.first, i.second.effTrig_mu + i.second.error_effTrig_mu);
-        trig_mu_high.SetPointError(index, 0., i.second.error_effTrig_mu); // Needed for fit
-
-        trig_e.SetPoint(index, i.first, i.second.effTrig_e);
-        trig_e.SetPointError(index, 0., i.second.error_effTrig_e);
-
-        trig_e_low.SetPoint(index, i.first, i.second.effTrig_e - i.second.error_effTrig_e);
-        trig_e_low.SetPointError(index, 0., i.second.error_effTrig_e); // Needed for fit
-        trig_e_high.SetPoint(index, i.first, i.second.effTrig_e + i.second.error_effTrig_e);
-        trig_e_high.SetPointError(index++, 0., i.second.error_effTrig_e); // Needed for fit
-      }
-    }
-
-    TF1 triggerEff_fit_mu("sel_eff_fit_mu", "pol1", 500, 2000);
-    TF1* triggerEff_fit_mu_low = (TF1*) triggerEff_fit_mu.Clone("triggerEff_fit_mu_low");
-    TF1* triggerEff_fit_mu_high = (TF1*) triggerEff_fit_mu.Clone("triggerEff_fit_mu_high");
-
-    TF1 triggerEff_fit_e("sel_eff_fit_e", "pol1", 500, 2000);
-    TF1* triggerEff_fit_e_low = (TF1*) triggerEff_fit_e.Clone("triggerEff_fit_e_low");
-    TF1* triggerEff_fit_e_high = (TF1*) triggerEff_fit_e.Clone("triggerEff_fit_e_high");
-
-    if (! ignoreInterpolated) {
-      trig_mu.Fit(&triggerEff_fit_mu, "QMR");
-      trig_mu_low.Fit(triggerEff_fit_mu_low, "QMR");
-      trig_mu_high.Fit(triggerEff_fit_mu_high, "QMR");
-
-      trig_e.Fit(&triggerEff_fit_e, "QR");
-      trig_e_low.Fit(triggerEff_fit_e_low, "QR");
-      trig_e_high.Fit(triggerEff_fit_e_high, "QR");
-    }
-
-    TCanvas c("c", "c", 800, 800);
+    //for (int i = 500; i <= 2000; i += 125) {
+      //efficiencies[i] = Efficiencies(i);
+    //}
     
-    {
-      TMultiGraph *mg = new TMultiGraph();
-
-      mg->Add(&trig_e, "lp");
-      mg->Add(&trig_e_low, "lp");
-      mg->Add(&trig_e_high, "lp");
-
-      mg->Draw("a");
-
-      c.Print("interpolation_trigger_eff.root");
-
-      delete mg;
-    }
-
-    //--- selection efficiencies
-    const float N0[] = {
-      238028,
-      217629,
-      206846,
-      197422,
-      197349,
-      189522
+    efficiencies = {
+      {500, Efficiencies(500)},
+      {700, Efficiencies(700)}
     };
 
-    float Nsel_mu[6];
-    float ErrNsel_mu[6];
-    float Nsel_e[6];
-    float ErrNsel_e[6];
+    std::vector<int> M = {500, 700};
+
+    //--- selection efficiencies
+    std::vector<float> Ngen = {
+      259982,
+      379963
+    };
+
+    std::vector<float> Nsel_mu;
+    std::vector<float> ErrNsel_mu;
+    std::vector<float> Nsel_e;
+    std::vector<float> ErrNsel_e;
     loadSelection(syst, btag, M, Nsel_mu, ErrNsel_mu, Nsel_e, ErrNsel_e);
+
+    for (uint32_t i = 0; i <M.size(); i++) {
+      std::cout << "Number of selected events for M=" << M[i] << std::endl;
+      std::cout << "\t- semi-mu channel: " << Nsel_mu[i] << " +/- " << ErrNsel_mu[i] << std::endl;
+      std::cout << "\t- semi-e channel: " << Nsel_e[i] << " +/- " << ErrNsel_e[i] << std::endl;
+      std::cout << std::endl;
+    }
 
     TGraphErrors e_mu;
     TGraphErrors e_mu_low;
@@ -387,7 +256,7 @@ int main(int argc, char** argv) {
     TF1* selectionEff_fit_e_low = (TF1*) selectionEff_fit_e.Clone("sel_eff_fit_e_low");
     TF1* selectionEff_fit_e_high = (TF1*) selectionEff_fit_e.Clone("sel_eff_fit_e_high");
 
-    index = 0;
+    int index = 0;
     Efficiencies* lowMass_eff = nullptr;
     for (auto& i: efficiencies) {
       Efficiencies& eff = i.second;
@@ -395,10 +264,10 @@ int main(int argc, char** argv) {
       if (! i.second.isInterpolated) {
         lowMass_eff = &eff;
 
-        eff.selectionEff_mu = Nsel_mu[index] / N0[index];
-        eff.selectionEff_e  = Nsel_e[index] / N0[index];
-        eff.error_selectionEff_mu = ErrNsel_mu[index] / N0[index];
-        eff.error_selectionEff_e = ErrNsel_e[index] / N0[index];
+        eff.selectionEff_mu = Nsel_mu[index] / Ngen[index];
+        eff.selectionEff_e  = Nsel_e[index] / Ngen[index];
+        eff.error_selectionEff_mu = std::sqrt( eff.selectionEff_mu * (1 - eff.selectionEff_e) / Ngen[index] );
+        eff.error_selectionEff_e = std::sqrt( eff.selectionEff_e * (1 - eff.selectionEff_e) / Ngen[index] );
 
         if (! ignoreInterpolated && i.first != 500) {
           e_mu.SetPoint(index, i.first, i.second.selectionEff_mu);
@@ -430,20 +299,6 @@ int main(int argc, char** argv) {
       e_e_high.Fit(selectionEff_fit_e_high, "QR");
     }
 
-    {
-      TMultiGraph *mg = new TMultiGraph();
-
-      mg->Add(&e_mu, "lp");
-      mg->Add(&e_mu_low, "lp");
-      mg->Add(&e_mu_high, "lp");
-
-      mg->Draw("a");
-
-      c.Print("interpolation_selection_eff.root");
-
-      delete mg;
-    }
-
     if (! ignoreInterpolated) {
       for (auto& i: efficiencies) {
         Efficiencies& eff = i.second;
@@ -454,15 +309,6 @@ int main(int argc, char** argv) {
 
           eff.error_selectionEff_mu = fabs(selectionEff_fit_mu_high->Eval(i.first) - selectionEff_fit_mu_low->Eval(i.first)) / 2.;
           eff.error_selectionEff_e = fabs(selectionEff_fit_e_high->Eval(i.first) - selectionEff_fit_e_low->Eval(i.first)) / 2.; 
-        }
-
-        if (i.second.isInterpolated || i.first == 500 || i.first == 2000) {
-
-          eff.effTrig_mu = triggerEff_fit_mu.Eval(i.first);
-          eff.effTrig_e = triggerEff_fit_e.Eval(i.first);
-
-          eff.error_effTrig_mu = fabs(triggerEff_fit_mu_high->Eval(i.first) - triggerEff_fit_mu_low->Eval(i.first)) / 2.;
-          eff.error_effTrig_e = fabs(triggerEff_fit_e_high->Eval(i.first) - triggerEff_fit_e_low->Eval(i.first)) / 2.;
         }
       }
     }

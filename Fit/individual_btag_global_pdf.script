@@ -2,16 +2,36 @@
 # electron -> 11
 # muon -> 13
 
-# First, create our main observable, ie number of signal events
-nSig[0., -1000., 2000.]
+# sigma: theoritical cross-section
+
+# First, create our main observable, the signal strength
+mu[0., 0, 100]
+
+# Create constraint on luminosity and efficiency
+RooGaussian::eff_e_constraint(eff_e_constrained[0.5,0,1], eff_e, error_eff_e)
+RooGaussian::eff_mu_constraint(eff_mu_constrained[0.5,0,1], eff_mu, error_eff_mu)
+
+RooGaussian::lumi_e_constraint(lumi_e_constrained[0.5,0,1], lumi_e, error_lumi_e)
+RooGaussian::lumi_mu_constraint(lumi_mu_constrained[0.5,0,1], lumi_mu, error_lumi_mu)
+
+# Number of signal events in muon channel and electron channel
+
+prod::nSig_mu(lumi_mu_constrained, eff_mu_constrained, sigma, mu)
+prod::nSig_e(lumi_e_constrained, eff_e_constrained, sigma, mu)
+
+# Create the number of signal for the positive and negative part of the signal, for each channel
+expr::nSig_mu_positive("@0 / (1 + @1/@2)", nSig_mu, muon_negative_integral, muon_positive_integral)
+expr::nSig_mu_negative("-1 * (@0 * @1) / (@2 + @1)", nSig_mu, muon_negative_integral, muon_positive_integral)
+
+expr::nSig_e_positive("@0 / (1 + @1/@2)", nSig_e, electron_negative_integral, electron_positive_integral)
+expr::nSig_e_negative("-1 * (@0 * @1) / (@2 + @1)", nSig_e, electron_negative_integral, electron_positive_integral)
 
 # Create our number of background events, one for each category.
-nBkg_e[2000., 0., 50000.]
-nBkg_mu[2000., 0., 50000.]
-
-# Electron
-prod::nSig_e(eff_ratio_e_mu, lumiRatio, nSig)
+nBkg_e[45000., 0., 100000.]
+nBkg_mu[45000., 0., 100000.]
 
 # Create global pdf
+#SUM::global_pdf_electron(nSig_e_positive * positive_signal_electron, nSig_e_negative * negative_signal_electron, nBkg_e * background_electron)
+#SUM::global_pdf_muon(nSig_mu_positive * positive_signal_muon, nSig_mu_negative * negative_signal_muon, nBkg_mu * background_muon)
 SUM::global_pdf_electron(nSig_e * signal_electron, nBkg_e * background_electron)
-SUM::global_pdf_muon(nSig * signal_muon, nBkg_mu * background_muon)
+SUM::global_pdf_muon(nSig_mu * signal_muon, nBkg_mu * background_muon)

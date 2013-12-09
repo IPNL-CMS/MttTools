@@ -17,7 +17,7 @@ LDFLAGS = $(shell root-config --ldflags) -Wl,--as-needed
 # Here's where you'd want to define any #define with -DVariableName
 # (which means you can now use '#ifdef VariableName' preprocessor
 # lines in your source code).
-CFLAGS += $(INCDIRS) -std=c++0x -O2 -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wunused-variable -Wextra
+CFLAGS += $(INCDIRS) -std=c++0x -O2 -g -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wunused-variable -Wextra
 
 # Everything it needs to know about libraries
 DYNAMIC_LIBS = $(USERLIBDIRS) $(USERLIBS) -lboost_regex
@@ -29,7 +29,7 @@ SRCS =  $(wildcard *.cc)
 DEPS =  $(patsubst %.cc, %.d, $(wildcard *.cc)) 
 OBJS =  $(patsubst %.cc, %.o, $(wildcard *.cc))
 
-all: fritSignal fitMtt createCombineWorkspace computeEff computeCrystalBallSyst computeJECSystWithToys computeJECSyst computeBkgSyst computeSigmaRef runLikelihoodScan treatToyStuff extractLimits drawLimitCurve computeKeysPdfSyst interpolatePdf generateToyDataset generateKeysPdfWorkspaces
+all: fritSignal fitMtt createCombineWorkspace computeEff computeCrystalBallSyst computeJECSystWithToys computeJECSyst computeBkgSyst computeSigmaRef runLikelihoodScan treatToyStuff extractLimits drawLimitCurve computeKeysPdfSyst interpolatePdf generateToyDataset generateKeysPdfWorkspaces higgsSignalToPDF
 
 # Make the executable
 fitMtt: fitMtt.o lib/jsoncpp.o libUtils
@@ -46,6 +46,9 @@ interpolatePdf: interpolatePdf.o lib/jsoncpp.o libUtils
 
 fritSignal: fritSignal.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) fritSignal.o $(LIBS) $(EXPLLINKLIBS) -o fritSignal
+
+higgsSignalToPDF: higgsSignalToPDF.o lib/jsoncpp.o libUtils
+	$(LD) $(LDFLAGS) higgsSignalToPDF.o $(LIBS) $(EXPLLINKLIBS) -o higgsSignalToPDF
 
 computeEff: computeEff.o lib/jsoncpp.o libUtils
 	$(LD) $(LDFLAGS) computeEff.o $(LIBS) $(EXPLLINKLIBS) -o computeEff
