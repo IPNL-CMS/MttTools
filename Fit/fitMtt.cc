@@ -137,7 +137,7 @@ void saveTemporaryResult(const std::string& outputFile, double result) {
   file.close();
 }
 
-void fitMtt(std::map<int, TChain*> chains, int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground, bool saveWorkspace,
+void fitMtt(std::map<int, TChain*> chains, int massZprime, bool fit, string bkgfit_str, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, bool doBiasTest, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground, bool saveWorkspace,
     // Background systematics
     const std::string& temporaryResultFile,
     bool doBackgroundSyst, const std::string& backgroundParameterName, double backgroundParameterValue
@@ -185,6 +185,7 @@ int main(int argc, char** argv)
     TCLAP::SwitchArg writeRootArg("", "no-root-files", "Don't write root files", true);
     TCLAP::SwitchArg saveFiguresArg("", "no-figs", "Don't save figures", true);
     TCLAP::SwitchArg doLimitCurveArg("", "limit-curve", "Do the limit curve", false);
+    TCLAP::SwitchArg doBiasTestArg("", "bias-test", "Do the bias test", false);
     TCLAP::ValueArg<int> nToyArg("", "toys", "Number of toys exp.", false, 1, "integer");
     TCLAP::SwitchArg doLikInToyArg("", "no-scan-in-toys", "Don't do the likelihood scan in toys", true);
     TCLAP::ValueArg<int> indexArg("", "index", "Index", false, 1, "integer");
@@ -204,12 +205,14 @@ int main(int argc, char** argv)
     TCLAP::ValueArg<std::string> systSignArg("", "syst-sign", "?", false, "up", &allowedSign);
     TCLAP::ValueArg<std::string> systCBArg("", "systCB", "?", false, "none", "string");
 
+
     cmd.add(massArg);
     cmd.add(fitArg);
     cmd.add(doLikScanArg);
     cmd.add(writeRootArg);
     cmd.add(saveFiguresArg);
     cmd.add(doLimitCurveArg);
+    cmd.add(doBiasTestArg);
     cmd.add(nToyArg);
     cmd.add(doLikInToyArg);
     cmd.add(indexArg);
@@ -293,7 +296,7 @@ int main(int argc, char** argv)
 
     bool doBackgroundSyst = backgroundParameterNameArg.isSet() && backgroundParameterValueArg.isSet() && temporaryResultFileArg.isSet();
 
-    fitMtt(chains, massArg.getValue(), fitArg.getValue(), fitConfigFileArg.getValue(), doLikScanArg.getValue(), writeRootArg.getValue(), saveFiguresArg.getValue(), doLimitCurveArg.getValue(), nToyArg.getValue(), doLikInToyArg.getValue(), indexArg.getValue(), systArg.getValue(), systSignArg.getValue(), systCBArg.getValue(), bkgOnlyArg.getValue(), onlyMuonArg.getValue(), btagArg.getValue(), useSharedMemoryArg.getValue(), sharedMemoryKeyArg.getValue(), workspaceArg.getValue(), fixBackgroundArg.getValue(), saveWorkspaceArg.getValue(),
+    fitMtt(chains, massArg.getValue(), fitArg.getValue(), fitConfigFileArg.getValue(), doLikScanArg.getValue(), writeRootArg.getValue(), saveFiguresArg.getValue(), doLimitCurveArg.getValue(), doBiasTestArg.getValue(), nToyArg.getValue(), doLikInToyArg.getValue(), indexArg.getValue(), systArg.getValue(), systSignArg.getValue(), systCBArg.getValue(), bkgOnlyArg.getValue(), onlyMuonArg.getValue(), btagArg.getValue(), useSharedMemoryArg.getValue(), sharedMemoryKeyArg.getValue(), workspaceArg.getValue(), fixBackgroundArg.getValue(), saveWorkspaceArg.getValue(),
         // Background systematics
         temporaryResultFileArg.getValue(),
         doBackgroundSyst, backgroundParameterNameArg.getValue(), backgroundParameterValueArg.getValue()
@@ -1163,7 +1166,8 @@ std::map<std::string, float> computeChi2(RooRealVar& observable, const RooSimult
   std::cout << "Binning dataset with " << nBinsForChi2 << " bins for chi2 computation (" << observable.getMin() << " -> " << observable.getMax() << " ; resolution: " << resolution << " GeV)" << std::endl;
 
   RooArgSet* floatingParameters = static_cast<RooArgSet*>(simPdf.getParameters(RooArgSet(observable))->selectByAttrib("Constant", false));
-  int numberOfFloatingParams = floatingParameters->getSize() - 1;
+  floatingParameters->Print();
+  int numberOfFloatingParams = floatingParameters->getSize() - 2;
   delete floatingParameters;
 
   Roo1DTable* table = dataset.table(categories);
@@ -1440,7 +1444,7 @@ RooAbsPdf* getInterpolatedPdf(RooRealVar& observable, double massZprime, const s
   return keys_pdf;
 }
 
-void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string fitConfigurationFile, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground, bool saveWorkspace,
+void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string fitConfigurationFile, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, bool doBiasTest, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground, bool saveWorkspace,
     // Background systematics
     const std::string& temporaryResultFile,
     bool doBackgroundSyst, const std::string& backgroundParameterName, double backgroundParameterValue
@@ -2050,7 +2054,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
     drawHistograms(mainCategory, mtt, *dataOrig, simPdfBackgroundOnly, backgroundPdfsFromWorkspace, btag, saveFigures, std::string(prefix), std::string(suffix) + "_bkg_only", false, true, nullptr);
 
-    it = mainCategory.typeIterator();
+   it = mainCategory.typeIterator();
     type = nullptr;
     //while ((type = static_cast<RooCatType*>(it->Next()))) {
       //setPdfParametersRange(RooArgSet(mtt), *simPdfBackgroundOnly.getPdf(type->GetName()), 0);
@@ -2433,6 +2437,174 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       }
       SAFE_DELETE(fitResult);
     }
+
+    SAFE_DELETE(fitResult);
+ 
+
+    // WORKHERE
+    if (doBiasTest)
+    {
+
+      std::cout << "Starting bias analysis..." << std::endl;
+
+      // 0 means a random seed
+      RooRandom::randomGenerator()->SetSeed(0);
+
+      // Create PDF for toys generation
+      std::map<std::string, std::shared_ptr<BaseFunction>> backgroundPdfsForToys = getCategoriesPdf(BASE_PATH + "/fit_configuration", fitConfigurationFile, mtt, NULL, massZprime, "background", mainCategory, nullptr, "toy");
+
+      std::map<std::string, std::shared_ptr<RooAbsPdf>> globalPdfsForToys;
+
+      // Create PDF for fitting
+      RooSimultaneous simPdfToyFit("simPdfToyFit", "simultaneous pdf for toys fitting", mainCategory);
+      RooSimultaneous simPdfToyFitBackgroundOnly("simPdfToyFitBackgroundOnly", "simultaneous pdf for toys fitting (background only)", mainCategory);
+
+      int nEventsToy = 0;
+
+      TFile* toyResFile = NULL;
+      //if (writeRootFile) {
+      toyResFile = new TFile(OUTPUT_PATH + prefix + "_biastest_" + suffix + "_" + indexJob + ".root", "RECREATE");
+      toyResFile->cd();
+      //}
+
+      // Book historams for toy MC results
+      TH1F* hNToyEvents = new TH1F("hNToyEvents", "Number of events of toy experiment", 100, 200000, 250000);
+      TH1F* hToyChi2 = new TH1F("hToyChi2", "chi2 of toys experiments", 50, 0, 5);
+
+      std::cout << "Preparing to draw from data" << std::endl;
+      std::map<int, std::shared_ptr<RooDataHist>> muon_datahist;
+      std::map<int, std::shared_ptr<RooDataHist>> electron_datahist;
+
+      std::map<int, std::shared_ptr<RooAbsPdf>> muon_pdf_from_data;
+      std::map<int, std::shared_ptr<RooAbsPdf>> electron_pdf_from_data;
+
+      std::map<int, int> nMuons;
+      std::map<int, int> nElectrons;
+
+      it = mainCategory.typeIterator();
+      type = nullptr;
+      while ((type = static_cast<RooCatType*>(it->Next()))) {
+        std::string category = type->GetName();
+
+        mainCategory = category.c_str();
+        std::string cut = buildCutFormula(mainCategory);
+        //std::cout << "Cut: " << cut << std::endl;
+
+        std::string leptonName = TString(category).Contains("muon", TString::kIgnoreCase) ? "muon" : "electron";
+        std::string leptonNameShort = TString(category).Contains("muon", TString::kIgnoreCase) ? "mu" : "e";
+        static boost::regex regex("([0-9]+)-btag");
+        boost::smatch regexResults;
+
+        int extractedBTag = -1;
+        if (boost::regex_search(category, regexResults, regex)) {
+          std::string result(regexResults[1].first, regexResults[2].second);
+          extractedBTag = atoi(result.c_str());
+        }
+        if (extractedBTag < 0)
+          extractedBTag = btag;
+
+
+        if (leptonNameShort=="e") {
+          electron_datahist[extractedBTag].reset(static_cast<RooDataHist*>(binnedDataset->reduce(RooFit::SelectVars(RooArgSet(mtt, weight)), RooFit::Cut(cut.c_str()), RooFit::Name(TString::Format("electron_binned_dataset_%d", extractedBTag)))));
+          electron_pdf_from_data[extractedBTag].reset(new RooHistPdf(TString::Format("electron_hist_pdf_%d", extractedBTag), "electron_hist_pdf", RooArgSet(mtt), *electron_datahist[extractedBTag]));
+          nElectrons[extractedBTag]=electron_datahist[extractedBTag]->sumEntries();
+        }
+        if (leptonNameShort=="mu") {
+          muon_datahist[extractedBTag].reset(static_cast<RooDataHist*>(binnedDataset->reduce(RooFit::SelectVars(RooArgSet(mtt, weight)), RooFit::Cut(cut.c_str()), RooFit::Name(TString::Format("muon_binned_dataset_%d", extractedBTag)))));
+          muon_pdf_from_data[extractedBTag].reset(new RooHistPdf(TString::Format("muon_hist_pdf_%d", extractedBTag), "muon_hist_pdf", RooArgSet(mtt), *muon_datahist[extractedBTag]));
+          nMuons[extractedBTag]=muon_datahist[extractedBTag]->sumEntries();
+        }
+      }
+
+
+      std::map<int, std::shared_ptr<RooAbsPdf::GenSpec>> genSpecsMuon;
+      std::map<int, std::shared_ptr<RooAbsPdf::GenSpec>> genSpecsElectron;
+
+      if (! combine) {
+        genSpecsMuon[btag].reset(muon_pdf_from_data[btag]->prepareMultiGen(RooArgSet(mtt), NumEvents(nMuons[btag]), Extended(true),RooFit::AutoBinned(false)/*, Verbose(true)*/));
+        genSpecsElectron[btag].reset(electron_pdf_from_data[btag]->prepareMultiGen(RooArgSet(mtt), NumEvents(nElectrons[btag]), Extended(true),RooFit::AutoBinned(false)/*, Verbose(true)*/));
+      } else {
+        for (int i = minBTag; i <= maxBTag; i++) {
+          genSpecsMuon[i].reset(muon_pdf_from_data[i]->prepareMultiGen(RooArgSet(mtt), NumEvents(nMuons[i]), Extended(true),RooFit::AutoBinned(false)/*, Verbose(true)*/));
+          genSpecsElectron[i].reset(electron_pdf_from_data[i]->prepareMultiGen(RooArgSet(mtt), NumEvents(nElectrons[i]), Extended(true),RooFit::AutoBinned(false)/*, Verbose(true)*/));
+        }
+      }
+
+
+      for (int itoys=0 ; itoys<nToyExp ; itoys++) {
+        std::cout << "---> Toy #" << itoys << std::endl;
+        std::map<int, std::shared_ptr<RooDataSet>> generated_dataset_muon;
+        std::map<int, std::shared_ptr<RooDataSet>> generated_dataset_electron;
+
+        if (!combine) {
+          std::cout << "Generating #" << nMuons[btag] << " muons and #" << nElectrons[btag] << " electrons..." << std::endl;
+          generated_dataset_muon[btag].reset(muon_pdf_from_data[btag]->generate(*genSpecsMuon[btag]));
+          generated_dataset_electron[btag].reset(electron_pdf_from_data[btag]->generate(*genSpecsMuon[btag]));
+          std::cout << "done." << std::endl;
+        } else {
+          for (int i = minBTag; i <= maxBTag; i++) {
+            std::cout << "Generating #" << nMuons[i] << " muons and #" << nElectrons[i] << " electrons..." << std::endl;
+            generated_dataset_muon[i].reset(muon_pdf_from_data[i]->generate(*genSpecsMuon[i]));
+            generated_dataset_electron[i].reset(electron_pdf_from_data[i]->generate(*genSpecsMuon[i]));
+            std::cout << "done." << std::endl;
+          }
+        }
+
+        std::map<std::string, RooDataSet*> all_generated_datasets_electron; 
+        std::map<std::string, RooDataSet*> all_generated_datasets_muon; 
+        it = mainCategory.typeIterator();
+        type = nullptr;
+        while ((type = static_cast<RooCatType*>(it->Next()))) {
+          std::string category_str = type->GetName();
+          std::cout <<  category_str << std::endl;
+          std::string leptonName = TString(category_str).Contains("muon", TString::kIgnoreCase) ? "muon" : "electron";
+          static boost::regex regex("([0-9]+)-btag");
+          boost::smatch regexResults;
+          int extractedBTag = -1;
+          if (boost::regex_search(category_str, regexResults, regex)) {
+            std::string result(regexResults[1].first, regexResults[2].second);
+            extractedBTag = atoi(result.c_str());
+            if (leptonName=="muon")
+              all_generated_datasets_muon[result]=generated_dataset_muon[extractedBTag].get();
+            else if (leptonName=="electron")
+              all_generated_datasets_electron[result]=generated_dataset_electron[extractedBTag].get();
+          }
+          if (extractedBTag < 0) {
+            stringstream ss;
+            ss << btag;
+            std::string result = ss.str()+"-btag";
+            if (leptonName=="muon")
+              all_generated_datasets_muon[result]=generated_dataset_muon[btag].get();
+            else if (leptonName=="electron")
+              all_generated_datasets_electron[result]=generated_dataset_electron[btag].get();
+          }
+        }
+
+        std::shared_ptr<RooDataSet> toyDataset_muon(new RooDataSet("combData_muon", "combined data muon", RooArgSet(mtt), Index(btagCategory), Import(all_generated_datasets_muon))); 
+        std::shared_ptr<RooDataSet> toyDataset_electron(new RooDataSet("combData_electron", "combined data electron", RooArgSet(mtt), Index(btagCategory), Import(all_generated_datasets_electron))); 
+
+        std::shared_ptr<RooDataSet> toyDataset(new RooDataSet("combData", "combined data", RooArgSet(mtt, btagCategory), Index(lepton_type), Import("muon",*toyDataset_muon), Import("electron",*toyDataset_electron))); 
+
+        //toyDataset->Print("v");
+        toyDataset->table(superCategory)->Print("v");
+
+        std::shared_ptr<RooDataHist> toyBinnedDataset = std::shared_ptr<RooDataHist>(toyDataset->binnedClone());
+
+        std::shared_ptr<RooAbsData> toyDatasetToFit = toyBinnedDataset; // Binned likelihood
+
+        std::cout << " fit background + signal ..." << std::endl;
+        fitResult = simPdf.fitTo(*toyDatasetToFit, Save(),/*, Optimize(0),*/ Strategy(1), Minimizer("Minuit2", "Migrad"));
+        fitResult->Print("v");
+        std::map<std::string, float> chi2_toy = computeChi2(mtt, simPdf, mainCategory, *toyDataset, mainWorkspace);
+        hNToyEvents->Fill(toyDataset->numEntries());
+        hToyChi2->Fill(chi2_toy["combined"]);
+        delete fitResult;
+      } // ntoys
+      toyResFile->cd();
+      hNToyEvents->Write();
+      hToyChi2->Write();
+      toyResFile->Close();
+    } // doBiasTest
   }
 
   if (doLimitCurve)
@@ -2518,7 +2690,8 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
       std::map<std::string, std::shared_ptr<RooRealVar>>& parameters = backgroundPdfs[category]->getParameters();
       for (auto& parameter: parameters) {
-        std::string parameterName = category + "_" + parameter.first;
+        std::string aCleanedCategory = TString(category).ReplaceAll(";", "_").ReplaceAll("{", "").ReplaceAll("}", "").ReplaceAll("-", "").Data(); // For workspace names
+        std::string parameterName = aCleanedCategory + "_" + parameter.first;
         RooRealVar* var = mainWorkspace.var(parameterName.c_str());
 
         backgroundPdfsForToys[category]->getParameters()[parameter.first]->setVal(var->getVal());
@@ -2770,5 +2943,6 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     toyResFile->Close();
     delete toyResFile;
   }
+
 }
 
