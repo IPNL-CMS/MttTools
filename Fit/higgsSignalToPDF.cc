@@ -271,6 +271,9 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
     RooAbsPdf* pdf_positive = workspace.pdf(TString::Format("%s_positive_signal_pdf", category.c_str()));
     RooAbsPdf* pdf_negative = workspace.pdf(TString::Format("%s_negative_signal_pdf", category.c_str()));
 
+    if (!pdf_positive || !pdf_negative)
+      continue;
+
     dataset_positive->plotOn(plot, RooFit::Invisible());
     pdf_positive->plotOn(plot, RooFit::LineWidth(1));
     dataset_positive->plotOn(plot, RooFit::IgnoreEmptyBins());
@@ -294,8 +297,8 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
     t.SetNDC();
     t.SetTextSize(0.04);
 
-    gPad->SetTopMargin(0.05); 
-    gPad->SetBottomMargin(0.12); 
+    gPad->SetTopMargin(0.05);
+    gPad->SetBottomMargin(0.12);
     gPad->SetLeftMargin(0.17);
     gPad->SetRightMargin(0.050);
 
@@ -350,7 +353,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
     canvas->Print((prefix + "_fit_log.pdf").c_str());
     canvas->Print((prefix + "_fit_log.png").c_str());
   }
-  
+
   delete canvas;
 
   std::cout << std::endl;
@@ -379,6 +382,45 @@ std::vector<std::shared_ptr<TH1>> splitHistogram(TH1* h) {
   return {positive_h, negative_h};
 }
 
+RooDataSet* binnedToUnbinnedDataset(RooDataHist& in, RooRealVar& observable, RooRealVar& weight, const std::string& name) {
+
+  RooDataSet* ds = new RooDataSet(name.c_str(), name.c_str(), RooArgSet(observable, weight), RooFit::WeightVar(weight));
+  for (int i = 0; i < in.numEntries(); i++) {
+    const RooArgSet* set = in.get(i);
+    ds->add(*set, in.weight(*set));
+  }
+
+  return ds;
+}
+
+float shiftUp(TH1* h) {
+
+  // Shift the histogram bins up to make sure every bins are positive
+
+  int minBin = h->GetMinimumBin();
+
+  float minError = h->GetBinError(minBin);
+  float minValue = h->GetBinContent(minBin);
+
+  if (minValue > 0)
+    return 0;
+
+  // Substract twice the error to leave room for PDF conversion
+  float min = minValue - 2 * minError;
+
+  min *= -1;
+
+  for (uint16_t i = 1; i <= (uint16_t) h->GetNbinsX(); i++) {
+    float error = h->GetBinError(i);
+    h->SetBinContent(i, h->GetBinContent(i) + min);
+
+    // Don't change error on each bins
+    h->SetBinError(i, error);
+  }
+
+  return min;
+}
+
 void fritSignal(TChain* chain, const std::string& jecType, const std::string& jer, const std::string& pu, const std::string& pdfSyst, const std::string& configFile, int massZprime, int btag, bool saveWorkspace) {
 
   std::cout << "[" << getpid() << "] Processing for " << jecType << std::endl;
@@ -398,7 +440,7 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& je
   //fit region
   Float_t minmTT = 325;
   Float_t maxmTT = 1000;
-  Int_t nBins = 27;
+  Int_t nBins = (maxmTT - minmTT) / (25.);
 
   RooRealVar mtt("mtt", "mtt", minmTT, maxmTT, "GeV/c^2");
   mtt.setBins(nBins);
@@ -445,7 +487,7 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& je
   }
 
   TString prefix = TString::Format("%s-Higgs%d_%s_%d_btag", systPrefix.Data(), massZprime, analysisName.c_str(), btag);
-  
+
   // Save our signal functions into the workspace
   // We will need it for the fit on data
   TString workspaceFile = base_path + "/frit/" + prefix + "_workspace.root";
@@ -478,32 +520,13 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& je
     // Create histogram from binned dataset
     TH1* h = binned_dataset->createHistogram(name.c_str(), mtt);
 
+    workspace.factory(TString::Format("%s_integral[%.5f]", name.c_str(), h->Integral()));
+
     // Split histogram in two part: one positive, and one negative
     auto splitted_histograms = splitHistogram(h);
 
-    auto TH1ToPdf = [&](TH1* histogram, const std::string& p) -> std::pair<std::shared_ptr<RooHistPdf>, std::shared_ptr<RooDataHist>> {
-      // First, create a RooDataHist from the TH1
-      std::shared_ptr<RooDataHist> data = std::make_shared<RooDataHist>(TString::Format("%s_signal_data", p.c_str()), "", mtt, RooFit::Import(*histogram));
-      std::shared_ptr<RooHistPdf> pdf = std::make_shared<RooHistPdf>(TString::Format("%s_signal_pdf", p.c_str()), "", RooArgSet(mtt), *data);
-
-      return std::make_pair(pdf, data);
-    };
-
-    workspace.factory(TString::Format("%s_integral[%.5f]", name.c_str(), h->Integral()));
-
-    TString p = TString::Format("%s_positive", name.c_str());
-    auto pdf = TH1ToPdf(splitted_histograms[0].get(), p.Data());
-
-    workspace.import(*(pdf.first));
-    workspace.import(*(pdf.second));
-    workspace.factory(TString::Format("%s_integral[%.5f]", p.Data(), splitted_histograms[0]->Integral()));
-
-    p = TString::Format("%s_negative", name.c_str());
-    pdf = TH1ToPdf(splitted_histograms[1].get(), p.Data());
-
-    workspace.import(*(pdf.first));
-    workspace.import(*(pdf.second));
-    workspace.factory(TString::Format("%s_integral[%.5f]", p.Data(), splitted_histograms[1]->Integral()));
+    workspace.factory(TString::Format("%s_positive_integral[%.5f]", name.c_str(), splitted_histograms[0]->Integral()));
+    workspace.factory(TString::Format("%s_negative_integral[%.5f]", name.c_str(), splitted_histograms[1]->Integral()));
 
     double positive_integral_error = 0;
     double positive_integral = splitted_histograms[0]->IntegralAndError(splitted_histograms[0]->GetXaxis()->GetFirst(), splitted_histograms[0]->GetXaxis()->GetLast(), positive_integral_error);
@@ -515,6 +538,47 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& je
     double integral_error = std::sqrt(positive_integral_error * positive_integral_error + negative_integral_error * negative_integral_error);
 
     integrals[name] = std::make_pair(integral, integral_error);
+
+    if (false) {
+      // This histogram constains negative events.
+      // Add a given number to each bin to make sure
+      // all bins content are positive
+      float factor = shiftUp(h);
+      workspace.factory(TString::Format("%s_shift_factor[%.5f]", name.c_str(), factor));
+
+      std::shared_ptr<RooDataHist> data = std::make_shared<RooDataHist>(TString::Format("%s_signal_data", name.c_str()), "", mtt, RooFit::Import(*h));
+
+      RooRealVar weight_("__weight__", "__weight__", 0, 0, 100000);
+      std::shared_ptr<RooDataSet> unbinnedData(binnedToUnbinnedDataset(*data.get(), mtt, weight_, TString::Format("%s_signal_unbinned_data", name.c_str()).Data()));
+
+      std::shared_ptr<RooKeysPdf> keys_pdf = std::make_shared<RooKeysPdf>(std::string("signal_" + name).c_str(), "Keys pdf for signal", mtt, *unbinnedData, RooKeysPdf::MirrorRight, 0.4);
+
+      workspace.import(*data);
+      workspace.import(*unbinnedData);
+      workspace.import(*keys_pdf);
+
+    } else {
+
+      auto TH1ToPdf = [&](TH1* histogram, const std::string& p) -> std::pair<std::shared_ptr<RooHistPdf>, std::shared_ptr<RooDataHist>> {
+        // First, create a RooDataHist from the TH1
+        std::shared_ptr<RooDataHist> data = std::make_shared<RooDataHist>(TString::Format("%s_signal_data", p.c_str()), "", mtt, RooFit::Import(*histogram));
+        std::shared_ptr<RooHistPdf> pdf = std::make_shared<RooHistPdf>(TString::Format("%s_signal_pdf", p.c_str()), "", RooArgSet(mtt), *data, 2);
+
+        return std::make_pair(pdf, data);
+      };
+
+      TString p = TString::Format("%s_positive", name.c_str());
+      auto pdf = TH1ToPdf(splitted_histograms[0].get(), p.Data());
+
+      workspace.import(*(pdf.first));
+      workspace.import(*(pdf.second));
+
+      p = TString::Format("%s_negative", name.c_str());
+      pdf = TH1ToPdf(splitted_histograms[1].get(), p.Data());
+
+      workspace.import(*(pdf.first));
+      workspace.import(*(pdf.second));
+    }
 
     delete h;
   }
