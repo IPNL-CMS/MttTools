@@ -31,7 +31,19 @@ files = [
         #["MC_W1JetsToLNu_skims_nominal.root", "lists/MTT_W1JetsToLNu_%s.list"],
         #["MC_W2JetsToLNu_skims_nominal.root", "lists/MTT_W2JetsToLNu_%s.list"],
         #["MC_W3JetsToLNu_skims_nominal.root", "lists/MTT_W3JetsToLNu_%s.list"],
-        ["MC_W4JetsToLNu_skims_nominal.root", "lists/MTT_W4JetsToLNu_%s.list"],
+        #["MC_W4JetsToLNu_skims_nominal.root", "lists/MTT_W4JetsToLNu_%s.list"],
+
+        ["MC_QCD_Pt_20_30_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_20_30_EMEnriched_semie.list"],
+        ["MC_QCD_Pt_30_80_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_30_80_EMEnriched_semie.list"],
+        ["MC_QCD_Pt_80_170_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_80_170_EMEnriched_semie.list"],
+        ["MC_QCD_Pt_170_250_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_170_250_EMEnriched_semie.list"],
+        ["MC_QCD_Pt_250_350_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_250_350_EMEnriched_semie.list"],
+        ["MC_QCD_Pt_350_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_350_EMEnriched_semie.list"],
+
+        ["MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_skims_nominal.root", "lists/MTT_QCD_pt15to30_bEnriched_MuEnrichedPt14_semimu.list"],
+        ["MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_skims_nominal.root", "lists/MTT_QCD_pt30to50_bEnriched_MuEnrichedPt14_semimu.list"],
+        ["MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_skims_nominal.root", "lists/MTT_QCD_pt50to150_bEnriched_MuEnrichedPt14_semimu.list"],
+        ["MC_QCD_pt150_bEnriched_MuEnrichedPt14_skims_nominal.root", "lists/MTT_QCD_pt150_bEnriched_MuEnrichedPt14_semimu.list"],
         ]
 
 def launch(input, output):
@@ -60,7 +72,11 @@ print("Skimming datasets...")
 for file in files:
     for type in ["semie", "semimu"]:
         path = "skims/%s/%s" % (d, type)
-        tmpfile.write(launch(file[1] % type, os.path.join(path, file[0])) + "\n");
+        if "Enriched" in file[1]:
+            if ("MuEnriched" in file[1] and type == "semimu") or ("EMEnriched" in file[1] and type == "semie"):
+                tmpfile.write(launch(file[1], os.path.join(path, file[0])) + "\n");
+        else:
+            tmpfile.write(launch(file[1] % type, os.path.join(path, file[0])) + "\n");
 
 tmpfile.flush()
 
