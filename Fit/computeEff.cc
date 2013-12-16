@@ -53,6 +53,7 @@ void loadSelection(const std::string& syst, int btag, const std::vector<int>& ma
 
     if (index == -1) {
       std::cerr << "ERROR: mass " << member << " is not supported" << std::endl;
+      continue;
     }
 
     Json::Value massNode = root[member][btagStr];
