@@ -160,11 +160,12 @@ std::map<std::string, std::shared_ptr<BaseFunction>> getCategoriesPdf(const std:
       assert(false);
     }
 
+    std::string cleanedName = TString(name).ReplaceAll(";", "_").ReplaceAll("{", "").ReplaceAll("}", "").ReplaceAll("-", "").Data(); // For workspace names
     std::string pdfsPrefix = prefix;
     if (pdfsPrefix.length() != 0)
-      pdfsPrefix += "_" + name;
+      pdfsPrefix += "_" + cleanedName;
     else
-      pdfsPrefix += name;
+      pdfsPrefix += cleanedName;
 
     RooDataSet* reducedDataset = nullptr;
     if (dataset) {

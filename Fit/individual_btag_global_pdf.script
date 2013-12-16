@@ -31,7 +31,5 @@ nBkg_e[45000., 0., 100000.]
 nBkg_mu[45000., 0., 100000.]
 
 # Create global pdf
-#SUM::global_pdf_electron(nSig_e_positive * positive_signal_electron, nSig_e_negative * negative_signal_electron, nBkg_e * background_electron)
-#SUM::global_pdf_muon(nSig_mu_positive * positive_signal_muon, nSig_mu_negative * negative_signal_muon, nBkg_mu * background_muon)
-SUM::global_pdf_electron(nSig_e * signal_electron, nBkg_e * background_electron)
-SUM::global_pdf_muon(nSig_mu * signal_muon, nBkg_mu * background_muon)
+SUM::global_pdf_electron(nSig_e_positive * positive_signal_electron, nSig_e_negative * negative_signal_electron, nBkg_e * background_electron)
+SUM::global_pdf_muon(nSig_mu_positive * positive_signal_muon, nSig_mu_negative * negative_signal_muon, nBkg_mu * background_muon)

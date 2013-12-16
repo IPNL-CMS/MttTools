@@ -1238,7 +1238,7 @@ void setPdfParametersRange(const RooArgSet& observables, const RooAbsPdf& pdf, d
   delete params;
 }
 
-void mixEfficiencies(
+void addEfficienciesToWorkspace(
     const std::map<int, double>& effs1,
     const std::map<int, double>& effs2,
     const std::map<int, double>& err_effs1,
@@ -1247,48 +1247,31 @@ void mixEfficiencies(
     const std::string& prefix2,
     RooWorkspace& workspace) {
 
+  for (const auto& err_eff1: err_effs1) {
+
+    std::stringstream ss;
+
+    ss.str(std::string());
+    ss << "error_eff_" << prefix1 << "_" << err_eff1.first << "b[" << err_eff1.second << "]";
+    workspace.factory(ss.str().c_str());
+
+    ss.str(std::string());
+    ss << "error_eff_" << prefix2 << "_" << err_eff1.first << "b[" << err_effs2.at(err_eff1.first) << "]";
+    workspace.factory(ss.str().c_str());
+  }
+
   for (const auto& eff1: effs1) {
-    for (const auto& eff2: effs2) {
-      if (prefix1 == prefix2 && eff1.first == eff2.first)
-        continue;
 
-      std::stringstream ss;
-      ss << "eff_ratio_" << prefix1 << "_" << eff1.first << "b_" << prefix2 << "_" << eff2.first << "b[" << eff1.second / eff2.second << "]";
+    std::stringstream ss;
 
-      //std::cout << ss.str() << std::endl;
+    ss.str(std::string());
+    ss << "eff_" << prefix1 << "_" << eff1.first << "b[" << eff1.second << "]";
+    workspace.factory(ss.str().c_str());
 
-      workspace.factory(ss.str().c_str());
-    }
+    ss.str(std::string());
+    ss << "eff_" << prefix2 << "_" << eff1.first << "b[" << effs2.at(eff1.first) << "]";
+    workspace.factory(ss.str().c_str());
   }
-
-  if (prefix1 != prefix2) {
-    for (const auto& err_eff1: err_effs1) {
-
-      std::stringstream ss;
-
-      ss.str(std::string());
-      ss << "error_eff_" << prefix1 << "_" << err_eff1.first << "b[" << err_eff1.second << "]";
-      workspace.factory(ss.str().c_str());
-
-      ss.str(std::string());
-      ss << "error_eff_" << prefix2 << "_" << err_eff1.first << "b[" << err_effs2.at(err_eff1.first) << "]";
-      workspace.factory(ss.str().c_str());
-    }
-
-    for (const auto& eff1: effs1) {
-
-      std::stringstream ss;
-
-      ss.str(std::string());
-      ss << "eff_" << prefix1 << "_" << eff1.first << "b[" << eff1.second << "]";
-      workspace.factory(ss.str().c_str());
-
-      ss.str(std::string());
-      ss << "eff_" << prefix2 << "_" << eff1.first << "b[" << effs2.at(eff1.first) << "]";
-      workspace.factory(ss.str().c_str());
-    }
-  }
-
 }
 
 void parseConfigFile(const std::string& filename, /*RooAbsCategoryLValue& categories,*/RooWorkspace& workspace) {
@@ -1303,6 +1286,7 @@ void parseConfigFile(const std::string& filename, /*RooAbsCategoryLValue& catego
     workspace.factory(line.c_str());
   }
 
+  std::cout << "Content of workspace" << std::endl;
   workspace.Print("v");
 }
 
@@ -1590,7 +1574,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   double lumi_mu = 19700;
   double lumi_e  = 19667;
 
-  double s_lumi_mu_percent  = 2.6 / 100.; // 2.6%
+  double s_lumi_percent  = 2.6 / 100.; // 2.6%
 
   Double_t br_semil = 1.0; //0.14815; now included in the efficiency
 
@@ -1704,7 +1688,9 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       }
 
       if (higgsMode) {
-        positive_pdf->SetName(std::string("positive_signal_" + std::string(type->GetName())).c_str());
+        TString cleanedCategory = TString(type->GetName()).ReplaceAll(";", "_").ReplaceAll("{", "").ReplaceAll("}", "").ReplaceAll("-", ""); // For workspace names
+
+        positive_pdf->SetName(std::string("positive_signal_" + std::string(cleanedCategory.Data())).c_str());
         renameAndSetPdfParametersConst(RooArgSet(mtt), *positive_pdf, type->GetName());
         mainWorkspace.import(*positive_pdf);
 
@@ -1714,16 +1700,16 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
           exit(1);
         }
 
-        negative_pdf->SetName(std::string("negative_signal_" + std::string(type->GetName())).c_str());
+        negative_pdf->SetName(std::string("negative_signal_" + std::string(cleanedCategory.Data())).c_str());
         renameAndSetPdfParametersConst(RooArgSet(mtt), *negative_pdf, type->GetName());
         mainWorkspace.import(*negative_pdf);
 
         RooRealVar* positive_integral = workspace->var(TString::Format(integralName.c_str(), "positive"));
-        std::cout << positive_integral->getVal() << std::endl;
+        positive_integral->SetName(TString::Format("%s_positive_integral", cleanedCategory.Data()));
         mainWorkspace.import(*positive_integral);
 
         RooRealVar* negative_integral = workspace->var(TString::Format(integralName.c_str(), "negative"));
-        std::cout << negative_integral->getVal() << std::endl;
+        negative_integral->SetName(TString::Format("%s_negative_integral", cleanedCategory.Data()));
         mainWorkspace.import(*negative_integral);
 
         SignalPdf pdf = {
@@ -1752,8 +1738,6 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   }
 
   std::cout << "Done." << std::endl;
-
-  mainWorkspace.Print("v");
 
   //if (systCB != "none") // Signal systematics mode
   //{
@@ -1818,9 +1802,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   }
 
   if (combine) {
-    mixEfficiencies(sel_eff_e, sel_eff_mu, s_sel_eff_e, s_sel_eff_mu, "e", "mu", mainWorkspace);
-    mixEfficiencies(sel_eff_e, sel_eff_e, s_sel_eff_e, s_sel_eff_e, "e", "e", mainWorkspace);
-    mixEfficiencies(sel_eff_mu, sel_eff_mu, s_sel_eff_mu, s_sel_eff_mu, "mu", "mu", mainWorkspace);
+    addEfficienciesToWorkspace(sel_eff_e, sel_eff_mu, s_sel_eff_e, s_sel_eff_mu, "e", "mu", mainWorkspace);
   } else {
     std::stringstream ss;
     ss << "eff_ratio_e_mu[" << sel_eff_e[btag] / sel_eff_mu[btag]<< "]";
@@ -1849,8 +1831,37 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   // Import luminosity inside workspace
   mainWorkspace.factory(TString::Format("lumi_e[%.5f]", lumi_e));
   mainWorkspace.factory(TString::Format("lumi_mu[%.5f]", lumi_mu));
-  mainWorkspace.factory(TString::Format("error_lumi_e[%.5f]", lumi_e * s_lumi_mu_percent));
-  mainWorkspace.factory(TString::Format("error_lumi_mu[%.5f]", lumi_mu * s_lumi_mu_percent));
+  mainWorkspace.factory(TString::Format("error_lumi_e[%.5f]", lumi_e * s_lumi_percent));
+  mainWorkspace.factory(TString::Format("error_lumi_mu[%.5f]", lumi_mu * s_lumi_percent));
+
+  // Create constraints
+  // First, efficiency
+  if (combine) {
+    for (auto& eff_e: sel_eff_e) {
+      TString d = TString::Format("eff_e_%db_constrained[%.8f,0,1]", eff_e.first, eff_e.second);
+      mainWorkspace.factory(d);
+    }
+
+    for (auto& eff_mu: sel_eff_mu) {
+      TString d = TString::Format("eff_mu_%db_constrained[%.8f,0,1]", eff_mu.first, eff_mu.second);
+      mainWorkspace.factory(d);
+    }
+  } else {
+      TString d = TString::Format("eff_e_constrained[%.8f,0,1]", sel_eff_e[btag]);
+      mainWorkspace.factory(d);
+
+      d = TString::Format("eff_mu_constrained[%.8f,0,1]", sel_eff_mu[btag]);
+      mainWorkspace.factory(d);
+  }
+
+  // Second, luminosity
+  {
+    TString d = TString::Format("lumi_e_constrained[%.5f, %.5f, %.5f]", lumi_e, lumi_e - 5 * (lumi_e * s_lumi_percent), lumi_e + 5 * (lumi_e * s_lumi_percent));
+    mainWorkspace.factory(d);
+
+    d = TString::Format("lumi_mu_constrained[%.5f, %.5f, %.5f]", lumi_mu, lumi_mu - 5 * (lumi_mu * s_lumi_percent), lumi_mu + 5 * (lumi_mu * s_lumi_percent));
+    mainWorkspace.factory(d);
+  }
 
   if (! combine) {
     std::cout << "Efficiencies ratio x lumis ratio: " << sel_eff_e[btag] / sel_eff_mu[btag] * lumi_e / lumi_mu << std::endl;
@@ -1875,38 +1886,33 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
   RooRealVar& nSig_mu = *mainWorkspace.var("nSig_mu");
   RooRealVar& nSig_e = *mainWorkspace.var("nSig_e");
 
-  //FIXME: Correctly handle 1+2 btag case
-  // Retrieve contraints
-  RooRealVar* eff_e_constrained = mainWorkspace.var("eff_e_constrained");
-  if (eff_e_constrained) {
-    eff_e_constrained->setMax(1);
-    eff_e_constrained->setMin(0);
-    eff_e_constrained->setVal(sel_eff_e[btag]);
-    eff_e_constrained->setConstant(true);
+  // Constraints
+  std::vector<RooRealVar*> constrained_variables;
+
+  RooArgSet variables = mainWorkspace.allVars();
+  it = variables.createIterator();
+  for (RooRealVar* var = (RooRealVar*) it->Next(); var != nullptr; var = (RooRealVar*) it->Next()) {
+    if (TString(var->GetName()).Contains("constrained")) {
+      constrained_variables.push_back(var);
+    }
   }
 
-  RooRealVar* eff_mu_constrained = mainWorkspace.var("eff_mu_constrained");
-  if (eff_mu_constrained) {
-    eff_mu_constrained->setMax(1);
-    eff_mu_constrained->setMin(0);
-    eff_mu_constrained->setVal(sel_eff_mu[btag]);
-    eff_mu_constrained->setConstant(true);
+  RooArgSet constraint_pdfs;
+
+  RooArgSet pdfs = mainWorkspace.allPdfs();
+  it = pdfs.createIterator();
+  for (RooAbsPdf* pdf = (RooAbsPdf*) it->Next(); pdf != nullptr; pdf = (RooAbsPdf*) it->Next()) {
+    if (TString(pdf->GetName()).Contains("constraint")) {
+      constraint_pdfs.add(*pdf);
+    }
   }
 
-  RooRealVar* lumi_e_constrained = mainWorkspace.var("lumi_e_constrained");
-  if (lumi_e_constrained) {
-    lumi_e_constrained->setMax(lumi_e + 10 * s_lumi_mu_percent * lumi_e);
-    lumi_e_constrained->setMin(lumi_e - 10 * s_lumi_mu_percent * lumi_e);
-    lumi_e_constrained->setVal(lumi_e);
-    lumi_e_constrained->setConstant(true);
-  }
-
-  RooRealVar* lumi_mu_constrained = mainWorkspace.var("lumi_mu_constrained");
-  if (lumi_mu_constrained) {
-    lumi_mu_constrained->setMax(lumi_mu + 10 * lumi_mu * s_lumi_mu_percent);
-    lumi_mu_constrained->setMin(lumi_mu - 10 * lumi_mu * s_lumi_mu_percent);
-    lumi_mu_constrained->setVal(lumi_mu);
-    lumi_mu_constrained->setConstant(true);
+  //FIXME
+  bool useConstraints = false;
+  if (! useConstraints) {
+    for (RooRealVar* var: constrained_variables) {
+      var->setConstant(true);
+    }
   }
 
   // mtt global PDFs
@@ -1997,7 +2003,6 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
           break;
       }
 
-      dataOrig->Print("");
       dataOrig->table(superCategory)->Print("v");
 
     } else {
@@ -2056,9 +2061,9 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
    it = mainCategory.typeIterator();
     type = nullptr;
-    //while ((type = static_cast<RooCatType*>(it->Next()))) {
-      //setPdfParametersRange(RooArgSet(mtt), *simPdfBackgroundOnly.getPdf(type->GetName()), 0);
-    //}
+    while ((type = static_cast<RooCatType*>(it->Next()))) {
+      setPdfParametersRange(RooArgSet(mtt), *simPdfBackgroundOnly.getPdf(type->GetName()), 10);
+    }
 
     if (bkgOnly) {
       computeChi2(mtt, simPdfBackgroundOnly, mainCategory, *dataOrig, mainWorkspace, true);
@@ -2069,8 +2074,13 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       //simPdf.fitTo(*datasetToFit, Strategy(1), Minimizer("Minuit2", "migrad"),
           //ExternalConstraints(RooArgSet(*mainWorkspace.pdf("eff_e_constraint"), *mainWorkspace.pdf("eff_mu_constraint"), *mainWorkspace.pdf("lumi_e_constraint"), *mainWorkspace.pdf("lumi_mu_constraint")))
           //);
-      fitResult = simPdf.fitTo(*datasetToFit, Save(), Strategy(1), Minimizer("Minuit2", "migrad"));
-      //fitResult = simPdf.fitTo(*datasetToFit, Save(), Strategy(1), Minimizer("Minuit2", "migrad"), Minos(mu));
+      
+      if (useConstraints) {
+        fitResult = simPdf.fitTo(*datasetToFit, Save(), Strategy(1), Minimizer("Minuit", "migrad"), ExternalConstraints(constraint_pdfs));
+      } else {
+        fitResult = simPdf.fitTo(*datasetToFit, Save(), Strategy(1), Minimizer("Minuit", "migrad"));
+      }
+
       fitResult->Print("v");
 
       std::cout << "Done." << std::endl;

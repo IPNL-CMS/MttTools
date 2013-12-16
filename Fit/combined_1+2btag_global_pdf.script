@@ -5,30 +5,47 @@
 # {muon;1-btag} -> 3
 # {electron;2-btag} -> 4
 # {muon;2-btag} -> 5
+# sigma: theoritical cross-section
 
-# First, create our main observable, ie number of signal events
-nSig[0., -1000., 2500.]
+# First, create our main observable, the signal strength
+mu[0., 0, 50]
+
+# Create constraint on luminosity and efficiency
+RooGaussian::eff_e_1b_constraint(eff_e_1b_constrained, eff_e_1b, error_eff_e_1b)
+RooGaussian::eff_mu_1b_constraint(eff_mu_1b_constrained, eff_mu_1b, error_eff_mu_1b)
+RooGaussian::eff_e_2b_constraint(eff_e_2b_constrained, eff_e_2b, error_eff_e_2b)
+RooGaussian::eff_mu_2b_constraint(eff_mu_2b_constrained, eff_mu_2b, error_eff_mu_2b)
+
+RooGaussian::lumi_e_constraint(lumi_e_constrained, lumi_e, error_lumi_e)
+RooGaussian::lumi_mu_constraint(lumi_mu_constrained, lumi_mu, error_lumi_mu)
+
+# Number of signal events in muon channel and electron channel
+
+prod::nSig_mu_1b(lumi_mu_constrained, eff_mu_1b_constrained, sigma, mu)
+prod::nSig_mu_2b(lumi_mu_constrained, eff_mu_2b_constrained, sigma, mu)
+prod::nSig_e_1b(lumi_e_constrained, eff_e_1b_constrained, sigma, mu)
+prod::nSig_e_2b(lumi_e_constrained, eff_e_2b_constrained, sigma, mu)
+
+# Create the number of signal for the positive and negative part of the signal, for each channel
+expr::nSig_mu_1b_positive("@0 / (1 + @1/@2)", nSig_mu_1b, muon_1btag_negative_integral, muon_1btag_positive_integral)
+expr::nSig_mu_1b_negative("-1 * (@0 * @1) / (@2 + @1)", nSig_mu_1b, muon_1btag_negative_integral, muon_1btag_positive_integral)
+expr::nSig_mu_2b_positive("@0 / (1 + @1/@2)", nSig_mu_2b, muon_2btag_negative_integral, muon_2btag_positive_integral)
+expr::nSig_mu_2b_negative("-1 * (@0 * @1) / (@2 + @1)", nSig_mu_2b, muon_2btag_negative_integral, muon_2btag_positive_integral)
+
+expr::nSig_e_1b_positive("@0 / (1 + @1/@2)", nSig_e_1b, electron_1btag_negative_integral, electron_1btag_positive_integral)
+expr::nSig_e_1b_negative("-1 * (@0 * @1) / (@2 + @1)", nSig_e_1b, electron_1btag_negative_integral, electron_1btag_positive_integral)
+expr::nSig_e_2b_positive("@0 / (1 + @1/@2)", nSig_e_2b, electron_2btag_negative_integral, electron_2btag_positive_integral)
+expr::nSig_e_2b_negative("-1 * (@0 * @1) / (@2 + @1)", nSig_e_2b, electron_2btag_negative_integral, electron_2btag_positive_integral)
 
 # Create our number of background events, one for each category.
-nBkg_e_1[2000., 0., 50000.]
-nBkg_e_2[2000., 0., 50000.]
-nBkg_mu_1[2000., 0., 50000.]
-nBkg_mu_2[2000., 0., 50000.]
-
-# Create number of signal events variable for each category except {muon;2-btag}, with constraints
-
-# Muon, 1 btag
-prod::nSig_mu_1(eff_ratio_mu_1b_mu_2b, lumiRatio, nSig)
-
-# Electron, 1 btag
-prod::nSig_e_1(eff_ratio_e_1b_mu_1b, lumiRatio, nSig_mu_1)
-
-# Electron, 2 btag
-prod::nSig_e_2(eff_ratio_e_2b_mu_2b, lumiRatio, nSig)
+nBkg_e_1[50000., 30000., 100000.]
+nBkg_e_2[50000., 30000., 100000.]
+nBkg_mu_1[50000., 30000., 100000.]
+nBkg_mu_2[50000., 30000., 100000.]
 
 # Create global pdf
-SUM::global_pdf_electron_1btag(nSig_e_1 * signal_{electron;1-btag}, nBkg_e_1 * background_{electron;1-btag})
-SUM::global_pdf_muon_1btag(nSig_mu_1 * signal_{muon;1-btag}, nBkg_mu_1 * background_{muon;1-btag})
+SUM::global_pdf_electron_1btag(nSig_e_1b_positive * positive_signal_electron_1btag, nSig_e_1b_negative * negative_signal_electron_1btag, nBkg_e_1 * background_electron_1btag)
+SUM::global_pdf_muon_1btag(nSig_mu_1b_positive * positive_signal_muon_1btag, nSig_mu_1b_negative * negative_signal_muon_1btag, nBkg_mu_1 * background_muon_1btag)
 
-SUM::global_pdf_electron_2btag(nSig_e_2 * signal_{electron;2-btag}, nBkg_e_2 * background_{electron;2-btag})
-SUM::global_pdf_muon_2btag(nSig * signal_{muon;2-btag}, nBkg_mu_2 * background_{muon;2-btag})
+SUM::global_pdf_electron_2btag(nSig_e_2b_positive * positive_signal_electron_2btag, nSig_e_2b_negative * negative_signal_electron_2btag, nBkg_e_2 * background_electron_2btag)
+SUM::global_pdf_muon_2btag(nSig_mu_2b_positive * positive_signal_muon_2btag, nSig_mu_2b_negative * negative_signal_muon_2btag, nBkg_mu_2 * background_muon_2btag)
