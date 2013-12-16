@@ -1882,7 +1882,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     eff_e_constrained->setMax(1);
     eff_e_constrained->setMin(0);
     eff_e_constrained->setVal(sel_eff_e[btag]);
-    //eff_e_constrained->setConstant(true);
+    eff_e_constrained->setConstant(true);
   }
 
   RooRealVar* eff_mu_constrained = mainWorkspace.var("eff_mu_constrained");
@@ -1890,7 +1890,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     eff_mu_constrained->setMax(1);
     eff_mu_constrained->setMin(0);
     eff_mu_constrained->setVal(sel_eff_mu[btag]);
-    //eff_mu_constrained->setConstant(true);
+    eff_mu_constrained->setConstant(true);
   }
 
   RooRealVar* lumi_e_constrained = mainWorkspace.var("lumi_e_constrained");
@@ -1898,7 +1898,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     lumi_e_constrained->setMax(lumi_e + 10 * s_lumi_mu_percent * lumi_e);
     lumi_e_constrained->setMin(lumi_e - 10 * s_lumi_mu_percent * lumi_e);
     lumi_e_constrained->setVal(lumi_e);
-    //lumi_e_constrained->setConstant(true);
+    lumi_e_constrained->setConstant(true);
   }
 
   RooRealVar* lumi_mu_constrained = mainWorkspace.var("lumi_mu_constrained");
@@ -1906,7 +1906,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
     lumi_mu_constrained->setMax(lumi_mu + 10 * lumi_mu * s_lumi_mu_percent);
     lumi_mu_constrained->setMin(lumi_mu - 10 * lumi_mu * s_lumi_mu_percent);
     lumi_mu_constrained->setVal(lumi_mu);
-    //lumi_mu_constrained->setConstant(true);
+    lumi_mu_constrained->setConstant(true);
   }
 
   // mtt global PDFs
@@ -2069,9 +2069,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       //simPdf.fitTo(*datasetToFit, Strategy(1), Minimizer("Minuit2", "migrad"),
           //ExternalConstraints(RooArgSet(*mainWorkspace.pdf("eff_e_constraint"), *mainWorkspace.pdf("eff_mu_constraint"), *mainWorkspace.pdf("lumi_e_constraint"), *mainWorkspace.pdf("lumi_mu_constraint")))
           //);
-      fitResult = simPdf.fitTo(*datasetToFit, Save(), Strategy(1), Minimizer("Minuit2", "migrad"),
-          ExternalConstraints(RooArgSet(*mainWorkspace.pdf("eff_e_constraint"), *mainWorkspace.pdf("eff_mu_constraint"), *mainWorkspace.pdf("lumi_e_constraint"), *mainWorkspace.pdf("lumi_mu_constraint")))
-          );
+      fitResult = simPdf.fitTo(*datasetToFit, Save(), Strategy(1), Minimizer("Minuit2", "migrad"));
       //fitResult = simPdf.fitTo(*datasetToFit, Save(), Strategy(1), Minimizer("Minuit2", "migrad"), Minos(mu));
       fitResult->Print("v");
 
@@ -2468,8 +2466,11 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
       //}
 
       // Book historams for toy MC results
-      TH1F* hNToyEvents = new TH1F("hNToyEvents", "Number of events of toy experiment", 100, 200000, 250000);
+      TH1F* hNToyEvents = new TH1F("hNToyEvents", "Number of events of toy experiment", 100, 200000, 300000);
       TH1F* hToyChi2 = new TH1F("hToyChi2", "chi2 of toys experiments", 50, 0, 5);
+      TH1F* hToyMu = new TH1F("hToyMu", "mu of toys experiments", 100, -1, 1);
+      TH1F* hToyMuErr = new TH1F("hToyMuErr", "mu error of toys experiments", 100, 0, 1);
+      TH1F* hToyMuPull = new TH1F("hToyPull", "pull of toys experiments", 100, -3, 3);
 
       std::cout << "Preparing to draw from data" << std::endl;
       std::map<int, std::shared_ptr<RooDataHist>> muon_datahist;
@@ -2586,7 +2587,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
         std::shared_ptr<RooDataSet> toyDataset(new RooDataSet("combData", "combined data", RooArgSet(mtt, btagCategory), Index(lepton_type), Import("muon",*toyDataset_muon), Import("electron",*toyDataset_electron))); 
 
         //toyDataset->Print("v");
-        toyDataset->table(superCategory)->Print("v");
+        //toyDataset->table(superCategory)->Print("v");
 
         std::shared_ptr<RooDataHist> toyBinnedDataset = std::shared_ptr<RooDataHist>(toyDataset->binnedClone());
 
@@ -2594,15 +2595,24 @@ void fitMtt(std::map<int, TChain*> eventChain, int massZprime, bool fit, string 
 
         std::cout << " fit background + signal ..." << std::endl;
         fitResult = simPdf.fitTo(*toyDatasetToFit, Save(),/*, Optimize(0),*/ Strategy(1), Minimizer("Minuit2", "Migrad"));
-        fitResult->Print("v");
+        //fitResult->Print("v");
+
         std::map<std::string, float> chi2_toy = computeChi2(mtt, simPdf, mainCategory, *toyDataset, mainWorkspace);
         hNToyEvents->Fill(toyDataset->numEntries());
+        std::cout << toyDataset->numEntries() << std::endl;
         hToyChi2->Fill(chi2_toy["combined"]);
+        hToyMu->Fill(mu.getVal());;
+        hToyMuErr->Fill(mu.getError());;
+        hToyMuPull->Fill(mu.getVal()/mu.getError());;
+
         delete fitResult;
       } // ntoys
       toyResFile->cd();
       hNToyEvents->Write();
       hToyChi2->Write();
+      hToyMu->Write();
+      hToyMuErr->Write();
+      hToyMuPull->Write();
       toyResFile->Close();
     } // doBiasTest
   }
