@@ -11,6 +11,8 @@
 #include <ctime>
 #include <TLorentzVector.h>
 
+#include <boost/filesystem.hpp>
+
 #include "TopTriggerEfficiencyProvider.h"
 #include "../PUReweighting/PUReweighter.h"
 #include "tclap/CmdLine.h"
@@ -43,11 +45,12 @@ void Extractor2Histos::Loop()
   TH1::SetDefaultSumw2(true);
 
   TH1D *hWeight = new TH1D("weight", "", 50, 0, 5);
-  TH1D *hWeight_fullsel = new TH1D("weight_fullsel", "", 50, 0, 5);
-  TH1D *hLeptonWeight = new TH1D("lepton_weight", "", 50, 0, 5);
+  TH1D *hWeight_fullsel = new TH1D("weight_fullsel", "", 50, 0, 2);
+  TH1D *hLeptonWeight = new TH1D("lepton_weight", "", 50, 0, 2);
   TH1D *hBTagWeight = new TH1D("btag_weight", "", 100, 0, 2);
   TH1D *hTriggerWeight = new TH1D("trigger_weight", "", 50, 0, 1);
-  TH1D *hPUWeight = new TH1D("PU_weight", "", 50, 0, 5);
+  TH1D *hPUWeight = new TH1D("PU_weight", "", 50, 0, 2);
+  TH1D *hTopPtWeight = new TH1D("top_pt_weight", "", 50, 0, 2);
   TH1D *hGeneratorWeight = new TH1D("generator_weight", "", 100, -2, 2);
 
   TH1D *hRunPeriod = new TH1D("run_period", "", 2, 0, 2);
@@ -342,6 +345,21 @@ void Extractor2Histos::Loop()
       eventWeight *= generator_weight;
       eventWeight *= m_lepton_weight;
       eventWeight *= m_btag_weight;
+
+      // Top pt reweighting: see https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting
+      if (MC_channel != 0) {
+        auto SF = [](TLorentzVector* top) {
+          if (top->Pt() > 400)
+            return 1.;
+
+          return std::exp(0.156 - 0.00137 * top->Pt());
+        };
+
+        float topPtWeight = std::sqrt(SF(getP4(gen_top1_p4, 0)) * SF(getP4(gen_top2_p4, 0)));
+        hTopPtWeight->Fill(topPtWeight);
+
+        eventWeight *= topPtWeight;
+      }
     }
 
     if (std::isnan(eventWeight)) {
@@ -635,6 +653,19 @@ void Extractor2Histos::Loop()
     }
   }
 
+  if (mIsMC) {
+    std::cout << "Top pt reweighting mean weight: " << hTopPtWeight->GetMean() << std::endl;
+    std::cout << "Use this value to compute the new number of generated events for this sample" << std::endl;
+
+    // Save some useful informations
+    boost::filesystem::path p(mOutputFile);
+    p.replace_extension("info");
+
+    std::ofstream f(p.string());
+    f << "Top pt reweighting mean weight\t" << hTopPtWeight->GetMean();
+    f.close();
+  }
+
   output->Write();
   output->Close();
   delete output;
@@ -825,7 +856,7 @@ void Extractor2Histos::Init()
   gen_top1_p4 = NULL;
   gen_top2_p4 = NULL;
 
-  if (!mSkim && mIsMC) {
+  if (mIsMC) {
     fMTT->SetBranchStatus("MC_Top1_p4", 1);
     fMTT->SetBranchStatus("MC_Top2_p4", 1);
     fMTT->SetBranchAddress("MC_Top1_p4", &gen_top1_p4);
