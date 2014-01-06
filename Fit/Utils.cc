@@ -1,4 +1,5 @@
 #include "Utils.h"
+#include <iostream>
 
 double b_tagging_scale_factor = 0.963; // See http://cms.cern.ch/iCMS/jsp/openfile.jsp?tp=draft&files=AN2012_470_v3.pdf
 double b_tagging_scale_factor_error = 0.020;
