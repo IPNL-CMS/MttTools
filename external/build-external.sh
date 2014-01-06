@@ -29,3 +29,17 @@ make install
 
 cd ..
 rm tclap-1.2.1.tar.gz
+
+# Json cpp
+svn checkout svn://svn.code.sf.net/p/jsoncpp/code/trunk jsoncpp-code
+
+cd jsoncpp-code/jsoncpp
+mkdir -p ../build/release
+cd ../build/release
+
+cmake -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX:PATH=$PWD/../../../ -G "Unix Makefiles" ../../jsoncpp
+make -j4
+make install
+
+cd ../../..
+rm -rf jsoncpp-code
