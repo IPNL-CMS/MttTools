@@ -30,7 +30,7 @@ SRCS =  $(wildcard *.cc)
 DEPS =  $(patsubst %.cc,objs/%.d,$(SRCS)) 
 OBJS =  $(patsubst %.cc,objs/%.o,$(SRCS))
 
-all: fritSignal fitMtt createCombineWorkspace computeKeysPdfSyst interpolatePdf generateToyDataset generateKeysPdfWorkspaces higgsSignalToPDF computeEfficiencies
+all: fritSignal fitMtt computeKeysPdfSyst interpolatePdf generateToyDataset generateKeysPdfWorkspaces higgsSignalToPDF computeEfficiencies
 
 # Make the executable
 .SECONDEXPANSION:
@@ -38,9 +38,6 @@ all: fritSignal fitMtt createCombineWorkspace computeKeysPdfSyst interpolatePdf 
 OBJ = objs/$(@).o objs/libUtils.a
 
 fitMtt: $$(OBJ)
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
-
-createCombineWorkspace: $$(OBJ)
 	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
 
 generateToyDataset: $$(OBJ)
