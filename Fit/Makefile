@@ -30,7 +30,7 @@ SRCS =  $(wildcard *.cc)
 DEPS =  $(patsubst %.cc,objs/%.d,$(SRCS)) 
 OBJS =  $(patsubst %.cc,objs/%.o,$(SRCS))
 
-all: fritSignal fitMtt createCombineWorkspace computeCrystalBallSyst computeJECSystWithToys computeJECSyst computeBkgSyst computeSigmaRef runLikelihoodScan treatToyStuff extractLimits drawLimitCurve computeKeysPdfSyst interpolatePdf generateToyDataset generateKeysPdfWorkspaces higgsSignalToPDF computeEfficiencies
+all: fritSignal fitMtt createCombineWorkspace computeKeysPdfSyst interpolatePdf generateToyDataset generateKeysPdfWorkspaces higgsSignalToPDF computeEfficiencies
 
 # Make the executable
 .SECONDEXPANSION:
@@ -58,37 +58,10 @@ higgsSignalToPDF: $$(OBJ)
 computeEfficiencies: $$(OBJ)
 	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
 
-computeCrystalBallSyst: $$(OBJ)
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
-
 computeKeysPdfSyst: $$(OBJ)
 	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
 
 generateKeysPdfWorkspaces: $$(OBJ)
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
-
-computeJECSyst: $$(OBJ)
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
-
-computeJECSystWithToys: $$(OBJ)
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
-
-computeBkgSyst: $$(OBJ)
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
-
-computeSigmaRef: $$(OBJ)
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
-
-runLikelihoodScan: $$(OBJ) 
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
-
-treatToyStuff: $$(OBJ)
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
-
-extractLimits: $$(OBJ)
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
-
-drawLimitCurve: $$(OBJ)
 	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
 
 objs/libUtils.a: objs/Utils.o
