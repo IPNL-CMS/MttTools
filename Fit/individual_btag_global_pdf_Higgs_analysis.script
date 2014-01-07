@@ -8,11 +8,11 @@
 mu[0., 0, 100]
 
 # Create constraint on luminosity and efficiency
-RooGaussian::eff_e_constraint(eff_e_constrained[0.5,0,1], eff_e, error_eff_e)
-RooGaussian::eff_mu_constraint(eff_mu_constrained[0.5,0,1], eff_mu, error_eff_mu)
+RooGaussian::eff_e_constraint(eff_e_constrained, eff_e, error_eff_e)
+RooGaussian::eff_mu_constraint(eff_mu_constrained, eff_mu, error_eff_mu)
 
-RooGaussian::lumi_e_constraint(lumi_e_constrained[0.5,0,1], lumi_e, error_lumi_e)
-RooGaussian::lumi_mu_constraint(lumi_mu_constrained[0.5,0,1], lumi_mu, error_lumi_mu)
+RooGaussian::lumi_e_constraint(lumi_e_constrained, lumi_e, error_lumi_e)
+RooGaussian::lumi_mu_constraint(lumi_mu_constrained, lumi_mu, error_lumi_mu)
 
 # Number of signal events in muon channel and electron channel
 

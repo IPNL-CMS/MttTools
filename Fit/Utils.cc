@@ -103,22 +103,6 @@ char** getSystCLParameters(const std::string& mass, const std::string& file, boo
   return array;
 }
 
-double computeEfficiencyMuons_2btag(double selEfficiency, double hltEfficiency) {
-  return trigger_scale_factor_muons * muonID_scale_factor * muonIso_scale_factor * b_tagging_scale_factor * b_tagging_scale_factor * selEfficiency * hltEfficiency;
-}
-
-double computeEfficiencyElectrons_2btag(double selEfficiency, double hltEfficiency) {
-  return trigger_scale_factor_electrons * electron_scale_factor * b_tagging_scale_factor * b_tagging_scale_factor * selEfficiency * hltEfficiency;
-}
-
-double computeEfficiencyMuons_1btag(double selEfficiency, double hltEfficiency) {
-  return trigger_scale_factor_muons * muonID_scale_factor * muonIso_scale_factor * selEfficiency * hltEfficiency * b_tagging_scale_factor * ((1. - b_tagging_efficiency * b_tagging_scale_factor) / (1. - b_tagging_efficiency));
-}
-
-double computeEfficiencyElectrons_1btag(double selEfficiency, double hltEfficiency) {
-  return trigger_scale_factor_electrons * electron_scale_factor * selEfficiency * hltEfficiency * b_tagging_scale_factor * ((1. - b_tagging_efficiency * b_tagging_scale_factor) / (1. - b_tagging_efficiency));
-}
-
 uint32_t getAnalysisIndex(const std::string& base/* = "."*/) {
 
   Json::Value root;
@@ -161,60 +145,13 @@ AnalysisType getAnalysisType(const std::string& base/* = "."*/) {
   throw new std::invalid_argument("Unsupported analysis type " + type);
 }
 
-bool analysisUseSignalSyst(const std::string& base/* = "."*/) {
-  Json::Value root;
-  getJsonRoot(formatPath(base, "analysis.json"), root);
+const char* getAnalysisPrefix(const std::string& base/* = "."*/) {
 
-  const std::string uuid = getAnalysisUUID(base);
+  static AnalysisType type = getAnalysisType(base);
 
-  return root["analysis"][getAnalysisIndex(base)][uuid]["signal_syst"].asBool();
-}
-
-bool analysisUseJECSyst(const std::string& base/* = "."*/) {
-  Json::Value root;
-  getJsonRoot(formatPath(base, "analysis.json"), root);
-
-  const std::string uuid = getAnalysisUUID(base);
-
-  return root["analysis"][getAnalysisIndex(base)][uuid]["jec_syst"].asBool();
-}
-
-bool analysisUseBkgSyst(const std::string& base/* = "."*/) {
-  Json::Value root;
-  getJsonRoot(formatPath(base, "analysis.json"), root);
-
-  const std::string uuid = getAnalysisUUID(base);
-
-  return root["analysis"][getAnalysisIndex(base)][uuid]["background_syst"].asBool();
-}
-
-bool analysisUseSystematics(const std::string& base/* = "."*/) {
-  Json::Value root;
-  getJsonRoot(formatPath(base, "analysis.json"), root);
-
-  const std::string uuid = getAnalysisUUID(base);
-
-  return root["analysis"][getAnalysisIndex(base)][uuid]["systematics"].asBool();
-}
-
-bool analysisFixedBackground(const std::string& base/* = "."*/) {
-  Json::Value root;
-  getJsonRoot(formatPath(base, "analysis.json"), root);
-
-  const std::string uuid = getAnalysisUUID(base);
-
-  return root["analysis"][getAnalysisIndex(base)][uuid]["fixed_background"].asBool();
-}
-
-bool analysisUseInterpolation(const std::string& base/* = "."*/) {
-  Json::Value root;
-  getJsonRoot(formatPath(base, "analysis.json"), root);
-
-  const std::string uuid = getAnalysisUUID(base);
-  const int index = getAnalysisIndex(base);
-
-  if (! root["analysis"][index][uuid].isMember("interpolation"))
-    return false;
-
-  return root["analysis"][index][uuid]["interpolation"].asBool();
+  if (type == HIGGS) {
+    return "Higgs";
+  } else {
+    return "Zprime";
+  }
 }

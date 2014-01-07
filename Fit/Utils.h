@@ -56,15 +56,5 @@ extern int         getAnalysisId  (const std::string& base = ".");
 extern std::string getAnalysisUUID(const std::string& base = ".");
 extern std::string getAnalysisName(const std::string& base = ".");
 
-extern bool        analysisUseSystematics   (const std::string& base = ".");
-extern bool        analysisUseSignalSyst    (const std::string& base = ".");
-extern bool        analysisUseBkgSyst       (const std::string& base = ".");
-extern bool        analysisUseJECSyst       (const std::string& base = ".");
-extern bool        analysisFixedBackground  (const std::string& base = ".");
-extern bool        analysisUseInterpolation (const std::string& base = ".");
 extern AnalysisType getAnalysisType(const std::string& base = ".");
-
-extern "C" double computeEfficiencyMuons_2btag(double selEfficiency, double hltEfficiency);
-extern "C" double computeEfficiencyElectrons_2btag(double selEfficiency, double hltEfficiency);
-extern "C" double computeEfficiencyMuons_1btag(double selEfficiency, double hltEfficiency);
-extern "C" double computeEfficiencyElectrons_1btag(double selEfficiency, double hltEfficiency);
+extern const char* getAnalysisPrefix(const std::string& basee = ".");

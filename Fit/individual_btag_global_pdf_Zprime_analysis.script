@@ -1,0 +1,28 @@
+# Categories:
+# electron -> 11
+# muon -> 13
+
+# sigma: theoritical cross-section
+
+# First, create our main observable, the signal strength
+mu[0., 0, 100]
+
+# Create constraint on luminosity and efficiency
+RooGaussian::eff_e_constraint(eff_e_constrained, eff_e, error_eff_e)
+RooGaussian::eff_mu_constraint(eff_mu_constrained, eff_mu, error_eff_mu)
+
+RooGaussian::lumi_e_constraint(lumi_e_constrained, lumi_e, error_lumi_e)
+RooGaussian::lumi_mu_constraint(lumi_mu_constrained, lumi_mu, error_lumi_mu)
+
+# Number of signal events in muon channel and electron channel
+
+prod::nSig_mu(lumi_mu_constrained, eff_mu_constrained, sigma, mu)
+prod::nSig_e(lumi_e_constrained, eff_e_constrained, sigma, mu)
+
+# Create our number of background events, one for each category.
+nBkg_e[20000., 0., 100000.]
+nBkg_mu[20000., 0., 100000.]
+
+# Create global pdf
+SUM::global_pdf_electron(nSig_e * signal_electron, nBkg_e * background_electron)
+SUM::global_pdf_muon(nSig_mu * signal_muon, nBkg_mu * background_muon)

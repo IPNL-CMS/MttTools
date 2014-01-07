@@ -1,0 +1,40 @@
+# Categories:
+# {electron;0-btag} -> 0
+# {muon;0-btag} -> 1
+# {electron;1-btag} -> 2
+# {muon;1-btag} -> 3
+# {electron;2-btag} -> 4
+# {muon;2-btag} -> 5
+# sigma: theoritical cross-section
+
+# First, create our main observable, the signal strength
+mu[0., 0, 50]
+
+# Create constraint on luminosity and efficiency
+RooGaussian::eff_e_1b_constraint(eff_e_1b_constrained, eff_e_1b, error_eff_e_1b)
+RooGaussian::eff_mu_1b_constraint(eff_mu_1b_constrained, eff_mu_1b, error_eff_mu_1b)
+RooGaussian::eff_e_2b_constraint(eff_e_2b_constrained, eff_e_2b, error_eff_e_2b)
+RooGaussian::eff_mu_2b_constraint(eff_mu_2b_constrained, eff_mu_2b, error_eff_mu_2b)
+
+RooGaussian::lumi_e_constraint(lumi_e_constrained, lumi_e, error_lumi_e)
+RooGaussian::lumi_mu_constraint(lumi_mu_constrained, lumi_mu, error_lumi_mu)
+
+# Number of signal events in muon channel and electron channel
+
+prod::nSig_mu_1b(lumi_mu_constrained, eff_mu_1b_constrained, sigma, mu)
+prod::nSig_mu_2b(lumi_mu_constrained, eff_mu_2b_constrained, sigma, mu)
+prod::nSig_e_1b(lumi_e_constrained, eff_e_1b_constrained, sigma, mu)
+prod::nSig_e_2b(lumi_e_constrained, eff_e_2b_constrained, sigma, mu)
+
+# Create our number of background events, one for each category.
+nBkg_e_1[20000., 0., 100000.]
+nBkg_e_2[20000., 0., 100000.]
+nBkg_mu_1[20000., 0., 100000.]
+nBkg_mu_2[20000., 0., 100000.]
+
+# Create global pdf
+SUM::global_pdf_electron_1btag(nSig_e_1b * signal_electron_1btag, nBkg_e_1 * background_electron_1btag)
+SUM::global_pdf_muon_1btag(nSig_mu_1b * signal_muon_1btag, nBkg_mu_1 * background_muon_1btag)
+
+SUM::global_pdf_electron_2btag(nSig_e_2b * signal_electron_2btag, nBkg_e_2 * background_electron_2btag)
+SUM::global_pdf_muon_2btag(nSig_mu_2b * signal_muon_2btag, nBkg_mu_2 * background_muon_2btag)
