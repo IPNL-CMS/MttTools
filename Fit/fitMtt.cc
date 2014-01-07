@@ -1752,7 +1752,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massParticle, bool fit, strin
     }
 
     if (createCombineWorkspace) {
-      TString outputFileName = TString::Format("zprime_%d_workspace.root", massParticle);
+      TString outputFileName = TString::Format("%s_%d_workspace.root", getAnalysisPrefix(), massParticle);
       if (combineWorkspaceFilename.length() > 0)
         outputFileName = combineWorkspaceFilename;
 
@@ -1779,7 +1779,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massParticle, bool fit, strin
 
       if (saveWorkspace) {
         // Save fitted pdf and datasets in order to redo some plots
-        TString outputFileName = TString::Format("zprime_%d_workspace_after_fit.root", massParticle);
+        TString outputFileName = TString::Format("%s_%d_workspace_after_fit.root", getAnalysisPrefix(), massParticle);
         createWorkspace(outputFileName.Data(), true);
       }
 
