@@ -18,10 +18,10 @@ LDFLAGS = $(shell root-config --ldflags) -L../external/lib -Lobjs/ -Wl,--as-need
 # Here's where you'd want to define any #define with -DVariableName
 # (which means you can now use '#ifdef VariableName' preprocessor
 # lines in your source code).
-CFLAGS += $(INCDIRS) -std=c++0x -O2 -g -Wall -Wshadow -Wpointer-arith -Wunused-variable -Wextra
+CFLAGS += $(INCDIRS) -std=c++0x -O2 -g -Wall -Wpointer-arith -Wunused-variable -Wextra
 
 # Everything it needs to know about libraries
-DYNAMIC_LIBS = $(USERLIBDIRS) $(USERLIBS) -lboost_regex
+DYNAMIC_LIBS = $(USERLIBDIRS) $(USERLIBS) -lboost_regex -lboost_filesystem
 LIBS =  -Wl,-Bstatic -lUtils -ljsoncpp -Wl,-Bdynamic $(DYNAMIC_LIBS)
 
 # Define what to compile as well as the necessary dependencies and
@@ -30,7 +30,7 @@ SRCS =  $(wildcard *.cc)
 DEPS =  $(patsubst %.cc,objs/%.d,$(SRCS)) 
 OBJS =  $(patsubst %.cc,objs/%.o,$(SRCS))
 
-all: fritSignal fitMtt createCombineWorkspace computeEff computeCrystalBallSyst computeJECSystWithToys computeJECSyst computeBkgSyst computeSigmaRef runLikelihoodScan treatToyStuff extractLimits drawLimitCurve computeKeysPdfSyst interpolatePdf generateToyDataset generateKeysPdfWorkspaces higgsSignalToPDF
+all: fritSignal fitMtt createCombineWorkspace computeCrystalBallSyst computeJECSystWithToys computeJECSyst computeBkgSyst computeSigmaRef runLikelihoodScan treatToyStuff extractLimits drawLimitCurve computeKeysPdfSyst interpolatePdf generateToyDataset generateKeysPdfWorkspaces higgsSignalToPDF computeEfficiencies
 
 # Make the executable
 .SECONDEXPANSION:
@@ -55,7 +55,7 @@ fritSignal: $$(OBJ)
 higgsSignalToPDF: $$(OBJ)
 	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
 
-computeEff: $$(OBJ)
+computeEfficiencies: $$(OBJ)
 	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
 
 computeCrystalBallSyst: $$(OBJ)

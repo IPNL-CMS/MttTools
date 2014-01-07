@@ -22,6 +22,11 @@ struct SHMFitResults {
   int fit_status;
 };
 
+enum AnalysisType {
+  HIGGS,
+  ZPRIME
+};
+
 extern double b_tagging_scale_factor;
 extern double b_tagging_scale_factor_error;
 
@@ -57,6 +62,7 @@ extern bool        analysisUseBkgSyst       (const std::string& base = ".");
 extern bool        analysisUseJECSyst       (const std::string& base = ".");
 extern bool        analysisFixedBackground  (const std::string& base = ".");
 extern bool        analysisUseInterpolation (const std::string& base = ".");
+extern AnalysisType getAnalysisType(const std::string& base = ".");
 
 extern "C" double computeEfficiencyMuons_2btag(double selEfficiency, double hltEfficiency);
 extern "C" double computeEfficiencyElectrons_2btag(double selEfficiency, double hltEfficiency);

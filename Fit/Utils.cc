@@ -1,4 +1,6 @@
 #include "Utils.h"
+
+#include <stdexcept>
 #include <iostream>
 
 double b_tagging_scale_factor = 0.963; // See http://cms.cern.ch/iCMS/jsp/openfile.jsp?tp=draft&files=AN2012_470_v3.pdf
@@ -141,6 +143,22 @@ std::string getAnalysisName(const std::string& base/* = "."*/) {
   const std::string uuid = getAnalysisUUID(base);
 
   return root["analysis"][getAnalysisIndex(base)][uuid]["name"].asString();
+}
+
+AnalysisType getAnalysisType(const std::string& base/* = "."*/) {
+  Json::Value root;
+  getJsonRoot(formatPath(base, "analysis.json"), root);
+
+  const std::string uuid = getAnalysisUUID(base);
+
+  const std::string type = root["analysis"][getAnalysisIndex(base)][uuid]["type"].asString();
+
+  if (type == "higgs")
+    return HIGGS;
+  else if (type == "zprime")
+    return ZPRIME;
+
+  throw new std::invalid_argument("Unsupported analysis type " + type);
 }
 
 bool analysisUseSignalSyst(const std::string& base/* = "."*/) {
