@@ -137,7 +137,7 @@ void saveTemporaryResult(const std::string& outputFile, double result) {
   file.close();
 }
 
-void fitMtt(std::map<int, TChain*> chains, int massParticle, bool fit, string bkgfit_str, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, bool doBiasTest, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground, bool saveWorkspace, bool createCombineWorkspace,
+void fitMtt(std::map<int, TChain*> chains, int massParticle, bool fit, string bkgfit_str, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, bool doBiasTest, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground, bool saveWorkspace, bool createCombineWorkspace, const std::string& combineWorkspaceFilename,
     // Background systematics
     const std::string& temporaryResultFile,
     bool doBackgroundSyst, const std::string& backgroundParameterName, double backgroundParameterValue
@@ -252,6 +252,7 @@ int main(int argc, char** argv)
     TCLAP::SwitchArg saveWorkspaceArg("", "save-workspace", "Save the workspace for redoing plot after", cmd);
 
     TCLAP::SwitchArg createCombineWorkspaceArg("", "combine", "Create a workspace compatible with combine for limits computation", cmd);
+    TCLAP::ValueArg<std::string> combineWorkspaceFilenameArg("o", "output-file", "The output filename of the workspace to produce", false, "", "string", cmd);
 
     // New background syst calculation
     TCLAP::ValueArg<std::string> backgroundParameterNameArg("", "bkg-parameter-name", "The background parameter name to vary", false, "", "string", cmd);
@@ -298,7 +299,7 @@ int main(int argc, char** argv)
 
     bool doBackgroundSyst = backgroundParameterNameArg.isSet() && backgroundParameterValueArg.isSet() && temporaryResultFileArg.isSet();
 
-    fitMtt(chains, massArg.getValue(), fitArg.getValue(), fitConfigFileArg.getValue(), doLikScanArg.getValue(), writeRootArg.getValue(), saveFiguresArg.getValue(), doLimitCurveArg.getValue(), doBiasTestArg.getValue(), nToyArg.getValue(), doLikInToyArg.getValue(), indexArg.getValue(), systArg.getValue(), systSignArg.getValue(), systCBArg.getValue(), bkgOnlyArg.getValue(), onlyMuonArg.getValue(), btagArg.getValue(), useSharedMemoryArg.getValue(), sharedMemoryKeyArg.getValue(), workspaceArg.getValue(), fixBackgroundArg.getValue(), saveWorkspaceArg.getValue(), createCombineWorkspaceArg.getValue(),
+    fitMtt(chains, massArg.getValue(), fitArg.getValue(), fitConfigFileArg.getValue(), doLikScanArg.getValue(), writeRootArg.getValue(), saveFiguresArg.getValue(), doLimitCurveArg.getValue(), doBiasTestArg.getValue(), nToyArg.getValue(), doLikInToyArg.getValue(), indexArg.getValue(), systArg.getValue(), systSignArg.getValue(), systCBArg.getValue(), bkgOnlyArg.getValue(), onlyMuonArg.getValue(), btagArg.getValue(), useSharedMemoryArg.getValue(), sharedMemoryKeyArg.getValue(), workspaceArg.getValue(), fixBackgroundArg.getValue(), saveWorkspaceArg.getValue(), createCombineWorkspaceArg.getValue(), combineWorkspaceFilenameArg.getValue(),
         // Background systematics
         temporaryResultFileArg.getValue(),
         doBackgroundSyst, backgroundParameterNameArg.getValue(), backgroundParameterValueArg.getValue()
@@ -1393,7 +1394,7 @@ bool isInterpolated(AnalysisType type, int mass) {
   }
 }
 
-void fitMtt(std::map<int, TChain*> eventChain, int massParticle, bool fit, string fitConfigurationFile, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, bool doBiasTest, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground, bool saveWorkspace, bool createCombineWorkspace,
+void fitMtt(std::map<int, TChain*> eventChain, int massParticle, bool fit, string fitConfigurationFile, bool doLikScan, bool writeRootFile, bool saveFigures, bool doLimitCurve, bool doBiasTest, int nToyExp, bool doLikScanInToys, int index, string syst_str, string systCBsign, string systCB, bool bkgOnly, bool muonsOnly, int btag, bool useSharedMemory, key_t shm_key, const std::string& customWorkspaceFile, bool fixBackground, bool saveWorkspace, bool createCombineWorkspace, const std::string& combineWorkspaceFilename,
     // Background systematics
     const std::string& temporaryResultFile,
     bool doBackgroundSyst, const std::string& backgroundParameterName, double backgroundParameterValue
@@ -2286,9 +2287,8 @@ void fitMtt(std::map<int, TChain*> eventChain, int massParticle, bool fit, strin
 
     if (createCombineWorkspace) {
       TString outputFileName = TString::Format("zprime_%d_workspace.root", massParticle);
-      //FIXME
-      //if (outputFile.length() > 0)
-        //outputFileName = outputFile;
+      if (combineWorkspaceFilename.length() > 0)
+        outputFileName = combineWorkspaceFilename;
 
       createWorkspace(outputFileName.Data(), false);
 
