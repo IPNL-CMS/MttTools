@@ -37,21 +37,28 @@ def query_yes_no(question, default="yes"):
             sys.stdout.write("Please respond with 'yes' or 'no' "\
                              "(or 'y' or 'n').\n")
 
+def query(question, answsers):
+    """Ask a question via raw_input() and return their answer.
+
+    "question" is a string that is presented to the user.
+
+    The "answer" return value is one of "answers".
+    """
+    prompt = " [%s] " % ("/".join(answsers))
+
+    while True:
+        sys.stdout.write(question + prompt)
+        choice = raw_input().lower()
+        if choice in map(str.lower, answsers):
+            return choice
+        else:
+            sys.stdout.write("Please respond with %s\n" % (", ".join(answsers)))
+
 open("analysis.json", "a").close() # "touch" file
 
 analysisName = raw_input("Enter analysis name: ")
 analysisDescription = raw_input("Enter analysis description: ")
-analysisHasSyst = query_yes_no("Use systematics in this analysis?")
-if analysisHasSyst:
-  analysisSignalSyst = query_yes_no("\tSignal systematics?")
-  analysisBkgSyst = query_yes_no("\tBackground systematics?")
-  analysisJECSyst = query_yes_no("\tJEC systematics?")
-else:
-  analysisSignalSyst = False
-  analysisBkgSyst = False
-  analysisJECSyst = False
-analysisFixedBackground = query_yes_no("When fitting, should the background be fixed?")
-analysisUseInterpolation = query_yes_no("Do you want to use interpolation?")
+analysisType = query("What analysis do you want to do?", ["Higgs", "Zprime"])
 
 useAsCurrentAnalysis = query_yes_no("Set this new analysis as the current one?")
 
@@ -76,12 +83,7 @@ new_analysis = {
       "name": analysisName,
       "description": analysisDescription,
       "date": date,
-      "systematics": analysisHasSyst,
-      "signal_syst": analysisSignalSyst,
-      "background_syst": analysisBkgSyst,
-      "jec_syst": analysisJECSyst,
-      "fixed_background": analysisFixedBackground,
-      "interpolation": analysisUseInterpolation
+      "type": analysisType
       }
     }
 
