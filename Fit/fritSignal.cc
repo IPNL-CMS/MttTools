@@ -445,7 +445,7 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& je
     else
       systPrefix = "pdfDown";
   }
-  TString prefix = TString::Format("%s-Zprime%d_%s_%d_btag", systPrefix.Data(), massZprime, analysisName.c_str(), btag);
+  TString prefix = TString::Format("%s-%s%d_%s_%d_btag", systPrefix.Data(), getAnalysisPrefix(), massZprime, analysisName.c_str(), btag);
 
   std::map<std::string, std::shared_ptr<RooAbsPdf>> globalPdfs;
   std::map<std::string, std::shared_ptr<RooRealVar>> globalPdfsEvents;
@@ -577,7 +577,7 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& je
        );
        */
 
-      TString outputFileName = TString::Format("zprime_signal_%d_workspace_after_frit_%d_btag.root", massZprime, btag);
+      TString outputFileName = TString::Format("%s_signal_%d_workspace_after_frit_%d_btag.root", getAnalysisPrefix(), massZprime, btag);
       workspace.writeToFile(outputFileName);
     }
   }

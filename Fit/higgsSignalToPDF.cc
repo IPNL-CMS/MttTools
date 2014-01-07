@@ -485,7 +485,7 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& je
       systPrefix = "pdfDown";
   }
 
-  TString prefix = TString::Format("%s-Higgs%d_%s_%d_btag", systPrefix.Data(), massZprime, analysisName.c_str(), btag);
+  TString prefix = TString::Format("%s-%s%d_%s_%d_btag", systPrefix.Data(), getAnalysisPrefix(), massZprime, analysisName.c_str(), btag);
 
   // Save our signal functions into the workspace
   // We will need it for the fit on data

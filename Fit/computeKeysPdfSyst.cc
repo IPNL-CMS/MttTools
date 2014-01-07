@@ -195,7 +195,7 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
   }
 
   for (int i = btagMin; i <= btagMax; i++) {
-    TString workspace_file = TString::Format("%s/frit/nominal-Zprime%d_%s_%d_btag_workspace.root", base_path.c_str(), mass, analysisName.c_str(), i);
+    TString workspace_file = TString::Format("%s/frit/nominal-%s%d_%s_%d_btag_workspace.root", base_path.c_str(), getAnalysisPrefix(), mass, analysisName.c_str(), i);
     workspace_files[i].reset(TFile::Open(workspace_file, "read"));
 
     RooWorkspace* workspace = static_cast<RooWorkspace*>(workspace_files[i]->Get("w"));
@@ -324,7 +324,7 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
 
       // Save the pdf in a workspace
 
-      TString workspaceFile = TString::Format("%s/frit/temporary_Zprime%d_%s_%d_btag_workspace.root", base_path.c_str(), mass, analysisName.c_str(), b);
+      TString workspaceFile = TString::Format("%s/frit/temporary_%s%d_%s_%d_btag_workspace.root", base_path.c_str(), getAnalysisPrefix(), mass, analysisName.c_str(), b);
       RooWorkspace temp_workspace("w", "Frit signal workspace");
 
       temp_workspace.import(*muon_toy_pdf[b]);
@@ -343,7 +343,7 @@ void process(int mass, bool muonsOnly, int btag, const std::string& file, bool s
       keys_workspace.import(*electron_toyData[b]);
     }
 
-    TString workspaceFile = TString::Format("%s/frit/temporary_Zprime%d_%s_%%d_btag_workspace.root", base_path.c_str(), mass, analysisName.c_str());
+    TString workspaceFile = TString::Format("%s/frit/temporary_%s%d_%s_%%d_btag_workspace.root", base_path.c_str(), getAnalysisPrefix(), mass, analysisName.c_str());
     std::cout << "Fitting..." << std::endl;
     pid_t child = fork();
     if (child == 0) {

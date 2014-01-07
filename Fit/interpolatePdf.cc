@@ -122,7 +122,7 @@ void doInterpolation(int mass, const std::string& jec, int btag) {
   std::string analysisName = getAnalysisName();
   std::string base_path = "analysis/" + getAnalysisUUID();
 
-  TString prefix = TString::Format("%s-Zprime%d_%s_%d_btag", jec.c_str(), mass, analysisName.c_str(), btag);
+  TString prefix = TString::Format("%s-%s%d_%s_%d_btag", jec.c_str(), getAnalysisPrefix(), mass, analysisName.c_str(), btag);
 
   int lowMass = 0;
   int highMass = 0;
@@ -147,10 +147,10 @@ void doInterpolation(int mass, const std::string& jec, int btag) {
   }
 
   // Open workspaces and retrieve PDFs
-  TString lowMass_prefix = TString::Format("%s-Zprime%d_%s_%d_btag", jec.c_str(), lowMass, analysisName.c_str(), btag);
+  TString lowMass_prefix = TString::Format("%s-%s%d_%s_%d_btag", jec.c_str(), getAnalysisPrefix(), lowMass, analysisName.c_str(), btag);
   TString lowMass_workspaceFile = base_path + "/frit/" + lowMass_prefix + "_workspace.root";
 
-  TString highMass_prefix = TString::Format("%s-Zprime%d_%s_%d_btag", jec.c_str(), highMass, analysisName.c_str(), btag);
+  TString highMass_prefix = TString::Format("%s-%s%d_%s_%d_btag", jec.c_str(), getAnalysisPrefix(), highMass, analysisName.c_str(), btag);
   TString highMass_workspaceFile = base_path + "/frit/" + highMass_prefix + "_workspace.root";
 
   TFile lowMass_file(lowMass_workspaceFile);
