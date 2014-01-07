@@ -230,7 +230,7 @@ void saveCombinedChiSquare(int mass, const std::string& jecType, int btag, doubl
   fclose(lock);
 }
 
-void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, int mass, bool wide, int nBins, RooWorkspace& workspace, int btag, const std::string& prefix, bool log) {
+void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, int mass, int nBins, RooWorkspace& workspace, int btag, const std::string& prefix, bool log) {
 
   std::cout << std::endl;
   std::cout << "Drawing histograms..." << std::endl;
@@ -243,7 +243,6 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
 
   const int padWidth = 900;
   const int padHeight = 900;
-  const float LUMI = 19.67;
 
   const int canvasWidth = padWidth * x;
   const int canvasHeight = padHeight * y;
@@ -421,7 +420,7 @@ float shiftUp(TH1* h) {
   return min;
 }
 
-void fritSignal(TChain* chain, const std::string& jecType, const std::string& jer, const std::string& pu, const std::string& pdfSyst, const std::string& configFile, int massZprime, int btag, bool saveWorkspace) {
+void fritSignal(TChain* chain, const std::string& jecType, const std::string& jer, const std::string& pu, const std::string& pdfSyst, __attribute__((unused)) const std::string& configFile, int massZprime, int btag, __attribute__((unused)) bool saveWorkspace) {
 
   std::cout << "[" << getpid() << "] Processing for " << jecType << std::endl;
 
@@ -585,7 +584,7 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& je
 
   workspace.writeToFile(workspaceFile);
 
-  drawHistograms(whichLepton, mtt, massZprime, true, nBins, workspace, btag, std::string(base_path + "/frit/" + prefix), false);
+  drawHistograms(whichLepton, mtt, massZprime, nBins, workspace, btag, std::string(base_path + "/frit/" + prefix), false);
   //drawHistograms(whichLepton, mtt, massZprime, true, nBins, workspace, btag, std::string(base_path + "/frit/" + prefix), true);
 
   std::cout << "Workspace saved in " << workspaceFile << std::endl;

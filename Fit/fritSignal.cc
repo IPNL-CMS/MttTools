@@ -226,7 +226,7 @@ void saveCombinedChiSquare(int mass, const std::string& jecType, int btag, doubl
   fclose(lock);
 }
 
-void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, int mass, bool wide, int nBins, RooDataSet& dataset, RooSimultaneous& simPdfs, std::map<std::string, std::shared_ptr<BaseFunction>>& backgroundPdfs, int btag, const std::string& prefix, bool log) {
+void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, int mass, int nBins, RooDataSet& dataset, RooSimultaneous& simPdfs, std::map<std::string, std::shared_ptr<BaseFunction>>& backgroundPdfs, int btag, const std::string& prefix, bool log) {
 
   std::cout << std::endl;
   std::cout << "Drawing histograms..." << std::endl;
@@ -240,7 +240,6 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
 
   const int padWidth = 900;
   const int padHeight = 900;
-  const float LUMI = 19.58;
 
   const int canvasWidth = padWidth * x;
   const int canvasHeight = padHeight * y;
@@ -515,8 +514,8 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& je
 
   } while (! fitIsGood && fitIterations > 0);
 
-  drawHistograms(whichLepton, mtt, massZprime, true, nBins, *dataset, simPdf, backgroundPdfs, btag, std::string(base_path + "/frit/" + prefix), false);
-  drawHistograms(whichLepton, mtt, massZprime, true, nBins, *dataset, simPdf, backgroundPdfs, btag, std::string(base_path + "/frit/" + prefix), true);
+  drawHistograms(whichLepton, mtt, massZprime, nBins, *dataset, simPdf, backgroundPdfs, btag, std::string(base_path + "/frit/" + prefix), false);
+  drawHistograms(whichLepton, mtt, massZprime, nBins, *dataset, simPdf, backgroundPdfs, btag, std::string(base_path + "/frit/" + prefix), true);
 
   fitResult->Print("v");
 

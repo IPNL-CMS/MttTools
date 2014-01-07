@@ -43,7 +43,7 @@
 
 std::string base_path = "";
 
-void process(int mass, bool muonsOnly, int btag, const std::string& file, bool singleFile, const std::string& signalDatasetFile, bool fixBackground) {
+void process(int mass, bool muonsOnly, int btag, const std::string& file, bool singleFile, const std::string& signalDatasetFile, __attribute__((unused)) bool fixBackground) {
   
   RooRandom::randomGenerator()->SetSeed(0);
 

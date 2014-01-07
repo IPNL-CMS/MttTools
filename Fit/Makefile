@@ -30,6 +30,8 @@ SRCS =  $(wildcard *.cc)
 DEPS =  $(patsubst %.cc,objs/%.d,$(SRCS)) 
 OBJS =  $(patsubst %.cc,objs/%.o,$(SRCS))
 
+link = echo "Linking $@"; $(LD) $(LDFLAGS) $< $(LIBS) -o $@
+
 all: fritSignal fitMtt computeKeysPdfSyst interpolatePdf generateToyDataset generateKeysPdfWorkspaces higgsSignalToPDF computeEfficiencies
 
 # Make the executable
@@ -38,28 +40,28 @@ all: fritSignal fitMtt computeKeysPdfSyst interpolatePdf generateToyDataset gene
 OBJ = objs/$(@).o objs/libUtils.a
 
 fitMtt: $$(OBJ)
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
+	@$(link)
 
 generateToyDataset: $$(OBJ)
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
+	@$(link)
 
 interpolatePdf: $$(OBJ)
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
+	@$(link)
 
 fritSignal: $$(OBJ)
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
+	@$(link)
 
 higgsSignalToPDF: $$(OBJ)
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
+	@$(link)
 
 computeEfficiencies: $$(OBJ)
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
+	@$(link)
 
 computeKeysPdfSyst: $$(OBJ)
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
+	@$(link)
 
 generateKeysPdfWorkspaces: $$(OBJ)
-	$(LD) $(LDFLAGS) $< $(LIBS) -o $@
+	@$(link)
 
 objs/libUtils.a: objs/Utils.o
 	@ar rcs $@ $<
