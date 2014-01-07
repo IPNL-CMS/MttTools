@@ -179,7 +179,7 @@ void saveParameter(int mass, const std::string& jecType, int btag, const std::st
   std::string btagStr = ss.str();
 
   Json::Value& node = root[getAnalysisUUID()][strMass][btagStr][jecType][name];
-  node["events"] = nSig;
+  node["integral"] = nSig;
   node["error"] = nSig_err;
   node["chi2"] = chi2;
 
