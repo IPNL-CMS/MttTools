@@ -37,9 +37,8 @@ cd jsoncpp-code/jsoncpp
 mkdir -p ../build/release
 cd ../build/release
 
-cmake -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX:PATH=$PWD/../../../ -G "Unix Makefiles" ../../jsoncpp
+cmake -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX:PATH=$PWD/../../../ -DJSONCPP_WITH_TESTS=OFF -G "Unix Makefiles" ../../jsoncpp
 make -j4
 make install
 
 cd ../../..
-rm -rf jsoncpp-code
