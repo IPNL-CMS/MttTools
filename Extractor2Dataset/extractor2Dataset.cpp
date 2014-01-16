@@ -24,7 +24,7 @@ bool OVERRIDE_TYPE;
 std::string OVERRIDED_TYPE;
 PUProfile puProfile;
 
-void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& outputFile, bool isData, const std::string& type, int max, double lumi_weight, const std::string& puSyst, const std::string& pdfSyst) {
+void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& outputFile, bool isData, const std::string& type, int max, double lumi_weight, const std::string& puSyst, const std::string& pdfSyst, bool useMVA, bool runOnSkim) {
 
   TString outputFileFormated = OVERRIDE_TYPE ? outputFile : TString::Format(outputFile.c_str(), (isData) ? "" : type.c_str());
 
@@ -34,21 +34,26 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
       {2, new TTree("dataset_2btag", "dataset for at least 2 b-tagged jets") }
   };
 
-  float mtt_afterChi2, pt_1stJet, pt_2ndJet, pt_3rdJet, pt_4thJet, bestSolChi2;
-  int isSel, nBtaggedJets_CSVM;
+  float mtt_afterReco, pt_1stJet, pt_2ndJet, pt_3rdJet, pt_4thJet, bestSolChi2;
+  int isSel = 1, nBtaggedJets_CSVM;
   uint32_t run = 0;
 
   float lepton_weight = 1;
   float btag_weight = 1;
 
+  auto SetBranchAddress = [&](const std::string& param, void* address) {
+    mtt->SetBranchStatus(param.c_str(), 1);
+    mtt->SetBranchAddress(param.c_str(), address);
+  };
+
   mtt->SetBranchStatus("*", 0);
-  mtt->SetBranchStatus("mtt_AfterChi2", 1);
   mtt->SetBranchStatus("1stjetpt", 1);
   mtt->SetBranchStatus("2ndjetpt", 1);
   mtt->SetBranchStatus("3rdjetpt", 1);
   mtt->SetBranchStatus("4thjetpt", 1);
-  mtt->SetBranchStatus("bestSolChi2", 1);
-  mtt->SetBranchStatus("isSel", 1);
+  if (! runOnSkim)
+    mtt->SetBranchStatus("isSel", 1);
+
   if (puProfile == PUProfile::S6)
     mtt->SetBranchStatus("nBtaggedJets_TCHET", 1);
   else
@@ -58,12 +63,23 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
     mtt->SetBranchStatus("btag_weight", 1);
   }
 
-  mtt->SetBranchAddress("mtt_AfterChi2", &mtt_afterChi2, NULL);
+  int numComb = 0;
+  if (useMVA)
+    SetBranchAddress("numComb_MVA", &numComb);
+  else
+    SetBranchAddress("numComb_chi2", &numComb);
+
+  if (useMVA) {
+    SetBranchAddress("mtt_AfterMVA", &mtt_afterReco);
+  } else {
+    SetBranchAddress("mtt_AfterChi2", &mtt_afterReco);
+    SetBranchAddress("bestSolChi2", &bestSolChi2);
+  }
+
   mtt->SetBranchAddress("1stjetpt", &pt_1stJet, NULL);
   mtt->SetBranchAddress("2ndjetpt", &pt_2ndJet, NULL);
   mtt->SetBranchAddress("3rdjetpt", &pt_3rdJet, NULL);
   mtt->SetBranchAddress("4thjetpt", &pt_4thJet, NULL);
-  mtt->SetBranchAddress("bestSolChi2", &bestSolChi2, NULL);
   mtt->SetBranchAddress("isSel", &isSel, NULL);
   if (puProfile == PUProfile::S6)
     mtt->SetBranchAddress("nBtaggedJets_TCHET", &nBtaggedJets_CSVM, NULL);
@@ -118,7 +134,7 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
   float output_weight;
   int lepton = (type == "semimu") ? 13 : 11;
   for (auto& outputTree: outputTrees) {
-    outputTree.second->Branch("mtt", &mtt_afterChi2, "mtt/F");
+    outputTree.second->Branch("mtt", &mtt_afterReco, "mtt/F");
     outputTree.second->Branch("weight", &output_weight, "weight/F");
     outputTree.second->Branch("lepton_type", &lepton, "lepton_type/I");
   }
@@ -205,9 +221,20 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
       thirdJetCut = 35;
     }
 
+    if (!runOnSkim && (isSel != 1 || numComb <= 0))
+      continue;
+
     // Lepton selection done on Extractor
     // Selection
-    if (isSel == 1 && pt_1stJet > firstJetCut && pt_2ndJet > secondJetCut && pt_3rdJet > thirdJetCut && mtt_afterChi2 > 0. && bestSolChi2 < 500.) {
+    if (pt_1stJet > firstJetCut && pt_2ndJet > secondJetCut && pt_3rdJet > thirdJetCut) {
+
+      if (useMVA) {
+
+      } else {
+        if (mtt_afterReco <= 0 || bestSolChi2 > 500)
+          continue;
+      }
+
       // Good event
       int index;
       if (nBtaggedJets_CSVM == 0)
@@ -255,7 +282,7 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
 
         // Compute trigger weight
         double triggerWeight = m_trigger_efficiency_provider->get_weight(ptLepton, etaLepton, pt_4thJet, jetEta[3], n_vertices, nJets, type == "semimu", TopTriggerEfficiencyProvider::NOMINAL)[0];
-        output_weight *= puReweigher->weight(n_trueInteractions) * generator_weight * lumi_weight * triggerWeight * lepton_weight/* * btag_weight*/;
+        output_weight *= puReweigher->weight(n_trueInteractions) * generator_weight * lumi_weight * triggerWeight * lepton_weight * btag_weight;
       }
 
       if (doPDFSyst) {
@@ -323,12 +350,12 @@ void loadChain(const std::vector<std::string>& inputFiles, TChain*& mtt, TChain*
   vertices->SetCacheSize(30*1024*1024);
 }
 
-void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight, const std::string& puSyst, const std::string& pdfSyst) {
+void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight, const std::string& puSyst, const std::string& pdfSyst, bool useMVA, bool runOnSkim) {
 
   TChain* mtt = NULL, *event = NULL, *vertices = NULL;
 
   loadChain(inputFiles, mtt, event, vertices);
-  reduce(mtt, event, vertices, outputFile, isData, type, max, generator_weight, puSyst, pdfSyst);
+  reduce(mtt, event, vertices, outputFile, isData, type, max, generator_weight, puSyst, pdfSyst, useMVA, runOnSkim);
 
   delete mtt;
   delete event;
@@ -370,6 +397,9 @@ int main(int argc, char** argv)
 
     TCLAP::ValueArg<std::string> pdfSystArg("", "pdf-syst", "PDF systematic to compute", false, "nominal", "string", cmd);
 
+    TCLAP::SwitchArg skimArg("", "skim", "Run over a skimmed file", cmd, false);
+    TCLAP::SwitchArg mvaArg("", "mva", "Use MVA instead of chi2", cmd, false);
+
     cmd.parse(argc, argv);
 
     std::string p = pileupArg.getValue();
@@ -404,7 +434,7 @@ int main(int argc, char** argv)
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue(), puSyst, pdfSyst); 
+    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue(), puSyst, pdfSyst, mvaArg.getValue(), skimArg.getValue()); 
 
   } catch (TCLAP::ArgException& e) {
     std::cout << e.what() << std::endl;
