@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <cmath>
 
 #include <json/json.h>
 #include <tclap/CmdLine.h>

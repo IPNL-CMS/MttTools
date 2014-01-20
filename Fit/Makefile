@@ -12,7 +12,7 @@ INCDIRS = -I$(shell root-config --incdir) -I../external/include/ -I$(BOOST_ROOT)
 CXX = g++
 LD = g++
 CFLAGS = -fPIC $(shell root-config --cflags)
-LDFLAGS = $(shell root-config --ldflags) -L../external/lib -Lobjs/ -Wl,--as-needed
+LDFLAGS = $(shell root-config --ldflags) -L../external/lib -Lobjs/ 
 #LDFLAGS = $(shell root-config --ldflags)
 
 # Here's where you'd want to define any #define with -DVariableName
@@ -21,8 +21,9 @@ LDFLAGS = $(shell root-config --ldflags) -L../external/lib -Lobjs/ -Wl,--as-need
 CFLAGS += $(INCDIRS) -std=c++0x -O2 -g -Wall -Wpointer-arith -Wunused-variable -Wextra
 
 # Everything it needs to know about libraries
-DYNAMIC_LIBS = $(USERLIBDIRS) $(USERLIBS) -lboost_regex -lboost_filesystem
-LIBS =  -Wl,-Bstatic -lUtils -ljsoncpp -Wl,-Bdynamic $(DYNAMIC_LIBS)
+DYNAMIC_LIBS = $(USERLIBDIRS) $(USERLIBS) -lboost_regex -lboost_system -lboost_filesystem
+#LIBS =  -Wl,-Bstatic -lUtils -ljsoncpp -Wl,-Bdynamic $(DYNAMIC_LIBS)
+LIBS =  -lUtils -ljsoncpp $(DYNAMIC_LIBS)
 
 # Define what to compile as well as the necessary dependencies and
 # object names.

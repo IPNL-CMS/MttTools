@@ -6,6 +6,7 @@
 #include <sys/wait.h>
 #include <cmath>
 #include <regex>
+#include <unistd.h>
 
 #include <TString.h>
 #include <TRandom3.h>
