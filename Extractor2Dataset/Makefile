@@ -16,7 +16,7 @@ ROOTCFLAGS = $(shell root-config --cflags)
 ROOTLIBS   = $(shell root-config --libs)
 
 CXX           = g++
-CXXFLAGS	    = -O2 -Wall -Werror -fPIC -std=c++0x
+CXXFLAGS	    = -O2 -Wall -fPIC -std=c++0x
 LD			      = g++
 LDFLAGS		    = $(shell root-config --ldflags) -Wl,--as-needed
 SOFLAGS		    = 

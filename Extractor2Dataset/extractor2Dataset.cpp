@@ -90,12 +90,13 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
     mtt->SetBranchAddress("btag_weight", &btag_weight);
   }
 
+  bool isSemiMu = (type == "semimu");
 
   float muonPt[100];
   float muonEta[100];
   float electronPt[100];
   float electronEta[100];
-  if (type == "semimu") {
+  if (isSemiMu) {
     mtt->SetBranchStatus("muonPt", 1);
     mtt->SetBranchStatus("muonEta", 1);
     mtt->SetBranchAddress("muonPt", muonPt);
@@ -126,13 +127,13 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
   event->SetBranchAddress("run", &run, NULL);
   event->SetBranchAddress("generator_weight", &generator_weight, NULL);
 
-  int32_t n_vertices;
+  int32_t n_vertices = 0;
   vertices->SetBranchStatus("*", 0);
   vertices->SetBranchStatus("n_vertices", 1);
   vertices->SetBranchAddress("n_vertices", &n_vertices);
 
   float output_weight;
-  int lepton = (type == "semimu") ? 13 : 11;
+  int lepton = isSemiMu ? 13 : 11;
   for (auto& outputTree: outputTrees) {
     outputTree.second->Branch("mtt", &mtt_afterReco, "mtt/F");
     outputTree.second->Branch("weight", &output_weight, "weight/F");
@@ -147,7 +148,7 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
     else if (puSyst == "down")
       syst = Systematic::DOWN;
 
-    puReweigher = new PUReweighter(type == "semimu", puProfile, syst);
+    puReweigher = new PUReweighter(isSemiMu, puProfile, syst);
   }
 
   std::vector<float>* pdfWeights = NULL;
@@ -167,7 +168,7 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
   float lumi_run2012_C = 0;
   float lumi_run2012_D = 0;
 
-  if (type == "semimu") {
+  if (isSemiMu) {
     lumi_run2012_A = 0.876225;
     lumi_run2012_B = 4.412;
     lumi_run2012_C = 7.044;
@@ -191,6 +192,7 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
   for (int64_t i = 0; i < entries; i++) {
     mtt->GetEntry(i);
     event->GetEntry(i);
+    vertices->GetEntry(i);
 
     if (i % 1000000 == 0) {
       std::cout << "Processing event #" << i + 1 << " over " << entries << " (" << (float) i / entries * 100 << " %)" << std::endl;
@@ -249,7 +251,7 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
 
       double ptLepton = 0;
       double etaLepton = 0;
-      if (type == "semimu") {
+      if (isSemiMu) {
         ptLepton = muonPt[0];
         etaLepton = muonEta[0];
       } else {
@@ -281,7 +283,7 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
         }
 
         // Compute trigger weight
-        double triggerWeight = m_trigger_efficiency_provider->get_weight(ptLepton, etaLepton, pt_4thJet, jetEta[3], n_vertices, nJets, type == "semimu", TopTriggerEfficiencyProvider::NOMINAL)[0];
+        double triggerWeight = m_trigger_efficiency_provider->get_weight(ptLepton, etaLepton, pt_4thJet, jetEta[3], n_vertices, nJets, isSemiMu, TopTriggerEfficiencyProvider::NOMINAL)[0];
         output_weight *= puReweigher->weight(n_trueInteractions) * generator_weight * lumi_weight * triggerWeight * lepton_weight * btag_weight;
       }
 
@@ -337,7 +339,7 @@ void loadChain(const std::vector<std::string>& inputFiles, TChain*& mtt, TChain*
 
   mtt = new TChain("Mtt");
   event = new TChain("event");
-  vertices = new TChain("vertices");
+  vertices = new TChain("Vertices");
 
   for (const std::string& file: inputFiles) {
     mtt->Add(file.c_str());
