@@ -40,11 +40,24 @@ files = [
         ["MC_QCD_Pt_250_350_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_250_350_EMEnriched_skims_nominal.root"],
         ["MC_QCD_Pt_350_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_350_EMEnriched_skims_nominal.root"],
 
-        ## Background + Signal
+        ["MC_QCD_Pt_30_80_BCtoE_histos_nominal.root", "skims/semie/MC_QCD_Pt_30_80_BCtoE_skims_nominal.root"],
+        ["MC_QCD_Pt_80_170_BCtoE_histos_nominal.root", "skims/semie/MC_QCD_Pt_80_170_BCtoE_skims_nominal.root"],
+        ["MC_QCD_Pt_170_250_BCtoE_histos_nominal.root", "skims/semie/MC_QCD_Pt_170_250_BCtoE_skims_nominal.root"],
+        ["MC_QCD_Pt_250_350_BCtoE_histos_nominal.root", "skims/semie/MC_QCD_Pt_250_350_BCtoE_skims_nominal.root"],
+        ["MC_QCD_Pt_350_BCtoE_histos_nominal.root", "skims/semie/MC_QCD_Pt_350_BCtoE_skims_nominal.root"],
+
+        # Background + Signal
+        ["Signal_S0_S_i_M400_cpl1_scalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M400_cpl1_scalar_skims_nominal.root"],
         ["Signal_S0_S_i_M500_cpl1_scalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M500_cpl1_scalar_skims_nominal.root"],
+        ["Signal_S0_S_i_M600_cpl1_scalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M600_cpl1_scalar_skims_nominal.root"],
         ["Signal_S0_S_i_M700_cpl1_scalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M700_cpl1_scalar_skims_nominal.root"],
+        ["Signal_S0_S_i_M800_cpl1_scalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M800_cpl1_scalar_skims_nominal.root"],
+
+        ["Signal_S0_S_i_M400_cpl1_pseudoscalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M400_cpl1_pseudoscalar_skims_nominal.root"],
         ["Signal_S0_S_i_M500_cpl1_pseudoscalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M500_cpl1_pseudoscalar_skims_nominal.root"],
+        ["Signal_S0_S_i_M600_cpl1_pseudoscalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M600_cpl1_pseudoscalar_skims_nominal.root"],
         ["Signal_S0_S_i_M700_cpl1_pseudoscalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M700_cpl1_pseudoscalar_skims_nominal.root"],
+        ["Signal_S0_S_i_M800_cpl1_pseudoscalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M800_cpl1_pseudoscalar_skims_nominal.root"],
         ]
 
 def launch(input, output, btag):
