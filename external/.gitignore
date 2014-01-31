@@ -3,3 +3,4 @@ include
 yaml-*
 share
 tclap*
+json*
