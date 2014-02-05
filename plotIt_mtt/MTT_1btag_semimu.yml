@@ -1,0 +1,144 @@
+configuration:
+  width: 800
+  height: 800
+  title: 'CMS preliminary, L = %lumi% fb^{-1}, #sqrt{s} = 8 TeV'
+  root: 'inputs/Latest/1-btag/semimu'
+  luminosity: 19667
+  luminosity-error: 0.026
+  error-fill-style: 3154
+  error-fill-color: "#ee556270"
+  ratio-fit-error-fill-style: 1001
+  ratio-fit-error-fill-color: "#aa556270"
+  ratio-fit-line-color: "#0B486B"
+
+files:
+  '../data/Data_SingleMu.root':
+    type: data
+    legend: "Data"
+
+  'MC_TT_powheg_histos_nominal.root':
+    type: mc
+    cross-section: 245.8
+    generated-events-unweighted: 21675970
+    generated-events: 21059527.08917
+    fill-color: "#D95B43"
+    legend: "t#bar{t}"
+    order: 3
+
+  'MC_T_s-channel_histos_nominal.root':
+    type: mc
+    cross-section: 3.79
+    generated-events: 259961
+    group: single-t
+    order: 2
+  'MC_T_t-channel_histos_nominal.root':
+    type: mc
+    cross-section: 56.4
+    generated-events: 3728227
+    group: single-t
+    order: 2
+  'MC_T_tW-channel_histos_nominal.root':
+    type: mc
+    cross-section: 11.1
+    generated-events: 497658
+    group: single-t
+    order: 2
+  'MC_Tbar_s-channel_histos_nominal.root':
+    type: mc
+    cross-section: 1.76
+    generated-events: 139974
+    group: single-t
+    order: 2
+  'MC_Tbar_t-channel_histos_nominal.root':
+    type: mc
+    cross-section: 30.7
+    generated-events: 1935072
+    group: single-t
+    order: 2
+  'MC_Tbar_tW-channel_histos_nominal.root':
+    type: mc
+    cross-section: 11.1
+    generated-events: 493460
+    group: "single-t"
+    order: 2
+
+  'MC_DY1JetsToLL_M-50_histos_nominal.root':
+    type: mc
+    cross-section: 666.3
+    generated-events: 24045248
+    group: DY
+    order: 0
+  'MC_DY2JetsToLL_M-50_histos_nominal.root':
+    type: mc
+    cross-section: 215.0
+    generated-events: 21852156
+    group: DY
+    order: 0
+  'MC_DY3JetsToLL_M-50_histos_nominal.root':
+    type: mc
+    cross-section: 60.7
+    generated-events: 11015445
+    group: DY
+    order: 0
+  'MC_DY4JetsToLL_M-50_histos_nominal.root':
+    type: mc
+    cross-section: 27.3
+    generated-events: 6402827
+    group: DY
+    order: 0
+
+  'MC_W1JetsToLNu_histos_nominal.root':
+    type: mc
+    cross-section: 6662.8
+    generated-events: 23141598
+    group: W
+    order: 1
+  'MC_W2JetsToLNu_histos_nominal.root':
+    type: mc
+    cross-section: 2159.2
+    generated-events: 34044921
+    group: W
+    order: 1
+  'MC_W3JetsToLNu_histos_nominal.root':
+    type: mc
+    cross-section: 640.4
+    generated-events: 15539503
+    group: W
+    order: 1
+  'MC_W4JetsToLNu_histos_nominal.root':
+    type: mc
+    cross-section: 264.0
+    generated-events: 13382803
+    group: W
+    order: 1
+
+plots:
+  'mttSelected*':
+    rebin: 5
+    log-y: true
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+  'nBT*':
+    log-y: false
+    show-ratio: true
+    show-errors: true
+    save-extensions: ["pdf"]
+
+legend:
+  position: [0.7, 0.65, 0.9, 0.9]
+
+groups:
+  'single-t':
+    legend: 'Single top'
+    fill-color: '#542437'
+
+  W:
+    legend: 'W + jets'
+    fill-color: '#C02942'
+
+  DY:
+    legend: 'Z + jets'
+    fill-color: '#53777A'

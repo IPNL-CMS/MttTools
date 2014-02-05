@@ -1,0 +1,37 @@
+configuration:
+  width: 800
+  height: 800
+  title: 'CMS preliminary, Simulation, #sqrt{s} = 8 TeV'
+  root: 'inputs/Latest/2-btag/semimu'
+  luminosity: 19667
+
+files:
+  'Signal_S0_S_i_M500_cpl1_pseudoscalar_histos_nominal.root':
+    type: signal
+    cross-section: 0.720
+    generated-events: 379963
+    legend: 'S0, M = 500, pseudo-scalar'
+    line-color: 46
+    line-width: 2
+    fill-type: 0
+    line-type: 1
+
+  'Signal_S0_S_i_M700_cpl1_pseudoscalar_histos_nominal.root':
+    type: signal
+    cross-section: 0.326
+    generated-events: 369968
+    legend: 'S0, M = 700, pseudo-scalar'
+    line-color: 36
+    line-width: 2
+    fill-type: 0
+    line-type: 1
+
+plots:
+  'mttSelected*':
+    rebin: 3
+    log-y: false
+    y-axis: "Normalized to L = 1 pb^{-1}"
+    save-extensions: ["pdf"]
+
+legend:
+  position: [0.55, 0.8, 0.9, 0.9]
