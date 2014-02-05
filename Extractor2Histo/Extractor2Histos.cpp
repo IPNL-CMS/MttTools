@@ -249,7 +249,20 @@ void Extractor2Histos::Loop()
   //nentries = 10000;
 
   //PUReweighter puReweighter(mIsSemiMu, mDataset);
-  PUReweighter puReweighter(mIsSemiMu);
+
+  Systematic puSyst = Systematic::NOMINAL;
+  if (mPUSyst == "up")
+    puSyst = Systematic::UP;
+  else if (mPUSyst == "down")
+    puSyst = Systematic::DOWN;
+
+  PUReweighter puReweighter(mIsSemiMu, PUProfile::S10, puSyst);
+
+  TopTriggerEfficiencyProvider::JES triggerJESSyst = TopTriggerEfficiencyProvider::NOMINAL;
+  if (mJECSyst == "up")
+    triggerJESSyst = TopTriggerEfficiencyProvider::UP;
+  else if (mJECSyst == "down")
+    triggerJESSyst = TopTriggerEfficiencyProvider::DOWN;
 
   std::cout << "Processing..." << std::endl;
 
@@ -591,7 +604,13 @@ void Extractor2Histos::Loop()
         }
 
         // Compute trigger weight
-        double triggerWeight = m_trigger_efficiency_provider->get_weight(ptLepton, etaLepton, p_4thjetpt, jetEta[3], n_vertices, nJets, mIsSemiMu, TopTriggerEfficiencyProvider::NOMINAL)[0];
+        std::vector<double> triggerWeights = m_trigger_efficiency_provider->get_weight(ptLepton, etaLepton, p_4thjetpt, jetEta[3], n_vertices, nJets, mIsSemiMu, triggerJESSyst);
+        double triggerWeight = triggerWeights[0];
+        if (mTriggerSyst == "up")
+          triggerWeight = triggerWeight + triggerWeights[1];
+        else if (mTriggerSyst == "down")
+          triggerWeight = triggerWeight - triggerWeights[1];
+
         hTriggerWeight->Fill(triggerWeight);
 
         eventWeight *= triggerWeight;
@@ -682,7 +701,7 @@ void loadChain(const std::vector<std::string>& inputFiles, const std::string& tr
   output->SetCacheSize(30*1024*1024);
 }
 
-Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva) : fMTT(0), fVertices(0), fEvent(0)
+Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst) : fMTT(0), fVertices(0), fEvent(0)
 {
   mIsSemiMu = isSemiMu;
   mIsMC = isMC;
@@ -690,6 +709,10 @@ Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, c
   mBTag = btag;
   mSkim = skim;
   mUseMVA = mva;
+  mTriggerSyst = triggerSyst;
+  mJECSyst = jecSyst;
+  mPUSyst = puSyst;
+  mPDFSyst = pdfSyst;
 
   fLooseMuons = nullptr;
   fJet = nullptr;
@@ -975,6 +998,8 @@ int main(int argc, char** argv) {
 
     TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S10", "string", cmd);
 
+    TCLAP::ValueArg<std::string> jecSystArg("", "jec-syst", "Computing trigger weight for this JEC up / down", false, "nominal", "string", cmd);
+    TCLAP::ValueArg<std::string> triggerSystArg("", "trigger-syst", "Computing trigger weight systematic", false, "nominal", "string", cmd);
     TCLAP::ValueArg<std::string> pileupSystArg("", "pileup-syst", "PU profile to use for pileup reweigthing", false, "nominal", "string", cmd);
     TCLAP::ValueArg<std::string> pdfSystArg("", "pdf-syst", "PDF systematic to compute", false, "nominal", "string", cmd);
 
@@ -993,6 +1018,21 @@ int main(int argc, char** argv) {
       puProfile = PUProfile::S7;
     else if (p == "s10")
       puProfile = PUProfile::S10;
+
+    std::string triggerSyst = triggerSystArg.getValue();
+    std::transform(triggerSyst.begin(), triggerSyst.end(), triggerSyst.begin(), ::tolower);
+    if (triggerSyst != "nominal" && triggerSyst != "up" && triggerSyst != "down") {
+      std::cerr << "--trigger-syst can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
+
+
+    std::string jecSyst = jecSystArg.getValue();
+    std::transform(jecSyst.begin(), jecSyst.end(), jecSyst.begin(), ::tolower);
+    if (jecSyst != "nominal" && jecSyst != "up" && jecSyst != "down") {
+      std::cerr << "--jec-syst can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
 
     std::string puSyst = pileupSystArg.getValue();
     std::transform(puSyst.begin(), puSyst.end(), puSyst.begin(), ::tolower);
@@ -1017,7 +1057,7 @@ int main(int argc, char** argv) {
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    Extractor2Histos convertor(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData, btagArg.getValue(), skimArg.getValue(), mvaArg.getValue());
+    Extractor2Histos convertor(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData, btagArg.getValue(), skimArg.getValue(), mvaArg.getValue(), triggerSyst, jecSyst, puSyst, pdfSyst);
     convertor.Loop();
 
   } catch (TCLAP::ArgException &e) {

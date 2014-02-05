@@ -88,11 +88,15 @@ files = [
         ["MC_QCD_pt150_bEnriched_MuEnrichedPt14_histos_%s.root", "skims/semimu/Systematics/MC_QCD_pt150_bEnriched_MuEnrichedPt14_skims_%s.root"],
         ]
 
-systs = {"JECup": ["JECup", ""], "JECdown": ["JECdown", ""], "JERup": ["JERup", ""], "JERdown": ["JERdown", ""], "puUp": ["nominal", "--pileup-syst up"], "puDown": ["nominal", "--pileup-syst down"]}
+systs = {"JECup": ["JECup", "--jec-syst up"], "JECdown": ["JECdown", "--jec-syst down"], "JERup": ["JERup", ""], "JERdown": ["JERdown", ""], "puUp": ["nominal", "--pileup-syst up"], "puDown": ["nominal", "--pileup-syst down"]}
+
+if True:
+    systs["trigUp"] = ["nominal", "--trigger-syst up"]
+    systs["trigDown"] = ["nominal", "--trigger-syst down"]
 
 if False:
-    syst["pdfUp"] = ["nominal", "--pdf-syst up"]
-    syst["pdfDown"] = ["nominal", "--pdf-syst down"]
+    systs["pdfUp"] = ["nominal", "--pdf-syst up"]
+    systs["pdfDown"] = ["nominal", "--pdf-syst down"]
 
 def launch(input, output, btag, extra):
     args = ["./extractorToHisto", "-i", input, "-o", output, "--mc", "--skim", "--b-tag", str(btag)]

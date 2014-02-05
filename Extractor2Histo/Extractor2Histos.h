@@ -165,6 +165,10 @@ class Extractor2Histos {
     int             mBTag;
     bool            mSkim;
     bool            mUseMVA = false;
+    std::string     mTriggerSyst = "nominal";
+    std::string     mJECSyst = "nominal";
+    std::string     mPUSyst = "nominal";
+    std::string     mPDFSyst = "nominal";
 
     int             n_muons;
     float           muon_relIso[100];
@@ -174,7 +178,7 @@ class Extractor2Histos {
 
     TClonesArray*   jet_p4;
 
-    Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool useMVA);
+    Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool useMVA, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst);
 
     virtual ~Extractor2Histos();
     virtual Int_t    GetEntry(Long64_t entry);
