@@ -19,7 +19,7 @@ files = [
         ["Signal_S0_S_i_M700_cpl1_pseudoscalar_skims_nominal.root", "lists/MTT_S0_S_i_M700_cpl1_pseudoscalar_%s.list"],
         ["Signal_S0_S_i_M800_cpl1_pseudoscalar_skims_nominal.root", "lists/MTT_S0_S_i_M800_cpl1_pseudoscalar_%s.list"],
 
-        # Signal RS gluond
+        # Signal RS gluons
         ["Signal_RSGluonToTT_M-1000_skims_nominal.root", "lists/MTT_RSGluonToTT_M-1000_%s.list"],
         ["Signal_RSGluonToTT_M-1200_skims_nominal.root", "lists/MTT_RSGluonToTT_M-1200_%s.list"],
         ["Signal_RSGluonToTT_M-1500_skims_nominal.root", "lists/MTT_RSGluonToTT_M-1500_%s.list"],
