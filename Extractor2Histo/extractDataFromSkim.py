@@ -39,7 +39,7 @@ for input in inputs:
 
 tmpfile.flush()
 
-args = ["parallel", "-u", "-a", tmpfile.name, "-j", "8"] 
+args = ["parallel", "-u", "-a", tmpfile.name, "-j", "4"] 
 subprocess.call(args)
 
 ## All is done, merge
