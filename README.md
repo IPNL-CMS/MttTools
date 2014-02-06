@@ -6,8 +6,16 @@ This is the analysis tools for mtt study.
 
 Get the code by executing this command:
 
+Using HTTPS:
+
 ```bash
 myWorkingDir> git clone https://github.com/IPNL-CMS/MttTools.git
+```
+
+Using SSH keys (see how to generate a SSH key and add it to GitHub [here](https://help.github.com/articles/generating-ssh-keys)):
+
+```bash
+myWorkingDir> git clone git@github.com:IPNL-CMS/MttTools.git
 ```
 
 You can see that the directory "plotIt" is empty. Retrieve the code from the corresponding sub-repository as showed below:
