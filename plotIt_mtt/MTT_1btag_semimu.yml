@@ -19,8 +19,8 @@ files:
   'MC_TT_powheg_histos_nominal.root':
     type: mc
     cross-section: 245.8
-    generated-events-unweighted: 21675970
-    generated-events: 21059527.08917
+    generated-events: 21675970
+    generated-events-weighted: 21059527.08917
     fill-color: "#D95B43"
     legend: "t#bar{t}"
     order: 3
@@ -113,17 +113,12 @@ files:
     order: 1
 
 plots:
-  'mttSelected*':
+  '*':
     rebin: 5
-    log-y: true
-    show-ratio: true
-    fit-ratio: false
-    fit-function: "pol1"
-    show-errors: true
-    save-extensions: ["pdf"]
-  'nBT*':
     log-y: false
     show-ratio: true
+    fit-ratio: true 
+    fit-function: "pol1"
     show-errors: true
     save-extensions: ["pdf"]
 
