@@ -433,6 +433,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, Ro
 
     std::string category = type->GetName();
     std::string cleanedCategory = TString(category).ReplaceAll(";", "_").Data(); // Root does not like ';' in names
+    TString signalCategory = TString(type->GetName()).ReplaceAll(";", "_").ReplaceAll("{", "").ReplaceAll("}", "").ReplaceAll("-", ""); // For workspace names
 
     categories = category.c_str();
 
@@ -450,6 +451,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, Ro
       }
 
       simPdfs.plotOn(plot, Slice(categories), ProjWData(*subData), Components(*backgroundPdfs[category]), LineStyle(kDashed), LineColor(kRed), LineWidth(1), Range("FULL"));
+      simPdfs.plotOn(plot, Slice(categories), ProjWData(*subData), Components(TString::Format("positive_signal_%s", signalCategory.Data())), LineStyle(kDashed), LineColor(kRed), LineWidth(1));
       simPdfs.plotOn(zoom_plot, Slice(categories), ProjWData(*subData), Components(*backgroundPdfs[category]), LineStyle(kDashed), LineColor(kRed), LineWidth(2), Range("FULL"));
     }
 
@@ -1469,8 +1471,10 @@ void fitMtt(std::map<int, TChain*> eventChain, int massParticle, bool fit, strin
 
       std::cout << std::endl << "--- Bash code for systematics datacards ---" << std::endl;
 
-      std::vector<std::string> systematics = {"jecUp", "jecDown", "jerUp", "jerDown", "puUp", "puDown", "pdfUp", "pdfDown"};
-      std::vector<std::string> systematicsName = {"JECup", "JECdown", "JERup", "JERdown", "puUp", "puDown", "pdfUp", "pdfDown"};
+      std::vector<std::string> systematics = {"jecUp", "jecDown", "jerUp", "jerDown", "puUp", "puDown"};
+      std::vector<std::string> systematicsName = {"JECup", "JECdown", "JERup", "JERdown", "puUp", "puDown"};
+      //std::vector<std::string> systematics = {"jecUp", "jecDown", "jerUp", "jerDown", "puUp", "puDown", "pdfUp", "pdfDown"};
+      //std::vector<std::string> systematicsName = {"JECup", "JECdown", "JERup", "JERdown", "puUp", "puDown", "pdfUp", "pdfDown"};
 
       int index_syst = -1;
       for (const std::string& syst: systematics) {
@@ -1693,8 +1697,16 @@ void fitMtt(std::map<int, TChain*> eventChain, int massParticle, bool fit, strin
         importPdf(name, TString::Format("background_%s", workspace_suffix.Data()));
 
         // Import signal
-        name = TString::Format("signal_%s", cleanedCategory.c_str());
-        importPdf(name, TString::Format("signal_%s", workspace_suffix.Data()));
+        if (analysisType == HIGGS) {
+          name = TString::Format("positive_signal_%s", cleanedCategory.c_str());
+          importPdf(name, TString::Format("positive_signal_%s", workspace_suffix.Data()));
+
+          name = TString::Format("negative_signal_%s", cleanedCategory.c_str());
+          importPdf(name, TString::Format("positive_signal_%s", workspace_suffix.Data()));
+        } else {
+          name = TString::Format("signal_%s", cleanedCategory.c_str());
+          importPdf(name, TString::Format("signal_%s", workspace_suffix.Data()));
+        }
 
         if (afterFit) {
           // Import global pdf
@@ -1708,13 +1720,26 @@ void fitMtt(std::map<int, TChain*> eventChain, int massParticle, bool fit, strin
         if (! isInterpolated(analysisType, massParticle)) {
 
           importSystPdf = [&](const char* oldSyst, const char* newSyst) {
-            TString n = TString::Format("signal_%s", leptonName.c_str());
 
             TString workspaceFile = TString::Format("%s/frit/%s-%s%d_%s_%d_btag_workspace.root", BASE_PATH.c_str(), oldSyst, getAnalysisPrefix(), massParticle, analysisName.c_str(), extractedBTag);
             std::shared_ptr<TFile> f(TFile::Open(workspaceFile.Data()));
-            RooAbsPdf* pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(n);
-            pdf->SetName(TString::Format("signal_%s_%s", workspace_suffix.Data(), newSyst));
-            wspace.import(*pdf);
+
+            if (analysisType == HIGGS) {
+              TString n = TString::Format("%s_positive_signal_pdf", leptonName.c_str());
+              RooAbsPdf* pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(n);
+              pdf->SetName(TString::Format("positive_signal_%s_%s", workspace_suffix.Data(), newSyst));
+              wspace.import(*pdf);
+
+              n = TString::Format("%s_negative_signal_pdf", leptonName.c_str());
+              pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(n);
+              pdf->SetName(TString::Format("negative_signal_%s_%s", workspace_suffix.Data(), newSyst));
+              wspace.import(*pdf);
+            } else {
+              TString n = TString::Format("signal_%s", leptonName.c_str());
+              RooAbsPdf* pdf = static_cast<RooWorkspace*>(f->Get("w"))->pdf(n);
+              pdf->SetName(TString::Format("signal_%s_%s", workspace_suffix.Data(), newSyst));
+              wspace.import(*pdf);
+            }
           };
 
         } else {

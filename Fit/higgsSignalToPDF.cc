@@ -562,7 +562,7 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& je
       auto TH1ToPdf = [&](TH1* histogram, const std::string& p) -> std::pair<std::shared_ptr<RooHistPdf>, std::shared_ptr<RooDataHist>> {
         // First, create a RooDataHist from the TH1
         std::shared_ptr<RooDataHist> data = std::make_shared<RooDataHist>(TString::Format("%s_signal_data", p.c_str()), "", mtt, RooFit::Import(*histogram));
-        std::shared_ptr<RooHistPdf> pdf = std::make_shared<RooHistPdf>(TString::Format("%s_signal_pdf", p.c_str()), "", RooArgSet(mtt), *data, 2);
+        std::shared_ptr<RooHistPdf> pdf = std::make_shared<RooHistPdf>(TString::Format("%s_signal_pdf", p.c_str()), "", RooArgSet(mtt), *data);
 
         return std::make_pair(pdf, data);
       };

@@ -234,7 +234,7 @@ int main(int argc, char** argv) {
 
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", false, 2, "int", cmd);
 
-    TCLAP::ValueArg<std::string> triggerEffFileArg("", "trigger-eff", "JSON file containing trigger efficiencies", false, "data/zprime_trigger_efficiencies.json", "filename", cmd);
+    TCLAP::ValueArg<std::string> triggerEffFileArg("", "trigger-eff", "JSON file containing trigger efficiencies", false, "", "filename", cmd);
     TCLAP::ValueArg<std::string> nGenFileArg("", "gen-file", "JSON file containing number of generated events for each signal point", true, "data/", "filename", cmd);
 
     TCLAP::ValueArg<std::string> jecArg("", "jec", "JEC", false, "nominal", "nominal/JECup/JECdown", cmd);
