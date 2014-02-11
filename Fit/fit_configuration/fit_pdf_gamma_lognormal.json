@@ -1,0 +1,51 @@
+{
+  "{muon;2-btag}": {
+    "background": {
+      "name": "gamma_lognormal",
+      "parameters": "gamma_lognormal"
+    }
+  },
+  "{electron;2-btag}": {
+    "background": {
+      "name": "gamma_lognormal",
+      "parameters": "gamma_lognormal"
+    }
+  },
+  "{muon;1-btag}": {
+    "background": {
+      "name": "gamma_lognormal",
+      "parameters": "gamma_lognormal"
+    }
+  },
+  "{electron;1-btag}": {
+    "background": {
+      "name": "gamma_lognormal",
+      "parameters": "gamma_lognormal"
+    }
+  },
+  "{muon;0-btag}": {
+    "background": {
+      "name": "gamma_lognormal",
+      "parameters": "gamma_lognormal"
+    }
+  },
+  "{electron;0-btag}": {
+    "background": {
+      "name": "gamma_lognormal",
+      "parameters": "gamma_lognormal"
+    }
+  },
+
+  "muon": {
+    "background": {
+      "name": "gamma_lognormal",
+      "parameters": "gamma_lognormal"
+    }
+  },
+  "electron": {
+    "background": {
+      "name": "gamma_lognormal",
+      "parameters": "gamma_lognormal"
+    }
+  }
+}
