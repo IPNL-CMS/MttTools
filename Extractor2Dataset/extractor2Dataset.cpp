@@ -24,7 +24,7 @@ bool OVERRIDE_TYPE;
 std::string OVERRIDED_TYPE;
 PUProfile puProfile;
 
-void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& outputFile, bool isData, const std::string& type, int max, double lumi_weight, const std::string& puSyst, const std::string& pdfSyst, bool useMVA, bool runOnSkim) {
+void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& outputFile, bool isData, const std::string& type, int max, double lumi_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, bool useMVA, bool runOnSkim) {
 
   TString outputFileFormated = OVERRIDE_TYPE ? outputFile : TString::Format(outputFile.c_str(), (isData) ? "" : type.c_str());
 
@@ -150,6 +150,12 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
 
     puReweigher = new PUReweighter(isSemiMu, puProfile, syst);
   }
+
+  TopTriggerEfficiencyProvider::JES triggerJESSyst = TopTriggerEfficiencyProvider::NOMINAL;
+  if (jecSyst == "up")
+    triggerJESSyst = TopTriggerEfficiencyProvider::UP;
+  else if (jecSyst == "down")
+    triggerJESSyst = TopTriggerEfficiencyProvider::DOWN;
 
   std::vector<float>* pdfWeights = NULL;
   bool doPDFSyst = pdfSyst != "nominal";
@@ -283,7 +289,13 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
         }
 
         // Compute trigger weight
-        double triggerWeight = m_trigger_efficiency_provider->get_weight(ptLepton, etaLepton, pt_4thJet, jetEta[3], n_vertices, nJets, isSemiMu, TopTriggerEfficiencyProvider::NOMINAL)[0];
+        std::vector<double> triggerWeights = m_trigger_efficiency_provider->get_weight(ptLepton, etaLepton, pt_4thJet, jetEta[3], n_vertices, nJets, isSemiMu, triggerJESSyst);
+        double triggerWeight = triggerWeights[0];
+        if (triggerSyst == "up")
+          triggerWeight = triggerWeight + triggerWeights[1];
+        else if (triggerSyst == "down")
+          triggerWeight = triggerWeight - triggerWeights[1];
+
         output_weight *= puReweigher->weight(n_trueInteractions) * generator_weight * lumi_weight * triggerWeight * lepton_weight * btag_weight;
       }
 
@@ -352,12 +364,12 @@ void loadChain(const std::vector<std::string>& inputFiles, TChain*& mtt, TChain*
   vertices->SetCacheSize(30*1024*1024);
 }
 
-void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight, const std::string& puSyst, const std::string& pdfSyst, bool useMVA, bool runOnSkim) {
+void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, bool useMVA, bool runOnSkim) {
 
   TChain* mtt = NULL, *event = NULL, *vertices = NULL;
 
   loadChain(inputFiles, mtt, event, vertices);
-  reduce(mtt, event, vertices, outputFile, isData, type, max, generator_weight, puSyst, pdfSyst, useMVA, runOnSkim);
+  reduce(mtt, event, vertices, outputFile, isData, type, max, generator_weight, puSyst, pdfSyst, jecSyst, triggerSyst, useMVA, runOnSkim);
 
   delete mtt;
   delete event;
@@ -393,11 +405,13 @@ int main(int argc, char** argv)
 
     TCLAP::ValueArg<std::string> typeArg("", "type", "current inputfile type (semie or semimu)", true, "", "string", cmd);
     TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S10", "string", cmd);
-    TCLAP::ValueArg<std::string> pileupSystArg("", "pileup-syst", "PU profile to use for pileup reweigthing", false, "nominal", "string", cmd);
     TCLAP::ValueArg<int> maxEntriesArg("n", "", "Maximal number of entries to process", false, -1, "int", cmd);
     TCLAP::ValueArg<double> generatorWeightArg("", "weight", "MC generator weight", false, 1., "double", cmd);
 
     TCLAP::ValueArg<std::string> pdfSystArg("", "pdf-syst", "PDF systematic to compute", false, "nominal", "string", cmd);
+    TCLAP::ValueArg<std::string> jecSystArg("", "jec-syst", "Computing trigger weight for this JEC up / down", false, "nominal", "string", cmd);
+    TCLAP::ValueArg<std::string> triggerSystArg("", "trigger-syst", "Computing trigger weight systematic", false, "nominal", "string", cmd);
+    TCLAP::ValueArg<std::string> pileupSystArg("", "pileup-syst", "PU profile to use for pileup reweigthing", false, "nominal", "string", cmd);
 
     TCLAP::SwitchArg skimArg("", "skim", "Run over a skimmed file", cmd, false);
     TCLAP::SwitchArg mvaArg("", "mva", "Use MVA instead of chi2", cmd, false);
@@ -412,6 +426,21 @@ int main(int argc, char** argv)
       puProfile = PUProfile::S7;
     else if (p == "s10")
       puProfile = PUProfile::S10;
+
+    std::string triggerSyst = triggerSystArg.getValue();
+    std::transform(triggerSyst.begin(), triggerSyst.end(), triggerSyst.begin(), ::tolower);
+    if (triggerSyst != "nominal" && triggerSyst != "up" && triggerSyst != "down") {
+      std::cerr << "--trigger-syst can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
+
+
+    std::string jecSyst = jecSystArg.getValue();
+    std::transform(jecSyst.begin(), jecSyst.end(), jecSyst.begin(), ::tolower);
+    if (jecSyst != "nominal" && jecSyst != "up" && jecSyst != "down") {
+      std::cerr << "--jec-syst can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
 
     std::string puSyst = pileupSystArg.getValue();
     std::transform(puSyst.begin(), puSyst.end(), puSyst.begin(), ::tolower);
@@ -436,7 +465,7 @@ int main(int argc, char** argv)
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue(), puSyst, pdfSyst, mvaArg.getValue(), skimArg.getValue()); 
+    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue(), puSyst, pdfSyst, jecSyst, triggerSyst, mvaArg.getValue(), skimArg.getValue()); 
 
   } catch (TCLAP::ArgException& e) {
     std::cout << e.what() << std::endl;
