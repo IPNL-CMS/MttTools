@@ -108,13 +108,22 @@ class GammaPlusLogNormal : public BaseFunction {
       if (mParameters.size() != 5)
         return false;
 
-      mPdf.reset(new GammaPlusLogNormalPdf(mName.c_str(), mName.c_str(), observable,
-            // Gamma PDF
-            *mParameters["alpha"], *mParameters["theta"],
-            // Log normal PDF
-            /**mParameters["mu"],*/ *mParameters["sigma"],
-            // Various
-            *mParameters["shift"], *mParameters["sum"]));
+      // alpha: @0
+      // sigma: @1
+      // theta: @2
+      // shift: @3
+      // sum: @4
+      // mtt: @5
+
+      TString constrained_mu = "log( (@0 - 1) * @2 ) + @1 * @1";
+      TString lognormal = TString::Format("ROOT::Math::lognormal_pdf(@5, %s, @1, @3)", constrained_mu.Data());
+      TString gamma = "ROOT::Math::gamma_pdf(@5, @0, @2, @3)";
+      TString formula = TString::Format("@4 * %s + (1 - @4) * %s", lognormal.Data(), gamma.Data());
+
+      // See GammaPlusLogNormalPdf code for a more clean implementation
+      mPdf.reset(new RooGenericPdf(mName.c_str(), mName.c_str(),
+            formula,
+            RooArgList(*mParameters["alpha"], *mParameters["sigma"], *mParameters["theta"], *mParameters["shift"], *mParameters["sum"], observable)));
 
       return true;
     }
