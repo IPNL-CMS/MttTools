@@ -1,7 +1,8 @@
 #! /bin/bash
 
 echo "Sourcing root"
-source /gridgroup/cms/brochet/root/root-sl6/bin/thisroot.sh
+#source /gridgroup/cms/brochet/root/root-sl6/bin/thisroot.sh
+source /gridgroup/cms/brochet/root/root-combine/bin/thisroot.sh
 
 echo "Sourcing gcc / gdb / python / boost"
 source /cvmfs/cms.cern.ch/slc6_amd64_gcc472/external/gcc/4.7.2-cms/etc/profile.d/init.sh
