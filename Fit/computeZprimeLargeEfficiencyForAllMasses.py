@@ -7,7 +7,7 @@ btag = [1, 2]
 
 for mass in masses:
     for b in btag:
-         args = ["./computeEfficiencies", "-m", str(mass), "--b-tag", str(b), "--gen-file", "data/zprime_large_gen.json", "--trigger-eff", "data/zprime_trigger_efficiencies.json"]
+        args = ["./computeEfficiencies", "-m", str(mass), "--b-tag", str(b), "--gen-file", "data/zprime_large_gen.json"]
         subprocess.call(args)
 
 
