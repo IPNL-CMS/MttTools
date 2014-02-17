@@ -149,16 +149,84 @@ files:
     order: -1
 
 plots:
-  'mttSelected*':
+  'mttSelected_btag_sel_reco_fullsel':
     rebin: 5
-    log-y: true
+    log-y: true 
     show-ratio: true
-    fit-ratio: false
+    fit-ratio: true
+    fit-function: "pol1"
     show-errors: true
     save-extensions: ["pdf"]
-  'nBT*':
-    log-y: false
+
+  'MET_reco_fullsel':
+    rebin: 5
+    log-y: true 
     show-ratio: true
+    fit-ratio: true
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  '*JetPt_reco_fullsel':
+    rebin: 5
+    log-y: true 
+    show-ratio: true
+    fit-ratio: true
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'leptonPt_reco_fullsel':
+    rebin: 5
+    log-y: true 
+    show-ratio: true
+    fit-ratio: true
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'mtt_resolution':
+    rebin: 5
+    log-y: true 
+    show-ratio: true
+    fit-ratio: true
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'nBTaggedJets_reco_fullsel':
+    rebin: 5
+    log-y: true 
+    show-ratio: true
+    fit-ratio: true
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'nGoodJets_reco_fullsel':
+    rebin: 5
+    log-y: true 
+    show-ratio: true
+    fit-ratio: true
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'nVertex_reco_fullsel':
+    rebin: 5
+    log-y: true 
+    show-ratio: true
+    fit-ratio: true
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'ptTT_reco_fullsel':
+    rebin: 5
+    log-y: true 
+    show-ratio: true
+    fit-ratio: true
+    fit-function: "pol1"
     show-errors: true
     save-extensions: ["pdf"]
 
