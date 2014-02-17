@@ -148,6 +148,37 @@ files:
     generated-events: 29930562
     order: -1
 
+  'MC_QCD_Pt_30_80_BCtoE_histos_nominal.root':
+    type: mc
+    group: QCD
+    cross-section: 167040
+    generated-events: 2048152
+    order: -1
+  'MC_QCD_Pt_80_170_BCtoE_histos_nominal.root':
+    type: mc
+    group: QCD
+    cross-section: 12981.9
+    generated-events: 1945525
+    order: -1
+  'MC_QCD_Pt_170_250_BCtoE_histos_nominal.root':
+    type: mc
+    group: QCD
+    cross-section: 631.992
+    generated-events: 1948112
+    order: -1
+  'MC_QCD_Pt_250_350_BCtoE_histos_nominal.root':
+    type: mc
+    group: QCD
+    cross-section: 103.275
+    generated-events: 2026521
+    order: -1
+  'MC_QCD_Pt_350_BCtoE_histos_nominal.root':
+    type: mc
+    group: QCD
+    cross-section: 23.9245
+    generated-events: 1948532
+    order: -1
+
 plots:
   'mttSelected_btag_sel_reco_fullsel':
     rebin: 5
