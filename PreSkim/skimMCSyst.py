@@ -19,6 +19,13 @@ files = [
         ["Signal_S0_S_i_M700_cpl1_pseudoscalar_skims_%s.root", "lists/Systematics/MTT_S0_S_i_M700_cpl1_pseudoscalar_%s_%s.list"],
         ["Signal_S0_S_i_M800_cpl1_pseudoscalar_skims_%s.root", "lists/Systematics/MTT_S0_S_i_M800_cpl1_pseudoscalar_%s_%s.list"],
 
+        # Signal RS gluons
+        ["Signal_RSGluonToTT_M-700_skims_%s.root", "lists/Systematics/MTT_RSGluonToTT_M-700_%s_%s.list"],
+        ["Signal_RSGluonToTT_M-1000_skims_%s.root", "lists/Systematics/MTT_RSGluonToTT_M-1000_%s_%s.list"],
+        ["Signal_RSGluonToTT_M-1200_skims_%s.root", "lists/Systematics/MTT_RSGluonToTT_M-1200_%s_%s.list"],
+        ["Signal_RSGluonToTT_M-1500_skims_%s.root", "lists/Systematics/MTT_RSGluonToTT_M-1500_%s_%s.list"],
+        ["Signal_RSGluonToTT_M-2000_skims_%s.root", "lists/Systematics/MTT_RSGluonToTT_M-2000_%s_%s.list"],
+
         # Signal Z'
         ["Signal_ZPrimeToTTJets_M500GeV_W50GeV_skims_%s.root", "lists/Systematics/MTT_ZPrimeToTTJets_M500GeV_W50GeV_%s_%s.list"],
         ["Signal_ZPrimeToTTJets_M750GeV_W75GeV_skims_%s.root", "lists/Systematics/MTT_ZPrimeToTTJets_M750GeV_W75GeV_%s_%s.list"],
