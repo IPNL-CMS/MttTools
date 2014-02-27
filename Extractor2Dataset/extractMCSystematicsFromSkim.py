@@ -88,11 +88,22 @@ files = [
         #["MC_QCD_pt150_bEnriched_MuEnrichedPt14_dataset_%s.root", "skims/semimu/Systematics/MC_QCD_pt150_bEnriched_MuEnrichedPt14_skims_%s.root"],
         ]
 
-systs = {"JECup": ["JECup", "--jec-syst up"], "JECdown": ["JECdown", "--jec-syst down"], "JERup": ["JERup", ""], "JERdown": ["JERdown", ""], "puUp": ["nominal", "--pileup-syst up"], "puDown": ["nominal", "--pileup-syst down"]}
+systs = {}
+
+if True:
+    systs = {"JECup": ["JECup", "--jec-syst up"], "JECdown": ["JECdown", "--jec-syst down"], "JERup": ["JERup", ""], "JERdown": ["JERdown", ""], "puUp": ["nominal", "--pileup-syst up"], "puDown": ["nominal", "--pileup-syst down"]}
 
 if True:
     systs["trigUp"] = ["nominal", "--trigger-syst up"]
     systs["trigDown"] = ["nominal", "--trigger-syst down"]
+
+if True:
+    systs["leptUp"] = ["nominal", "--lepton-syst up"]
+    systs["leptDown"] = ["nominal", "--lepton-syst down"]
+
+if True:
+    systs["btagUp"] = ["nominal", "--btag-syst up"]
+    systs["btagDown"] = ["nominal", "--btag-syst down"]
 
 if False:
     systs["pdfUp"] = ["nominal", "--pdf-syst up"]

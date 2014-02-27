@@ -24,7 +24,7 @@ bool OVERRIDE_TYPE;
 std::string OVERRIDED_TYPE;
 PUProfile puProfile;
 
-void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& outputFile, bool isData, const std::string& type, int max, double lumi_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, bool useMVA, bool runOnSkim) {
+void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& outputFile, bool isData, const std::string& type, int max, double lumi_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool runOnSkim) {
 
   TString outputFileFormated = OVERRIDE_TYPE ? outputFile : TString::Format(outputFile.c_str(), (isData) ? "" : type.c_str());
 
@@ -40,6 +40,9 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
 
   float lepton_weight = 1;
   float btag_weight = 1;
+
+  float lepton_weight_error = 0;
+  float btag_weight_error = 0;
 
   auto SetBranchAddress = [&](const std::string& param, void* address) {
     mtt->SetBranchStatus(param.c_str(), 1);
@@ -61,6 +64,18 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
   if (! isData) {
     mtt->SetBranchStatus("lepton_weight", 1);
     mtt->SetBranchStatus("btag_weight", 1);
+
+    if (leptonSyst == "up")
+      SetBranchAddress("lepton_weight_error_high", &lepton_weight_error);
+
+    if (leptonSyst == "down")
+      SetBranchAddress("lepton_weight_error_low", &lepton_weight_error);
+
+    if (btagSyst == "up")
+      SetBranchAddress("btag_weight_error_high", &btag_weight_error);
+
+    if (btagSyst == "down")
+      SetBranchAddress("btag_weight_error_low", &btag_weight_error);
   }
 
   int numComb = 0;
@@ -296,6 +311,16 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
         else if (triggerSyst == "down")
           triggerWeight = triggerWeight - triggerWeights[1];
 
+        if (leptonSyst == "up")
+            lepton_weight += lepton_weight_error;
+        else if (leptonSyst == "down")
+            lepton_weight -= lepton_weight_error;
+
+        if (btagSyst == "up")
+            btag_weight += btag_weight_error;
+        else if (btagSyst == "down")
+            btag_weight -= btag_weight_error;
+
         output_weight *= puReweigher->weight(n_trueInteractions) * generator_weight * lumi_weight * triggerWeight * lepton_weight * btag_weight;
       }
 
@@ -364,12 +389,12 @@ void loadChain(const std::vector<std::string>& inputFiles, TChain*& mtt, TChain*
   vertices->SetCacheSize(30*1024*1024);
 }
 
-void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, bool useMVA, bool runOnSkim) {
+void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool runOnSkim) {
 
   TChain* mtt = NULL, *event = NULL, *vertices = NULL;
 
   loadChain(inputFiles, mtt, event, vertices);
-  reduce(mtt, event, vertices, outputFile, isData, type, max, generator_weight, puSyst, pdfSyst, jecSyst, triggerSyst, useMVA, runOnSkim);
+  reduce(mtt, event, vertices, outputFile, isData, type, max, generator_weight, puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, useMVA, runOnSkim);
 
   delete mtt;
   delete event;
@@ -412,6 +437,8 @@ int main(int argc, char** argv)
     TCLAP::ValueArg<std::string> jecSystArg("", "jec-syst", "Computing trigger weight for this JEC up / down", false, "nominal", "string", cmd);
     TCLAP::ValueArg<std::string> triggerSystArg("", "trigger-syst", "Computing trigger weight systematic", false, "nominal", "string", cmd);
     TCLAP::ValueArg<std::string> pileupSystArg("", "pileup-syst", "PU profile to use for pileup reweigthing", false, "nominal", "string", cmd);
+    TCLAP::ValueArg<std::string> btagSystArg("", "btag-syst", "Compute btag weight systematic", false, "nominal", "string", cmd);
+    TCLAP::ValueArg<std::string> leptonSystArg("", "lepton-syst", "Compute lepton weight systematic", false, "nominal", "string", cmd);
 
     TCLAP::SwitchArg skimArg("", "skim", "Run over a skimmed file", cmd, false);
     TCLAP::SwitchArg mvaArg("", "mva", "Use MVA instead of chi2", cmd, false);
@@ -455,6 +482,20 @@ int main(int argc, char** argv)
       std::cerr << "--pdf-syst can only be 'nominal', 'up' or 'down'" << std::endl;
       exit(1);
     }
+
+    std::string leptonSyst = leptonSystArg.getValue();
+    std::transform(leptonSyst.begin(), leptonSyst.end(), leptonSyst.begin(), ::tolower);
+    if (leptonSyst != "nominal" && leptonSyst != "up" && leptonSyst != "down") {
+      std::cerr << "--lepton-syst can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
+
+    std::string btagSyst = btagSystArg.getValue();
+    std::transform(btagSyst.begin(), btagSyst.end(), btagSyst.begin(), ::tolower);
+    if (btagSyst != "nominal" && btagSyst != "up" && btagSyst != "down") {
+      std::cerr << "--btag-syst can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
     
     bool isData = dataArg.isSet();
 
@@ -465,7 +506,7 @@ int main(int argc, char** argv)
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue(), puSyst, pdfSyst, jecSyst, triggerSyst, mvaArg.getValue(), skimArg.getValue()); 
+    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue(), puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, mvaArg.getValue(), skimArg.getValue()); 
 
   } catch (TCLAP::ArgException& e) {
     std::cout << e.what() << std::endl;
