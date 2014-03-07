@@ -6,7 +6,7 @@ import os, subprocess, tempfile, datetime
 d = datetime.datetime.now().strftime("%d%b%y")
 
 files = [
-        # Background + Signal
+         Background + Signal
         ["Signal_S0_S_i_M400_cpl1_scalar_skims_nominal.root", "lists/MTT_S0_S_i_M400_cpl1_scalar_%s.list"],
         ["Signal_S0_S_i_M500_cpl1_scalar_skims_nominal.root", "lists/MTT_S0_S_i_M500_cpl1_scalar_%s.list"],
         ["Signal_S0_S_i_M600_cpl1_scalar_skims_nominal.root", "lists/MTT_S0_S_i_M600_cpl1_scalar_%s.list"],
@@ -131,3 +131,46 @@ tmpfile.flush()
 
 args = ["parallel", "-u", "-a", tmpfile.name, "-j", "8"] 
 subprocess.call(args)
+
+## All is done, merge
+# Merge files
+
+masses_narrow = {
+        500: "5",
+        750: "7p5",
+        1000: "10",
+        1250: "12p5",
+        1500: "15",
+        2000: "20"
+        }
+
+masses_large = {
+        500: "50",
+        750: "75",
+        1000: "100",
+        1250: "125",
+        1500: "150",
+        2000: "200"
+        }
+
+masses = [masses_narrow, masses_large]
+
+myFinalList = []
+for type in ["semie", "semimu"]:
+    path = "skims/%s/%s" % (d, type)
+    for widths in masses:
+        for mass, width in widths.items():
+            aList = []
+            for file in files:
+                skim = os.path.join(path, file[0])
+                if "ZPrimeToTTJets" in skim and ("M"+str(mass)+"G") in skim and ("W"+str(width)+"G") in skim:
+                    aList.append(skim)
+            if len(aList) != 0:
+                myFinalList.append(aList)
+
+for pair in myFinalList:
+    merged_file = pair[0].replace(".root", "_merged.root")
+    args = ["hadd", "-f", merged_file]
+    for input in pair:
+        args.append(input)
+    subprocess.call(args)
