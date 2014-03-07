@@ -59,19 +59,19 @@ files = [
         ["Signal_S0_S_i_M700_cpl1_pseudoscalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M700_cpl1_pseudoscalar_skims_nominal.root"],
         ["Signal_S0_S_i_M800_cpl1_pseudoscalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M800_cpl1_pseudoscalar_skims_nominal.root"],
 
-        ["Signal_ZPrimeToTTJets_M500GeV_W5GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M500GeV_W5GeV_merged_skims_nominal.root"],
-	["Signal_ZPrimeToTTJets_M750GeV_W7p5GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M750GeV_W7p5GeV_merged_skims_nominal.root"],
-        ["Signal_ZPrimeToTTJets_M1000GeV_W10GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1000GeV_W10GeV_merged_skims_nominal.root"],
-        ["Signal_ZPrimeToTTJets_M1250GeV_W12p5GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1250GeV_W12p5GeV_merged_skims_nominal.root"],
-        ["Signal_ZPrimeToTTJets_M1500GeV_W15GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1500GeV_W15GeV_merged_skims_nominal.root"],
-        ["Signal_ZPrimeToTTJets_M2000GeV_W20GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M2000GeV_W20GeV_merged_skims_nominal.root"],
+        ["Signal_ZPrimeToTTJets_M500GeV_W5GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M500GeV_W5GeV_skims_nominal_merged.root"],
+        ["Signal_ZPrimeToTTJets_M750GeV_W7p5GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M750GeV_W7p5GeV_skims_nominal_merged.root"],
+        ["Signal_ZPrimeToTTJets_M1000GeV_W10GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1000GeV_W10GeV_skims_nominal_merged.root"],
+        ["Signal_ZPrimeToTTJets_M1250GeV_W12p5GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1250GeV_W12p5GeV_skims_nominal_merged.root"],
+        ["Signal_ZPrimeToTTJets_M1500GeV_W15GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1500GeV_W15GeV_skims_nominal_merged.root"],
+        ["Signal_ZPrimeToTTJets_M2000GeV_W20GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M2000GeV_W20GeV_skims_nominal_merged.root"],
 	
-	["Signal_ZPrimeToTTJets_M500GeV_W50GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M500GeV_W50GeV_merged_skims_nominal.root"],
-	["Signal_ZPrimeToTTJets_M750GeV_W75GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M750GeV_W75GeV_merged_skims_nominal.root"],
-        ["Signal_ZPrimeToTTJets_M1000GeV_W100GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1000GeV_W100GeV_merged_skims_nominal.root"],
-        ["Signal_ZPrimeToTTJets_M1250GeV_W125GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1250GeV_W125GeV_merged_skims_nominal.root"],
-        ["Signal_ZPrimeToTTJets_M1500GeV_W150GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1500GeV_W150GeV_merged_skims_nominal.root"],
-        ["Signal_ZPrimeToTTJets_M2000GeV_W200GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M2000GeV_W200GeV_merged_skims_nominal.root"],
+        ["Signal_ZPrimeToTTJets_M500GeV_W50GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M500GeV_W50GeV_skims_nominal_merged.root"],
+        ["Signal_ZPrimeToTTJets_M750GeV_W75GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M750GeV_W75GeV_skims_nominal_merged.root"],
+        ["Signal_ZPrimeToTTJets_M1000GeV_W100GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1000GeV_W100GeV_skims_nominal_merged.root"],
+        ["Signal_ZPrimeToTTJets_M1250GeV_W125GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1250GeV_W125GeV_skims_nominal_merged.root"],
+        ["Signal_ZPrimeToTTJets_M1500GeV_W150GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1500GeV_W150GeV_skims_nominal_merged.root"],
+        ["Signal_ZPrimeToTTJets_M2000GeV_W200GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M2000GeV_W200GeV_skims_nominal_merged.root"],
         ]
 
 def launch(input, output, btag):
