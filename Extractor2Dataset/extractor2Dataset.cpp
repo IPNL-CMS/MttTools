@@ -16,6 +16,8 @@
 
 #include <tclap/CmdLine.h>
 
+#include "ExtractorPostprocessing.h"
+
 #include "../PUReweighting/PUReweighter.h"
 
 #include "TopTriggerEfficiencyProvider.h"
@@ -23,6 +25,8 @@
 bool OVERRIDE_TYPE;
 std::string OVERRIDED_TYPE;
 PUProfile puProfile;
+
+ExtractorPostprocessing selection;
 
 void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& outputFile, bool isData, const std::string& type, int max, double lumi_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool runOnSkim) {
 
@@ -54,8 +58,7 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
   mtt->SetBranchStatus("2ndjetpt", 1);
   mtt->SetBranchStatus("3rdjetpt", 1);
   mtt->SetBranchStatus("4thjetpt", 1);
-  if (! runOnSkim)
-    mtt->SetBranchStatus("isSel", 1);
+  mtt->SetBranchStatus("isSel", 1);
 
   if (puProfile == PUProfile::S6)
     mtt->SetBranchStatus("nBtaggedJets_TCHET", 1);
@@ -233,130 +236,114 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
       isRun2012AB = (run <= 196531);
     }
 
-    float firstJetCut = 0, secondJetCut = 0, thirdJetCut = 0;
-    if (isRun2012AB) {
-      firstJetCut = 45;
-      secondJetCut = 45;
-      thirdJetCut = 45;
+    double ptLepton = 0;
+    double etaLepton = 0;
+    if (isSemiMu) {
+      ptLepton = muonPt[0];
+      etaLepton = muonEta[0];
     } else {
-      firstJetCut = 55;
-      secondJetCut = 45;
-      thirdJetCut = 35;
+      ptLepton = electronPt[0];
+      etaLepton = electronEta[0];
     }
 
-    if (!runOnSkim && (isSel != 1 || numComb <= 0))
+    if (isSemiMu && !selection.passMuonSel(ptLepton, etaLepton))
       continue;
 
-    // Lepton selection done on Extractor
-    // Selection
-    if (pt_1stJet > firstJetCut && pt_2ndJet > secondJetCut && pt_3rdJet > thirdJetCut) {
+    if (!isSemiMu && !selection.passElectronSel(ptLepton, etaLepton))
+      continue;
 
-      if (useMVA) {
+    if (! selection.passExtractorSel(isSel, numComb, mtt_afterReco))
+      continue;
 
-      } else {
-        if (mtt_afterReco <= 0 || bestSolChi2 > 500)
-          continue;
-      }
+    if (! selection.passJetsSel(pt_1stJet, pt_2ndJet, pt_3rdJet, pt_4thJet, isRun2012AB))
+      continue;
 
-      // Good event
-      int index;
-      if (nBtaggedJets_CSVM == 0)
-        index = 0;
-      else if (nBtaggedJets_CSVM == 1)
-        index = 1;
-      else
-        index = 2;
+    if (useMVA) {
 
-      if (max > 0 && selectedEntries[index] >= max)
+    } else {
+      if (! selection.passChi2Sel(bestSolChi2))
         continue;
-
-      double ptLepton = 0;
-      double etaLepton = 0;
-      if (isSemiMu) {
-        ptLepton = muonPt[0];
-        etaLepton = muonEta[0];
-      } else {
-        ptLepton = electronPt[0];
-        etaLepton = electronEta[0];
-        
-        // The TOP reference selection exclude electron with
-        // SuperCluster eta between 1.4442 and 1.5660
-        // The TopTrigger efficiency does the same thing, but
-        // using electron eta instead of SuperCluster eta.
-        // Redo a cut here on electron eta
-        // FIXME?
-        if (fabs(etaLepton) >= 1.442 && fabs(etaLepton) < 1.5660)
-          continue;
-      }
-
-      output_weight = 1.;
-      if (! isData) {
-        if (isRun2012AB) {
-          m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunA, lumi_run2012_A);
-          m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunB, lumi_run2012_B);
-          m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunC, 0);
-          m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunD, 0);
-        } else {
-          m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunA, 0);
-          m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunB, 0);
-          m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunC, lumi_run2012_C);
-          m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunD, lumi_run2012_D);
-        }
-
-        // Compute trigger weight
-        std::vector<double> triggerWeights = m_trigger_efficiency_provider->get_weight(ptLepton, etaLepton, pt_4thJet, jetEta[3], n_vertices, nJets, isSemiMu, triggerJESSyst);
-        double triggerWeight = triggerWeights[0];
-        if (triggerSyst == "up")
-          triggerWeight = triggerWeight + triggerWeights[1];
-        else if (triggerSyst == "down")
-          triggerWeight = triggerWeight - triggerWeights[1];
-
-        if (leptonSyst == "up")
-            lepton_weight += lepton_weight_error;
-        else if (leptonSyst == "down")
-            lepton_weight -= lepton_weight_error;
-
-        if (btagSyst == "up")
-            btag_weight += btag_weight_error;
-        else if (btagSyst == "down")
-            btag_weight -= btag_weight_error;
-
-        output_weight *= puReweigher->weight(n_trueInteractions) * generator_weight * lumi_weight * triggerWeight * lepton_weight * btag_weight;
-      }
-
-      if (doPDFSyst) {
-        // 4? pdf systematics
-        double sum = 0;
-        for (unsigned int i = 0; i < (pdfWeights->size() / 2); i++) {
-          int up_index = 2 * i;
-          int down_index = up_index + 1;
-
-          double up = (*pdfWeights)[up_index];
-          double down = (*pdfWeights)[down_index];
-
-          /*
-          std::cout << "up weight: " << up << std::endl;
-          std::cout << "down weight: " << down << std::endl;
-          */
-
-          if (pdfSyst == "up") {
-            sum += pow(std::max(std::max(up - 1, down - 1), 0.), 2);
-          } else {
-            sum += pow(std::max(std::max(1 - up, 1 - down), 0.), 2);
-          }
-        }
-
-        double pdf_weight = sqrt(sum);
-        //std::cout << "event weight: " << pdf_weight << std::endl;
-        if (pdfSyst == "down")
-          pdf_weight *= -1;
-
-        output_weight *= (pdf_weight / 1.645) + 1;
-      }
-
-      outputTrees[index]->Fill();
-      selectedEntries[index]++;
     }
+
+    // Good event
+    int index;
+    if (nBtaggedJets_CSVM == 0)
+      index = 0;
+    else if (nBtaggedJets_CSVM == 1)
+      index = 1;
+    else
+      index = 2;
+
+    if (max > 0 && selectedEntries[index] >= max)
+      continue;
+
+    output_weight = 1.;
+    if (! isData) {
+      if (isRun2012AB) {
+        m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunA, lumi_run2012_A);
+        m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunB, lumi_run2012_B);
+        m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunC, 0);
+        m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunD, 0);
+      } else {
+        m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunA, 0);
+        m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunB, 0);
+        m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunC, lumi_run2012_C);
+        m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunD, lumi_run2012_D);
+      }
+
+      // Compute trigger weight
+      std::vector<double> triggerWeights = m_trigger_efficiency_provider->get_weight(ptLepton, etaLepton, pt_4thJet, jetEta[3], n_vertices, nJets, isSemiMu, triggerJESSyst);
+      double triggerWeight = triggerWeights[0];
+      if (triggerSyst == "up")
+        triggerWeight = triggerWeight + triggerWeights[1];
+      else if (triggerSyst == "down")
+        triggerWeight = triggerWeight - triggerWeights[1];
+
+      if (leptonSyst == "up")
+        lepton_weight += lepton_weight_error;
+      else if (leptonSyst == "down")
+        lepton_weight -= lepton_weight_error;
+
+      if (btagSyst == "up")
+        btag_weight += btag_weight_error;
+      else if (btagSyst == "down")
+        btag_weight -= btag_weight_error;
+
+      output_weight *= puReweigher->weight(n_trueInteractions) * generator_weight * lumi_weight * triggerWeight * lepton_weight * btag_weight;
+    }
+
+    if (doPDFSyst) {
+      // 4? pdf systematics
+      double sum = 0;
+      for (unsigned int i = 0; i < (pdfWeights->size() / 2); i++) {
+        int up_index = 2 * i;
+        int down_index = up_index + 1;
+
+        double up = (*pdfWeights)[up_index];
+        double down = (*pdfWeights)[down_index];
+
+        /*
+           std::cout << "up weight: " << up << std::endl;
+           std::cout << "down weight: " << down << std::endl;
+           */
+
+        if (pdfSyst == "up") {
+          sum += pow(std::max(std::max(up - 1, down - 1), 0.), 2);
+        } else {
+          sum += pow(std::max(std::max(1 - up, 1 - down), 0.), 2);
+        }
+      }
+
+      double pdf_weight = sqrt(sum);
+      //std::cout << "event weight: " << pdf_weight << std::endl;
+      if (pdfSyst == "down")
+        pdf_weight *= -1;
+
+      output_weight *= (pdf_weight / 1.645) + 1;
+    }
+
+    outputTrees[index]->Fill();
+    selectedEntries[index]++;
   }
 
   TFile* output = TFile::Open(outputFileFormated, "recreate");

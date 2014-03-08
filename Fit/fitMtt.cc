@@ -1688,7 +1688,7 @@ void fitMtt(std::map<int, TChain*> eventChain, int massParticle, bool fit, strin
 
         auto importPdf = [&](const char* name, const char* newName) {
           RooAbsPdf* pdf = mainWorkspace.pdf(name);
-          setPdfParametersRange(RooArgSet(mtt), *pdf, 10);
+          //setPdfParametersRange(RooArgSet(mtt), *pdf, 10);
           wspace.import(*pdf, RooFit::RenameVariable(name, newName));
         };
 

@@ -6,39 +6,39 @@ import os, subprocess, tempfile, datetime
 d = datetime.datetime.now().strftime("%d%b%y")
 
 files = [
-        # Background
-        ["MC_TT_powheg_dataset_nominal.root", "skims/%s/MC_TT_powheg_skims_nominal.root", 21675970, 245.8],
+        ## Background
+        #["MC_TT_powheg_histos_nominal.root", "skims/%s/MC_TT_powheg_skims_nominal.root", 21675970, 245.8],
 
-        ["MC_T_tW-channel_dataset_nominal.root", "skims/%s/MC_T_tW-channel_skims_nominal.root", 497658, 11.1],
-        ["MC_T_s-channel_dataset_nominal.root", "skims/%s/MC_T_s-channel_skims_nominal.root", 259961, 3.79],
-        ["MC_T_t-channel_dataset_nominal.root", "skims/%s/MC_T_t-channel_skims_nominal.root", 3728227, 56.4],
+        #["MC_T_tW-channel_histos_nominal.root", "skims/%s/MC_T_tW-channel_skims_nominal.root", 497658, 11.1],
+        #["MC_T_s-channel_histos_nominal.root", "skims/%s/MC_T_s-channel_skims_nominal.root", 259961, 3.79],
+        #["MC_T_t-channel_histos_nominal.root", "skims/%s/MC_T_t-channel_skims_nominal.root", 3728227, 56.4],
 
-        ["MC_Tbar_tW-channel_dataset_nominal.root", "skims/%s/MC_Tbar_tW-channel_skims_nominal.root", 493460, 11.1],
-        ["MC_Tbar_s-channel_dataset_nominal.root", "skims/%s/MC_Tbar_s-channel_skims_nominal.root", 139974, 1.76],
-        ["MC_Tbar_t-channel_dataset_nominal.root", "skims/%s/MC_Tbar_t-channel_skims_nominal.root", 1935072, 30.7],
+        #["MC_Tbar_tW-channel_histos_nominal.root", "skims/%s/MC_Tbar_tW-channel_skims_nominal.root", 493460, 11.1],
+        #["MC_Tbar_s-channel_histos_nominal.root", "skims/%s/MC_Tbar_s-channel_skims_nominal.root", 139974, 1.76],
+        #["MC_Tbar_t-channel_histos_nominal.root", "skims/%s/MC_Tbar_t-channel_skims_nominal.root", 1935072, 30.7],
 
-        ["MC_DY1JetsToLL_M-50_dataset_nominal.root", "skims/%s/MC_DY1JetsToLL_M-50_skims_nominal.root", 24045248, 666.3],
-        ["MC_DY2JetsToLL_M-50_dataset_nominal.root", "skims/%s/MC_DY2JetsToLL_M-50_skims_nominal.root", 21852156, 215.0],
-        ["MC_DY3JetsToLL_M-50_dataset_nominal.root", "skims/%s/MC_DY3JetsToLL_M-50_skims_nominal.root", 11015445, 60.7],
-        ["MC_DY4JetsToLL_M-50_dataset_nominal.root", "skims/%s/MC_DY4JetsToLL_M-50_skims_nominal.root", 6402827, 27.3],
+        #["MC_DY1JetsToLL_M-50_histos_nominal.root", "skims/%s/MC_DY1JetsToLL_M-50_skims_nominal.root", 24045248, 666.3],
+        #["MC_DY2JetsToLL_M-50_histos_nominal.root", "skims/%s/MC_DY2JetsToLL_M-50_skims_nominal.root", 21852156, 215.0],
+        #["MC_DY3JetsToLL_M-50_histos_nominal.root", "skims/%s/MC_DY3JetsToLL_M-50_skims_nominal.root", 11015445, 60.7],
+        #["MC_DY4JetsToLL_M-50_histos_nominal.root", "skims/%s/MC_DY4JetsToLL_M-50_skims_nominal.root", 6402827, 27.3],
 
-        ["MC_W1JetsToLNu_dataset_nominal.root", "skims/%s/MC_W1JetsToLNu_skims_nominal.root", 23141598, 6662.8],
-        ["MC_W2JetsToLNu_dataset_nominal.root", "skims/%s/MC_W2JetsToLNu_skims_nominal.root", 34044921, 2159.2],
-        ["MC_W3JetsToLNu_dataset_nominal.root", "skims/%s/MC_W3JetsToLNu_skims_nominal.root", 15539503, 640.4],
-        ["MC_W4JetsToLNu_dataset_nominal.root", "skims/%s/MC_W4JetsToLNu_skims_nominal.root", 13382803, 264.0],
+        #["MC_W1JetsToLNu_histos_nominal.root", "skims/%s/MC_W1JetsToLNu_skims_nominal.root", 23141598, 6662.8],
+        #["MC_W2JetsToLNu_histos_nominal.root", "skims/%s/MC_W2JetsToLNu_skims_nominal.root", 34044921, 2159.2],
+        #["MC_W3JetsToLNu_histos_nominal.root", "skims/%s/MC_W3JetsToLNu_skims_nominal.root", 15539503, 640.4],
+        #["MC_W4JetsToLNu_histos_nominal.root", "skims/%s/MC_W4JetsToLNu_skims_nominal.root", 13382803, 264.0],
 
-        # QCD
-        ["MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_dataset_nominal.root", "skims/semimu/MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_skims_nominal.root"],
-        ["MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_dataset_nominal.root", "skims/semimu/MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_skims_nominal.root"],
-        ["MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_dataset_nominal.root", "skims/semimu/MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_skims_nominal.root"],
-        ["MC_QCD_pt150_bEnriched_MuEnrichedPt14_dataset_nominal.root", "skims/semimu/MC_QCD_pt150_bEnriched_MuEnrichedPt14_skims_nominal.root"],
+        ## QCD
+        #["MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_histos_nominal.root", "skims/semimu/MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_skims_nominal.root"],
+        #["MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_histos_nominal.root", "skims/semimu/MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_skims_nominal.root"],
+        #["MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_histos_nominal.root", "skims/semimu/MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_skims_nominal.root"],
+        #["MC_QCD_pt150_bEnriched_MuEnrichedPt14_histos_nominal.root", "skims/semimu/MC_QCD_pt150_bEnriched_MuEnrichedPt14_skims_nominal.root"],
 
-        ["MC_QCD_Pt_20_30_EMEnriched_dataset_nominal.root", "skims/semie/MC_QCD_Pt_20_30_EMEnriched_skims_nominal.root"],
-        ["MC_QCD_Pt_30_80_EMEnriched_dataset_nominal.root", "skims/semie/MC_QCD_Pt_30_80_EMEnriched_skims_nominal.root"],
-        ["MC_QCD_Pt_80_170_EMEnriched_dataset_nominal.root", "skims/semie/MC_QCD_Pt_80_170_EMEnriched_skims_nominal.root"],
-        ["MC_QCD_Pt_170_250_EMEnriched_dataset_nominal.root", "skims/semie/MC_QCD_Pt_170_250_EMEnriched_skims_nominal.root"],
-        ["MC_QCD_Pt_250_350_EMEnriched_dataset_nominal.root", "skims/semie/MC_QCD_Pt_250_350_EMEnriched_skims_nominal.root"],
-        ["MC_QCD_Pt_350_EMEnriched_dataset_nominal.root", "skims/semie/MC_QCD_Pt_350_EMEnriched_skims_nominal.root"],
+        #["MC_QCD_Pt_20_30_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_20_30_EMEnriched_skims_nominal.root"],
+        #["MC_QCD_Pt_30_80_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_30_80_EMEnriched_skims_nominal.root"],
+        #["MC_QCD_Pt_80_170_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_80_170_EMEnriched_skims_nominal.root"],
+        #["MC_QCD_Pt_170_250_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_170_250_EMEnriched_skims_nominal.root"],
+        #["MC_QCD_Pt_250_350_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_250_350_EMEnriched_skims_nominal.root"],
+        #["MC_QCD_Pt_350_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_350_EMEnriched_skims_nominal.root"],
 
         ## Background + Signal
         ["Signal_S0_S_i_M400_cpl1_scalar_dataset_nominal.root", "skims/%s/Signal_S0_S_i_M400_cpl1_scalar_skims_nominal.root"],
@@ -110,7 +110,7 @@ for file in files:
 
 tmpfile.flush()
 
-args = ["parallel", "-u", "-a", tmpfile.name, "-j", "6"] 
+args = ["parallel", "-u", "-a", tmpfile.name, "-j", "30"] 
 
 print args
 subprocess.call(args)
