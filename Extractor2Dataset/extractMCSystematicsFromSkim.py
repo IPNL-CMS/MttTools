@@ -27,13 +27,12 @@ files = [
         ["Signal_ZPrimeToTTJets_M1500GeV_W150GeV_dataset_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M1500GeV_W150GeV_skims_%s_merged.root"],
         ["Signal_ZPrimeToTTJets_M2000GeV_W200GeV_dataset_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M2000GeV_W200GeV_skims_%s_merged.root"],
 
-        ["signal_zprimetottjets_m500gev_w5gev_dataset_%s.root", "skims/%s/systematics/signal_zprimetottjets_m500gev_w5gev_skims_%s_merged.root"],
-        ["signal_zprimetottjets_m750gev_w7p5gev_dataset_%s.root", "skims/%s/systematics/signal_zprimetottjets_m750gev_w7p5gev_skims_%s_merged.root"],
-        ["signal_zprimetottjets_m1000gev_w10gev_dataset_%s.root", "skims/%s/systematics/signal_zprimetottjets_m1000gev_w10gev_skims_%s_merged.root"],
-        ["signal_zprimetottjets_m1250gev_w12p5gev_dataset_%s.root", "skims/%s/systematics/signal_zprimetottjets_m1250gev_w12p5gev_skims_%s_merged.root"],
-        ["signal_zprimetottjets_m1500gev_w15gev_dataset_%s.root", "skims/%s/systematics/signal_zprimetottjets_m1500gev_w15gev_skims_%s_merged.root"],
-        ["signal_zprimetottjets_m2000gev_w20gev_dataset_%s.root", "skims/%s/systematics/signal_zprimetottjets_m2000gev_w20gev_skims_%s_merged.root"],
-
+        ["Signal_ZPrimeToTTJets_M500GeV_W5GeV_dataset_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M500GeV_W5GeV_skims_%s_merged.root"],
+        ["Signal_ZPrimeToTTJets_M750GeV_W7p5GeV_dataset_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M750GeV_W7p5GeV_skims_%s_merged.root"],
+        ["Signal_ZPrimeToTTJets_M1000GeV_W10GeV_dataset_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M1000GeV_W10GeV_skims_%s_merged.root"],
+        ["Signal_ZPrimeToTTJets_M1250GeV_W12p5GeV_dataset_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M1250GeV_W12p5GeV_skims_%s_merged.root"],
+        ["Signal_ZPrimeToTTJets_M1500GeV_W15GeV_dataset_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M1500GeV_W15GeV_skims_%s_merged.root"],
+        ["Signal_ZPrimeToTTJets_M2000GeV_W20GeV_dataset_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M2000GeV_W20GeV_skims_%s_merged.root"],
 
         ## Background
         ["MC_TT_powheg_dataset_%s.root", "skims/%s/Systematics/MC_TT_powheg_skims_%s.root"],
