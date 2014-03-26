@@ -76,6 +76,10 @@ files = [
         ["MC_W3JetsToLNu_skims_nominal.root", "lists/MTT_W3JetsToLNu_%s.list"],
         ["MC_W4JetsToLNu_skims_nominal.root", "lists/MTT_W4JetsToLNu_%s.list"],
 
+        ["MC_WW_skims_nominal.root", "lists/MTT_WW_%s.list"],
+        ["MC_WZ_skims_nominal.root", "lists/MTT_WZ_%s.list"],
+        ["MC_ZZ_skims_nominal.root", "lists/MTT_ZZ_%s.list"],
+
         ["MC_QCD_Pt_20_30_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_20_30_EMEnriched_semie.list"],
         ["MC_QCD_Pt_30_80_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_30_80_EMEnriched_semie.list"],
         ["MC_QCD_Pt_80_170_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_80_170_EMEnriched_semie.list"],
@@ -130,7 +134,7 @@ for file in files:
 
 tmpfile.flush()
 
-args = ["parallel", "-u", "-a", tmpfile.name, "-j", "8"] 
+args = ["parallel", "-u", "-a", tmpfile.name, "-j", "30"] 
 subprocess.call(args)
 
 ## All is done, merge

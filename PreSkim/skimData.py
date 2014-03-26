@@ -6,15 +6,15 @@ import os, subprocess, tempfile, datetime
 d = datetime.datetime.now().strftime("%d%b%y")
 
 files = [
-        ['MTT_MuHad_Run2012A-22Jan2013.root', 'lists/MTT_MuHad_Run2012A-22Jan2013_30Jan.list', 'semimu'],
-        ['MTT_SingleMu_Run2012B-TOPMuPlusJets-22Jan2013.root', 'lists/MTT_SingleMu_Run2012B-TOPMuPlusJets-22Jan2013_30Jan.list', 'semimu'],
-        ['MTT_SingleMu_Run2012C-TOPMuPlusJets-22Jan2013.root', 'lists/MTT_SingleMu_Run2012C-TOPMuPlusJets-22Jan2013_30Jan.list', 'semimu'],
-        ['MTT_SingleMu_Run2012D-TOPMuPlusJets-22Jan2013.root', 'lists/MTT_SingleMu_Run2012D-TOPMuPlusJets-22Jan2013_30Jan.list', 'semimu'],
+        ['MTT_MuHad_Run2012A-22Jan2013.root', 'lists/MTT_MuHad_Run2012A-22Jan2013_20Mar.list', 'semimu'],
+        ['MTT_SingleMu_Run2012B-TOPMuPlusJets-22Jan2013.root', 'lists/MTT_SingleMu_Run2012B-TOPMuPlusJets-22Jan2013_20Mar.list', 'semimu'],
+        ['MTT_SingleMu_Run2012C-TOPMuPlusJets-22Jan2013.root', 'lists/MTT_SingleMu_Run2012C-TOPMuPlusJets-22Jan2013_20Mar.list', 'semimu'],
+        ['MTT_SingleMu_Run2012D-TOPMuPlusJets-22Jan2013.root', 'lists/MTT_SingleMu_Run2012D-TOPMuPlusJets-22Jan2013_20Mar.list', 'semimu'],
 
-        ['MTT_ElectronHad_Run2012A-22Jan2013.root', 'lists/MTT_ElectronHad_Run2012A-22Jan2013_30Jan.list', 'semie'],
-        ['MTT_SingleElectron_Run2012B-TOPElePlusJets-22Jan2013.root', 'lists/MTT_SingleElectron_Run2012B-TOPElePlusJets-22Jan2013_30Jan.list', 'semie'],
-        ['MTT_SingleElectron_Run2012C-TOPElePlusJets-22Jan2013.root', 'lists/MTT_SingleElectron_Run2012C-TOPElePlusJets-22Jan2013_30Jan.list', 'semie'],
-        ['MTT_SingleElectron_Run2012D-TOPElePlusJets-22Jan2013.root', 'lists/MTT_SingleElectron_Run2012D-TOPElePlusJets-22Jan2013_30Jan.list', 'semie'],
+        ['MTT_ElectronHad_Run2012A-22Jan2013.root', 'lists/MTT_ElectronHad_Run2012A-22Jan2013_20Mar.list', 'semie'],
+        ['MTT_SingleElectron_Run2012B-TOPElePlusJets-22Jan2013.root', 'lists/MTT_SingleElectron_Run2012B-TOPElePlusJets-22Jan2013_20Mar.list', 'semie'],
+        ['MTT_SingleElectron_Run2012C-TOPElePlusJets-22Jan2013.root', 'lists/MTT_SingleElectron_Run2012C-TOPElePlusJets-22Jan2013_20Mar.list', 'semie'],
+        ['MTT_SingleElectron_Run2012D-TOPElePlusJets-22Jan2013.root', 'lists/MTT_SingleElectron_Run2012D-TOPElePlusJets-22Jan2013.list', 'semie'],
         ]
 
 def launch(input, output, type):

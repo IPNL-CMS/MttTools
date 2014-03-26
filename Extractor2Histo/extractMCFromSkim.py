@@ -27,6 +27,10 @@ files = [
         ["MC_W3JetsToLNu_histos_nominal.root", "skims/%s/MC_W3JetsToLNu_skims_nominal.root"],
         ["MC_W4JetsToLNu_histos_nominal.root", "skims/%s/MC_W4JetsToLNu_skims_nominal.root"],
 
+        ["MC_WW_histos_nominal.root", "skims/%s/MC_WW_skims_nominal.root"],
+        ["MC_ZZ_histos_nominal.root", "skims/%s/MC_ZZ_skims_nominal.root"],
+        ["MC_WZ_histos_nominal.root", "skims/%s/MC_WZ_skims_nominal.root"],
+
         # QCD
         ["MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_histos_nominal.root", "skims/semimu/MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_skims_nominal.root"],
         ["MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_histos_nominal.root", "skims/semimu/MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_skims_nominal.root"],

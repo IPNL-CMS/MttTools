@@ -468,7 +468,6 @@ void PreSkim::Init()
   SetBranchAddress(fMTT, "beta_tt_AfterChi2", &beta_tt_AfterChi2);
   SetBranchAddress(fMTT, "lepton_weight", &m_lepton_weight);
   SetBranchAddress(fMTT, "btag_weight", &m_btag_weight);
-  SetBranchAddress(fMTT, "selectedLeptonIndex_AfterChi2", &selectedLeptonIndex_AfterChi2);
 
   if (fMTT->GetBranch("trigger_passed")) {
     SetBranchAddress(fMTT, "trigger_passed", &m_triggerPassed);
@@ -585,6 +584,11 @@ int main(int argc, char** argv) {
       inputFiles.push_back(inputFileArg.getValue());
     } else {
       loadInputFiles(inputListArg.getValue(), inputFiles);
+    }
+
+    if (inputFiles.size() == 0) {
+      std::cerr << "No input files found" << std::endl;
+      return 1;
     }
     
     PreSkim skimmer(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData);
