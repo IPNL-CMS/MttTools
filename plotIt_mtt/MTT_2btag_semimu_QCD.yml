@@ -20,6 +20,7 @@ files:
     type: mc
     cross-section: 245.8
     generated-events: 21675970
+    generated-events-weighted: 21059527.08917
     fill-color: "#D95B43"
     legend: "t#bar{t}"
     order: 3
@@ -111,30 +112,53 @@ files:
     group: W
     order: 1
 
+  'MC_WW_histos_nominal.root':
+    type: mc
+    cross-section:  56.0 
+    generated-events: 10000431
+    group: diboson
+    order: 0
+  'MC_WZ_histos_nominal.root':
+    type: mc
+    cross-section: 33.6
+    generated-events: 10000283
+    group: diboson
+    order: 0
+  'MC_ZZ_histos_nominal.root':
+    type: mc
+    cross-section: 7.6 
+    generated-events: 9799908
+    group: diboson
+    order: 0
+
   'MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_histos_nominal.root':
     type: mc
     group: QCD
-    cross-section: 0
+    cross-section: 815600000 
     generated-events: 5567359
+    order: -1
   'MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_histos_nominal.root':
     type: mc
     group: QCD
-    cross-section: 0
+    cross-section: 66190000
     generated-events: 5567359
+    order: -1
   'MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_histos_nominal.root':
     type: mc
     group: QCD
-    cross-section: 0
+    cross-section: 9271000
     generated-events: 4815103
+    order: -1
   'MC_QCD_pt150_bEnriched_MuEnrichedPt14_histos_nominal.root':
     type: mc
     group: QCD
-    cross-section: 0
+    cross-section: 8637     
     generated-events: 5015598
+    order: -1
 
 plots:
   'mttSelected_btag_sel_reco_fullsel':
-    rebin: 5
+    rebin: 4
     log-y: true 
     show-ratio: true
     fit-ratio: true
@@ -143,7 +167,7 @@ plots:
     save-extensions: ["pdf"]
 
   'MET_reco_fullsel':
-    rebin: 5
+    rebin: 4
     log-y: true 
     show-ratio: true
     fit-ratio: true
@@ -152,7 +176,7 @@ plots:
     save-extensions: ["pdf"]
 
   '*JetPt_reco_fullsel':
-    rebin: 5
+    rebin: 4
     log-y: true 
     show-ratio: true
     fit-ratio: true
@@ -170,7 +194,7 @@ plots:
     save-extensions: ["pdf"]
 
   'mtt_resolution':
-    rebin: 5
+    rebin: 4
     log-y: true 
     show-ratio: true
     fit-ratio: true
@@ -179,7 +203,7 @@ plots:
     save-extensions: ["pdf"]
 
   'nBTaggedJets_reco_fullsel':
-    rebin: 5
+    rebin: 1
     log-y: true 
     show-ratio: true
     fit-ratio: true
@@ -188,7 +212,7 @@ plots:
     save-extensions: ["pdf"]
 
   'nGoodJets_reco_fullsel':
-    rebin: 5
+    rebin: 1
     log-y: true 
     show-ratio: true
     fit-ratio: true
@@ -197,7 +221,7 @@ plots:
     save-extensions: ["pdf"]
 
   'nVertex_reco_fullsel':
-    rebin: 5
+    rebin: 1
     log-y: true 
     show-ratio: true
     fit-ratio: true
@@ -206,7 +230,7 @@ plots:
     save-extensions: ["pdf"]
 
   'ptTT_reco_fullsel':
-    rebin: 5
+    rebin: 4
     log-y: true 
     show-ratio: true
     fit-ratio: true
@@ -229,6 +253,10 @@ groups:
   DY:
     legend: 'Z + jets'
     fill-color: '#53777A'
+
+  diboson:
+    legend: 'Di-bosons'
+    fill-color: '#69D2E7'
 
   QCD:
     legend: 'Multi-jets'
