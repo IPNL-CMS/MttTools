@@ -36,7 +36,6 @@ class createBDTTrees {
     Int_t           fCurrent; //!current Tree number in a TChain
 
     std::string     mDataset;
-    bool            mIsMC;
     bool            mIsSemiMu;
 
     bool            eventIsAssociable;
@@ -57,7 +56,6 @@ class createBDTTrees {
 
     std::string     mOutputFile;
 
-    int             mBTag;
     PUProfile       mPUProfile;
 
     int             n_muons;
@@ -69,10 +67,11 @@ class createBDTTrees {
     TClonesArray*   jet_p4;
     uint32_t        n_jets;
     int32_t         jet_mc_index[100];
+    float           jet_btag_CSV[100];
 
     TClonesArray*   met_p4;
 
-    createBDTTrees(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, PUProfile puProfile);
+    createBDTTrees(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, PUProfile puProfile);
 
     virtual ~createBDTTrees();
     virtual Int_t    GetEntry(Long64_t entry);
@@ -106,6 +105,12 @@ class createBDTTrees {
     float delta_R_tops;
     float delta_R_lightjets;
     float delta_R_W;
+
+    float pt_tt_system;
+    float ht_fraction;
+
+    float leptonic_B_CSV;
+    float hadronic_B_CSV;
 
     float signal_weight;
     float background_weight;

@@ -158,6 +158,9 @@ void createBDTTrees::Loop()
   signal_tree.Branch("hadronic_B_Pt", &hadronic_B_Pt, "hadronic_B_Pt/F");
   signal_tree.Branch("lightJet1p2_Pt", &lightJet1p2_Pt, "lightJet1p2_Pt/F");
 
+  signal_tree.Branch("leptonic_B_CSV", &leptonic_B_CSV, "leptonic_B_CSV/F");
+  signal_tree.Branch("hadronic_B_CSV", &hadronic_B_CSV, "hadronic_B_CSV/F");
+
   signal_tree.Branch("leptonic_W_Pt", &leptonic_W_Pt, "leptonic_W_Pt/F");
   signal_tree.Branch("hadronic_W_Pt", &hadronic_W_Pt, "hadronic_W_Pt/F");
   signal_tree.Branch("leptonic_W_M", &leptonic_W_M, "leptonic_W_M/F");
@@ -175,6 +178,9 @@ void createBDTTrees::Loop()
   signal_tree.Branch("delta_R_tops", &delta_R_tops, "delta_R_tops/F");
   signal_tree.Branch("delta_R_lightjets", &delta_R_lightjets, "delta_R_lightjets/F");
   signal_tree.Branch("delta_R_W", &delta_R_W, "delta_R_W/F");
+
+  signal_tree.Branch("pt_tt_system", &pt_tt_system, "pt_tt_system/F");
+  signal_tree.Branch("ht_fraction", &ht_fraction, "ht_fraction/F");
 
   signal_tree.Branch("weight", &signal_weight, "weight/F");
 
@@ -199,9 +205,7 @@ void createBDTTrees::Loop()
     GetEntry(jentry);
 
     double eventWeight = 1.;
-    if (mIsMC) {
-      eventWeight *= puReweighter.weight(n_trueInteractions);
-    }
+    eventWeight *= puReweighter.weight(n_trueInteractions);
 
     if (isSel != 1) {
       // Keep only event passing basic selection
@@ -222,6 +226,15 @@ void createBDTTrees::Loop()
       leptonP4 = (TLorentzVector*) (*muon_p4)[0];
     } else {
       leptonP4 = (TLorentzVector*) (*electron_p4)[0];
+    }
+
+    float allJets_pt = 0;
+    for (uint32_t i = 0; i < n_jets; i++) {
+      if (! jetPassSelection(i))
+        continue;
+
+      TLorentzVector* p4 = (TLorentzVector*) (*jet_p4)[i];
+      allJets_pt += p4->Pt();
     }
 
     // Compute background weight
@@ -309,6 +322,9 @@ void createBDTTrees::Loop()
             TLorentzVector* lightJet1P4 = (TLorentzVector*) (*jet_p4)[k];
             TLorentzVector* lightJet2P4 = (TLorentzVector*) (*jet_p4)[l];
 
+            leptonic_B_CSV = jet_btag_CSV[i];
+            hadronic_B_CSV = jet_btag_CSV[j];
+
             leptonic_B_Pt = leptonicBP4->Pt();
             hadronic_B_Pt = hadronicBP4->Pt();
 
@@ -346,6 +362,9 @@ void createBDTTrees::Loop()
             delta_R_lightjets = lightJet1P4->DeltaR(*lightJet2P4);
             delta_R_W = leptonicWP4.DeltaR(hadronicWP4);
 
+            ht_fraction = (leptonicBP4->Pt() + hadronicBP4->Pt() + lightJet1P4->Pt() + lightJet2P4->Pt()) / allJets_pt;
+            pt_tt_system =(leptonicTopP4 + hadronicTopP4).Pt();
+
             if (
                jet_mc_index[i] == MC_leptonicBIndex &&
                jet_mc_index[j] == MC_hadronicBIndex &&
@@ -377,12 +396,10 @@ void loadChain(const std::vector<std::string>& inputFiles, const std::string& tr
   }
 }
 
-createBDTTrees::createBDTTrees(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, PUProfile puProfile) : fMTT(0), fEvent(0)
+createBDTTrees::createBDTTrees(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, PUProfile puProfile) : fMTT(0), fEvent(0)
 {
   mIsSemiMu = isSemiMu;
-  mIsMC = isMC;
   mOutputFile = outputFile;
-  mBTag = btag;
   mPUProfile = puProfile;
 
   // Get trees
@@ -474,15 +491,16 @@ void createBDTTrees::Init()
 
   jet_p4 = NULL;
   fJet->SetBranchStatus("*", 0);
-  fJet->SetBranchStatus("jet_4vector", 1);
 
+  fJet->SetBranchStatus("jet_4vector", 1);
   fJet->SetBranchStatus("n_jets", 1);
   fJet->SetBranchStatus("jet_mcParticleIndex", 1);
+  fJet->SetBranchStatus("jet_btag_CSV", 1);
 
   fJet->SetBranchAddress("jet_4vector", &jet_p4, NULL);
-
   fJet->SetBranchAddress("n_jets", &n_jets);
   fJet->SetBranchAddress("jet_mcParticleIndex", &jet_mc_index);
+  fJet->SetBranchAddress("jet_btag_CSV", &jet_btag_CSV);
 
   met_p4 = NULL;
   fMET->SetBranchAddress("met_4vector", &met_p4);
@@ -512,26 +530,12 @@ int main(int argc, char** argv) {
 
     TCLAP::ValueArg<std::string> outputFileArg("o", "output-file", "output file", true, "", "string", cmd);
 
-    TCLAP::SwitchArg dataArg("", "data", "Is this data?", false);
-    TCLAP::SwitchArg mcArg("", "mc", "Is this mc?", false);
-
-    cmd.xorAdd(dataArg, mcArg);
-
     TCLAP::SwitchArg semimuArg("", "semimu", "Is this semi-mu channel?", false);
     TCLAP::SwitchArg semieArg("", "semie", "Is this semi-e channel?", false);
 
     cmd.xorAdd(semimuArg, semieArg);
 
-    TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jet to require", true, 2, "int", cmd);
-
     TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S10", "string", cmd);
-
-    TCLAP::ValueArg<std::string> pileupSystArg("", "pileup-syst", "PU profile to use for pileup reweigthing", false, "nominal", "string", cmd);
-    TCLAP::ValueArg<std::string> pdfSystArg("", "pdf-syst", "PDF systematic to compute", false, "nominal", "string", cmd);
-
-
-    TCLAP::ValueArg<int> maxEntriesArg("n", "", "Maximal number of entries to process", false, -1, "int", cmd);
-    TCLAP::ValueArg<double> generatorWeightArg("", "weight", "MC generator weight", false, 1., "double", cmd);
 
     cmd.parse(argc, argv);
 
@@ -545,22 +549,6 @@ int main(int argc, char** argv) {
     else
       puProfile = PUProfile::S10;
 
-    std::string puSyst = pileupSystArg.getValue();
-    std::transform(puSyst.begin(), puSyst.end(), puSyst.begin(), ::tolower);
-    if (puSyst != "nominal" && puSyst != "up" && puSyst != "down") {
-      std::cerr << "--pilup-syst can only be 'nominal', 'up' or 'down'" << std::endl;
-      exit(1);
-    }
-
-    std::string pdfSyst = pdfSystArg.getValue();
-    std::transform(pdfSyst.begin(), pdfSyst.end(), pdfSyst.begin(), ::tolower);
-    if (pdfSyst != "nominal" && pdfSyst != "up" && pdfSyst != "down") {
-      std::cerr << "--pdf-syst can only be 'nominal', 'up' or 'down'" << std::endl;
-      exit(1);
-    }
-
-    bool isData = dataArg.isSet();
-
     std::vector<std::string> inputFiles;
     if (inputFileArg.isSet()) {
       inputFiles.push_back(inputFileArg.getValue());
@@ -568,7 +556,7 @@ int main(int argc, char** argv) {
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    createBDTTrees convertor(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData, btagArg.getValue(), puProfile);
+    createBDTTrees convertor(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), puProfile);
     convertor.Loop();
 
   } catch (TCLAP::ArgException &e) {
