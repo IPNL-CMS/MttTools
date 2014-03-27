@@ -44,14 +44,19 @@ void Extractor2Histos::Loop()
 
   TH1::SetDefaultSumw2(true);
 
-  TH1D *hWeight = new TH1D("weight", "", 50, 0, 5);
-  TH1D *hWeight_fullsel = new TH1D("weight_fullsel", "", 50, 0, 2);
-  TH1D *hLeptonWeight = new TH1D("lepton_weight", "", 50, 0, 2);
+  TH1D *hWeight = new TH1D("weight", "", 100, 0, 5);
+  TH1D *hWeight_fullsel = new TH1D("weight_fullsel", "", 100, 0, 2);
+  TH1D *hLeptonWeight = new TH1D("lepton_weight", "", 100, 0, 2);
+  TH1D *hLeptonWeight_fullsel = new TH1D("lepton_weight_fullsel", "", 100, 0.5, 2);
   TH1D *hBTagWeight = new TH1D("btag_weight", "", 100, 0, 2);
-  TH1D *hTriggerWeight = new TH1D("trigger_weight", "", 50, 0, 1);
-  TH1D *hPUWeight = new TH1D("PU_weight", "", 50, 0, 2);
-  TH1D *hTopPtWeight = new TH1D("top_pt_weight", "", 50, 0, 2);
+  TH1D *hBTagWeight_fullsel = new TH1D("btag_weight_fullsel", "", 100, 0.5, 2);
+  TH1D *hTriggerWeight_fullsel = new TH1D("trigger_weight_fullsel", "", 100, 0, 1);
+  TH1D *hPUWeight = new TH1D("PU_weight", "", 100, 0, 2);
+  TH1D *hPUWeight_fullsel = new TH1D("PU_weight_fullsel", "", 100, 0, 2);
+  TH1D *hTopPtWeight = new TH1D("top_pt_weight", "", 100, 0, 2);
+  TH1D *hTopPtWeight_fullsel = new TH1D("top_pt_weight_fullsel", "", 100, 0, 2);
   TH1D *hGeneratorWeight = new TH1D("generator_weight", "", 100, -2, 2);
+  TH1D *hGeneratorWeight_fullsel = new TH1D("generator_weight_fullsel", "", 100, -2, 2);
 
   TH1D *hRunPeriod = new TH1D("run_period", "", 2, 0, 2);
   hRunPeriod->GetXaxis()->SetBinLabel(1, "Run2012 A+B");
@@ -346,8 +351,10 @@ void Extractor2Histos::Loop()
     }
 
     double eventWeight = 1.;
+    float puWeight = 1.;
+    float topPtWeight = 1.;
     if (mIsMC) {
-      float puWeight = puReweighter.weight(n_trueInteractions);
+      puWeight = puReweighter.weight(n_trueInteractions);
 
       hLeptonWeight->Fill(m_lepton_weight);
       hBTagWeight->Fill(m_btag_weight);
@@ -368,7 +375,7 @@ void Extractor2Histos::Loop()
           return std::exp(0.156 - 0.00137 * top->Pt());
         };
 
-        float topPtWeight = std::sqrt(SF(getP4(gen_top1_p4, 0)) * SF(getP4(gen_top2_p4, 0)));
+        topPtWeight = std::sqrt(SF(getP4(gen_top1_p4, 0)) * SF(getP4(gen_top2_p4, 0)));
         hTopPtWeight->Fill(topPtWeight);
 
         eventWeight *= topPtWeight;
@@ -611,11 +618,15 @@ void Extractor2Histos::Loop()
         else if (mTriggerSyst == "down")
           triggerWeight = triggerWeight - triggerWeights[1];
 
-        hTriggerWeight->Fill(triggerWeight);
-
         eventWeight *= triggerWeight;
 
         hWeight_fullsel->Fill(eventWeight);
+        hLeptonWeight_fullsel->Fill(m_lepton_weight);
+        hBTagWeight_fullsel->Fill(m_btag_weight);
+        hGeneratorWeight_fullsel->Fill(generator_weight);
+        hPUWeight_fullsel->Fill(puWeight);
+        hTopPtWeight_fullsel->Fill(topPtWeight);
+        hTriggerWeight_fullsel->Fill(triggerWeight);
       }
 
       hBestSolChi2_fullsel->Fill(bestSolChi2, eventWeight);
