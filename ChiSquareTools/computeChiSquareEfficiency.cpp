@@ -369,7 +369,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
 
 void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {
 
-  ifstream ifs(filename.c_str());
+  std::ifstream ifs(filename.c_str());
   std::string line;
 
   while (getline(ifs, line))

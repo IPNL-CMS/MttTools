@@ -15,7 +15,7 @@ HeadSuf       = h
 ROOTSYS  ?= ERROR_RootSysIsNotDefined
 
 ROOTCFLAGS = $(shell root-config --cflags)
-ROOTLIBS   = $(shell root-config --libs) -lMinuit -lRooFitCore -lRooFit
+ROOTLIBS   = $(shell root-config --libs) -lMinuit
 
 CXX           = g++
 #CXXFLAGS	    = -O2 -Wall -Werror -fPIC -std=c++0x

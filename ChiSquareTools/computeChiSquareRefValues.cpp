@@ -45,7 +45,7 @@ void loadChain(const std::vector<std::string>& inputFiles, TChain*& mc, TChain*&
   MET = new TChain("MET_PF");
   muons = new TChain("muon_PF");
   electrons = new TChain("electron_PF");
-  //mtt = new TChain("Mtt");
+  mtt = new TChain("Mtt");
 
   for (const std::string& file: inputFiles) {
     mc->Add(file.c_str());
@@ -54,7 +54,7 @@ void loadChain(const std::vector<std::string>& inputFiles, TChain*& mc, TChain*&
     MET->Add(file.c_str());
     muons->Add(file.c_str());
     electrons->Add(file.c_str());
-    //mtt->Add(file.c_str());
+    mtt->Add(file.c_str());
   }
 
   std::cout << "... done." << std::endl;
@@ -90,15 +90,14 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
   MET->SetBranchStatus("*", 0);
   muons->SetBranchStatus("*", 0);
   electrons->SetBranchStatus("*", 0);
+  mtt->SetBranchStatus("*", 0);
 
   static const int 	m_MCs_MAX        = 1000;
 
   TClonesArray *m_MC_lorentzvector;
   int   m_n_MCs;
-  int   m_MC_index[m_MCs_MAX];
   //int   m_MC_status[m_MCs_MAX];
   int   m_MC_type[m_MCs_MAX];
-  int   m_MC_imot1[m_MCs_MAX];
  /* int   m_MC_imot2[m_MCs_MAX];
   int   m_MC_generation[m_MCs_MAX];
   float m_MC_E[m_MCs_MAX];
@@ -113,11 +112,11 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
 
   m_MC_lorentzvector = new TClonesArray("TLorentzVector");
 
-  SetBranchAddress(MC, "n_MCs",  &m_n_MCs);
+  //SetBranchAddress(MC, "n_MCs",  &m_n_MCs);
   SetBranchAddress(MC, "MC_4vector", &m_MC_lorentzvector);
-  SetBranchAddress(MC, "MC_index",   &m_MC_index);
-  SetBranchAddress(MC, "MC_type",    &m_MC_type);
-  SetBranchAddress(MC, "MC_mot1",    &m_MC_imot1);
+  //SetBranchAddress(MC, "MC_index",   &m_MC_index);
+  //SetBranchAddress(MC, "MC_type",    &m_MC_type);
+  //SetBranchAddress(MC, "MC_mot1",    &m_MC_imot1);
   //SetBranchAddress(MC, "MC_mot2",    &m_MC_imot2);
   //SetBranchAddress(MC, "MC_generation",   &m_MC_generation);
   /*SetBranchAddress(MC, "MC_e",   &m_MC_E);
@@ -164,6 +163,37 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
   // MET
   TClonesArray* m_met_lorentzvector = new TClonesArray("TLorentzVector");
   SetBranchAddress(MET, "met_4vector", &m_met_lorentzvector);
+
+  int leptonIndex = -1;
+  int neutrinoIndex = -1;
+
+  int leptonicBIndex = -1;
+  int hadronicBIndex = -1;
+  int leptonicTopIndex = -1;
+
+  int firstJetIndex = -1;
+  int secondJetIndex = -1;
+ 
+  int channel = -1;
+
+  SetBranchAddress(mtt, "MC_channel", &channel);
+  SetBranchAddress(mtt, "MC_leptonIndex", &leptonIndex);
+  SetBranchAddress(mtt, "MC_neutrinoIndex", &neutrinoIndex);
+  SetBranchAddress(mtt, "MC_leptonicTopIndex", &leptonicTopIndex);
+  SetBranchAddress(mtt, "MC_leptonicBIndex", &leptonicBIndex);
+  SetBranchAddress(mtt, "MC_hadronicBIndex", &hadronicBIndex);
+  SetBranchAddress(mtt, "MC_hadronicFirstJetIndex", &firstJetIndex);
+  SetBranchAddress(mtt, "MC_hadronicSecondJetIndex", &secondJetIndex);
+
+
+  int pass_met_cut = 0;
+  int pass_lepton_cut = 0;
+
+  SetBranchAddress(mtt, "pass_met_cut", &pass_met_cut);
+  SetBranchAddress(mtt, "pass_lepton_cut", &pass_lepton_cut);
+
+  TClonesArray* lepton_p4 = new TClonesArray("TLorentzVector");
+  SetBranchAddress(mtt, "selectedLeptonP4_AfterChi2", &lepton_p4);
 
   // Histograms
   TH1* h_deltaPtFirstJet  = new TH1F("deltapt_firstjet", "Delta pt first jet", 70, -1.5, 1.5);
@@ -245,128 +275,26 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
     MET->GetEntry(entry);
     muons->GetEntry(entry);
     electrons->GetEntry(entry);
+    mtt->GetEntry(entry);
 
-    if (((entry + 1) % 100000) == 0) {
+    if (((entry) % 100000) == 0) {
       std::cout << "Processing entry " << entry + 1 << " out of " << entries << " (" << (entry + 1) / (float) entries * 100 << "%)" << std::endl;
     }
+    
+    // Select semi-leptonic events
+    if (channel != 1 && channel != 2)
+      continue;
+
 
     bool keepEvent = true;
 
     // Indexes
-    bool isSemiMu = false;
-    int leptonIndex = -1;
-    int neutrinoIndex = -1;
-
-    int leptonicBIndex = -1;
-    int hadronicBIndex = -1;
-    int leptonicTopIndex = -1;
-
-    int firstJetIndex = -1;
-    int secondJetIndex = -1;
+    bool isSemiMu = channel == 2;
 
     if (false) {
       std::cout << "New event" << std::endl;
       for (int i = 0; i < m_n_MCs; i++) {
         std::cout << "\tType: " << m_MC_type[i] << std::endl;
-      }
-    }
-
-    auto patIndexToExtractorIndex = [&](int patIndex) {
-      for (int i = 0; i < m_n_MCs ; i++) {
-        if (m_MC_index[i] == patIndex)
-          return i;
-      }
-
-      return -1;
-    };
-
-    for (int i = 0; i < m_n_MCs; i++) {
-
-      int motherIndex = patIndexToExtractorIndex(m_MC_imot1[i]);
-      int grandMotherIndex = -1;
-      if (motherIndex != -1)
-        grandMotherIndex = patIndexToExtractorIndex(m_MC_imot1[motherIndex]);
-
-      if (motherIndex == -1 || grandMotherIndex == -1)
-        continue;
-
-      // Look only event coming (directly / indirectly) from a top
-      if (abs(m_MC_type[motherIndex]) == ID_T || abs(m_MC_type[grandMotherIndex]) == ID_T)  {
-
-        int type = abs(m_MC_type[i]);
-        // W? Continue
-        if (type == ID_W)
-          continue;
-
-        // Only semi-mu or semi-e events are interesting, so throw away event with a tau
-        if (type == ID_TAU) {
-          keepEvent = false;
-          break;
-        }
-
-        switch (type) {
-          case ID_E:
-            if (leptonIndex != -1) {
-              keepEvent = false;
-              break;
-            }
-            leptonIndex = i;
-            isSemiMu = false;
-            break;
-
-          case ID_MU:
-            if (leptonIndex != -1) {
-              keepEvent = false;
-              break;
-            }
-            leptonIndex = i;
-            isSemiMu = true;
-            break;
-
-          case ID_NEUTRINO_E:
-          case ID_NEUTRINO_MU:
-          case ID_NEUTRINO_TAU:
-            if (neutrinoIndex != -1) {
-              keepEvent = false;
-              break;
-            }
-            neutrinoIndex = i;
-
-            // In some case, Madgraph does not output a W in the LHE
-            if (abs(m_MC_type[grandMotherIndex]) == ID_T)
-              leptonicTopIndex = grandMotherIndex;
-            else
-              leptonicTopIndex = motherIndex;
-
-            break;
-
-          case ID_B:
-            if (leptonicBIndex == -1) {
-              leptonicBIndex = i;
-            } else {
-              if (hadronicBIndex != -1) {
-                keepEvent = false;
-                break;
-              }
-              hadronicBIndex = i;
-            }
-            break;
-
-          default: // Other jets
-            if (firstJetIndex == -1) {
-              firstJetIndex = i;
-            } else {
-              if (secondJetIndex != -1) {
-                keepEvent = false;
-                break;
-              }
-              secondJetIndex = i;
-            }
-            break;
-        }
-
-        if (! keepEvent)
-          break;
       }
     }
 
@@ -376,12 +304,6 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
     if (! keepEvent) {
       leptonIndex = leptonicBIndex = hadronicBIndex = neutrinoIndex = firstJetIndex = secondJetIndex = leptonicTopIndex = -1;
       continue;
-    }
-
-    // Reorder B jet indexes
-    if (patIndexToExtractorIndex(m_MC_imot1[leptonicBIndex]) != leptonicTopIndex) {
-      // Wrong combinaison, swap
-      std::swap(leptonicBIndex, hadronicBIndex);
     }
 
     if (false) {
@@ -395,12 +317,6 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
       std::cout << "\tSecond jet type: " << m_MC_type[secondJetIndex] << std::endl;
     }
 
-    if (fabs(m_MC_type[leptonicBIndex]) != ID_B ||
-        fabs(m_MC_type[hadronicBIndex]) != ID_B) {
-      std::cout << "ERROR: Faulty algorithm" << std::endl;
-      continue;
-    }
-
     // Fill GEN histograms
     TLorentzVector* genFirstJetP4 = static_cast<TLorentzVector*>((*m_MC_lorentzvector)[firstJetIndex]);
     TLorentzVector* genSecondJetP4 = static_cast<TLorentzVector*>((*m_MC_lorentzvector)[secondJetIndex]);
@@ -412,30 +328,14 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
     h_hadronicWMassMC->Fill(genWMass);
     h_hadronicTopMassMC->Fill(genHadrTopMass);
 
-    // MET
-    TLorentzVector* neutrinoP4 = static_cast<TLorentzVector*>((*m_met_lorentzvector)[0]);
-    if (neutrinoP4->Pt() < 20)
+    if (pass_met_cut != 1)
       continue;
 
-    // Lepton
-    TLorentzVector* leptonP4 = NULL;
-    float ptLeptonCut = 0;
-    if (isSemiMu) {
-      if (n_muons != 1)
-        continue;
-
-      leptonP4 = static_cast<TLorentzVector*>((*m_muo_lorentzvector)[0]);
-      ptLeptonCut = 25;
-    } else {
-      if (n_electrons != 1)
-        continue;
-
-      leptonP4 = static_cast<TLorentzVector*>((*m_ele_lorentzvector)[0]);
-      ptLeptonCut = 30;
-    }
-
-    if (leptonP4->Pt() < ptLeptonCut || fabs(leptonP4->Eta()) > 2.1)
+    if (pass_lepton_cut != 1)
       continue;
+
+    TLorentzVector* neutrinoP4 = static_cast<TLorentzVector*>((*m_met_lorentzvector)[0]);    
+    TLorentzVector* leptonP4 = static_cast<TLorentzVector*>((*lepton_p4)[0]);
 
     selectedEntriesBeforeMatching++;
 
@@ -461,11 +361,20 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
       continue;
 
     //std::cout << "Njets: " << n_jets << "; Good combinaison: " << recoLeptonicBIndex << " " << recoHadronicBIndex << " " << recoFirstJetIndex << " " << recoSecondJetIndex << std::endl;
+    
+    double allJet_pt = 0;
+
+    for (int i = 0; i < n_jets; i++) {
+      TLorentzVector* p4 = static_cast<TLorentzVector*>((*m_jet_lorentzvector)[i]);
+      if (p4->Pt() > 30 && fabs(p4->Eta()) < 2.4) {
+        allJet_pt += p4->Pt();
+      }
+    }
 
     for (int j1 = 0; j1 < n_jets; j1++) {
       //int j1_mcIndex = m_jet_MCIndex[j1];
       TLorentzVector* firstJetP4 = static_cast<TLorentzVector*>((*m_jet_lorentzvector)[j1]);
-      if (firstJetP4->Pt() < 30 || firstJetP4->Eta() > 2.4)
+      if (firstJetP4->Pt() < 30 || fabs(firstJetP4->Eta()) > 2.4)
         continue;
 
       if (j1 != recoLeptonicBIndex) {
@@ -486,7 +395,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
 
         //int j2_mcIndex = m_jet_MCIndex[j2];
         TLorentzVector* secondJetP4 = static_cast<TLorentzVector*>((*m_jet_lorentzvector)[j2]);
-        if (secondJetP4->Pt() < 30 || secondJetP4->Eta() > 2.4)
+        if (secondJetP4->Pt() < 30 || fabs(secondJetP4->Eta()) > 2.4)
           continue;
 
         if ((j1 != recoFirstJetIndex && j2 != recoSecondJetIndex) ||
@@ -501,7 +410,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
             continue;
 
           TLorentzVector* thirdJetP4 = static_cast<TLorentzVector*>((*m_jet_lorentzvector)[j3]);
-          if (thirdJetP4->Pt() < 30 || thirdJetP4->Eta() > 2.4)
+          if (thirdJetP4->Pt() < 30 || fabs(thirdJetP4->Eta()) > 2.4)
             continue;
 
           //int j3_mcIndex = m_jet_MCIndex[j3];
@@ -519,7 +428,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
               continue;
 
             TLorentzVector* fourthJetP4 = static_cast<TLorentzVector*>((*m_jet_lorentzvector)[j4]);
-            if (fourthJetP4->Pt() < 30 || fourthJetP4->Eta() > 2.4)
+            if (fourthJetP4->Pt() < 30 || fabs(fourthJetP4->Eta()) > 2.4)
               continue;
 
             //int j4_mcIndex = m_jet_MCIndex[j4];
@@ -536,14 +445,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
               h_ptSystem_wrong->Fill((neutrino + *leptonP4 + *firstJetP4 + *secondJetP4 + *thirdJetP4 + *fourthJetP4).Pt());
 
               double htFrac = firstJetP4->Pt() + secondJetP4->Pt() + thirdJetP4->Pt() + fourthJetP4->Pt();
-              double denom = 0;
-              for (int i = 0; i < n_jets; i++) {
-                TLorentzVector* p4 = static_cast<TLorentzVector*>((*m_jet_lorentzvector)[i]);
-                if (p4->Pt() > 30) {
-                  denom += p4->Pt();
-                }
-              }
-              htFrac /= denom;
+              htFrac /= allJet_pt;
               h_htFrac_wrong->Fill(htFrac);
             }
           }
@@ -619,14 +521,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
     h_ptSystem_large->Fill(ttPt);
 
     double htFrac = firstJetP4->Pt() + secondJetP4->Pt() + hadronicBP4->Pt() + leptonicBP4->Pt();
-    double denom = 0;
-    for (int i = 0; i < n_jets; i++) {
-      TLorentzVector* p4 = static_cast<TLorentzVector*>((*m_jet_lorentzvector)[i]);
-      if (p4->Pt() > 30) {
-        denom += p4->Pt();
-      }
-    }
-    htFrac /= denom;
+    htFrac /= allJet_pt;
     h_htFrac->Fill(htFrac);
 
     selectedEntries++;
@@ -725,7 +620,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
 
 void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {
 
-  ifstream ifs(filename.c_str());
+  std::ifstream ifs(filename.c_str());
   std::string line;
 
   while (getline(ifs, line))
