@@ -55,7 +55,7 @@ void process(const std::vector<std::string>& inputFiles, const std::string& name
   factory->AddVariable("leptonic_Top_Pt");
   factory->AddVariable("leptonic_Top_M");
   factory->AddVariable("hadronic_B_Pt");
-  factory->AddVariable("hadronic_W_Pt");
+  //factory->AddVariable("hadronic_W_Pt");
   factory->AddVariable("hadronic_W_M");
   factory->AddVariable("hadronic_Top_Pt");
   factory->AddVariable("hadronic_Top_M");
@@ -66,6 +66,12 @@ void process(const std::vector<std::string>& inputFiles, const std::string& name
   factory->AddVariable("delta_R_tops");
   factory->AddVariable("delta_R_lightjets");
   factory->AddVariable("delta_R_W");
+  
+  factory->AddVariable("leptonic_B_CSV");
+  factory->AddVariable("hadronic_B_CSV");
+
+  //factory->AddVariable("pt_tt_system");
+  factory->AddVariable("ht_fraction");
 
   factory->SetWeightExpression("weight");
 
@@ -73,7 +79,8 @@ void process(const std::vector<std::string>& inputFiles, const std::string& name
 
   //factory->BookMethod( TMVA::Types::kBDT, "BDT", "V:BoostType=AdaBoost:nCuts=20:VarTransform=D");
   factory->BookMethod(TMVA::Types::kBDT, "BDT", "V:BoostType=AdaBoost:nCuts=20");
-  //factory->BookMethod(TMVA::Types::kMLP, "NN", "V:VarTransform=Norm");
+  factory->BookMethod(TMVA::Types::kMLP, "NN", "V:VarTransform=Norm");
+  //factory->BookMethod(TMVA::Types::kPDERS, "PDERS", "V");
 
   factory->TrainAllMethods();
   factory->TestAllMethods();
