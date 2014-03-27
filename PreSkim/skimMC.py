@@ -57,6 +57,7 @@ files = [
 
         # Background
         ["MC_TT_powheg_skims_nominal.root", "lists/MTT_TT_powheg_%s.list"],
+        ["MC_TT_madgraph_skims_nominal.root", "lists/MTT_TT_madgraph_%s.list"],
 
         ["MC_T_tW-channel_skims_nominal.root", "lists/MTT_T_tW-channel_%s.list"],
         ["MC_T_s-channel_skims_nominal.root", "lists/MTT_T_s-channel_%s.list"],
