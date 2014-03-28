@@ -684,7 +684,7 @@ void Extractor2Histos::Loop()
   }
 
   if (mIsMC) {
-    std::cout << "Top pt reweighting mean weight: " << hTopPtWeight->GetMean() << std::endl;
+    std::cout << "Top pt reweighting mean weight: " << hTopPtWeight_fullsel->GetMean() << std::endl;
     std::cout << "Use this value to compute the new number of generated events for this sample" << std::endl;
 
     // Save some useful informations
@@ -692,7 +692,7 @@ void Extractor2Histos::Loop()
     p.replace_extension("info");
 
     std::ofstream f(p.string());
-    f << "Top pt reweighting mean weight\t" << hTopPtWeight->GetMean();
+    f << "Top pt reweighting mean weight\t" << hTopPtWeight_fullsel->GetMean();
     f.close();
   }
 
