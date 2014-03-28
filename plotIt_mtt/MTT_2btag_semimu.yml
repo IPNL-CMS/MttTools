@@ -24,6 +24,7 @@ files:
     fill-color: "#D95B43"
     legend: "t#bar{t}"
     order: 3
+    systematics: 'Systematics/MC_TT_powheg_histos_total_syst_errors.root'
 
   'MC_T_s-channel_histos_nominal.root':
     type: mc
@@ -31,36 +32,42 @@ files:
     generated-events: 259961
     group: single-t
     order: 2
+    systematics: 'Systematics/MC_T_s-channel_histos_total_syst_errors.root'
   'MC_T_t-channel_histos_nominal.root':
     type: mc
     cross-section: 56.4
     generated-events: 3728227
     group: single-t
     order: 2
+    systematics: 'Systematics/MC_T_t-channel_histos_total_syst_errors.root'
   'MC_T_tW-channel_histos_nominal.root':
     type: mc
     cross-section: 11.1
     generated-events: 497658
     group: single-t
     order: 2
+    systematics: 'Systematics/MC_T_tW-channel_histos_total_syst_errors.root'
   'MC_Tbar_s-channel_histos_nominal.root':
     type: mc
     cross-section: 1.76
     generated-events: 139974
     group: single-t
     order: 2
+    systematics: 'Systematics/MC_Tbar_s-channel_histos_total_syst_errors.root'
   'MC_Tbar_t-channel_histos_nominal.root':
     type: mc
     cross-section: 30.7
     generated-events: 1935072
     group: single-t
     order: 2
+    systematics: 'Systematics/MC_Tbar_t-channel_histos_total_syst_errors.root'
   'MC_Tbar_tW-channel_histos_nominal.root':
     type: mc
     cross-section: 11.1
     generated-events: 493460
     group: "single-t"
     order: 2
+    systematics: 'Systematics/MC_Tbar_tW-channel_histos_total_syst_errors.root'
 
   'MC_DY1JetsToLL_M-50_histos_nominal.root':
     type: mc
@@ -68,24 +75,28 @@ files:
     generated-events: 24045248
     group: DY
     order: 0
+    systematics: 'Systematics/MC_DY1JetsToLL_M-50_histos_total_syst_errors.root'
   'MC_DY2JetsToLL_M-50_histos_nominal.root':
     type: mc
     cross-section: 215.0
     generated-events: 21852156
     group: DY
     order: 0
+    systematics: 'Systematics/MC_DY2JetsToLL_M-50_histos_total_syst_errors.root'
   'MC_DY3JetsToLL_M-50_histos_nominal.root':
     type: mc
     cross-section: 60.7
     generated-events: 11015445
     group: DY
     order: 0
+    systematics: 'Systematics/MC_DY3JetsToLL_M-50_histos_total_syst_errors.root'
   'MC_DY4JetsToLL_M-50_histos_nominal.root':
     type: mc
     cross-section: 27.3
     generated-events: 6402827
     group: DY
     order: 0
+    systematics: 'Systematics/MC_DY4JetsToLL_M-50_histos_total_syst_errors.root'
 
   'MC_W1JetsToLNu_histos_nominal.root':
     type: mc
@@ -93,43 +104,47 @@ files:
     generated-events: 23141598
     group: W
     order: 1
+    systematics: 'Systematics/MC_W1JetsToLNu_histos_total_syst_errors.root'
   'MC_W2JetsToLNu_histos_nominal.root':
     type: mc
     cross-section: 2159.2
     generated-events: 34044921
     group: W
     order: 1
+    systematics: 'Systematics/MC_W2JetsToLNu_histos_total_syst_errors.root'
   'MC_W3JetsToLNu_histos_nominal.root':
     type: mc
     cross-section: 640.4
     generated-events: 15539503
     group: W
     order: 1
+    systematics: 'Systematics/MC_W3JetsToLNu_histos_total_syst_errors.root'
   'MC_W4JetsToLNu_histos_nominal.root':
     type: mc
     cross-section: 264.0
     generated-events: 13382803
     group: W
     order: 1
+    systematics: 'Systematics/MC_W4JetsToLNu_histos_total_syst_errors.root'
 
-  'MC_WW_histos_nominal.root':
-    type: mc
-    cross-section:  56.0 
-    generated-events: 10000431
-    group: diboson
-    order: 0
-  'MC_WZ_histos_nominal.root':
-    type: mc
-    cross-section: 33.6
-    generated-events: 10000283
-    group: diboson
-    order: 0
-  'MC_ZZ_histos_nominal.root':
-    type: mc
-    cross-section: 7.6 
-    generated-events: 9799908
-    group: diboson
-    order: 0
+  #'MC_WW_histos_nominal.root':
+    #type: mc
+    #cross-section:  56.0 
+    #generated-events: 10000431
+    #group: diboson
+    #order: 0
+  #'MC_WZ_histos_nominal.root':
+    #type: mc
+    #cross-section: 33.6
+    #generated-events: 10000283
+    #group: diboson
+    #order: 0
+  #'MC_ZZ_histos_nominal.root':
+    #type: mc
+    #cross-section: 7.6 
+    #generated-events: 9799908
+    #group: diboson
+    #order: 0
 
 plots:
   'mttSelected_btag_sel_reco_fullsel':
