@@ -8,6 +8,8 @@ d = datetime.datetime.now().strftime("%d%b%y")
 files = [
         # Background
         ["MC_TT_powheg_histos_nominal.root", "skims/%s/MC_TT_powheg_skims_nominal.root"],
+        ["MC_TT_madgraph_histos_nominal.root", "skims/%s/MC_TT_madgraph_skims_nominal.root"],
+        ["MC_TT_mcatnlo_histos_nominal.root", "skims/%s/MC_TT_mcatnlo_skims_nominal.root"],
 
         ["MC_T_tW-channel_histos_nominal.root", "skims/%s/MC_T_tW-channel_skims_nominal.root"],
         ["MC_T_s-channel_histos_nominal.root", "skims/%s/MC_T_s-channel_skims_nominal.root"],
@@ -69,7 +71,7 @@ files = [
         ["Signal_ZPrimeToTTJets_M1250GeV_W12p5GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1250GeV_W12p5GeV_skims_nominal_merged.root"],
         ["Signal_ZPrimeToTTJets_M1500GeV_W15GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1500GeV_W15GeV_skims_nominal_merged.root"],
         ["Signal_ZPrimeToTTJets_M2000GeV_W20GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M2000GeV_W20GeV_skims_nominal_merged.root"],
-	
+
         ["Signal_ZPrimeToTTJets_M500GeV_W50GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M500GeV_W50GeV_skims_nominal_merged.root"],
         ["Signal_ZPrimeToTTJets_M750GeV_W75GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M750GeV_W75GeV_skims_nominal_merged.root"],
         ["Signal_ZPrimeToTTJets_M1000GeV_W100GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1000GeV_W100GeV_skims_nominal_merged.root"],
@@ -79,6 +81,10 @@ files = [
         ]
 
 def launch(input, output, btag):
+    if not os.path.exists(input):
+        print("Warning input file '%s' does not exist. Skipping job." % input)
+        return ""
+
     args = ["./extractorToHisto", "-i", input, "-o", output, "--mc", "--skim", "--b-tag", str(btag)]
     if "semie" in input:
         args.append("--semie")
@@ -116,5 +122,5 @@ for file in files:
 tmpfile.flush()
 
 print tmpfile.name
-args = ["parallel", "-u", "-a", tmpfile.name, "-j", "4"] 
+args = ["parallel", "-u", "-a", tmpfile.name, "-j", "15"]
 subprocess.call(args)
