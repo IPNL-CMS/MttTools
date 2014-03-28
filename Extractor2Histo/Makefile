@@ -39,7 +39,7 @@ SOBJECTS	= $(SOURCES:.$(SrcSuf)=.$(DllSuf))
 
 ###
 
-all: extractorToHisto substractHistos
+all: extractorToHisto substractHistos createSystHistograms
 
 clean:
 	@rm *.o;
@@ -51,6 +51,9 @@ extractorToHisto: ../external/TopTriggerEfficiencyProvider.o Extractor2Histos.o 
 	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS)
 
 substractHistos: substractHistos.o
+	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ -Wl,-Bstatic -lyaml-cpp -Wl,-Bdynamic $(LIBS)
+
+createSystHistograms: createSystHistograms.o
 	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ -Wl,-Bstatic -lyaml-cpp -Wl,-Bdynamic $(LIBS)
 
 %.o: %.cpp
