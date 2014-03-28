@@ -113,6 +113,12 @@ class Extractor2Histos {
 
     TClonesArray* lepTopP4_AfterReco;
     TClonesArray* hadTopP4_AfterReco;
+    TClonesArray* selectedFirstJetP4_AfterReco;
+    TClonesArray* selectedSecondJetP4_AfterReco;
+    TClonesArray* selectedHadronicBP4_AfterReco;
+    TClonesArray* selectedLeptonicBP4_AfterReco;
+    TClonesArray* selectedLeptonP4_AfterReco;
+    TClonesArray* selectedNeutrinoP4_AfterReco;
 
     // List of branches
     TBranch        *b_MC_channel;   //!

@@ -147,6 +147,26 @@ void Extractor2Histos::Loop()
   TH1D *hmttSelected_btag_sel = new TH1D("mttSelected_btag_sel_reco_fullsel", "", 150, 0., 2000.);
   TH1D *hmttSelected_btag_sel_mass_cut = new TH1D("mttSelected_btag_sel_mass_cut_reco_fullsel", "", 150, 0., 2000.);
 
+  TH1D *hSelectedFirstJetPt = new TH1D("selectedFirstJetPt_reco_fullsel", "", 100, 70., 640.);
+  TH1D *hSelectedSecondJetPt = new TH1D("selectedSecondJetPt_reco_fullsel", "", 50, 30., 300.);
+  TH1D *hSelectedHadronicBPt = new TH1D("selectedHadronicBPt_reco_fullsel", "", 100, 70., 640.);
+  TH1D *hSelectedLeptonicBPt = new TH1D("selectedLeptonicBPt_reco_fullsel", "", 100, 70., 640.);
+  TH1D *hSelectedLeptonPt = new TH1D("selectedLeptonPt_reco_fullsel", "", 50, 20., 200.);
+  TH1D *hSelectedNeutrinoPt = new TH1D("selectedNeutrinoPt_reco_fullsel", "", 50, 20., 200.);
+  TH1D *hSelectedNeutrinoPz = new TH1D("selectedNeutrinoPz_reco_fullsel", "", 50, 20., 200.);
+
+  if (mIsSemiMu) {
+    hSelectedLeptonPt->SetXTitle("selected #mu p_{T} [GeV/c]");
+  } else {
+    hSelectedLeptonPt->SetXTitle("selected e p_{T} [GeV/c]");
+  }
+  hSelectedFirstJetPt->SetXTitle("selected 1^{st} jet p_{T} [GeV/c]");
+  hSelectedSecondJetPt->SetXTitle("selected 2^{nd} jet p_{T} [GeV/c]");
+  hSelectedHadronicBPt->SetXTitle("selected had B p_{T} [GeV/c]");
+  hSelectedLeptonicBPt->SetXTitle("selected lep B p_{T} [GeV/c]");
+  hSelectedNeutrinoPt->SetXTitle("selected #nu p_{T} [GeV/c]");
+  hSelectedNeutrinoPz->SetXTitle("selected #nu p_{Z} [GeV/c]");
+
   TH1D *hNGoodJets = new TH1D("nGoodJets_reco_fullsel", "", 6, 3.5, 9.5);
   TH1D *hNGoodJets_chi2sel = new TH1D("nGoodJets_reco_chi2sel", "", 6, 3.5, 9.5);
 
@@ -678,6 +698,14 @@ void Extractor2Histos::Loop()
       hDeltaEtaTops_reco_fullsel->Fill(getP4(lepTopP4_AfterReco, 0)->Eta() - getP4(hadTopP4_AfterReco, 0)->Eta(), eventWeight);
       hDeltaRTops_reco_fullsel->Fill(getP4(lepTopP4_AfterReco, 0)->DeltaR(*getP4(hadTopP4_AfterReco, 0)), eventWeight);
 
+      hSelectedFirstJetPt->Fill(getP4(selectedFirstJetP4_AfterReco, 0)->Pt(), eventWeight);
+      hSelectedSecondJetPt->Fill(getP4(selectedSecondJetP4_AfterReco, 0)->Pt(), eventWeight);
+      hSelectedNeutrinoPt->Fill(getP4(selectedNeutrinoP4_AfterReco, 0)->Pt(), eventWeight);
+      hSelectedNeutrinoPz->Fill(getP4(selectedFirstJetP4_AfterReco, 0)->Pz(), eventWeight);
+      hSelectedLeptonPt->Fill(getP4(selectedLeptonP4_AfterReco, 0)->Pt(), eventWeight);
+      hSelectedHadronicBPt->Fill(getP4(selectedHadronicBP4_AfterReco, 0)->Pt(), eventWeight);
+      hSelectedLeptonicBPt->Fill(getP4(selectedLeptonicBP4_AfterReco, 0)->Pt(), eventWeight);
+
       if (mtt_AfterReco > 500)
         hmttSelected_btag_sel_mass_cut->Fill(mtt_AfterReco, eventWeight);
     }
@@ -874,17 +902,48 @@ void Extractor2Histos::Init()
 
   lepTopP4_AfterReco = NULL;
   hadTopP4_AfterReco = NULL;
+  selectedFirstJetP4_AfterReco = NULL;
+  selectedSecondJetP4_AfterReco = NULL;
+  selectedHadronicBP4_AfterReco = NULL;
+  selectedLeptonicBP4_AfterReco = NULL;
+  selectedLeptonP4_AfterReco = NULL;
+  selectedNeutrinoP4_AfterReco = NULL;
+
 
   if (mUseMVA) {
     fMTT->SetBranchStatus("lepTopP4_AfterMVA", 1);
     fMTT->SetBranchStatus("hadTopP4_AfterMVA", 1);
+    fMTT->SetBranchStatus("selectedFirstJetP4_AfterMVA", 1);
+    fMTT->SetBranchStatus("selectedSecondJetP4_AfterMVA", 1);
+    fMTT->SetBranchStatus("selectedLeptonP4_AfterMVA", 1);
+    fMTT->SetBranchStatus("selectedNeutrinoP4_AfterMVA", 1);
+    fMTT->SetBranchStatus("selectedLeptonicBP4_AfterMVA", 1);
+    fMTT->SetBranchStatus("selectedHadronicBP4_AfterMVA", 1);
     fMTT->SetBranchAddress("lepTopP4_AfterMVA", &lepTopP4_AfterReco);
     fMTT->SetBranchAddress("hadTopP4_AfterMVA", &hadTopP4_AfterReco);
+    fMTT->SetBranchAddress("selectedFirstJetP4_AfterMVA", &selectedFirstJetP4_AfterReco);
+    fMTT->SetBranchAddress("selectedSecondJetP4_AfterMVA", &selectedSecondJetP4_AfterReco);
+    fMTT->SetBranchAddress("selectedLeptonP4_AfterMVA", &selectedLeptonP4_AfterReco);
+    fMTT->SetBranchAddress("selectedNeutrinoP4_AfterMVA", &selectedNeutrinoP4_AfterReco);
+    fMTT->SetBranchAddress("selectedHadronicBP4_AfterMVA", &selectedHadronicBP4_AfterReco);
+    fMTT->SetBranchAddress("selectedLeptonicBP4_AfterMVA", &selectedLeptonicBP4_AfterReco);
   } else {
     fMTT->SetBranchStatus("lepTopP4_AfterChi2", 1);
     fMTT->SetBranchStatus("hadTopP4_AfterChi2", 1);
+    fMTT->SetBranchStatus("selectedFirstJetP4_AfterChi2", 1);
+    fMTT->SetBranchStatus("selectedSecondJetP4_AfterChi2", 1);
+    fMTT->SetBranchStatus("selectedLeptonP4_AfterChi2", 1);
+    fMTT->SetBranchStatus("selectedNeutrinoP4_AfterChi2", 1);
+    fMTT->SetBranchStatus("selectedLeptonicBP4_AfterChi2", 1);
+    fMTT->SetBranchStatus("selectedHadronicBP4_AfterChi2", 1);
     fMTT->SetBranchAddress("lepTopP4_AfterChi2", &lepTopP4_AfterReco);
     fMTT->SetBranchAddress("hadTopP4_AfterChi2", &hadTopP4_AfterReco);
+    fMTT->SetBranchAddress("selectedFirstJetP4_AfterChi2", &selectedFirstJetP4_AfterReco);
+    fMTT->SetBranchAddress("selectedSecondJetP4_AfterChi2", &selectedSecondJetP4_AfterReco);
+    fMTT->SetBranchAddress("selectedLeptonP4_AfterChi2", &selectedLeptonP4_AfterReco);
+    fMTT->SetBranchAddress("selectedNeutrinoP4_AfterChi2", &selectedNeutrinoP4_AfterReco);
+    fMTT->SetBranchAddress("selectedHadronicBP4_AfterChi2", &selectedHadronicBP4_AfterReco);
+    fMTT->SetBranchAddress("selectedLeptonicBP4_AfterChi2", &selectedLeptonicBP4_AfterReco);
   }
 
   gen_top1_p4 = NULL;
