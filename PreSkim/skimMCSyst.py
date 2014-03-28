@@ -96,6 +96,8 @@ files = [
         ]
 
 def launch(input, output):
+    if not os.path.exists(input):
+        print("Warning: input file '%s' not found. Skipping this job." % input)
     args = ["./preSkim", "--input-list", input, "-o", output, "--mc"]
     if "semie" in input:
         args.append("--semie")
@@ -108,7 +110,7 @@ def launch(input, output):
 
 tmpfile = tempfile.NamedTemporaryFile(dir = '/scratch/', delete = False)
 
-systs = ["JECup", "JECdown", "JERup", "JERdown"]
+systs = ["JECup", "JECdown", "JERup", "JERdown", "matchingup", "matchingdown", "scaleup", "scaledown"]
 
 # Build output tree structure
 for type in ["semie", "semimu"]:
