@@ -19,8 +19,8 @@ files:
   'MC_TT_powheg_histos_nominal.root':
     type: mc
     cross-section: 245.8
-    generated-events: 21675970
-    generated-events-weighted: 21059527.08917
+    generated-events-unweighted: 21675970
+    generated-events: 20935909.03226
     fill-color: "#D95B43"
     legend: "t#bar{t}"
     order: 3

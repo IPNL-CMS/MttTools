@@ -19,12 +19,32 @@ files:
   'MC_TT_powheg_histos_nominal.root':
     type: mc
     cross-section: 245.8
-    generated-events: 21675970
-    generated-events-weighted: 21059527.08917
+    generated-events-unweighted: 21675970
+    generated-events: 20934846.90973
     fill-color: "#D95B43"
     legend: "t#bar{t}"
     order: 3
     systematics: 'Systematics/MC_TT_powheg_histos_total_syst_errors.root'
+
+  #'MC_TT_madgraph_histos_nominal.root':
+    #type: mc
+    #cross-section: 245.8
+    #generated-events-unweighted: 6901778
+    #generated-events: 6662127.562506
+    #fill-color: "#D95B43"
+    #legend: "t#bar{t}"
+    #order: 3
+    #systematics: 'Systematics/MC_TT_madgraph_histos_total_syst_errors.root'
+
+  #'MC_TT_mcatnlo_histos_nominal.root':
+    #type: mc
+    #cross-section: 245.8
+    #generated-events-unweighted: 32822589
+    #generated-events: 32696484.613062
+    #fill-color: "#D95B43"
+    #legend: "t#bar{t}"
+    #order: 3
+    #systematics: 'Systematics/MC_TT_mcatnlo_histos_total_syst_errors.root'
 
   'MC_T_s-channel_histos_nominal.root':
     type: mc
@@ -127,24 +147,27 @@ files:
     order: 1
     systematics: 'Systematics/MC_W4JetsToLNu_histos_total_syst_errors.root'
 
-  #'MC_WW_histos_nominal.root':
-    #type: mc
-    #cross-section:  56.0 
-    #generated-events: 10000431
-    #group: diboson
-    #order: 0
-  #'MC_WZ_histos_nominal.root':
-    #type: mc
-    #cross-section: 33.6
-    #generated-events: 10000283
-    #group: diboson
-    #order: 0
-  #'MC_ZZ_histos_nominal.root':
-    #type: mc
-    #cross-section: 7.6 
-    #generated-events: 9799908
-    #group: diboson
-    #order: 0
+  'MC_WW_histos_nominal.root':
+    type: mc
+    cross-section:  56.0 
+    generated-events: 10000431
+    group: diboson
+    order: -1
+    systematics: 'Systematics/MC_WW_histos_total_syst_errors.root'
+  'MC_WZ_histos_nominal.root':
+    type: mc
+    cross-section: 33.6
+    generated-events: 10000283
+    group: diboson
+    order: -1
+    systematics: 'Systematics/MC_WZ_histos_total_syst_errors.root'
+  'MC_ZZ_histos_nominal.root':
+    type: mc
+    cross-section: 7.6 
+    generated-events: 9799908
+    group: diboson
+    order: -1
+    systematics: 'Systematics/MC_ZZ_histos_total_syst_errors.root'
 
 plots:
   'mttSelected_btag_sel_reco_fullsel':
