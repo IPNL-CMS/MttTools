@@ -57,6 +57,11 @@ files = [
 
         # Background
         ["MC_TT_powheg_skims_%s.root", "lists/Systematics/MTT_TT_powheg_%s_%s.list"],
+        ["MC_TT_madgraph_skims_%s.root", "lists/Systematics/MTT_TT_madgraph_%s_%s.list"],
+        ["MC_TT_mcatnlo_skims_%s.root", "lists/Systematics/MTT_TT_mcatnlo_%s_%s.list"],
+        ["MC_TT_madgraph_semilept_skims_%s.root", "lists/Systematics/MTT_TT_madgraph_semilept_%s_%s.list"],
+        ["MC_TT_madgraph_dilept_skims_%s.root", "lists/Systematics/MTT_TT_madgraph_dilept_%s_%s.list"],
+        ["MC_TT_madgraph_hadronic_skims_%s.root", "lists/Systematics/MTT_TT_madgraph_hadronic_%s_%s.list"],
 
         ["MC_T_tW-channel_skims_%s.root", "lists/Systematics/MTT_T_tW-channel_%s_%s.list"],
         ["MC_T_s-channel_skims_%s.root", "lists/Systematics/MTT_T_s-channel_%s_%s.list"],
@@ -76,28 +81,39 @@ files = [
         ["MC_W3JetsToLNu_skims_%s.root", "lists/Systematics/MTT_W3JetsToLNu_%s_%s.list"],
         ["MC_W4JetsToLNu_skims_%s.root", "lists/Systematics/MTT_W4JetsToLNu_%s_%s.list"],
 
-        ["MC_QCD_Pt_20_30_EMEnriched_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_20_30_EMEnriched_%s_semie.list"],
-        ["MC_QCD_Pt_30_80_EMEnriched_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_30_80_EMEnriched_%s_semie.list"],
-        ["MC_QCD_Pt_80_170_EMEnriched_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_80_170_EMEnriched_%s_semie.list"],
-        ["MC_QCD_Pt_170_250_EMEnriched_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_170_250_EMEnriched_%s_semie.list"],
-        ["MC_QCD_Pt_250_350_EMEnriched_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_250_350_EMEnriched_%s_semie.list"],
-        ["MC_QCD_Pt_350_EMEnriched_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_350_EMEnriched_%s_semie.list"],
+        ["MC_WW_skims_%s.root", "lists/Systematics/MTT_WW_%s_%s.list"],
+        ["MC_WZ_skims_%s.root", "lists/Systematics/MTT_WZ_%s_%s.list"],
+        ["MC_ZZ_skims_%s.root", "lists/Systematics/MTT_ZZ_%s_%s.list"],
 
-        ["MC_QCD_Pt_30_80_BCtoE_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_30_80_BCtoE_%s_semie.list"],
-        ["MC_QCD_Pt_80_170_BCtoE_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_80_170_BCtoE_%s_semie.list"],
-        ["MC_QCD_Pt_170_250_BCtoE_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_170_250_BCtoE_%s_semie.list"],
-        ["MC_QCD_Pt_250_350_BCtoE_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_250_350_BCtoE_%s_semie.list"],
-        ["MC_QCD_Pt_350_BCtoE_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_350_BCtoE_%s_semie.list"],
+        #["MC_QCD_Pt_20_30_EMEnriched_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_20_30_EMEnriched_%s_semie.list"],
+        #["MC_QCD_Pt_30_80_EMEnriched_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_30_80_EMEnriched_%s_semie.list"],
+        #["MC_QCD_Pt_80_170_EMEnriched_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_80_170_EMEnriched_%s_semie.list"],
+        #["MC_QCD_Pt_170_250_EMEnriched_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_170_250_EMEnriched_%s_semie.list"],
+        #["MC_QCD_Pt_250_350_EMEnriched_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_250_350_EMEnriched_%s_semie.list"],
+        #["MC_QCD_Pt_350_EMEnriched_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_350_EMEnriched_%s_semie.list"],
 
-        ["MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_skims_%s.root", "lists/Systematics/MTT_QCD_pt15to30_bEnriched_MuEnrichedPt14_%s_semimu.list"],
-        ["MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_skims_%s.root", "lists/Systematics/MTT_QCD_pt30to50_bEnriched_MuEnrichedPt14_%s_semimu.list"],
-        ["MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_skims_%s.root", "lists/Systematics/MTT_QCD_pt50to150_bEnriched_MuEnrichedPt14_%s_semimu.list"],
-        ["MC_QCD_pt150_bEnriched_MuEnrichedPt14_skims_%s.root", "lists/Systematics/MTT_QCD_pt150_bEnriched_MuEnrichedPt14_%s_semimu.list"],
+        #["MC_QCD_Pt_30_80_BCtoE_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_30_80_BCtoE_%s_semie.list"],
+        #["MC_QCD_Pt_80_170_BCtoE_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_80_170_BCtoE_%s_semie.list"],
+        #["MC_QCD_Pt_170_250_BCtoE_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_170_250_BCtoE_%s_semie.list"],
+        #["MC_QCD_Pt_250_350_BCtoE_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_250_350_BCtoE_%s_semie.list"],
+        #["MC_QCD_Pt_350_BCtoE_skims_%s.root", "lists/Systematics/MTT_QCD_Pt_350_BCtoE_%s_semie.list"],
+
+        #["MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_skims_%s.root", "lists/Systematics/MTT_QCD_pt15to30_bEnriched_MuEnrichedPt14_%s_semimu.list"],
+        #["MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_skims_%s.root", "lists/Systematics/MTT_QCD_pt30to50_bEnriched_MuEnrichedPt14_%s_semimu.list"],
+        #["MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_skims_%s.root", "lists/Systematics/MTT_QCD_pt50to150_bEnriched_MuEnrichedPt14_%s_semimu.list"],
+        #["MC_QCD_pt150_bEnriched_MuEnrichedPt14_skims_%s.root", "lists/Systematics/MTT_QCD_pt150_bEnriched_MuEnrichedPt14_%s_semimu.list"],
+
+        ## Macthing / scale  up & down
+        #["MC_TT_madgraph_skims_%s.root", "lists/Systematics/MTT_TTJets_%s_%s.list"],
+        #["MC_DYJetsToLL_M-50_skims_%s.root", "lists/Systematics/MTT_DYJetsToLL_M-50_%s_%s.list"],
+        #["MC_WJetsToLNu_skims_%s.root", "lists/Systematics/MTT_WJetsToLNu_%s_%s.list"]
         ]
 
 def launch(input, output):
     if not os.path.exists(input):
         print("Warning: input file '%s' not found. Skipping this job." % input)
+        return ""
+
     args = ["./preSkim", "--input-list", input, "-o", output, "--mc"]
     if "semie" in input:
         args.append("--semie")
@@ -110,7 +126,10 @@ def launch(input, output):
 
 tmpfile = tempfile.NamedTemporaryFile(dir = '/scratch/', delete = False)
 
-systs = ["JECup", "JECdown", "JERup", "JERdown", "matchingup", "matchingdown", "scaleup", "scaledown"]
+systs = ["JECup", "JECdown", "JERup", "JERdown"]
+
+if True:
+    systs += ["matchingup", "matchingdown", "scaleup", "scaledown"]
 
 # Build output tree structure
 for type in ["semie", "semimu"]:
@@ -134,7 +153,7 @@ for file in files:
 
 tmpfile.flush()
 
-args = ["parallel", "-u", "-a", tmpfile.name, "-j", "8"] 
+args = ["parallel", "-u", "-a", tmpfile.name, "-j", "15"]
 subprocess.call(args)
 
 masses_narrow = {
@@ -175,5 +194,8 @@ for pair in myFinalList:
     merged_file = pair[0].replace(".root", "_merged.root")
     args = ["hadd", "-f", merged_file]
     for input in pair:
-        args.append(input)
-    subprocess.call(args)
+        if os.path.exists(input):
+            args.append(input)
+
+    if len(args) > 3:
+        subprocess.call(args)

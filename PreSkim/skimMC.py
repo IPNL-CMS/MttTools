@@ -59,6 +59,9 @@ files = [
         ["MC_TT_powheg_skims_nominal.root", "lists/MTT_TT_powheg_%s.list"],
         ["MC_TT_madgraph_skims_nominal.root", "lists/MTT_TT_madgraph_%s.list"],
         ["MC_TT_mcatnlo_skims_nominal.root", "lists/MTT_TT_mcatnlo_%s.list"],
+        ["MC_TT_madgraph_semilept_skims_nominal.root", "lists/MTT_TT_madgraph_semilept_%s.list"],
+        ["MC_TT_madgraph_dilept_skims_nominal.root", "lists/MTT_TT_madgraph_dilept_%s.list"],
+        ["MC_TT_madgraph_hadronic_skims_nominal.root", "lists/MTT_TT_madgraph_hadronic_%s.list"],
 
         ["MC_T_tW-channel_skims_nominal.root", "lists/MTT_T_tW-channel_%s.list"],
         ["MC_T_s-channel_skims_nominal.root", "lists/MTT_T_s-channel_%s.list"],
@@ -82,23 +85,23 @@ files = [
         ["MC_WZ_skims_nominal.root", "lists/MTT_WZ_%s.list"],
         ["MC_ZZ_skims_nominal.root", "lists/MTT_ZZ_%s.list"],
 
-        ["MC_QCD_Pt_20_30_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_20_30_EMEnriched_semie.list"],
-        ["MC_QCD_Pt_30_80_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_30_80_EMEnriched_semie.list"],
-        ["MC_QCD_Pt_80_170_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_80_170_EMEnriched_semie.list"],
-        ["MC_QCD_Pt_170_250_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_170_250_EMEnriched_semie.list"],
-        ["MC_QCD_Pt_250_350_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_250_350_EMEnriched_semie.list"],
-        ["MC_QCD_Pt_350_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_350_EMEnriched_semie.list"],
+        #["MC_QCD_Pt_20_30_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_20_30_EMEnriched_semie.list"],
+        #["MC_QCD_Pt_30_80_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_30_80_EMEnriched_semie.list"],
+        #["MC_QCD_Pt_80_170_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_80_170_EMEnriched_semie.list"],
+        #["MC_QCD_Pt_170_250_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_170_250_EMEnriched_semie.list"],
+        #["MC_QCD_Pt_250_350_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_250_350_EMEnriched_semie.list"],
+        #["MC_QCD_Pt_350_EMEnriched_skims_nominal.root", "lists/MTT_QCD_Pt_350_EMEnriched_semie.list"],
 
-        ["MC_QCD_Pt_30_80_BCtoE_skims_nominal.root", "lists/MTT_QCD_Pt_30_80_BCtoE_semie.list"],
-        ["MC_QCD_Pt_80_170_BCtoE_skims_nominal.root", "lists/MTT_QCD_Pt_80_170_BCtoE_semie.list"],
-        ["MC_QCD_Pt_170_250_BCtoE_skims_nominal.root", "lists/MTT_QCD_Pt_170_250_BCtoE_semie.list"],
-        ["MC_QCD_Pt_250_350_BCtoE_skims_nominal.root", "lists/MTT_QCD_Pt_250_350_BCtoE_semie.list"],
-        ["MC_QCD_Pt_350_BCtoE_skims_nominal.root", "lists/MTT_QCD_Pt_350_BCtoE_semie.list"],
+        #["MC_QCD_Pt_30_80_BCtoE_skims_nominal.root", "lists/MTT_QCD_Pt_30_80_BCtoE_semie.list"],
+        #["MC_QCD_Pt_80_170_BCtoE_skims_nominal.root", "lists/MTT_QCD_Pt_80_170_BCtoE_semie.list"],
+        #["MC_QCD_Pt_170_250_BCtoE_skims_nominal.root", "lists/MTT_QCD_Pt_170_250_BCtoE_semie.list"],
+        #["MC_QCD_Pt_250_350_BCtoE_skims_nominal.root", "lists/MTT_QCD_Pt_250_350_BCtoE_semie.list"],
+        #["MC_QCD_Pt_350_BCtoE_skims_nominal.root", "lists/MTT_QCD_Pt_350_BCtoE_semie.list"],
 
-        ["MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_skims_nominal.root", "lists/MTT_QCD_pt15to30_bEnriched_MuEnrichedPt14_semimu.list"],
-        ["MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_skims_nominal.root", "lists/MTT_QCD_pt30to50_bEnriched_MuEnrichedPt14_semimu.list"],
-        ["MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_skims_nominal.root", "lists/MTT_QCD_pt50to150_bEnriched_MuEnrichedPt14_semimu.list"],
-        ["MC_QCD_pt150_bEnriched_MuEnrichedPt14_skims_nominal.root", "lists/MTT_QCD_pt150_bEnriched_MuEnrichedPt14_semimu.list"],
+        #["MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_skims_nominal.root", "lists/MTT_QCD_pt15to30_bEnriched_MuEnrichedPt14_semimu.list"],
+        #["MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_skims_nominal.root", "lists/MTT_QCD_pt30to50_bEnriched_MuEnrichedPt14_semimu.list"],
+        #["MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_skims_nominal.root", "lists/MTT_QCD_pt50to150_bEnriched_MuEnrichedPt14_semimu.list"],
+        #["MC_QCD_pt150_bEnriched_MuEnrichedPt14_skims_nominal.root", "lists/MTT_QCD_pt150_bEnriched_MuEnrichedPt14_semimu.list"],
         
         ]
 
