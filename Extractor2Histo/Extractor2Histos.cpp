@@ -376,6 +376,16 @@ void Extractor2Histos::Loop()
     if (mIsMC) {
       puWeight = puReweighter.weight(n_trueInteractions);
 
+      if (mLeptonSyst == "up")
+        m_lepton_weight += m_lepton_weight_error;
+      else if (mLeptonSyst == "down")
+        m_lepton_weight -= m_lepton_weight_error;
+
+      if (mBTagSyst == "up")
+        m_btag_weight += m_btag_weight_error;
+      else if (mBTagSyst == "down")
+        m_btag_weight -= m_btag_weight_error;
+
       hLeptonWeight->Fill(m_lepton_weight);
       hBTagWeight->Fill(m_btag_weight);
       hGeneratorWeight->Fill(generator_weight);
@@ -711,7 +721,7 @@ void Extractor2Histos::Loop()
     }
   }
 
-  if (mIsMC) {
+  if (mIsMC && hTopPtWeight_fullsel->GetEntries() > 0) {
     std::cout << "Top pt reweighting mean weight: " << hTopPtWeight_fullsel->GetMean() << std::endl;
     std::cout << "Use this value to compute the new number of generated events for this sample" << std::endl;
 
@@ -720,7 +730,7 @@ void Extractor2Histos::Loop()
     p.replace_extension("info");
 
     std::ofstream f(p.string());
-    f << "Top pt reweighting mean weight\t" << hTopPtWeight_fullsel->GetMean();
+    f << hTopPtWeight_fullsel->GetMean() << std::endl;
     f.close();
   }
 
@@ -740,7 +750,7 @@ void loadChain(const std::vector<std::string>& inputFiles, const std::string& tr
   output->SetCacheSize(30*1024*1024);
 }
 
-Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst) : fMTT(0), fVertices(0), fEvent(0)
+Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst) : fMTT(0), fVertices(0), fEvent(0)
 {
   mIsSemiMu = isSemiMu;
   mIsMC = isMC;
@@ -752,6 +762,8 @@ Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, c
   mJECSyst = jecSyst;
   mPUSyst = puSyst;
   mPDFSyst = pdfSyst;
+  mLeptonSyst = leptonSyst;
+  mBTagSyst = btagSyst;
 
   fLooseMuons = nullptr;
   fJet = nullptr;
@@ -892,6 +904,18 @@ void Extractor2Histos::Init()
 
   SetBranchAddress(fMTT, "lepton_weight", &m_lepton_weight, NULL);
   SetBranchAddress(fMTT, "btag_weight", &m_btag_weight, NULL);
+
+  if (mLeptonSyst == "up")
+    SetBranchAddress(fMTT, "lepton_weight_error_high", &m_lepton_weight_error);
+
+  if (mLeptonSyst == "down")
+    SetBranchAddress(fMTT, "lepton_weight_error_low", &m_lepton_weight_error);
+
+  if (mBTagSyst == "up")
+    SetBranchAddress(fMTT, "btag_weight_error_high", &m_btag_weight_error);
+
+  if (mBTagSyst == "down")
+    SetBranchAddress(fMTT, "btag_weight_error_low", &m_btag_weight_error);
 
   if (fMTT->GetBranch("trigger_passed")) {
     SetBranchAddress(fMTT, "trigger_passed", &m_triggerPassed, NULL);
@@ -1072,6 +1096,8 @@ int main(int argc, char** argv) {
     TCLAP::ValueArg<std::string> triggerSystArg("", "trigger-syst", "Computing trigger weight systematic", false, "nominal", "string", cmd);
     TCLAP::ValueArg<std::string> pileupSystArg("", "pileup-syst", "PU profile to use for pileup reweigthing", false, "nominal", "string", cmd);
     TCLAP::ValueArg<std::string> pdfSystArg("", "pdf-syst", "PDF systematic to compute", false, "nominal", "string", cmd);
+    TCLAP::ValueArg<std::string> btagSystArg("", "btag-syst", "Compute btag weight systematic", false, "nominal", "string", cmd);
+    TCLAP::ValueArg<std::string> leptonSystArg("", "lepton-syst", "Compute lepton weight systematic", false, "nominal", "string", cmd);
 
 
     TCLAP::ValueArg<int> maxEntriesArg("n", "", "Maximal number of entries to process", false, -1, "int", cmd);
@@ -1118,6 +1144,20 @@ int main(int argc, char** argv) {
       exit(1);
     }
 
+    std::string leptonSyst = leptonSystArg.getValue();
+    std::transform(leptonSyst.begin(), leptonSyst.end(), leptonSyst.begin(), ::tolower);
+    if (leptonSyst != "nominal" && leptonSyst != "up" && leptonSyst != "down") {
+      std::cerr << "--lepton-syst can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
+
+    std::string btagSyst = btagSystArg.getValue();
+    std::transform(btagSyst.begin(), btagSyst.end(), btagSyst.begin(), ::tolower);
+    if (btagSyst != "nominal" && btagSyst != "up" && btagSyst != "down") {
+      std::cerr << "--btag-syst can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
+
     bool isData = dataArg.isSet();
 
     std::vector<std::string> inputFiles;
@@ -1127,7 +1167,7 @@ int main(int argc, char** argv) {
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    Extractor2Histos convertor(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData, btagArg.getValue(), skimArg.getValue(), mvaArg.getValue(), triggerSyst, jecSyst, puSyst, pdfSyst);
+    Extractor2Histos convertor(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData, btagArg.getValue(), skimArg.getValue(), mvaArg.getValue(), triggerSyst, jecSyst, puSyst, pdfSyst, leptonSyst, btagSyst);
     convertor.Loop();
 
   } catch (TCLAP::ArgException &e) {

@@ -162,7 +162,9 @@ class Extractor2Histos {
     float           n_trueInteractions;
     uint32_t        run;
     float           m_lepton_weight;
+    float           m_lepton_weight_error = 0;
     float           m_btag_weight;
+    float           m_btag_weight_error = 0;
     float           generator_weight;
 
 
@@ -175,6 +177,8 @@ class Extractor2Histos {
     std::string     mJECSyst = "nominal";
     std::string     mPUSyst = "nominal";
     std::string     mPDFSyst = "nominal";
+    std::string     mLeptonSyst = "nominal";
+    std::string     mBTagSyst = "nominal";
 
     int             n_muons;
     float           muon_relIso[100];
@@ -184,7 +188,7 @@ class Extractor2Histos {
 
     TClonesArray*   jet_p4;
 
-    Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool useMVA, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst);
+    Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool useMVA, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst);
 
     virtual ~Extractor2Histos();
     virtual Int_t    GetEntry(Long64_t entry);
