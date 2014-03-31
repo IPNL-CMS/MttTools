@@ -232,7 +232,7 @@ plots:
     show-errors: true
     save-extensions: ["pdf"]
 
-  'leptTopPt_reco_fullsel':
+  'leptTopP*_reco_fullsel':
     rebin: 4
     log-y: true 
     show-ratio: true
@@ -250,7 +250,7 @@ plots:
     show-errors: true
     save-extensions: ["pdf"]
 
-  'hadrTopPt_reco_fullsel':
+  'hadrTopP*_reco_fullsel':
     rebin: 4
     log-y: true 
     show-ratio: true
@@ -260,6 +260,15 @@ plots:
     save-extensions: ["pdf"]
 
   'mtHad_reco_fullsel':
+    rebin: 4
+    log-y: true 
+    show-ratio: true
+    fit-ratio: true
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'delta*Tops_reco_fullsel':
     rebin: 4
     log-y: true 
     show-ratio: true
