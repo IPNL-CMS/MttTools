@@ -84,6 +84,7 @@ void Extractor2Histos::Loop()
 
   TH1D *hLeptTopPt = new TH1D("leptTopPt_reco_fullsel", "", 60, 20., 600.);
   TH1D *hLeptTopPt_chi2sel = new TH1D("leptTopPt_reco_chi2sel", "", 60, 20., 600.);
+  TH1D *hLeptTopPz = new TH1D("leptTopPz_reco_fullsel", "", 60, 20., 600.);
 
   TH1D *hBoostTT_gen = new TH1D("boostTT_gen", "", 50, 0., 1.);
   TH1D *hPtTT_gen = new TH1D("ptTT_gen", "", 60, 0., 600.);
@@ -94,6 +95,7 @@ void Extractor2Histos::Loop()
 
   TH1D *hHadrTopPt = new TH1D("hadrTopPt_reco_fullsel", "", 60, 20., 600.);
   TH1D *hHadrTopPt_chi2sel = new TH1D("hadrTopPt_reco_chi2sel", "", 60, 20., 600.);
+  TH1D *hHadrTopPz = new TH1D("hadrTopPz_reco_fullsel", "", 60, 20., 600.);
 
   TH1D *hHadrTopEta = new TH1D("hadrTopEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
   TH1D *hHadrTopEta_chi2sel = new TH1D("hadrTopEta_reco_chi2sel", "", 50, -2*M_PI, 2*M_PI);
@@ -239,6 +241,9 @@ void Extractor2Histos::Loop()
     hLeptonPt_chi2sel->SetXTitle("e p_{T} [GeV/c]");
     hLeptonPt->SetXTitle("e p_{T} [GeV/c]");
   }
+
+  hLeptTopPz->SetXTitle("leptonic top p_{Z} [GeV/c]");
+  hHadrTopPz->SetXTitle("hadronic top p_{Z} [GeV/c]");
 
   hFirstJetPt->SetXTitle("1^{st} jet p_{T} [GeV/c]");
   hFirstJetPt_nosel->SetXTitle("1^{st} jet p_{T} [GeV/c]");
@@ -707,6 +712,9 @@ void Extractor2Histos::Loop()
       hDeltaPhiTops_reco_fullsel->Fill(fabs(getP4(lepTopP4_AfterReco, 0)->DeltaPhi(*getP4(hadTopP4_AfterReco, 0))), eventWeight);
       hDeltaEtaTops_reco_fullsel->Fill(getP4(lepTopP4_AfterReco, 0)->Eta() - getP4(hadTopP4_AfterReco, 0)->Eta(), eventWeight);
       hDeltaRTops_reco_fullsel->Fill(getP4(lepTopP4_AfterReco, 0)->DeltaR(*getP4(hadTopP4_AfterReco, 0)), eventWeight);
+
+      hLeptTopPz->Fill(getP4(lepTopP4_AfterReco, 0)->Pz(), eventWeight);
+      hHadrTopPz->Fill(getP4(hadTopP4_AfterReco, 0)->Pz(), eventWeight);
 
       hSelectedFirstJetPt->Fill(getP4(selectedFirstJetP4_AfterReco, 0)->Pt(), eventWeight);
       hSelectedSecondJetPt->Fill(getP4(selectedSecondJetP4_AfterReco, 0)->Pt(), eventWeight);
