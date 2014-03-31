@@ -16,16 +16,17 @@ files:
     type: data
     legend: "Data"
 
-  'MC_TT_powheg_histos_nominal.root':
-    type: mc
-    cross-section: 245.8
-    generated-events-unweighted: 21675970
-    generated-events: 20934846.90973
-    fill-color: "#D95B43"
-    legend: "t#bar{t}"
-    order: 3
-    systematics: 'Systematics/MC_TT_powheg_histos_total_syst_errors.root'
+  #'MC_TT_powheg_histos_nominal.root':
+    #type: mc
+    #cross-section: 245.8
+    #generated-events-unweighted: 21675970
+    #generated-events: 20934846.90973
+    #fill-color: "#D95B43"
+    #legend: "t#bar{t}"
+    #order: 3
+    #systematics: 'Systematics/MC_TT_powheg_histos_total_syst_errors.root'
 
+  ## Inclusive Madgraph sample
   #'MC_TT_madgraph_histos_nominal.root':
     #type: mc
     #cross-section: 245.8
@@ -35,6 +36,38 @@ files:
     #legend: "t#bar{t}"
     #order: 3
     #systematics: 'Systematics/MC_TT_madgraph_histos_total_syst_errors.root'
+
+  # Exclusive Madgraph samples
+  'MC_TT_madgraph_semilept_histos_nominal.root':
+    type: mc
+    cross-section: 245.8
+    generated-events-unweighted: 24953451
+    generated-events: 24081677.235864
+    branching-ratio: 0.4392
+    fill-color: "#D95B43"
+    legend: "t#bar{t}"
+    order: 3
+    systematics: 'Systematics/MC_TT_madgraph_semilept_histos_total_syst_errors.root'
+
+  'MC_TT_madgraph_dilept_histos_nominal.root':
+    type: mc
+    cross-section: 245.8
+    generated-events-unweighted: 12011428
+    generated-events: 11576289.997844
+    branching-ratio: 0.1061
+    fill-color: "#D95B43"
+    order: 3
+    systematics: 'Systematics/MC_TT_madgraph_dilept_histos_total_syst_errors.root'
+
+  'MC_TT_madgraph_hadronic_histos_nominal.root':
+    type: mc
+    cross-section: 245.8
+    generated-events-unweighted: 31163821
+    generated-events: 29622614.232445
+    branching-ratio: 0.4547
+    fill-color: "#D95B43"
+    order: 3
+    systematics: 'Systematics/MC_TT_madgraph_hadronic_histos_total_syst_errors.root'
 
   #'MC_TT_mcatnlo_histos_nominal.root':
     #type: mc
@@ -169,6 +202,13 @@ files:
     order: -1
     systematics: 'Systematics/MC_ZZ_histos_total_syst_errors.root'
 
+  # Systematics samples
+  'Systematics/MC_TT_madgraph_histos_scale.root':
+    type: syst
+
+  'Systematics/MC_TT_madgraph_histos_matching.root':
+    type: syst
+
 plots:
   'mttSelected_btag_sel_reco_fullsel':
     rebin: 4
@@ -234,7 +274,7 @@ plots:
     save-extensions: ["pdf"]
 
   'nVertex_reco_fullsel':
-    rebin: 1
+    rebin: 2
     log-y: true 
     show-ratio: true
     fit-ratio: true
