@@ -36,6 +36,11 @@ files = [
 
         # Background
         ["MC_TT_powheg_histos_%s.root", "skims/%s/Systematics/MC_TT_powheg_skims_%s.root"],
+        ["MC_TT_madgraph_histos_%s.root", "skims/%s/Systematics/MC_TT_madgraph_skims_%s.root"],
+        ["MC_TT_mcatnlo_histos_%s.root", "skims/%s/Systematics/MC_TT_mcatnlo_skims_%s.root"],
+        ["MC_TT_madgraph_dilept_histos_%s.root", "skims/%s/Systematics/MC_TT_madgraph_dilept_skims_%s.root"],
+        ["MC_TT_madgraph_semilept_histos_%s.root", "skims/%s/Systematics/MC_TT_madgraph_semilept_skims_%s.root"],
+        ["MC_TT_madgraph_hadronic_histos_%s.root", "skims/%s/Systematics/MC_TT_madgraph_hadronic_skims_%s.root"],
 
         ["MC_T_tW-channel_histos_%s.root", "skims/%s/Systematics/MC_T_tW-channel_skims_%s.root"],
         ["MC_T_s-channel_histos_%s.root", "skims/%s/Systematics/MC_T_s-channel_skims_%s.root"],
@@ -55,23 +60,32 @@ files = [
         ["MC_W3JetsToLNu_histos_%s.root", "skims/%s/Systematics/MC_W3JetsToLNu_skims_%s.root"],
         ["MC_W4JetsToLNu_histos_%s.root", "skims/%s/Systematics/MC_W4JetsToLNu_skims_%s.root"],
 
-        ["MC_QCD_Pt_20_30_EMEnriched_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_20_30_EMEnriched_skims_%s.root"],
-        ["MC_QCD_Pt_30_80_EMEnriched_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_30_80_EMEnriched_skims_%s.root"],
-        ["MC_QCD_Pt_80_170_EMEnriched_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_80_170_EMEnriched_skims_%s.root"],
-        ["MC_QCD_Pt_170_250_EMEnriched_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_170_250_EMEnriched_skims_%s.root"],
-        ["MC_QCD_Pt_250_350_EMEnriched_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_250_350_EMEnriched_skims_%s.root"],
-        ["MC_QCD_Pt_350_EMEnriched_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_350_EMEnriched_skims_%s.root"],
+        ["MC_WW_histos_%s.root", "skims/%s/Systematics/MC_WW_skims_%s.root"],
+        ["MC_ZZ_histos_%s.root", "skims/%s/Systematics/MC_ZZ_skims_%s.root"],
+        ["MC_WZ_histos_%s.root", "skims/%s/Systematics/MC_WZ_skims_%s.root"],
 
-        ["MC_QCD_Pt_30_80_BCtoE_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_30_80_BCtoE_skims_%s.root"],
-        ["MC_QCD_Pt_80_170_BCtoE_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_80_170_BCtoE_skims_%s.root"],
-        ["MC_QCD_Pt_170_250_BCtoE_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_170_250_BCtoE_skims_%s.root"],
-        ["MC_QCD_Pt_250_350_BCtoE_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_250_350_BCtoE_skims_%s.root"],
-        ["MC_QCD_Pt_350_BCtoE_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_350_BCtoE_skims_%s.root"],
+        # Matching / scale  up & down
+        ["MC_TT_madgraph_histos_%s.root", "skims/%s/Systematics/MC_TT_madgraph_skims_%s.root"],
+        ["MC_DYJetsToLL_M-50_histos_%s.root", "skims/%s/Systematics/MC_DYJetsToLL_M-50_skims_%s.root"],
+        ["MC_WJetsToLNu_histos_%s.root", "skims/%s/Systematics/MC_WJetsToLNu_skims_%s.root"],
 
-        ["MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_histos_%s.root", "skims/semimu/Systematics/MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_skims_%s.root"],
-        ["MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_histos_%s.root", "skims/semimu/Systematics/MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_skims_%s.root"],
-        ["MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_histos_%s.root", "skims/semimu/Systematics/MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_skims_%s.root"],
-        ["MC_QCD_pt150_bEnriched_MuEnrichedPt14_histos_%s.root", "skims/semimu/Systematics/MC_QCD_pt150_bEnriched_MuEnrichedPt14_skims_%s.root"],
+        #["MC_QCD_Pt_20_30_EMEnriched_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_20_30_EMEnriched_skims_%s.root"],
+        #["MC_QCD_Pt_30_80_EMEnriched_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_30_80_EMEnriched_skims_%s.root"],
+        #["MC_QCD_Pt_80_170_EMEnriched_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_80_170_EMEnriched_skims_%s.root"],
+        #["MC_QCD_Pt_170_250_EMEnriched_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_170_250_EMEnriched_skims_%s.root"],
+        #["MC_QCD_Pt_250_350_EMEnriched_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_250_350_EMEnriched_skims_%s.root"],
+        #["MC_QCD_Pt_350_EMEnriched_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_350_EMEnriched_skims_%s.root"],
+
+        #["MC_QCD_Pt_30_80_BCtoE_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_30_80_BCtoE_skims_%s.root"],
+        #["MC_QCD_Pt_80_170_BCtoE_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_80_170_BCtoE_skims_%s.root"],
+        #["MC_QCD_Pt_170_250_BCtoE_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_170_250_BCtoE_skims_%s.root"],
+        #["MC_QCD_Pt_250_350_BCtoE_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_250_350_BCtoE_skims_%s.root"],
+        #["MC_QCD_Pt_350_BCtoE_histos_%s.root", "skims/semie/Systematics/MC_QCD_Pt_350_BCtoE_skims_%s.root"],
+
+        #["MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_histos_%s.root", "skims/semimu/Systematics/MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_skims_%s.root"],
+        #["MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_histos_%s.root", "skims/semimu/Systematics/MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_skims_%s.root"],
+        #["MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_histos_%s.root", "skims/semimu/Systematics/MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_skims_%s.root"],
+        #["MC_QCD_pt150_bEnriched_MuEnrichedPt14_histos_%s.root", "skims/semimu/Systematics/MC_QCD_pt150_bEnriched_MuEnrichedPt14_skims_%s.root"],
         ]
 
 systs = {"JECup": ["JECup", "--jec-syst up"], "JECdown": ["JECdown", "--jec-syst down"], "JERup": ["JERup", ""], "JERdown": ["JERdown", ""], "puUp": ["nominal", "--pileup-syst up"], "puDown": ["nominal", "--pileup-syst down"]}
@@ -80,12 +94,30 @@ if True:
     systs["trigUp"] = ["nominal", "--trigger-syst up"]
     systs["trigDown"] = ["nominal", "--trigger-syst down"]
 
+if True:
+    systs["leptUp"] = ["nominal", "--lepton-syst up"]
+    systs["leptDown"] = ["nominal", "--lepton-syst down"]
+
+if True:
+    systs["btagUp"] = ["nominal", "--btag-syst up"]
+    systs["btagDown"] = ["nominal", "--btag-syst down"]
+
 if False:
     systs["pdfUp"] = ["nominal", "--pdf-syst up"]
     systs["pdfDown"] = ["nominal", "--pdf-syst down"]
 
+if True:
+    systs["matchingup"] = ["matchingup", ""]
+    systs["matchingdown"] = ["matchingdown", ""]
+    systs["scaleup"] = ["scaleup", ""]
+    systs["scaledown"] = ["scaledown", ""]
+
 def launch(input, output, btag, extra):
     args = ["./extractorToHisto", "-i", input, "-o", output, "--mc", "--skim", "--b-tag", str(btag)]
+
+    if not os.path.exists(input):
+        print("Warning: input file '%s' not found. Skipping this job." % input)
+        return ""
 
     if len(extra) > 0:
         args.append(extra)

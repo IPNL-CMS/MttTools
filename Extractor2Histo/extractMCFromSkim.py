@@ -10,6 +10,9 @@ files = [
         ["MC_TT_powheg_histos_nominal.root", "skims/%s/MC_TT_powheg_skims_nominal.root"],
         ["MC_TT_madgraph_histos_nominal.root", "skims/%s/MC_TT_madgraph_skims_nominal.root"],
         ["MC_TT_mcatnlo_histos_nominal.root", "skims/%s/MC_TT_mcatnlo_skims_nominal.root"],
+        ["MC_TT_madgraph_dilept_histos_nominal.root", "skims/%s/MC_TT_madgraph_dilept_skims_nominal.root"],
+        ["MC_TT_madgraph_semilept_histos_nominal.root", "skims/%s/MC_TT_madgraph_semilept_skims_nominal.root"],
+        ["MC_TT_madgraph_hadronic_histos_nominal.root", "skims/%s/MC_TT_madgraph_hadronic_skims_nominal.root"],
 
         ["MC_T_tW-channel_histos_nominal.root", "skims/%s/MC_T_tW-channel_skims_nominal.root"],
         ["MC_T_s-channel_histos_nominal.root", "skims/%s/MC_T_s-channel_skims_nominal.root"],
@@ -33,24 +36,24 @@ files = [
         ["MC_ZZ_histos_nominal.root", "skims/%s/MC_ZZ_skims_nominal.root"],
         ["MC_WZ_histos_nominal.root", "skims/%s/MC_WZ_skims_nominal.root"],
 
-        # QCD
-        ["MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_histos_nominal.root", "skims/semimu/MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_skims_nominal.root"],
-        ["MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_histos_nominal.root", "skims/semimu/MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_skims_nominal.root"],
-        ["MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_histos_nominal.root", "skims/semimu/MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_skims_nominal.root"],
-        ["MC_QCD_pt150_bEnriched_MuEnrichedPt14_histos_nominal.root", "skims/semimu/MC_QCD_pt150_bEnriched_MuEnrichedPt14_skims_nominal.root"],
+        ## QCD
+        #["MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_histos_nominal.root", "skims/semimu/MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_skims_nominal.root"],
+        #["MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_histos_nominal.root", "skims/semimu/MC_QCD_pt30to50_bEnriched_MuEnrichedPt14_skims_nominal.root"],
+        #["MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_histos_nominal.root", "skims/semimu/MC_QCD_pt50to150_bEnriched_MuEnrichedPt14_skims_nominal.root"],
+        #["MC_QCD_pt150_bEnriched_MuEnrichedPt14_histos_nominal.root", "skims/semimu/MC_QCD_pt150_bEnriched_MuEnrichedPt14_skims_nominal.root"],
 
-        ["MC_QCD_Pt_20_30_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_20_30_EMEnriched_skims_nominal.root"],
-        ["MC_QCD_Pt_30_80_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_30_80_EMEnriched_skims_nominal.root"],
-        ["MC_QCD_Pt_80_170_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_80_170_EMEnriched_skims_nominal.root"],
-        ["MC_QCD_Pt_170_250_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_170_250_EMEnriched_skims_nominal.root"],
-        ["MC_QCD_Pt_250_350_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_250_350_EMEnriched_skims_nominal.root"],
-        ["MC_QCD_Pt_350_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_350_EMEnriched_skims_nominal.root"],
+        #["MC_QCD_Pt_20_30_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_20_30_EMEnriched_skims_nominal.root"],
+        #["MC_QCD_Pt_30_80_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_30_80_EMEnriched_skims_nominal.root"],
+        #["MC_QCD_Pt_80_170_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_80_170_EMEnriched_skims_nominal.root"],
+        #["MC_QCD_Pt_170_250_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_170_250_EMEnriched_skims_nominal.root"],
+        #["MC_QCD_Pt_250_350_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_250_350_EMEnriched_skims_nominal.root"],
+        #["MC_QCD_Pt_350_EMEnriched_histos_nominal.root", "skims/semie/MC_QCD_Pt_350_EMEnriched_skims_nominal.root"],
 
-        ["MC_QCD_Pt_30_80_BCtoE_histos_nominal.root", "skims/semie/MC_QCD_Pt_30_80_BCtoE_skims_nominal.root"],
-        ["MC_QCD_Pt_80_170_BCtoE_histos_nominal.root", "skims/semie/MC_QCD_Pt_80_170_BCtoE_skims_nominal.root"],
-        ["MC_QCD_Pt_170_250_BCtoE_histos_nominal.root", "skims/semie/MC_QCD_Pt_170_250_BCtoE_skims_nominal.root"],
-        ["MC_QCD_Pt_250_350_BCtoE_histos_nominal.root", "skims/semie/MC_QCD_Pt_250_350_BCtoE_skims_nominal.root"],
-        ["MC_QCD_Pt_350_BCtoE_histos_nominal.root", "skims/semie/MC_QCD_Pt_350_BCtoE_skims_nominal.root"],
+        #["MC_QCD_Pt_30_80_BCtoE_histos_nominal.root", "skims/semie/MC_QCD_Pt_30_80_BCtoE_skims_nominal.root"],
+        #["MC_QCD_Pt_80_170_BCtoE_histos_nominal.root", "skims/semie/MC_QCD_Pt_80_170_BCtoE_skims_nominal.root"],
+        #["MC_QCD_Pt_170_250_BCtoE_histos_nominal.root", "skims/semie/MC_QCD_Pt_170_250_BCtoE_skims_nominal.root"],
+        #["MC_QCD_Pt_250_350_BCtoE_histos_nominal.root", "skims/semie/MC_QCD_Pt_250_350_BCtoE_skims_nominal.root"],
+        #["MC_QCD_Pt_350_BCtoE_histos_nominal.root", "skims/semie/MC_QCD_Pt_350_BCtoE_skims_nominal.root"],
 
         # Background + Signal
         ["Signal_S0_S_i_M400_cpl1_scalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M400_cpl1_scalar_skims_nominal.root"],
