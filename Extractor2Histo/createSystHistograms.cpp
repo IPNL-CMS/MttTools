@@ -34,6 +34,7 @@ struct Input {
   uint64_t generated_events;
   float cross_section;
   int32_t type; // 0: Nominal, 1: Up, -1: Down
+  float top_pt_weight;
 
   std::shared_ptr<TFile> file;
 };
@@ -47,7 +48,7 @@ std::shared_ptr<TH1> getHistogram(const std::string& name, const std::vector<Inp
       continue;
 
     TH1* f = static_cast<TH1*>(input.file->Get(name.c_str()));
-    f->Scale(input.cross_section / input.generated_events);
+    f->Scale(input.cross_section / (input.generated_events * input.top_pt_weight));
 
     if (! h) {
       h = static_cast<TH1*>(f->Clone());
@@ -102,10 +103,15 @@ int main(int argc, char** argv) {
         else
           input.cross_section = 1.;
 
+        input.top_pt_weight = 1.;
         inputs.push_back(input);
       }
 
       boost::filesystem::path output = it["output"].as<std::string>();
+
+      bool manual = false;
+      if (it["manual"])
+        manual = it["manual"].as<bool>();
 
       // Loop over systematics, btag & type
       for (auto& btag: btags) {
@@ -116,9 +122,16 @@ int main(int argc, char** argv) {
           mainFormatter.exceptions(boost::io::all_error_bits ^ (boost::io::too_many_args_bit | boost::io::too_few_args_bit )  );
           mainFormatter % btag % type % "total_syst_errors";
 
-          std::shared_ptr<TFile> mainOutputFile(TFile::Open(mainFormatter.str().c_str(), "recreate"));
+          std::shared_ptr<TFile> mainOutputFile;
+          
+          if (! manual) {
+            mainOutputFile.reset(TFile::Open(mainFormatter.str().c_str(), "recreate"));
+          }
+
           std::map<std::string, std::shared_ptr<TH1>> total_uncertainties_hists;
-          for (auto& syst: systs) {
+
+          std::vector<std::string> goodSysts = (manual) ? std::vector<std::string>({"dummy"}) : systs;
+          for (auto& syst: goodSysts) {
             
             // Load input files
             for (auto& input: inputs) {
@@ -136,9 +149,22 @@ int main(int argc, char** argv) {
                 std::transform(systSuffix.begin(), systSuffix.end(), systSuffix.begin(), ::tolower);
 
               std::string fullSyst = syst + systSuffix;
-              formatter % btag % type % fullSyst;
+              formatter % btag % type;
+
+              if (! manual)
+                formatter % fullSyst;
 
               input.file.reset(TFile::Open(formatter.str().c_str()));
+
+              // Try to find if a '.info' file exists, containing the mean
+              // value of the top pt weights
+              boost::filesystem::path p(formatter.str());
+              p.replace_extension("info");
+
+              if (boost::filesystem::exists(p)) {
+                std::ifstream info(p.string());
+                info >> input.top_pt_weight;
+              }
             }
 
             // List all histograms
@@ -175,9 +201,11 @@ int main(int argc, char** argv) {
               uncertainties->Reset(); // Keep binning but remove all events
 
               std::shared_ptr<TH1>& total_uncertainties = total_uncertainties_hists[histogram];
-              if (! total_uncertainties.get()) {
-                total_uncertainties.reset(static_cast<TH1*>(uncertainties->Clone()));
-                total_uncertainties->SetDirectory(NULL);
+              if (! manual) {
+                if (! total_uncertainties.get()) {
+                  total_uncertainties.reset(static_cast<TH1*>(uncertainties->Clone()));
+                  total_uncertainties->SetDirectory(NULL);
+                }
               }
 
               for (int i = 1; i <= uncertainties->GetNbinsX(); i++) {
@@ -188,9 +216,11 @@ int main(int argc, char** argv) {
                 uncertainties->SetBinContent(i, 0);
                 uncertainties->SetBinError(i, error);
 
-                total_uncertainties->SetBinContent(i, 0);
-                float total_error = total_uncertainties->GetBinError(i);
-                total_uncertainties->SetBinError(i, sqrt(error * error + total_error * total_error));
+                if (! manual) {
+                  total_uncertainties->SetBinContent(i, 0);
+                  float total_error = total_uncertainties->GetBinError(i);
+                  total_uncertainties->SetBinError(i, sqrt(error * error + total_error * total_error));
+                }
               }
 
               uncertainties_hists.push_back(uncertainties);
@@ -203,13 +233,13 @@ int main(int argc, char** argv) {
             outputFile->Close();
           }
 
-          mainOutputFile->cd();
-          for (auto& it: total_uncertainties_hists) {
-            it.second->Write();
+          if (! manual) {
+            mainOutputFile->cd();
+            for (auto& it: total_uncertainties_hists) {
+              it.second->Write();
+            }
+            mainOutputFile->Close();
           }
-          mainOutputFile->Close();
-
-          return 0;
         }
       }
       
