@@ -277,6 +277,14 @@ plots:
     show-errors: true
     save-extensions: ["pdf"]
 
+  'HTFrac':
+    log-y: true 
+    show-ratio: true
+    fit-ratio: true
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
 
 legend:
   position: [0.7, 0.65, 0.9, 0.9]
