@@ -236,6 +236,8 @@ void Extractor2Histos::Loop()
 
   TH1* hHTFull_reco_nosel = new TH1D("HTFull_reco_nosel", "", 100, 0, 1000);
 
+  TH1* hHTFrac = new TH1D("HTFrac", "", 100, 0, 1);
+
   if (mIsSemiMu) {
     hLeptonPt->SetXTitle("#mu p_{T} [GeV/c]");
     hLeptonPt_chi2sel->SetXTitle("#mu p_{T} [GeV/c]");
@@ -274,8 +276,8 @@ void Extractor2Histos::Loop()
   hNGoodJets->SetXTitle("Num good jets");
   hNGoodJets_chi2sel->SetXTitle("Num good jets");
 
-  hNBtaggedJets->SetXTitle("Num TCHEL jets");
-  hNBtaggedJets_chi2sel->SetXTitle("Num TCHEL jets");
+  hNBtaggedJets->SetXTitle("Num CSVM jets");
+  hNBtaggedJets_chi2sel->SetXTitle("Num CSVM jets");
 
   Long64_t nentries = fMTT->GetEntries();
   //nentries = 10000;
@@ -721,13 +723,26 @@ void Extractor2Histos::Loop()
       hLeptTopPz->Fill(getP4(lepTopP4_AfterReco, 0)->Pz(), eventWeight);
       hHadrTopPz->Fill(getP4(hadTopP4_AfterReco, 0)->Pz(), eventWeight);
 
-      hSelectedFirstJetPt->Fill(getP4(selectedFirstJetP4_AfterReco, 0)->Pt(), eventWeight);
-      hSelectedSecondJetPt->Fill(getP4(selectedSecondJetP4_AfterReco, 0)->Pt(), eventWeight);
+      selectedFirstJetPt_AfterReco = getP4(selectedFirstJetP4_AfterReco, 0)->Pt();
+      selectedSecondJetPt_AfterReco = getP4(selectedSecondJetP4_AfterReco, 0)->Pt();
+      selectedHadronicBPt_AfterReco = getP4(selectedHadronicBP4_AfterReco, 0)->Pt();
+      selectedLeptonicBPt_AfterReco = getP4(selectedLeptonicBP4_AfterReco, 0)->Pt();
+
+      hSelectedFirstJetPt->Fill(selectedFirstJetPt_AfterReco, eventWeight);
+      hSelectedSecondJetPt->Fill(selectedSecondJetPt_AfterReco, eventWeight);
       hSelectedNeutrinoPt->Fill(getP4(selectedNeutrinoP4_AfterReco, 0)->Pt(), eventWeight);
       hSelectedNeutrinoPz->Fill(getP4(selectedFirstJetP4_AfterReco, 0)->Pz(), eventWeight);
       hSelectedLeptonPt->Fill(getP4(selectedLeptonP4_AfterReco, 0)->Pt(), eventWeight);
-      hSelectedHadronicBPt->Fill(getP4(selectedHadronicBP4_AfterReco, 0)->Pt(), eventWeight);
-      hSelectedLeptonicBPt->Fill(getP4(selectedLeptonicBP4_AfterReco, 0)->Pt(), eventWeight);
+      hSelectedHadronicBPt->Fill(selectedHadronicBPt_AfterReco, eventWeight);
+      hSelectedLeptonicBPt->Fill(selectedLeptonicBPt_AfterReco, eventWeight);
+
+      sumPt4JetsSel = selectedFirstJetPt_AfterReco + selectedSecondJetPt_AfterReco + selectedHadronicBPt_AfterReco + selectedLeptonicBPt_AfterReco;
+      sumPtJetsInEvent = 0.;
+      for (int i = 0; i < nJets; i++) {
+        sumPtJetsInEvent += jetPt[i];
+      }
+      HTFracValue = sumPt4JetsSel/sumPtJetsInEvent;
+      hHTFrac->Fill(HTFracValue, eventWeight);
 
       if (mtt_AfterReco > 500)
         hmttSelected_btag_sel_mass_cut->Fill(mtt_AfterReco, eventWeight);
@@ -868,7 +883,7 @@ void Extractor2Histos::Init()
   SetBranchAddress(fMTT, "4thjetpt", &p_4thjetpt, &b_4thjetpt);
   SetBranchAddress(fMTT, "nJets", &nJets, &b_nJets);
   SetBranchAddress(fMTT, "jetEta", jetEta, &b_jetEta);
-  //SetBranchAddress(fMTT, "jetPt", jetPt, &b_jetPt);
+  SetBranchAddress(fMTT, "jetPt", jetPt, &b_jetPt);
   SetBranchAddress(fMTT, "nBtaggedJets_CSVM", &nBtaggedJets_CSVM, NULL);
   //SetBranchAddress(fMTT, "nBtaggedJets_TCHEM", &nBtaggedJets_TCHEM, &b_nBtaggedJets_TCHEM);
   //SetBranchAddress(fMTT, "nBtaggedJets_TCHET", &nBtaggedJets_TCHET, &b_nBtaggedJets_TCHET);

@@ -96,6 +96,13 @@ class Extractor2Histos {
     Float_t         pt_tt_AfterReco;
     Float_t         eta_tt_AfterReco;
     Float_t         beta_tt_AfterReco;
+    Float_t         HTFracValue;
+    Float_t         selectedFirstJetPt_AfterReco;
+    Float_t         selectedSecondJetPt_AfterReco;
+    Float_t         selectedHadronicBPt_AfterReco;
+    Float_t         selectedLeptonicBPt_AfterReco;
+    Float_t         sumPt4JetsSel;
+    Float_t         sumPtJetsInEvent;
 
     bool            m_triggerPassed;
 
