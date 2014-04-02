@@ -199,6 +199,8 @@ void Extractor2Histos::Loop()
   TH1D *hDeltaRTops_gen = new TH1D("deltaRTops_gen", "", 50, 0, 10);
   TH1D *hDeltaRTops_reco_fullsel = new TH1D("deltaRTops_reco_fullsel", "", 50, 0, 10);
 
+  TH1D *hDeltaThetaTops_reco_fullsel = new TH1D("deltaThetaTops_reco_fullsel", "", 50, 0, M_PI);
+
   /******
    * Leptonic side
    */
@@ -712,6 +714,7 @@ void Extractor2Histos::Loop()
       hDeltaPhiTops_reco_fullsel->Fill(fabs(getP4(lepTopP4_AfterReco, 0)->DeltaPhi(*getP4(hadTopP4_AfterReco, 0))), eventWeight);
       hDeltaEtaTops_reco_fullsel->Fill(getP4(lepTopP4_AfterReco, 0)->Eta() - getP4(hadTopP4_AfterReco, 0)->Eta(), eventWeight);
       hDeltaRTops_reco_fullsel->Fill(getP4(lepTopP4_AfterReco, 0)->DeltaR(*getP4(hadTopP4_AfterReco, 0)), eventWeight);
+      hDeltaThetaTops_reco_fullsel->Fill(fabs(getP4(lepTopP4_AfterReco, 0)->Theta() - getP4(hadTopP4_AfterReco, 0)->Theta()), eventWeight);
 
       hLeptTopPz->Fill(getP4(lepTopP4_AfterReco, 0)->Pz(), eventWeight);
       hHadrTopPz->Fill(getP4(hadTopP4_AfterReco, 0)->Pz(), eventWeight);
