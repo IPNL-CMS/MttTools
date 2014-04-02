@@ -417,7 +417,7 @@ void Extractor2Histos::Loop()
         topPtWeight = std::sqrt(SF(getP4(gen_top1_p4, 0)) * SF(getP4(gen_top2_p4, 0)));
         hTopPtWeight->Fill(topPtWeight);
 
-        eventWeight *= topPtWeight;
+        //eventWeight *= topPtWeight;
       }
     }
 
