@@ -354,11 +354,13 @@ void Extractor2Histos::Loop()
       isRun2012AB = (run <= 196531);
     }
 
-    if (generator_weight > 0)
+    if (generator_weight > 0) {
       positive_events++;
-    else
+      generator_weight = 1;
+    } else {
       negative_events++;
-
+      generator_weight = -1;
+    }
 
     // Compute event weight
     if (std::isnan(m_lepton_weight)) {
