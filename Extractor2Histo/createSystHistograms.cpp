@@ -209,10 +209,12 @@ int main(int argc, char** argv) {
               }
 
               for (int i = 1; i <= uncertainties->GetNbinsX(); i++) {
-                float error_high = fabs(up->GetBinContent(i) - nominal->GetBinContent(i));
-                float error_low = fabs(nominal->GetBinContent(i) - down->GetBinContent(i));
+                float nominal_value = nominal->GetBinContent(i);
+                float error_high = fabs(up->GetBinContent(i) - nominal_value);
+                float error_low = fabs(nominal_value - down->GetBinContent(i));
 
-                float error = (error_high + error_low) / 2.;
+                float error = (nominal_value == 0) ? 0. : std::max(error_high, error_low) / nominal_value;
+
                 uncertainties->SetBinContent(i, 0);
                 uncertainties->SetBinError(i, error);
 
