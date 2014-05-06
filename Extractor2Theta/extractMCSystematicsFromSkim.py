@@ -7,35 +7,33 @@ d = datetime.datetime.now().strftime("%d%b%y")
 
 files = [
         # Background + Signal
-        #["Signal_S0_S_i_M400_cpl1_scalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M400_cpl1_scalar_skims_%s.root"],
-        #["Signal_S0_S_i_M500_cpl1_scalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M500_cpl1_scalar_skims_%s.root"],
-        #["Signal_S0_S_i_M600_cpl1_scalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M600_cpl1_scalar_skims_%s.root"],
-        #["Signal_S0_S_i_M700_cpl1_scalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M700_cpl1_scalar_skims_%s.root"],
-        #["Signal_S0_S_i_M800_cpl1_scalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M800_cpl1_scalar_skims_%s.root"],
+        ["Signal_S0_S_i_M400_cpl1_scalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M400_cpl1_scalar_skims_%s.root", 2074732, 0.5289 * 5.340],
+        ["Signal_S0_S_i_M500_cpl1_scalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M500_cpl1_scalar_skims_%s.root", 1990686, 0.3023 * 6.088],
+        ["Signal_S0_S_i_M600_cpl1_scalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M600_cpl1_scalar_skims_%s.root", 2354567, 0.1891 * 4.886],
+        ["Signal_S0_S_i_M700_cpl1_scalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M700_cpl1_scalar_skims_%s.root", 1999935, 0.1295 * 3.654],
+        ["Signal_S0_S_i_M800_cpl1_scalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M800_cpl1_scalar_skims_%s.root", 1999938, 0.09436 * 2.888],
 
-        #["Signal_S0_S_i_M400_cpl1_pseudoscalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M400_cpl1_pseudoscalar_skims_%s.root"],
-        #["Signal_S0_S_i_M500_cpl1_pseudoscalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M500_cpl1_pseudoscalar_skims_%s.root"],
-        #["Signal_S0_S_i_M600_cpl1_pseudoscalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M600_cpl1_pseudoscalar_skims_%s.root"],
-        #["Signal_S0_S_i_M700_cpl1_pseudoscalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M700_cpl1_pseudoscalar_skims_%s.root"],
-        #["Signal_S0_S_i_M800_cpl1_pseudoscalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M800_cpl1_pseudoscalar_skims_%s.root"],
+        ["Signal_S0_S_i_M400_cpl1_pseudoscalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M400_cpl1_pseudoscalar_skims_%s.root", 2276384, 1.169 * 5.039],
+        ["Signal_S0_S_i_M500_cpl1_pseudoscalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M500_cpl1_pseudoscalar_skims_%s.root", 1999940, 0.6756 * 3.803],
+        ["Signal_S0_S_i_M600_cpl1_pseudoscalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M600_cpl1_pseudoscalar_skims_%s.root", 1999949, 0.4414 * 2.709],
+        ["Signal_S0_S_i_M700_cpl1_pseudoscalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M700_cpl1_pseudoscalar_skims_%s.root", 1999932, 0.3121 * 2.057],
+        ["Signal_S0_S_i_M800_cpl1_pseudoscalar_theta_%s.root", "skims/%s/Systematics/Signal_S0_S_i_M800_cpl1_pseudoscalar_skims_%s.root", 1999940, 0.2325 * 1.697],
 
-        # Signal Z'
-        #["Signal_ZPrimeToTTJets_M500GeV_W50GeV_dataset_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M500GeV_W50GeV_skims_%s_merged.root"],
-        #["Signal_ZPrimeToTTJets_M750GeV_W75GeV_dataset_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M750GeV_W75GeV_skims_%s_merged.root"],
-        #["Signal_ZPrimeToTTJets_M1000GeV_W100GeV_dataset_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M1000GeV_W100GeV_skims_%s_merged.root"],
-        #["Signal_ZPrimeToTTJets_M1250GeV_W125GeV_dataset_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M1250GeV_W125GeV_skims_%s_merged.root"],
-        #["Signal_ZPrimeToTTJets_M1500GeV_W150GeV_dataset_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M1500GeV_W150GeV_skims_%s_merged.root"],
-        #["Signal_ZPrimeToTTJets_M2000GeV_W200GeV_dataset_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M2000GeV_W200GeV_skims_%s_merged.root"],
+        ["Signal_ZPrimeToTTJets_M500GeV_W5GeV_theta_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M500GeV_W5GeV_skims_%s_merged.root", 118975 + 119053, 1],
+        ["Signal_ZPrimeToTTJets_M750GeV_W7p5GeV_theta_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M750GeV_W7p5GeV_skims_%s_merged.root", 108827 + 108802, 1],
+        ["Signal_ZPrimeToTTJets_M1000GeV_W10GeV_theta_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M1000GeV_W10GeV_skims_%s_merged.root", 103095 + 103751, 1],
+        ["Signal_ZPrimeToTTJets_M1250GeV_W12p5GeV_theta_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M1250GeV_W12p5GeV_skims_%s_merged.root", 97864 + 99558, 1],
+        ["Signal_ZPrimeToTTJets_M1500GeV_W15GeV_theta_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M1500GeV_W15GeV_skims_%s_merged.root", 97349 + 388760, 1],
+        ["Signal_ZPrimeToTTJets_M2000GeV_W20GeV_theta_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M2000GeV_W20GeV_skims_%s_merged.root", 94817 + 94705, 1],
 
-        #["signal_zprimetottjets_m500gev_w5gev_dataset_%s.root", "skims/%s/systematics/signal_zprimetottjets_m500gev_w5gev_skims_%s_merged.root"],
-        #["signal_zprimetottjets_m750gev_w7p5gev_dataset_%s.root", "skims/%s/systematics/signal_zprimetottjets_m750gev_w7p5gev_skims_%s_merged.root"],
-        #["signal_zprimetottjets_m1000gev_w10gev_dataset_%s.root", "skims/%s/systematics/signal_zprimetottjets_m1000gev_w10gev_skims_%s_merged.root"],
-        #["signal_zprimetottjets_m1250gev_w12p5gev_dataset_%s.root", "skims/%s/systematics/signal_zprimetottjets_m1250gev_w12p5gev_skims_%s_merged.root"],
-        #["signal_zprimetottjets_m1500gev_w15gev_dataset_%s.root", "skims/%s/systematics/signal_zprimetottjets_m1500gev_w15gev_skims_%s_merged.root"],
-        #["signal_zprimetottjets_m2000gev_w20gev_dataset_%s.root", "skims/%s/systematics/signal_zprimetottjets_m2000gev_w20gev_skims_%s_merged.root"],
+        ["Signal_ZPrimeToTTJets_M500GeV_W50GeV_theta_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M500GeV_W50GeV_skims_%s_merged.root", 110507 + 119260],
+        ["Signal_ZPrimeToTTJets_M750GeV_W75GeV_theta_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M750GeV_W75GeV_skims_%s_merged.root",  106587 + 106587],
+        ["Signal_ZPrimeToTTJets_M1000GeV_W100GeV_theta_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M1000GeV_W100GeV_skims_%s_merged.root", 104043 + 103387],
+        ["Signal_ZPrimeToTTJets_M1250GeV_W125GeV_theta_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M1250GeV_W125GeV_skims_%s_merged.root", 100805 + 100615],
+        ["Signal_ZPrimeToTTJets_M1500GeV_W150GeV_theta_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M1500GeV_W150GeV_skims_%s_merged.root", 98775 + 97976],
+        ["Signal_ZPrimeToTTJets_M2000GeV_W200GeV_theta_%s.root", "skims/%s/Systematics/Signal_ZPrimeToTTJets_M2000GeV_W200GeV_skims_%s_merged.root", 97240 + 387897],
 
-
-        ## Background
+        # Background
         ["MC_TT_powheg_theta_%s.root", "skims/%s/Systematics/MC_TT_powheg_skims_%s.root", 21675970, 245.8],
 
         ["MC_T_tW-channel_theta_%s.root", "skims/%s/Systematics/MC_T_tW-channel_skims_%s.root", 497658, 11.1],
@@ -56,6 +54,10 @@ files = [
         ["MC_W3JetsToLNu_theta_%s.root", "skims/%s/Systematics/MC_W3JetsToLNu_skims_%s.root", 15539503, 640.4],
         ["MC_W4JetsToLNu_theta_%s.root", "skims/%s/Systematics/MC_W4JetsToLNu_skims_%s.root", 13382803, 264.0],
 
+        ["MC_WW_theta_%s.root", "skims/%s/Systematics/MC_WW_skims_%s.root", 10000431, 56.0],
+        ["MC_ZZ_theta_%s.root", "skims/%s/Systematics/MC_ZZ_skims_%s.root", 9799908, 7.6],
+        ["MC_WZ_theta_%s.root", "skims/%s/Systematics/MC_WZ_skims_%s.root", 10000283, 33.6],
+
         #["MC_QCD_Pt_20_30_EMEnriched_theta_%s.root", "skims/semie/Systematics/MC_QCD_Pt_20_30_EMEnriched_skims_%s.root"],
         #["MC_QCD_Pt_30_80_EMEnriched_theta_%s.root", "skims/semie/Systematics/MC_QCD_Pt_30_80_EMEnriched_skims_%s.root"],
         #["MC_QCD_Pt_80_170_EMEnriched_theta_%s.root", "skims/semie/Systematics/MC_QCD_Pt_80_170_EMEnriched_skims_%s.root"],
@@ -75,6 +77,27 @@ files = [
         #["MC_QCD_pt150_bEnriched_MuEnrichedPt14_theta_%s.root", "skims/semimu/Systematics/MC_QCD_pt150_bEnriched_MuEnrichedPt14_skims_%s.root"],
         ]
 
+
+generator_syst_files = [
+
+        # Special systematics
+        ["MC_TT_madgraph_theta_matchingup.root", "skims/%s/Systematics/MC_TT_madgraph_skims_matchingup.root", 5415010, 245.8],
+        ["MC_TT_madgraph_theta_matchingdown.root", "skims/%s/Systematics/MC_TT_madgraph_skims_matchingdown.root", 5476728, 245.8],
+
+        ["MC_TT_madgraph_theta_scaleup.root", "skims/%s/Systematics/MC_TT_madgraph_skims_scaleup.root", 5009488, 245.8],
+        ["MC_TT_madgraph_theta_scaledown.root", "skims/%s/Systematics/MC_TT_madgraph_skims_scaledown.root", 5387181, 245.8],
+
+        ["MC_WJetsToLNu_theta_scaleup.root", "skims/%s/Systematics/MC_WJetsToLNu_skims_scaleup.root", 20784770, 9726.4],
+        ["MC_WJetsToLNu_theta_scaledown.root", "skims/%s/Systematics/MC_WJetsToLNu_skims_scaledown.root", 20760884, 9726.4],
+        ["MC_WJetsToLNu_theta_matchingup.root", "skims/%s/Systematics/MC_WJetsToLNu_skims_matchingup.root", 20976082, 9726.4],
+        ["MC_WJetsToLNu_theta_matchingdown.root", "skims/%s/Systematics/MC_WJetsToLNu_skims_matchingdown.root", 21364637, 9726.4],
+
+        ["MC_DYJetsToLL_M-50_theta_scaleup.root", "skims/%s/Systematics/MC_DYJetsToLL_M-50_skims_scaleup.root", 2170270, 969.3],
+        ["MC_DYJetsToLL_M-50_theta_scaledown.root", "skims/%s/Systematics/MC_DYJetsToLL_M-50_skims_scaledown.root", 1934901, 969.3],
+        ["MC_DYJetsToLL_M-50_theta_matchingup.root", "skims/%s/Systematics/MC_DYJetsToLL_M-50_skims_matchingup.root", 1985529, 969.3],
+        ["MC_DYJetsToLL_M-50_theta_matchingdown.root", "skims/%s/Systematics/MC_DYJetsToLL_M-50_skims_matchingdown.root", 2112387, 969.3],
+
+        ]
 systs = {}
 
 if True:
@@ -140,11 +163,23 @@ for file in files:
                 inputFile = inputFile.replace("Systematics/", "")
 
             events = file[2] if len(file) >= 3 else -1
-            xsection = file[3] if len(file) >= 4 else -1
+            xsection = file[3] if len(file) >= 4 else 1
             weight = 19667. * xsection / events if events > 0 else 1;
             print("Weight for %s: %.15f" % (file[1], weight))
 
             tmpfile.write(launch(inputFile, os.path.join(path, file[0] % syst), weight, extra[1]) + "\n");
+
+for file in generator_syst_files:
+    for type in ["semie", "semimu"]:
+        path = "theta/%s/%s/Systematics" % (d, type)
+        inputFile = file[1] % type
+
+        events = file[2] if len(file) >= 3 else -1
+        xsection = file[3] if len(file) >= 4 else -1
+        weight = 19667. * xsection / events if events > 0 else 1;
+        print("Weight for %s: %.15f" % (file[1], weight))
+
+        tmpfile.write(launch(inputFile, os.path.join(path, file[0]), weight, "") + "\n");
 
 tmpfile.flush()
 
