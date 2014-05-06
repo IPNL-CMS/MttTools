@@ -4,17 +4,18 @@
 from __future__ import division
 import os, math, subprocess, shutil, sys, tempfile
 
-if sys.version_info<(2,7,0):
-  sys.stderr.write("You need python 2.7 or later to run this script\n")
+if sys.version_info<(2,6,0):
+  sys.stderr.write("You need python 2.6 or later to run this script\n")
   sys.exit(1)
 
-import argparse
+import optparse
 
-parser = argparse.ArgumentParser(description='Generate KeysPdf workspace for all masses.')
-parser.add_argument("--b-tag", dest="btag", required=True, type=int)
-parser.add_argument("-i", dest="i", required=True, type=str)
-parser.add_argument("--signal", dest="signal", required=True, type=str)
-args = parser.parse_args()
+parser = OptionParser()
+parser.add_option("", "--b-tag", dest="btag", type = int)
+parser.add_option("-i", "--input", dest="i", type = str)
+parser.add_option("-s", "--signal", dest="signal", type = str)
+
+(args, pos) = parser.parse_args()
 
 tmpfile = tempfile.NamedTemporaryFile(dir = '/scratch/', delete = True)
 
