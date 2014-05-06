@@ -13,6 +13,7 @@
 
 #include <boost/filesystem.hpp>
 
+#include "GaussianProfile.h"
 #include "TopTriggerEfficiencyProvider.h"
 #include "../PUReweighting/PUReweighter.h"
 #include "tclap/CmdLine.h"
@@ -28,8 +29,11 @@ struct Dummy
 };
 static Dummy foo;
 
-const int nBins = 15;
-const double bins[] = {340, 360, 380, 400, 420, 460, 500, 550, 600, 650, 750, 850, 950, 1050, 1200, 1400, 1600};
+const int nBins = 12; 
+const double bins[] = {340, 400, 450, 500, 550, 600, 650, 750, 850, 950, 1050, 1200, 1400};
+
+//const int nBins = 10; 
+//const double bins[] = {340, 400, 450, 500, 600, 700, 800, 900, 1000, 1200, 1400};
 
 TLorentzVector* getP4(TClonesArray* array, int index) {
   return (TLorentzVector*) array->At(index);
@@ -146,7 +150,11 @@ void Extractor2Histos::Loop()
   TH1D *hmtlep = new TH1D("mtLep_reco_fullsel", "", 100, 120., 240.);
   TH1D *hmthad = new TH1D("mtHad_reco_fullsel", "", 150, 120., 300.);
 
+  TH1D *hmttSelected_btag_sel_positive = new TH1D("mttSelected_btag_sel_reco_fullsel_positive", "", 150, 0., 2000.);
+  TH1D *hmttSelected_btag_sel_negative = new TH1D("mttSelected_btag_sel_reco_fullsel_negative", "", 150, 0., 2000.);
+
   TH1D *hmttSelected_btag_sel = new TH1D("mttSelected_btag_sel_reco_fullsel", "", 150, 0., 2000.);
+  TH1D *hmttSelected_btag_sel_no_gen_weight = new TH1D("mttSelected_btag_sel_reco_fullsel_no_gen_weight", "", 150, 0., 2000.);
   TH1D *hmttSelected_btag_sel_mass_cut = new TH1D("mttSelected_btag_sel_mass_cut_reco_fullsel", "", 150, 0., 2000.);
 
   TH1D *hSelectedFirstJetPt = new TH1D("selectedFirstJetPt_reco_fullsel", "", 100, 70., 640.);
@@ -178,6 +186,13 @@ void Extractor2Histos::Loop()
   TH1D *h_mtt_gen_nosel = new TH1D("mtt_gen_nosel", "", 300, 0., 1500.);
 
   TH1D *h_mtt_resolution = new TH1D("mtt_resolution", "", 100, -600., 600.);
+  TH1D *h_mtt_resolution_four_jets = new TH1D("mtt_resolution_four_jets", "", 100, -600., 600.);
+
+  GaussianProfile mtt_gen_vs_mtt_reco_chi2sel("mtt_gen_vs_mtt_reco_chi2sel", nBins, bins);
+  GaussianProfile mtt_gen_vs_mtt_reso_chi2sel("mtt_gen_vs_mtt_reso_chi2sel", nBins, bins, 100, -1.2, 1.2);
+
+  GaussianProfile mtt_gen_vs_mtt_reco_four_jets_chi2sel("mtt_gen_vs_mtt_reco_four_jets_chi2sel", nBins, bins);
+  GaussianProfile mtt_gen_vs_mtt_reso_four_jets_chi2sel("mtt_gen_vs_mtt_reso_four_jets_chi2sel", nBins, bins, 100, -1.2, 1.2);
 
   TProfile *pMttResolution_btag_sel = new TProfile("pMttResolution_btag_sel", "", nBins, bins);
   pMttResolution_btag_sel->SetXTitle("m_{t#bar{t}}^{gen} [GeV/c^{2}]");
@@ -382,6 +397,7 @@ void Extractor2Histos::Loop()
     }
 
     double eventWeight = 1.;
+    double eventWeightNoGenWeight = 1.;
     float puWeight = 1.;
     float topPtWeight = 1.;
     if (mIsMC) {
@@ -403,7 +419,6 @@ void Extractor2Histos::Loop()
       hPUWeight->Fill(puWeight);
 
       eventWeight *= puWeight;
-      eventWeight *= generator_weight;
       eventWeight *= m_lepton_weight;
       eventWeight *= m_btag_weight;
 
@@ -417,10 +432,13 @@ void Extractor2Histos::Loop()
         };
 
         topPtWeight = std::sqrt(SF(getP4(gen_top1_p4, 0)) * SF(getP4(gen_top2_p4, 0)));
-        hTopPtWeight->Fill(topPtWeight);
+        //hTopPtWeight->Fill(topPtWeight);
 
         //eventWeight *= topPtWeight;
       }
+
+      eventWeightNoGenWeight = eventWeight;
+      eventWeight *= generator_weight;
     }
 
     if (std::isnan(eventWeight)) {
@@ -609,6 +627,40 @@ void Extractor2Histos::Loop()
     hPtTT_chi2sel->Fill(pt_tt_AfterReco, eventWeight);
     hEtaTT_chi2sel->Fill(eta_tt_AfterReco, eventWeight);
 
+    if (mIsMC && MC_channel != 0) {
+      h_mtt_resolution->Fill(mtt_AfterReco - MC_mtt, eventWeight);
+
+      mtt_gen_vs_mtt_reco_chi2sel.fill(MC_mtt, mtt_AfterReco, eventWeight);
+      mtt_gen_vs_mtt_reso_chi2sel.fill(MC_mtt, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
+
+      if (true) {
+
+        // Reconstruct mtt using the four leading jet
+
+        TLorentzVector tt_system = *getP4(selectedLeptonP4_AfterReco, 0) + *getP4(selectedNeutrinoP4_AfterReco, 0);
+        int njets = 0;
+        for (int i = 0; i < jet_p4->GetEntriesFast(); i++) {
+
+          if (njets > 3)
+            break;
+
+          TLorentzVector* p = (TLorentzVector*) (*jet_p4)[i];
+
+          if (p->Pt() < 30 || fabs(p->Eta()) > 2.4)
+            continue;
+
+          tt_system += *p;
+          njets++;
+        }
+
+        float mtt_four_leading_jets = tt_system.M();    
+
+        mtt_gen_vs_mtt_reco_four_jets_chi2sel.fill(MC_mtt, mtt_four_leading_jets, eventWeight);
+        mtt_gen_vs_mtt_reso_four_jets_chi2sel.fill(MC_mtt, (mtt_four_leading_jets - MC_mtt) / MC_mtt, eventWeight);
+        h_mtt_resolution_four_jets->Fill(mtt_four_leading_jets - MC_mtt, eventWeight);
+      }
+    }
+
     bool btagSel = false;
     if (mBTag == 1)
       btagSel = nBtaggedJets_CSVM == 1;
@@ -666,7 +718,7 @@ void Extractor2Histos::Loop()
         hBTagWeight_fullsel->Fill(m_btag_weight);
         hGeneratorWeight_fullsel->Fill(generator_weight);
         hPUWeight_fullsel->Fill(puWeight);
-        hTopPtWeight_fullsel->Fill(topPtWeight);
+        //hTopPtWeight_fullsel->Fill(topPtWeight);
         hTriggerWeight_fullsel->Fill(triggerWeight);
       }
 
@@ -676,7 +728,6 @@ void Extractor2Histos::Loop()
       hEtaTT->Fill(eta_tt_AfterReco, eventWeight);
 
       if (mIsMC && MC_channel != 0) {
-        h_mtt_resolution->Fill(mtt_AfterReco - MC_mtt, eventWeight);
       }
 
       hLeptonPt->Fill(ptLepton, eventWeight);
@@ -713,6 +764,13 @@ void Extractor2Histos::Loop()
       hmthad->Fill(mHadTop_AfterReco, eventWeight);
 
       hmttSelected_btag_sel->Fill(mtt_AfterReco, eventWeight);
+      hmttSelected_btag_sel_no_gen_weight->Fill(mtt_AfterReco, eventWeightNoGenWeight);
+
+      if (eventWeight > 0)
+        hmttSelected_btag_sel_positive->Fill(mtt_AfterReco, eventWeight);
+      else
+        hmttSelected_btag_sel_negative->Fill(mtt_AfterReco, eventWeight);
+
       pMttResolution_btag_sel->Fill(MC_mtt , mtt_AfterReco, eventWeight);
 
       hDeltaPhiTops_reco_fullsel->Fill(fabs(getP4(lepTopP4_AfterReco, 0)->DeltaPhi(*getP4(hadTopP4_AfterReco, 0))), eventWeight);
@@ -758,11 +816,20 @@ void Extractor2Histos::Loop()
     p.replace_extension("info");
 
     std::ofstream f(p.string());
-    f << hTopPtWeight_fullsel->GetMean() << std::endl;
+    //f << hTopPtWeight_fullsel->GetMean() << std::endl;
+    f << 1 << std::endl;
     f.close();
   }
 
   output->Write();
+
+  if (mIsMC) {
+    mtt_gen_vs_mtt_reco_chi2sel.write(output);
+    mtt_gen_vs_mtt_reso_chi2sel.write(output);
+    mtt_gen_vs_mtt_reco_four_jets_chi2sel.write(output);
+    mtt_gen_vs_mtt_reso_four_jets_chi2sel.write(output);
+  }
+
   output->Close();
   delete output;
 }
@@ -802,8 +869,12 @@ Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, c
   loadChain(inputFiles, "event", fEvent);
 
   if (! mSkim) {
-   loadChain(inputFiles, "muon_loose_PF", fLooseMuons);
-   loadChain(inputFiles, "jet_PF", fJet);
+    loadChain(inputFiles, "muon_loose_PF", fLooseMuons);
+    loadChain(inputFiles, "jet_PF", fJet);
+  }
+
+  if (true) {
+    loadChain(inputFiles, "jet_PF", fJet);
   }
 
   Init();
@@ -965,20 +1036,21 @@ void Extractor2Histos::Init()
   if (mUseMVA) {
     fMTT->SetBranchStatus("lepTopP4_AfterMVA", 1);
     fMTT->SetBranchStatus("hadTopP4_AfterMVA", 1);
-    fMTT->SetBranchStatus("selectedFirstJetP4_AfterMVA", 1);
-    fMTT->SetBranchStatus("selectedSecondJetP4_AfterMVA", 1);
-    fMTT->SetBranchStatus("selectedLeptonP4_AfterMVA", 1);
-    fMTT->SetBranchStatus("selectedNeutrinoP4_AfterMVA", 1);
-    fMTT->SetBranchStatus("selectedLeptonicBP4_AfterMVA", 1);
-    fMTT->SetBranchStatus("selectedHadronicBP4_AfterMVA", 1);
     fMTT->SetBranchAddress("lepTopP4_AfterMVA", &lepTopP4_AfterReco);
     fMTT->SetBranchAddress("hadTopP4_AfterMVA", &hadTopP4_AfterReco);
-    fMTT->SetBranchAddress("selectedFirstJetP4_AfterMVA", &selectedFirstJetP4_AfterReco);
-    fMTT->SetBranchAddress("selectedSecondJetP4_AfterMVA", &selectedSecondJetP4_AfterReco);
-    fMTT->SetBranchAddress("selectedLeptonP4_AfterMVA", &selectedLeptonP4_AfterReco);
-    fMTT->SetBranchAddress("selectedNeutrinoP4_AfterMVA", &selectedNeutrinoP4_AfterReco);
-    fMTT->SetBranchAddress("selectedHadronicBP4_AfterMVA", &selectedHadronicBP4_AfterReco);
-    fMTT->SetBranchAddress("selectedLeptonicBP4_AfterMVA", &selectedLeptonicBP4_AfterReco);
+    //FIXME: For extractor production after April 3rd, 2014, please use correct variable name (MVA instead of Chi2)
+    fMTT->SetBranchStatus("selectedFirstJetP4_AfterChi2", 1);
+    fMTT->SetBranchStatus("selectedSecondJetP4_AfterChi2", 1);
+    fMTT->SetBranchStatus("selectedLeptonP4_AfterChi2", 1);
+    fMTT->SetBranchStatus("selectedNeutrinoP4_AfterChi2", 1);
+    fMTT->SetBranchStatus("selectedLeptonicBP4_AfterChi2", 1);
+    fMTT->SetBranchStatus("selectedHadronicBP4_AfterChi2", 1);
+    fMTT->SetBranchAddress("selectedFirstJetP4_AfterChi2", &selectedFirstJetP4_AfterReco);
+    fMTT->SetBranchAddress("selectedSecondJetP4_AfterChi2", &selectedSecondJetP4_AfterReco);
+    fMTT->SetBranchAddress("selectedLeptonP4_AfterChi2", &selectedLeptonP4_AfterReco);
+    fMTT->SetBranchAddress("selectedNeutrinoP4_AfterChi2", &selectedNeutrinoP4_AfterReco);
+    fMTT->SetBranchAddress("selectedHadronicBP4_AfterChi2", &selectedHadronicBP4_AfterReco);
+    fMTT->SetBranchAddress("selectedLeptonicBP4_AfterChi2", &selectedLeptonicBP4_AfterReco);
   } else {
     fMTT->SetBranchStatus("lepTopP4_AfterChi2", 1);
     fMTT->SetBranchStatus("hadTopP4_AfterChi2", 1);
@@ -1070,6 +1142,15 @@ void Extractor2Histos::Init()
     fLooseMuons->SetBranchAddress("n_muons", &n_muons, NULL);
     fLooseMuons->SetBranchAddress("muon_deltaBetaCorrectedRelIsolation", &muon_relIso, NULL);
 
+    jet_p4 = NULL;
+    fJet->SetMakeClass(1);
+    fJet->SetBranchStatus("*", 0);
+    fJet->SetBranchStatus("jet_4vector", 1);
+
+    fJet->SetBranchAddress("jet_4vector", &jet_p4, NULL);
+  }
+
+  if (true) {
     jet_p4 = NULL;
     fJet->SetMakeClass(1);
     fJet->SetBranchStatus("*", 0);
