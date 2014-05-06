@@ -1,7 +1,7 @@
 TLegend* createLegend(TH1* a, TH1* b, bool left = false) {
   TLegend* l = NULL;
   if (! left)
-    l = new TLegend(0.50, 0.75, 0.88, 0.88);
+    l = new TLegend(0.35, 0.75, 0.88, 0.88);
   else
     l = new TLegend(0.12, 0.75, 0.45, 0.88);
 
