@@ -1,0 +1,6 @@
+extractor2Theta
+skims/*
+theta/*
+combine/*
+*.root
+*.json
