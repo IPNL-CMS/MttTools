@@ -45,6 +45,16 @@ uint64_t chi2_matchedAndWellPlacedEntries2 = 0;
 uint64_t chi2_matchedAndWellPlacedEntries3 = 0;
 uint64_t chi2_matchedAndWellPlacedEntries4 = 0;
 
+uint64_t mva_matchedEntries1 = 0;
+uint64_t mva_matchedEntries2 = 0;
+uint64_t mva_matchedEntries3 = 0;
+uint64_t mva_matchedEntries4 = 0;
+
+uint64_t mva_matchedAndWellPlacedEntries1 = 0;
+uint64_t mva_matchedAndWellPlacedEntries2 = 0;
+uint64_t mva_matchedAndWellPlacedEntries3 = 0;
+uint64_t mva_matchedAndWellPlacedEntries4 = 0;
+
 uint64_t jets_matchedEntries1 = 0;
 uint64_t jets_matchedEntries2 = 0;
 uint64_t jets_matchedEntries3 = 0;
@@ -58,6 +68,9 @@ TH1F* chi2_selectedEntries_vs_mtt;
 TH1F* chi2_matchedEntries_vs_mtt;
 TH1F* chi2_efficiency_vs_mtt;
 
+TH1F* mva_selectedEntries_vs_mtt;
+TH1F* mva_matchedEntries_vs_mtt;
+TH1F* mva_efficiency_vs_mtt;
 
 TH1F* jets_selectedEntries_vs_mtt;
 TH1F* jets_matchedEntries_vs_mtt;
@@ -118,6 +131,69 @@ bool isMatched(int index, int jetsMcIndex[], TClonesArray* p4s, int nJets) {
   }
 
   return false;
+}
+
+void computeEfficiencyMVA(int selectedLeptonicBIndex, int selectedHadronicBIndex, int selectedFirstJetIndex, int selectedSecondJetIndex) {
+  int numberOfMatchedJets = 0;
+  if (m_jet_MCIndex[selectedLeptonicBIndex] == genLeptonicBIndex || m_jet_MCIndex[selectedLeptonicBIndex] == genHadronicBIndex ||
+      m_jet_MCIndex[selectedLeptonicBIndex] == genFirstJetIndex || m_jet_MCIndex[selectedLeptonicBIndex] == genSecondJetIndex)
+    numberOfMatchedJets++;
+
+  if (m_jet_MCIndex[selectedHadronicBIndex] == genLeptonicBIndex || m_jet_MCIndex[selectedHadronicBIndex] == genHadronicBIndex ||
+      m_jet_MCIndex[selectedHadronicBIndex] == genFirstJetIndex || m_jet_MCIndex[selectedHadronicBIndex] == genSecondJetIndex)
+    numberOfMatchedJets++;
+
+  if (m_jet_MCIndex[selectedFirstJetIndex] == genLeptonicBIndex || m_jet_MCIndex[selectedFirstJetIndex] == genHadronicBIndex ||
+      m_jet_MCIndex[selectedFirstJetIndex] == genFirstJetIndex || m_jet_MCIndex[selectedFirstJetIndex] == genSecondJetIndex)
+    numberOfMatchedJets++;
+
+  if (m_jet_MCIndex[selectedSecondJetIndex] == genLeptonicBIndex || m_jet_MCIndex[selectedSecondJetIndex] == genHadronicBIndex ||
+      m_jet_MCIndex[selectedSecondJetIndex] == genFirstJetIndex || m_jet_MCIndex[selectedSecondJetIndex] == genSecondJetIndex)
+    numberOfMatchedJets++;
+
+  int numberOfMatchedAndWellPlacedJets = 0;
+  if (m_jet_MCIndex[selectedLeptonicBIndex] == genLeptonicBIndex)
+    numberOfMatchedAndWellPlacedJets++;
+
+  if (m_jet_MCIndex[selectedHadronicBIndex] == genHadronicBIndex)
+    numberOfMatchedAndWellPlacedJets++;
+
+  if (m_jet_MCIndex[selectedFirstJetIndex] == genFirstJetIndex || m_jet_MCIndex[selectedFirstJetIndex] == genSecondJetIndex)
+    numberOfMatchedAndWellPlacedJets++;
+
+  if (m_jet_MCIndex[selectedSecondJetIndex] == genSecondJetIndex || m_jet_MCIndex[selectedSecondJetIndex] == genFirstJetIndex)
+    numberOfMatchedAndWellPlacedJets++;
+
+  switch (numberOfMatchedAndWellPlacedJets) {
+    case 4:
+      mva_matchedAndWellPlacedEntries4++;
+
+    case 3:
+      mva_matchedAndWellPlacedEntries3++;
+
+    case 2:
+      mva_matchedAndWellPlacedEntries2++;
+
+    case 1:
+      mva_matchedAndWellPlacedEntries1++;
+  }
+
+  switch (numberOfMatchedJets) {
+    case 4:
+      mva_matchedEntries4++;
+      mva_matchedEntries_vs_mtt->Fill(MC_mtt);
+
+    case 3:
+      mva_matchedEntries3++;
+
+    case 2:
+      mva_matchedEntries2++;
+
+    case 1:
+      mva_matchedEntries1++;
+  }
+
+
 }
 
 void computeEfficiencyChiSquare(int selectedLeptonicBIndex, int selectedHadronicBIndex, int selectedFirstJetIndex, int selectedSecondJetIndex) {
@@ -224,12 +300,18 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
 
   jets_selectedEntries_vs_mtt = new TH1F("jets_selected_entries_vs_mtt", "Efficiency;Generated m_{tt};Number of selected jets", nBins, bins);
   chi2_selectedEntries_vs_mtt = new TH1F("chi2_selected_entries_vs_mtt", "Efficiency;Generated m_{tt};Number of selected jets", nBins, bins);
+  mva_selectedEntries_vs_mtt = new TH1F("mva_selected_entries_vs_mtt", "Efficiency;Generated m_{tt};Number of selected jets", nBins, bins);
 
   chi2_matchedEntries_vs_mtt = new TH1F("matched_entries_vs_mtt", "Efficiency;Generated m_{tt};Number of matched jets", nBins, bins);
+  mva_matchedEntries_vs_mtt = new TH1F("mva_matched_entries_vs_mtt", "Efficiency;Generated m_{tt};Number of matched jets", nBins, bins);
   jets_matchedEntries_vs_mtt = new TH1F("jets_entries_vs_mtt", "Efficiency;Generated m_{tt};Number of matched jets", nBins, bins);
 
   chi2_efficiency_vs_mtt = new TH1F("chi2_efficiency_vs_mtt", "Efficiency;Generated m_{tt};Jet selection efficiency", nBins, bins);
+  mva_efficiency_vs_mtt = new TH1F("mva_efficiency_vs_mtt", "Efficiency;Generated m_{tt};Jet selection efficiency", nBins, bins);
   jets_efficiency_vs_mtt = new TH1F("jets_efficiency_vs_mtt", "Efficiency;Generated m_{tt};Jet selection efficiency", nBins, bins);
+
+  TH1* h_mtt_res_chi2 = new TH1F("mtt_resolution_chi2", ";m_{t#bar{t}} - m_{t#bar{t}}^{gen};", 100, -600, 600);
+  TH1* h_mtt_res_mva = new TH1F("mtt_resolution_mva", ";m_{t#bar{t}} - m_{t#bar{t}}^{gen};", 100, -600, 600);
 
   TChain* MC = NULL, *event = NULL, *jets = NULL, *MET = NULL, *muons = NULL, *electrons = NULL, *mtt = NULL;
   loadChain(inputFiles, jets, mtt);
@@ -259,11 +341,23 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
   SetBranchAddress(mtt, "selectedHadronicFirstJetIndex_AfterChi2", &selectedFirstJetIndex);
   SetBranchAddress(mtt, "selectedHadronicSecondJetIndex_AfterChi2", &selectedSecondJetIndex);
 
-  int numComb, channel;
+  int selectedLeptonicBIndex_MVA, selectedHadronicBIndex_MVA, selectedFirstJetIndex_MVA, selectedSecondJetIndex_MVA;
+  SetBranchAddress(mtt, "selectedLeptonicBIndex_AfterMVA", &selectedLeptonicBIndex_MVA);
+  SetBranchAddress(mtt, "selectedHadronicBIndex_AfterMVA", &selectedHadronicBIndex_MVA);
+  SetBranchAddress(mtt, "selectedHadronicFirstJetIndex_AfterMVA", &selectedFirstJetIndex_MVA);
+  SetBranchAddress(mtt, "selectedHadronicSecondJetIndex_AfterMVA", &selectedSecondJetIndex_MVA);
+
+  int numComb, channel, isSel;
   SetBranchAddress(mtt, "MC_channel", &channel);
-  //SetBranchAddress(mtt, "isSel", &isSel);
+  SetBranchAddress(mtt, "isSel", &isSel);
   SetBranchAddress(mtt, "numComb_chi2", &numComb);
   SetBranchAddress(mtt, "MC_mtt", &MC_mtt);
+
+  float mtt_resolution_chi2;
+  float mtt_resolution_mva;
+  SetBranchAddress(mtt, "MC_mtt", &MC_mtt);
+  SetBranchAddress(mtt, "mttResolution_AfterChi2", &mtt_resolution_chi2);
+  SetBranchAddress(mtt, "mttResolution_AfterMVA", &mtt_resolution_mva);
 
   uint64_t jets_selectedEntries = 0;
   uint64_t chi2_selectedEntries = 0;
@@ -287,10 +381,18 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
       std::cout << "Processing entry " << entry + 1 << " out of " << entries << " (" << (entry + 1) / (float) entries * 100 << "%)" << std::endl;
     }
 
+    if (isSel == 1 && numComb > 0) {
+      h_mtt_res_chi2->Fill(mtt_resolution_chi2);
+      h_mtt_res_mva->Fill(mtt_resolution_mva);
+    }
+
     if (genLeptonicBIndex == -1 || genHadronicBIndex == -1 || genFirstJetIndex == -1 || genHadronicBIndex == -1)
       continue;
 
     if (channel != 1 && channel != 2)
+      continue;
+
+    if (isSel != 1)
       continue;
     
     if (numComb) {
@@ -317,8 +419,10 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
 
     chi2_selectedEntries++;
     chi2_selectedEntries_vs_mtt->Fill(MC_mtt);
+    mva_selectedEntries_vs_mtt->Fill(MC_mtt);
 
     computeEfficiencyChiSquare(selectedLeptonicBIndex, selectedHadronicBIndex, selectedFirstJetIndex, selectedSecondJetIndex);
+    computeEfficiencyMVA(selectedLeptonicBIndex_MVA, selectedHadronicBIndex_MVA, selectedFirstJetIndex_MVA, selectedSecondJetIndex_MVA);
   }
 
   std::cout << "Number of total entries: " << entries << std::endl;
@@ -340,6 +444,19 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
   printEff((double) chi2_matchedEntries3 / chi2_selectedEntries, chi2_selectedEntries);
   printEff((double) chi2_matchedEntries4 / chi2_selectedEntries, chi2_selectedEntries);
 
+  std::cout << std::endl << "MVA" << std::endl;
+  std::cout << "Matched and well placed: 1 / 2 / 3 / 4 jets" << std::endl;
+  printEff((double) mva_matchedAndWellPlacedEntries1 / chi2_selectedEntries, chi2_selectedEntries);
+  printEff((double) mva_matchedAndWellPlacedEntries2 / chi2_selectedEntries, chi2_selectedEntries);
+  printEff((double) mva_matchedAndWellPlacedEntries3 / chi2_selectedEntries, chi2_selectedEntries);
+  printEff((double) mva_matchedAndWellPlacedEntries4 / chi2_selectedEntries, chi2_selectedEntries);
+
+  std::cout << std::endl << "Matched: 1 / 2 / 3 / 4 jets" << std::endl;
+  printEff((double) mva_matchedEntries1 / chi2_selectedEntries, chi2_selectedEntries);
+  printEff((double) mva_matchedEntries2 / chi2_selectedEntries, chi2_selectedEntries);
+  printEff((double) mva_matchedEntries3 / chi2_selectedEntries, chi2_selectedEntries);
+  printEff((double) mva_matchedEntries4 / chi2_selectedEntries, chi2_selectedEntries);
+
   std::cout << std::endl << "Four leading jets" << std::endl;
   std::cout << std::endl << "Matched: 1 / 2 / 3 / 4 jets" << std::endl;
   printEff((double) jets_matchedEntries1 / jets_selectedEntries, jets_selectedEntries);
@@ -352,16 +469,23 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
   if (outputFile.length() > 0) {
     TFile* f = TFile::Open(outputFile.c_str(), "recreate");
     chi2_efficiency_vs_mtt->Divide(chi2_matchedEntries_vs_mtt, chi2_selectedEntries_vs_mtt);
+    mva_efficiency_vs_mtt->Divide(mva_matchedEntries_vs_mtt, mva_selectedEntries_vs_mtt);
     jets_efficiency_vs_mtt->Divide(jets_matchedEntries_vs_mtt, jets_selectedEntries_vs_mtt);
 
     // Compute binomial errors
     for (int i = 1; i < nBins; i++) {
       chi2_efficiency_vs_mtt->SetBinError(i, binomialError(chi2_efficiency_vs_mtt->GetBinContent(i), chi2_selectedEntries_vs_mtt->GetBinContent(i)));
+      mva_efficiency_vs_mtt->SetBinError(i, binomialError(mva_efficiency_vs_mtt->GetBinContent(i), mva_selectedEntries_vs_mtt->GetBinContent(i)));
       jets_efficiency_vs_mtt->SetBinError(i, binomialError(jets_efficiency_vs_mtt->GetBinContent(i), jets_selectedEntries_vs_mtt->GetBinContent(i)));
-  }
+    }
 
     chi2_efficiency_vs_mtt->Write();
+    mva_efficiency_vs_mtt->Write();
     jets_efficiency_vs_mtt->Write();
+
+    h_mtt_res_mva->Write();
+    h_mtt_res_chi2->Write();
+
     f->Close();
     delete f;
   }
