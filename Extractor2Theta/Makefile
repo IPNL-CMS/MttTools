@@ -42,6 +42,7 @@ all: extractor2Theta
 
 clean:
 	@rm *.o;
+	@rm ../PUReweighting/*.o;
 
 extractor2Theta: extractor2Theta.o ../PUReweighting/PUReweighter.o ../external/TopTriggerEfficiencyProvider.o ../ExtractorPostprocessing/ExtractorPostprocessing.o
 	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS)

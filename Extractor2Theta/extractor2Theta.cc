@@ -197,9 +197,9 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
   std::shared_ptr<TopTriggerEfficiencyProvider> m_trigger_efficiency_provider = std::make_shared<TopTriggerEfficiencyProvider>();
   TRandom2 random_generator;
 
-  float hist_min = 325;
-  float hist_max = 1000;
-  int nBins = (hist_max - hist_min) / 15.;
+  float hist_min = 250;
+  float hist_max = 1250;
+  int nBins = (hist_max - hist_min) / 5.;
   TH1::SetDefaultSumw2(true);
   TH1* h_mtt_0btag = new TH1D("mtt_0btag", "mtt", nBins, hist_min, hist_max);
   TH1* h_mtt_1btag = new TH1D("mtt_1btag", "mtt", nBins, hist_min, hist_max);
