@@ -15,6 +15,10 @@
 
 #include <iostream>
 
+#include <Math/Vector4D.h>
+#include <vector>
+typedef ROOT::Math::PtEtaPhiEVector LorentzVector;
+
 class TBranch;
 
 // Header file for the classes stored in the TTree if any.
@@ -84,6 +88,8 @@ class Extractor2Histos {
     Float_t         bestSolChi2;
     Int_t           isBestSolMatched;
     Float_t         KFChi2;
+    Float_t         kf_proba;
+    bool            kf_converged;
     Int_t           numComb;
     Float_t         solChi2[MAX_ARRAY_SIZE];   //[numComb]
     Float_t         mLepTop_AfterReco;
@@ -118,14 +124,15 @@ class Extractor2Histos {
     TClonesArray* gen_lightJet1_p4;
     TClonesArray* gen_lightJet2_p4;
 
-    TClonesArray* lepTopP4_AfterReco;
-    TClonesArray* hadTopP4_AfterReco;
-    TClonesArray* selectedFirstJetP4_AfterReco;
-    TClonesArray* selectedSecondJetP4_AfterReco;
-    TClonesArray* selectedHadronicBP4_AfterReco;
-    TClonesArray* selectedLeptonicBP4_AfterReco;
+    LorentzVector* lepTopP4_AfterReco;
+    LorentzVector* hadTopP4_AfterReco;
+    LorentzVector* selectedFirstJetP4_AfterReco;
+    LorentzVector* selectedSecondJetP4_AfterReco;
+    LorentzVector* selectedHadronicBP4_AfterReco;
+    LorentzVector* selectedLeptonicBP4_AfterReco;
+    LorentzVector* selectedLeptonP4_AfterKF;
     TClonesArray* selectedLeptonP4_AfterReco;
-    TClonesArray* selectedNeutrinoP4_AfterReco;
+    LorentzVector* selectedNeutrinoP4_AfterReco;
 
     // List of branches
     TBranch        *b_MC_channel;   //!
@@ -180,6 +187,7 @@ class Extractor2Histos {
     int             mBTag;
     bool            mSkim;
     bool            mUseMVA = false;
+    bool            mUseKF = false;
     std::string     mTriggerSyst = "nominal";
     std::string     mJECSyst = "nominal";
     std::string     mPUSyst = "nominal";
@@ -195,11 +203,11 @@ class Extractor2Histos {
 
     TClonesArray*   jet_p4;
 
-    Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool useMVA, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst);
+    Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool useMVA, bool useKF, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst);
 
     virtual ~Extractor2Histos();
     virtual Int_t    GetEntry(Long64_t entry);
     virtual void     Loop();
     virtual void     Init();
-    void SetBranchAddress(TTree* t, const char* branchName, void* ptr, TBranch** branch = NULL);
+    void SetBranchAddress(TTree* t, const char* branchName, void* ptr);
 };

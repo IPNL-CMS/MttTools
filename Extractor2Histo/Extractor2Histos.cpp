@@ -10,6 +10,7 @@
 #include <chrono>
 #include <ctime>
 #include <TLorentzVector.h>
+#include <Math/GenVector/VectorUtil.h>
 
 #include <boost/filesystem.hpp>
 
@@ -29,10 +30,10 @@ struct Dummy
 };
 static Dummy foo;
 
-const int nBins = 12; 
+const int nBins = 12;
 const double bins[] = {340, 400, 450, 500, 550, 600, 650, 750, 850, 950, 1050, 1200, 1400};
 
-//const int nBins = 10; 
+//const int nBins = 10;
 //const double bins[] = {340, 400, 450, 500, 600, 700, 800, 900, 1000, 1200, 1400};
 
 TLorentzVector* getP4(TClonesArray* array, int index) {
@@ -188,11 +189,27 @@ void Extractor2Histos::Loop()
   TH1D *h_mtt_resolution = new TH1D("mtt_resolution", "", 100, -600., 600.);
   TH1D *h_mtt_resolution_four_jets = new TH1D("mtt_resolution_four_jets", "", 100, -600., 600.);
 
-  GaussianProfile mtt_gen_vs_mtt_reco_chi2sel("mtt_gen_vs_mtt_reco_chi2sel", nBins, bins);
-  GaussianProfile mtt_gen_vs_mtt_reso_chi2sel("mtt_gen_vs_mtt_reso_chi2sel", nBins, bins, 100, -1.2, 1.2);
+  GaussianProfile mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel("mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel", nBins, bins);
+  GaussianProfile mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel("mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel", nBins, bins, 100, -1.2, 1.2);
+  GaussianProfile mtt_gen_vs_mtt_reco_resolution_rmsVSmttreco_sortingAlgoSel("mtt_gen_vs_mtt_reco_resolution_rmsVSmttreco_sortingAlgoSel", nBins, bins, 100, -1.2, 1.2);
 
-  GaussianProfile mtt_gen_vs_mtt_reco_four_jets_chi2sel("mtt_gen_vs_mtt_reco_four_jets_chi2sel", nBins, bins);
-  GaussianProfile mtt_gen_vs_mtt_reso_four_jets_chi2sel("mtt_gen_vs_mtt_reso_four_jets_chi2sel", nBins, bins, 100, -1.2, 1.2);
+  GaussianProfile mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_lowKfProb("mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_lowKfProb", nBins, bins);
+  GaussianProfile mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_lowKfProb("mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_lowKfProb", nBins, bins, 100, -1.2, 1.2);
+
+  GaussianProfile mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_highKfProb("mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_highKfProb", nBins, bins);
+  GaussianProfile mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_highKfProb("mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_highKfProb", nBins, bins, 100, -1.2, 1.2);
+
+  GaussianProfile mtt_gen_vs_mtt_reco_linearity_fullSel("mtt_gen_vs_mtt_reco_linearity_fullSel", nBins, bins);
+  GaussianProfile mtt_gen_vs_mtt_reco_resolution_fullSel("mtt_gen_vs_mtt_reco_resolution_fullSel", nBins, bins, 100, -1.2, 1.2);
+
+  //GaussianProfile mtt_gen_vs_mtt_reco_chi2sel("mtt_gen_vs_mtt_reco_chi2sel", nBins, bins);
+  //GaussianProfile mtt_gen_vs_mtt_reso_chi2sel("mtt_gen_vs_mtt_reso_chi2sel", nBins, bins, 100, -1.2, 1.2);
+
+  GaussianProfile mtt_gen_vs_mtt_reco_linearity_fourJets_sortingAlgoSel("mtt_gen_vs_mtt_reco_linearity_fourJets_sortingAlgoSel", nBins, bins);
+  GaussianProfile mtt_gen_vs_mtt_reco_resolution_fourJets_sortingAlgoSel("mtt_gen_vs_mtt_reco_resolution_fourJets_sortingAlgoSel", nBins, bins, 100, -1.2, 1.2);
+
+  GaussianProfile mtt_gen_vs_mtt_reco_linearity_fourJets_fullSel("mtt_gen_vs_mtt_reco_linearity_fourJets_fullSel", nBins, bins);
+  GaussianProfile mtt_gen_vs_mtt_reco_resolution_fourJets_fullSel("mtt_gen_vs_mtt_reco_resolution_fourJets_fullSel", nBins, bins, 100, -1.2, 1.2);
 
   TProfile *pMttResolution_btag_sel = new TProfile("pMttResolution_btag_sel", "", nBins, bins);
   pMttResolution_btag_sel->SetXTitle("m_{t#bar{t}}^{gen} [GeV/c^{2}]");
@@ -448,47 +465,45 @@ void Extractor2Histos::Loop()
 
     hWeight->Fill(eventWeight);
 
-    if (! mSkim) {
-      // Fill gen value
-      if (mIsMC && (MC_channel != 0)) {
-        h_mtt_gen_nosel->Fill(MC_mtt, eventWeight);
-        hBoostTT_gen->Fill(MC_boost_tt, eventWeight);
+    // Fill gen value
+    if (mIsMC && (MC_channel != 0)) {
+      h_mtt_gen_nosel->Fill(MC_mtt, eventWeight);
+      hBoostTT_gen->Fill(MC_boost_tt, eventWeight);
 
-        hPtTT_gen->Fill(MC_pt_tt, eventWeight);
-        hEtaTT_gen->Fill(MC_eta_tt, eventWeight);
-        hDeltaPhiTops_gen->Fill(fabs(getP4(gen_top1_p4, 0)->DeltaPhi(*getP4(gen_top2_p4, 0))), eventWeight);
-        hDeltaEtaTops_gen->Fill(getP4(gen_top1_p4, 0)->Eta() - getP4(gen_top2_p4, 0)->Eta(), eventWeight);
-        hDeltaRTops_gen->Fill(getP4(gen_top1_p4, 0)->DeltaR(*getP4(gen_top2_p4, 0)), eventWeight);
+      hPtTT_gen->Fill(MC_pt_tt, eventWeight);
+      hEtaTT_gen->Fill(MC_eta_tt, eventWeight);
+      hDeltaPhiTops_gen->Fill(fabs(getP4(gen_top1_p4, 0)->DeltaPhi(*getP4(gen_top2_p4, 0))), eventWeight);
+      hDeltaEtaTops_gen->Fill(getP4(gen_top1_p4, 0)->Eta() - getP4(gen_top2_p4, 0)->Eta(), eventWeight);
+      hDeltaRTops_gen->Fill(getP4(gen_top1_p4, 0)->DeltaR(*getP4(gen_top2_p4, 0)), eventWeight);
+    }
+
+    if (mIsMC && (MC_channel == 1 || MC_channel == 2)) {
+      TLorentzVector leptonic_W(0., 0., 0., 0.);
+      if (gen_lepton_p4->GetEntriesFast() && gen_neutrino_p4->GetEntriesFast()) {
+        hDeltaPhiLeptonNeutrino_gen->Fill(fabs(getP4(gen_lepton_p4, 0)->DeltaPhi(*getP4(gen_neutrino_p4, 0))), eventWeight);
+        hDeltaRLeptonNeutrino_gen->Fill(getP4(gen_lepton_p4, 0)->DeltaR(*getP4(gen_neutrino_p4, 0)), eventWeight);
+        hDeltaEtaLeptonNeutrino_gen->Fill(getP4(gen_lepton_p4, 0)->Eta() - getP4(gen_neutrino_p4, 0)->Eta(), eventWeight);
+
+        leptonic_W = *getP4(gen_lepton_p4, 0) + *getP4(gen_neutrino_p4, 0);
+        hLeptonicWPt_gen->Fill(leptonic_W.Pt(), eventWeight);
+        hLeptonicWEta_gen->Fill(leptonic_W.Eta(), eventWeight);
       }
 
-      if (mIsMC && (MC_channel == 1 || MC_channel == 2)) {
-        TLorentzVector leptonic_W(0., 0., 0., 0.);
-        if (gen_lepton_p4->GetEntriesFast() && gen_neutrino_p4->GetEntriesFast()) {
-          hDeltaPhiLeptonNeutrino_gen->Fill(fabs(getP4(gen_lepton_p4, 0)->DeltaPhi(*getP4(gen_neutrino_p4, 0))), eventWeight);
-          hDeltaRLeptonNeutrino_gen->Fill(getP4(gen_lepton_p4, 0)->DeltaR(*getP4(gen_neutrino_p4, 0)), eventWeight);
-          hDeltaEtaLeptonNeutrino_gen->Fill(getP4(gen_lepton_p4, 0)->Eta() - getP4(gen_neutrino_p4, 0)->Eta(), eventWeight);
+      TLorentzVector hadronic_W(0., 0., 0., 0.);
+      if (gen_lightJet1_p4->GetEntriesFast() && gen_lightJet2_p4->GetEntriesFast()) {
+        hDeltaPhiTwoLightJets_gen->Fill(fabs(getP4(gen_lightJet1_p4, 0)->DeltaPhi(*getP4(gen_lightJet2_p4, 0))), eventWeight);
+        hDeltaRTwoLightJets_gen->Fill(getP4(gen_lightJet1_p4, 0)->DeltaR(*getP4(gen_lightJet2_p4, 0)), eventWeight);
+        hDeltaEtaTwoLightJets_gen->Fill(getP4(gen_lightJet1_p4, 0)->Eta() - getP4(gen_lightJet2_p4, 0)->Eta(), eventWeight);
 
-          leptonic_W = *getP4(gen_lepton_p4, 0) + *getP4(gen_neutrino_p4, 0);
-          hLeptonicWPt_gen->Fill(leptonic_W.Pt(), eventWeight);
-          hLeptonicWEta_gen->Fill(leptonic_W.Eta(), eventWeight);
-        }
+        hadronic_W = *getP4(gen_lightJet1_p4, 0) + *getP4(gen_lightJet2_p4, 0);
+        hHadronicWPt_gen->Fill(leptonic_W.Pt(), eventWeight);
+        hHadronicWEta_gen->Fill(leptonic_W.Eta(), eventWeight);
+      }
 
-        TLorentzVector hadronic_W(0., 0., 0., 0.);
-        if (gen_lightJet1_p4->GetEntriesFast() && gen_lightJet2_p4->GetEntriesFast()) {
-          hDeltaPhiTwoLightJets_gen->Fill(fabs(getP4(gen_lightJet1_p4, 0)->DeltaPhi(*getP4(gen_lightJet2_p4, 0))), eventWeight);
-          hDeltaRTwoLightJets_gen->Fill(getP4(gen_lightJet1_p4, 0)->DeltaR(*getP4(gen_lightJet2_p4, 0)), eventWeight);
-          hDeltaEtaTwoLightJets_gen->Fill(getP4(gen_lightJet1_p4, 0)->Eta() - getP4(gen_lightJet2_p4, 0)->Eta(), eventWeight);
-
-          hadronic_W = *getP4(gen_lightJet1_p4, 0) + *getP4(gen_lightJet2_p4, 0);
-          hHadronicWPt_gen->Fill(leptonic_W.Pt(), eventWeight);
-          hHadronicWEta_gen->Fill(leptonic_W.Eta(), eventWeight);
-        }
-
-        if (leptonic_W.Pt() != 0 && hadronic_W.Pt() != 0) {
-          hDeltaPhiW_gen->Fill(fabs(leptonic_W.DeltaPhi(hadronic_W)), eventWeight);
-          hDeltaRW_gen->Fill(leptonic_W.DeltaR(hadronic_W), eventWeight);
-          hDeltaEtaW_gen->Fill(leptonic_W.Eta() - hadronic_W.Eta(), eventWeight);
-        }
+      if (leptonic_W.Pt() != 0 && hadronic_W.Pt() != 0) {
+        hDeltaPhiW_gen->Fill(fabs(leptonic_W.DeltaPhi(hadronic_W)), eventWeight);
+        hDeltaRW_gen->Fill(leptonic_W.DeltaR(hadronic_W), eventWeight);
+        hDeltaEtaW_gen->Fill(leptonic_W.Eta() - hadronic_W.Eta(), eventWeight);
       }
     }
 
@@ -513,6 +528,7 @@ void Extractor2Histos::Loop()
       }
     }
 
+    float mtt_four_leading_jets = 0.;
     if (! mSkim) {
       hNTrueInt_nosel->Fill(n_trueInteractions, eventWeight);
       hNVtx_nosel->Fill(n_vertices, eventWeight);
@@ -592,6 +608,16 @@ void Extractor2Histos::Loop()
     if (!mSkim && (isSel != 1 || numComb <= 0))
       continue;
 
+    if (mUseMVA) {
+
+    } else if(mUseKF) {
+      if (! kf_converged)
+        continue;
+    } else {
+      if (numComb == 0)
+        continue;
+    }
+
     hBestSolChi2->Fill(bestSolChi2, eventWeight);
     hNGoodJets_chi2sel->Fill(nJets, eventWeight);
     hNBtaggedJets_chi2sel->Fill(nBtaggedJets_CSVM, eventWeight);
@@ -630,14 +656,33 @@ void Extractor2Histos::Loop()
     if (mIsMC && MC_channel != 0) {
       h_mtt_resolution->Fill(mtt_AfterReco - MC_mtt, eventWeight);
 
-      mtt_gen_vs_mtt_reco_chi2sel.fill(MC_mtt, mtt_AfterReco, eventWeight);
-      mtt_gen_vs_mtt_reso_chi2sel.fill(MC_mtt, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
+      mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel.fill(MC_mtt, mtt_AfterReco, eventWeight);
+      mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel.fill(MC_mtt, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
+      mtt_gen_vs_mtt_reco_resolution_rmsVSmttreco_sortingAlgoSel.fill(mtt_AfterReco, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
+
+      if (mUseKF) {
+        if (kf_proba < 0.2) {
+          mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_lowKfProb.fill(MC_mtt, mtt_AfterReco, eventWeight);
+          mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_lowKfProb.fill(MC_mtt, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
+
+        } else {
+          mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_highKfProb.fill(MC_mtt, mtt_AfterReco, eventWeight);
+          mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_highKfProb.fill(MC_mtt, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
+        }
+      }
 
       if (true) {
 
         // Reconstruct mtt using the four leading jet
 
-        TLorentzVector tt_system = *getP4(selectedLeptonP4_AfterReco, 0) + *getP4(selectedNeutrinoP4_AfterReco, 0);
+        LorentzVector selectedLeptonP4_LV_AfterReco;
+        if (mUseKF) {
+          selectedLeptonP4_LV_AfterReco = *selectedLeptonP4_AfterKF;
+        } else {
+          selectedLeptonP4_LV_AfterReco = LorentzVector(getP4(selectedLeptonP4_AfterReco, 0)->Pt(), getP4(selectedLeptonP4_AfterReco, 0)->Eta(), getP4(selectedLeptonP4_AfterReco, 0)->Phi(), getP4(selectedLeptonP4_AfterReco, 0)->E());
+        }
+
+        LorentzVector tt_system = selectedLeptonP4_LV_AfterReco + *selectedNeutrinoP4_AfterReco;
         int njets = 0;
         for (int i = 0; i < jet_p4->GetEntriesFast(); i++) {
 
@@ -649,14 +694,17 @@ void Extractor2Histos::Loop()
           if (p->Pt() < 30 || fabs(p->Eta()) > 2.4)
             continue;
 
-          tt_system += *p;
+          LorentzVector p_LV(p->Pt(), p->Eta(), p->Phi(), p->E());
+
+          tt_system += p_LV;
           njets++;
         }
 
-        float mtt_four_leading_jets = tt_system.M();    
+        mtt_four_leading_jets = tt_system.M();
 
-        mtt_gen_vs_mtt_reco_four_jets_chi2sel.fill(MC_mtt, mtt_four_leading_jets, eventWeight);
-        mtt_gen_vs_mtt_reso_four_jets_chi2sel.fill(MC_mtt, (mtt_four_leading_jets - MC_mtt) / MC_mtt, eventWeight);
+        mtt_gen_vs_mtt_reco_linearity_fourJets_sortingAlgoSel.fill(MC_mtt, mtt_four_leading_jets, eventWeight);
+        mtt_gen_vs_mtt_reco_resolution_fourJets_sortingAlgoSel.fill(MC_mtt, (mtt_four_leading_jets - MC_mtt) / MC_mtt, eventWeight);
+
         h_mtt_resolution_four_jets->Fill(mtt_four_leading_jets - MC_mtt, eventWeight);
       }
     }
@@ -682,14 +730,6 @@ void Extractor2Histos::Loop()
       continue;
 
     if (btagSel && p_1stjetpt > firstJetCut && p_2ndjetpt > secondJetCut && p_3rdjetpt > thirdJetCut) {
-
-      if (mUseMVA) {
-
-      } else {
-        if (mtt_AfterReco <= 0 || bestSolChi2 > 500)
-          continue;
-      }
-
       if (mIsMC) {
         if (isRun2012AB) {
           m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunA, lumi_run2012_A);
@@ -720,15 +760,17 @@ void Extractor2Histos::Loop()
         hPUWeight_fullsel->Fill(puWeight);
         //hTopPtWeight_fullsel->Fill(topPtWeight);
         hTriggerWeight_fullsel->Fill(triggerWeight);
+
+        mtt_gen_vs_mtt_reco_linearity_fullSel.fill(MC_mtt, mtt_AfterReco, eventWeight);
+        mtt_gen_vs_mtt_reco_resolution_fullSel.fill(MC_mtt, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
+        mtt_gen_vs_mtt_reco_linearity_fourJets_fullSel.fill(MC_mtt, mtt_four_leading_jets, eventWeight);
+        mtt_gen_vs_mtt_reco_resolution_fourJets_fullSel.fill(MC_mtt, (mtt_four_leading_jets - MC_mtt) / MC_mtt, eventWeight);
       }
 
       hBestSolChi2_fullsel->Fill(bestSolChi2, eventWeight);
       hBoostTT->Fill(beta_tt_AfterReco, eventWeight);
       hPtTT->Fill(pt_tt_AfterReco, eventWeight);
       hEtaTT->Fill(eta_tt_AfterReco, eventWeight);
-
-      if (mIsMC && MC_channel != 0) {
-      }
 
       hLeptonPt->Fill(ptLepton, eventWeight);
       hLeptonEta->Fill(etaLepton, eventWeight);
@@ -773,24 +815,28 @@ void Extractor2Histos::Loop()
 
       pMttResolution_btag_sel->Fill(MC_mtt , mtt_AfterReco, eventWeight);
 
-      hDeltaPhiTops_reco_fullsel->Fill(fabs(getP4(lepTopP4_AfterReco, 0)->DeltaPhi(*getP4(hadTopP4_AfterReco, 0))), eventWeight);
-      hDeltaEtaTops_reco_fullsel->Fill(getP4(lepTopP4_AfterReco, 0)->Eta() - getP4(hadTopP4_AfterReco, 0)->Eta(), eventWeight);
-      hDeltaRTops_reco_fullsel->Fill(getP4(lepTopP4_AfterReco, 0)->DeltaR(*getP4(hadTopP4_AfterReco, 0)), eventWeight);
-      hDeltaThetaTops_reco_fullsel->Fill(fabs(getP4(lepTopP4_AfterReco, 0)->Theta() - getP4(hadTopP4_AfterReco, 0)->Theta()), eventWeight);
+      hDeltaPhiTops_reco_fullsel->Fill(fabs(ROOT::Math::VectorUtil::DeltaPhi(*lepTopP4_AfterReco, *hadTopP4_AfterReco)), eventWeight);
+      hDeltaEtaTops_reco_fullsel->Fill(lepTopP4_AfterReco->Eta() - hadTopP4_AfterReco->Eta(), eventWeight);
+      hDeltaRTops_reco_fullsel->Fill(ROOT::Math::VectorUtil::DeltaR(*lepTopP4_AfterReco, *hadTopP4_AfterReco), eventWeight);
+      hDeltaThetaTops_reco_fullsel->Fill(fabs(lepTopP4_AfterReco->Theta() - hadTopP4_AfterReco->Theta()), eventWeight);
 
-      hLeptTopPz->Fill(getP4(lepTopP4_AfterReco, 0)->Pz(), eventWeight);
-      hHadrTopPz->Fill(getP4(hadTopP4_AfterReco, 0)->Pz(), eventWeight);
+      hLeptTopPz->Fill(lepTopP4_AfterReco->Pz(), eventWeight);
+      hHadrTopPz->Fill(hadTopP4_AfterReco->Pz(), eventWeight);
 
-      selectedFirstJetPt_AfterReco = getP4(selectedFirstJetP4_AfterReco, 0)->Pt();
-      selectedSecondJetPt_AfterReco = getP4(selectedSecondJetP4_AfterReco, 0)->Pt();
-      selectedHadronicBPt_AfterReco = getP4(selectedHadronicBP4_AfterReco, 0)->Pt();
-      selectedLeptonicBPt_AfterReco = getP4(selectedLeptonicBP4_AfterReco, 0)->Pt();
+      selectedFirstJetPt_AfterReco = selectedFirstJetP4_AfterReco->Pt();
+      selectedSecondJetPt_AfterReco = selectedSecondJetP4_AfterReco->Pt();
+      selectedHadronicBPt_AfterReco = selectedHadronicBP4_AfterReco->Pt();
+      selectedLeptonicBPt_AfterReco = selectedLeptonicBP4_AfterReco->Pt();
 
       hSelectedFirstJetPt->Fill(selectedFirstJetPt_AfterReco, eventWeight);
       hSelectedSecondJetPt->Fill(selectedSecondJetPt_AfterReco, eventWeight);
-      hSelectedNeutrinoPt->Fill(getP4(selectedNeutrinoP4_AfterReco, 0)->Pt(), eventWeight);
-      hSelectedNeutrinoPz->Fill(getP4(selectedFirstJetP4_AfterReco, 0)->Pz(), eventWeight);
-      hSelectedLeptonPt->Fill(getP4(selectedLeptonP4_AfterReco, 0)->Pt(), eventWeight);
+      hSelectedNeutrinoPt->Fill(selectedNeutrinoP4_AfterReco->Pt(), eventWeight);
+      hSelectedNeutrinoPz->Fill(selectedFirstJetP4_AfterReco->Pz(), eventWeight);
+      if (mUseKF) {
+        hSelectedLeptonPt->Fill(selectedLeptonP4_AfterKF->Pt(), eventWeight);
+      } else {
+        hSelectedLeptonPt->Fill(getP4(selectedLeptonP4_AfterReco, 0)->Pt(), eventWeight);
+      }
       hSelectedHadronicBPt->Fill(selectedHadronicBPt_AfterReco, eventWeight);
       hSelectedLeptonicBPt->Fill(selectedLeptonicBPt_AfterReco, eventWeight);
 
@@ -824,10 +870,21 @@ void Extractor2Histos::Loop()
   output->Write();
 
   if (mIsMC) {
-    mtt_gen_vs_mtt_reco_chi2sel.write(output);
-    mtt_gen_vs_mtt_reso_chi2sel.write(output);
-    mtt_gen_vs_mtt_reco_four_jets_chi2sel.write(output);
-    mtt_gen_vs_mtt_reso_four_jets_chi2sel.write(output);
+    mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel.write(output);
+    mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel.write(output);
+    mtt_gen_vs_mtt_reco_resolution_rmsVSmttreco_sortingAlgoSel.write(output);
+    mtt_gen_vs_mtt_reco_linearity_fourJets_sortingAlgoSel.write(output);
+    mtt_gen_vs_mtt_reco_resolution_fourJets_sortingAlgoSel.write(output);
+
+    mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_lowKfProb.write(output);
+    mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_lowKfProb.write(output);
+    mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_highKfProb.write(output);
+    mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_highKfProb.write(output);
+
+    mtt_gen_vs_mtt_reco_linearity_fullSel.write(output);
+    mtt_gen_vs_mtt_reco_resolution_fullSel.write(output);
+    mtt_gen_vs_mtt_reco_linearity_fourJets_fullSel.write(output);
+    mtt_gen_vs_mtt_reco_resolution_fourJets_fullSel.write(output);
   }
 
   output->Close();
@@ -845,7 +902,7 @@ void loadChain(const std::vector<std::string>& inputFiles, const std::string& tr
   output->SetCacheSize(30*1024*1024);
 }
 
-Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst) : fMTT(0), fVertices(0), fEvent(0)
+Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, bool kf, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst) : fMTT(0), fVertices(0), fEvent(0)
 {
   mIsSemiMu = isSemiMu;
   mIsMC = isMC;
@@ -853,6 +910,7 @@ Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, c
   mBTag = btag;
   mSkim = skim;
   mUseMVA = mva;
+  mUseKF = kf;
   mTriggerSyst = triggerSyst;
   mJECSyst = jecSyst;
   mPUSyst = puSyst;
@@ -910,14 +968,29 @@ Int_t Extractor2Histos::GetEntry(Long64_t entry)
     fJet->GetEntry(entry);
 
   //if (fElectrons)
-    //fElectrons->GetEntry(entry);
+  //fElectrons->GetEntry(entry);
 
   return 1;
 }
 
-void Extractor2Histos::SetBranchAddress(TTree* t, const char* branchName, void* ptr, TBranch** branch/* = NULL*/) {
-  t->SetBranchStatus(branchName, 1);
-  t->SetBranchAddress(branchName, ptr, branch);
+void ActivateBranch(TBranch* branch) {
+  branch->SetStatus(1);
+  TObjArray* objArray = branch->GetListOfBranches();
+  for (int i = 0; i < objArray->GetEntries(); i++) {
+    TBranch* b = static_cast<TBranch*> (objArray->At(i));
+    if (b) {
+      ActivateBranch(b);
+    }
+  }
+}
+
+void Extractor2Histos::SetBranchAddress(TTree* t, const char* branchName, void* ptr) {
+  TBranch* branch = t->FindBranch(branchName);
+  if (!branch)
+    return;
+
+  ActivateBranch(branch);
+  t->SetBranchAddress(branchName, ptr, NULL);
 }
 
 void Extractor2Histos::Init()
@@ -926,36 +999,34 @@ void Extractor2Histos::Init()
 
   fMTT->SetBranchStatus("*", 0);
 
-  SetBranchAddress(fMTT, "MC_channel", &MC_channel, NULL);
-  SetBranchAddress(fMTT, "MC_mtt", &MC_mtt, &b_MC_mtt);
+  SetBranchAddress(fMTT, "MC_channel", &MC_channel);
+  SetBranchAddress(fMTT, "MC_mtt", &MC_mtt);
 
-  if (! mSkim) {
-    SetBranchAddress(fMTT, "MC_beta_tt", &MC_boost_tt, NULL);
+  SetBranchAddress(fMTT, "MC_beta_tt", &MC_boost_tt);
 
-    SetBranchAddress(fMTT, "MC_pt_tt", &MC_pt_tt, NULL);
-    SetBranchAddress(fMTT, "MC_eta_tt", &MC_eta_tt, NULL);
-  }
+  SetBranchAddress(fMTT, "MC_pt_tt", &MC_pt_tt);
+  SetBranchAddress(fMTT, "MC_eta_tt", &MC_eta_tt);
 
-  SetBranchAddress(fMTT, "nGoodMuons", &nGoodMuons, &b_nGoodMuons);
-  //SetBranchAddress(fMTT, "nLooseGoodMuons", &nLooseGoodMuons, &b_nLooseGoodMuons);
+  SetBranchAddress(fMTT, "nGoodMuons", &nGoodMuons);
+  //SetBranchAddress(fMTT, "nLooseGoodMuons", &nLooseGoodMuons);
   if (mIsSemiMu) {
-    SetBranchAddress(fMTT, "muonPt", muonPt, &b_muonPt);
-    SetBranchAddress(fMTT, "muonEta", muonEta, &b_muonPt);
-    SetBranchAddress(fMTT, "muRelIso", muRelIso, &b_muRelIso);
+    SetBranchAddress(fMTT, "muonPt", muonPt);
+    SetBranchAddress(fMTT, "muonEta", muonEta);
+    SetBranchAddress(fMTT, "muRelIso", muRelIso);
   } else {
-    SetBranchAddress(fMTT, "nGoodElectrons", &nGoodElectrons, &b_nGoodElectrons);
-    SetBranchAddress(fMTT, "electronPt", &electronPt, &b_electronPt);
-    SetBranchAddress(fMTT, "electronEta", &electronEta, &b_electronPt);
-    SetBranchAddress(fMTT, "elRelIso", &elRelIso, &b_elRelIso);
+    SetBranchAddress(fMTT, "nGoodElectrons", &nGoodElectrons);
+    SetBranchAddress(fMTT, "electronPt", &electronPt);
+    SetBranchAddress(fMTT, "electronEta", &electronEta);
+    SetBranchAddress(fMTT, "elRelIso", &elRelIso);
   }
-  SetBranchAddress(fMTT, "1stjetpt", &p_1stjetpt, &b_1stjetpt);
-  SetBranchAddress(fMTT, "2ndjetpt", &p_2ndjetpt, &b_2ndjetpt);
-  SetBranchAddress(fMTT, "3rdjetpt", &p_3rdjetpt, &b_3rdjetpt);
-  SetBranchAddress(fMTT, "4thjetpt", &p_4thjetpt, &b_4thjetpt);
-  SetBranchAddress(fMTT, "nJets", &nJets, &b_nJets);
-  SetBranchAddress(fMTT, "jetEta", jetEta, &b_jetEta);
-  SetBranchAddress(fMTT, "jetPt", jetPt, &b_jetPt);
-  SetBranchAddress(fMTT, "nBtaggedJets_CSVM", &nBtaggedJets_CSVM, NULL);
+  SetBranchAddress(fMTT, "1stjetpt", &p_1stjetpt);
+  SetBranchAddress(fMTT, "2ndjetpt", &p_2ndjetpt);
+  SetBranchAddress(fMTT, "3rdjetpt", &p_3rdjetpt);
+  SetBranchAddress(fMTT, "4thjetpt", &p_4thjetpt);
+  SetBranchAddress(fMTT, "nJets", &nJets);
+  SetBranchAddress(fMTT, "jetEta", jetEta);
+  SetBranchAddress(fMTT, "jetPt", jetPt);
+  SetBranchAddress(fMTT, "nBtaggedJets_CSVM", &nBtaggedJets_CSVM);
   //SetBranchAddress(fMTT, "nBtaggedJets_TCHEM", &nBtaggedJets_TCHEM, &b_nBtaggedJets_TCHEM);
   //SetBranchAddress(fMTT, "nBtaggedJets_TCHET", &nBtaggedJets_TCHET, &b_nBtaggedJets_TCHET);
   //SetBranchAddress(fMTT, "nBtaggedJets_TCHPL", &nBtaggedJets_TCHPL, &b_nBtaggedJets_TCHPL);
@@ -963,15 +1034,17 @@ void Extractor2Histos::Init()
   //SetBranchAddress(fMTT, "nBtaggedJets_TCHPT", &nBtaggedJets_TCHPT, &b_nBtaggedJets_TCHPT);
   //SetBranchAddress(fMTT, "nBtaggedJets_SSVHEM", &nBtaggedJets_SSVHEM, &b_nBtaggedJets_SSVHEM);
   //SetBranchAddress(fMTT, "nBtaggedJets_SSVHPT", &nBtaggedJets_SSVHPT, &b_nBtaggedJets_SSVHPT);
-  SetBranchAddress(fMTT, "MET", &MET, &b_MET);
-  SetBranchAddress(fMTT, "isSel", &isSel, &b_isSel);
+  SetBranchAddress(fMTT, "MET", &MET);
+  SetBranchAddress(fMTT, "isSel", &isSel);
   //SetBranchAddress(fMTT, "oneMatchedCombi", &oneMatchedCombi, &b_oneMatchedCombi);
-  SetBranchAddress(fMTT, "bestSolChi2", &bestSolChi2, &b_bestSolChi2);
+  SetBranchAddress(fMTT, "bestSolChi2", &bestSolChi2);
   //SetBranchAddress(fMTT, "isBestSolMatched", &isBestSolMatched, &b_isBestSolMatched);
   //SetBranchAddress(fMTT, "KFChi2", &KFChi2, &b_KFChi2);
 
   if (mUseMVA)
     SetBranchAddress(fMTT, "numComb_MVA", &numComb);
+  else if (mUseKF)
+    SetBranchAddress(fMTT, "numComb_KF", &numComb);
   else
     SetBranchAddress(fMTT, "numComb_chi2", &numComb);
 
@@ -987,6 +1060,19 @@ void Extractor2Histos::Init()
     SetBranchAddress(fMTT, "lepTopEta_AfterMVA", &lepTopEta_AfterReco);
     SetBranchAddress(fMTT, "hadTopPt_AfterMVA", &hadTopPt_AfterReco);
     SetBranchAddress(fMTT, "hadTopEta_AfterMVA", &hadTopEta_AfterReco);
+  } else if (mUseKF) {
+    SetBranchAddress(fMTT, "mLepTop_AfterKF", &mLepTop_AfterReco);
+    SetBranchAddress(fMTT, "mHadTop_AfterKF", &mHadTop_AfterReco);
+    SetBranchAddress(fMTT, "mtt_AfterKF", &mtt_AfterReco);
+    SetBranchAddress(fMTT, "pt_tt_AfterKF", &pt_tt_AfterReco);
+    SetBranchAddress(fMTT, "eta_tt_AfterKF", &eta_tt_AfterReco);
+    SetBranchAddress(fMTT, "beta_tt_AfterKF", &beta_tt_AfterReco);
+    SetBranchAddress(fMTT, "kf_proba", &kf_proba);
+
+    SetBranchAddress(fMTT, "lepTopPt_AfterKF", &lepTopPt_AfterReco);
+    SetBranchAddress(fMTT, "lepTopEta_AfterKF", &lepTopEta_AfterReco);
+    SetBranchAddress(fMTT, "hadTopPt_AfterKF", &hadTopPt_AfterReco);
+    SetBranchAddress(fMTT, "hadTopEta_AfterKF", &hadTopEta_AfterReco);
   } else {
     SetBranchAddress(fMTT, "mLepTop_AfterChi2", &mLepTop_AfterReco);
     SetBranchAddress(fMTT, "mHadTop_AfterChi2", &mHadTop_AfterReco);
@@ -994,6 +1080,7 @@ void Extractor2Histos::Init()
     SetBranchAddress(fMTT, "pt_tt_AfterChi2", &pt_tt_AfterReco);
     SetBranchAddress(fMTT, "eta_tt_AfterChi2", &eta_tt_AfterReco);
     SetBranchAddress(fMTT, "beta_tt_AfterChi2", &beta_tt_AfterReco);
+    SetBranchAddress(fMTT, "kf_converged", &kf_converged);
 
     SetBranchAddress(fMTT, "lepTopPt_AfterChi2", &lepTopPt_AfterReco);
     SetBranchAddress(fMTT, "lepTopEta_AfterChi2", &lepTopEta_AfterReco);
@@ -1001,8 +1088,8 @@ void Extractor2Histos::Init()
     SetBranchAddress(fMTT, "hadTopEta_AfterChi2", &hadTopEta_AfterReco);
   }
 
-  SetBranchAddress(fMTT, "lepton_weight", &m_lepton_weight, NULL);
-  SetBranchAddress(fMTT, "btag_weight", &m_btag_weight, NULL);
+  SetBranchAddress(fMTT, "lepton_weight", &m_lepton_weight);
+  SetBranchAddress(fMTT, "btag_weight", &m_btag_weight);
 
   if (mLeptonSyst == "up")
     SetBranchAddress(fMTT, "lepton_weight_error_high", &m_lepton_weight_error);
@@ -1017,7 +1104,7 @@ void Extractor2Histos::Init()
     SetBranchAddress(fMTT, "btag_weight_error_low", &m_btag_weight_error);
 
   if (fMTT->GetBranch("trigger_passed")) {
-    SetBranchAddress(fMTT, "trigger_passed", &m_triggerPassed, NULL);
+    SetBranchAddress(fMTT, "trigger_passed", &m_triggerPassed);
   } else {
     // Backward compatibilty
     m_triggerPassed = true;
@@ -1029,85 +1116,71 @@ void Extractor2Histos::Init()
   selectedSecondJetP4_AfterReco = NULL;
   selectedHadronicBP4_AfterReco = NULL;
   selectedLeptonicBP4_AfterReco = NULL;
-  selectedLeptonP4_AfterReco = NULL;
   selectedNeutrinoP4_AfterReco = NULL;
+  selectedLeptonP4_AfterReco = NULL;
+  selectedLeptonP4_AfterKF = NULL;
 
 
   if (mUseMVA) {
-    fMTT->SetBranchStatus("lepTopP4_AfterMVA", 1);
-    fMTT->SetBranchStatus("hadTopP4_AfterMVA", 1);
-    fMTT->SetBranchAddress("lepTopP4_AfterMVA", &lepTopP4_AfterReco);
-    fMTT->SetBranchAddress("hadTopP4_AfterMVA", &hadTopP4_AfterReco);
-    //FIXME: For extractor production after April 3rd, 2014, please use correct variable name (MVA instead of Chi2)
-    fMTT->SetBranchStatus("selectedFirstJetP4_AfterChi2", 1);
-    fMTT->SetBranchStatus("selectedSecondJetP4_AfterChi2", 1);
-    fMTT->SetBranchStatus("selectedLeptonP4_AfterChi2", 1);
-    fMTT->SetBranchStatus("selectedNeutrinoP4_AfterChi2", 1);
-    fMTT->SetBranchStatus("selectedLeptonicBP4_AfterChi2", 1);
-    fMTT->SetBranchStatus("selectedHadronicBP4_AfterChi2", 1);
-    fMTT->SetBranchAddress("selectedFirstJetP4_AfterChi2", &selectedFirstJetP4_AfterReco);
-    fMTT->SetBranchAddress("selectedSecondJetP4_AfterChi2", &selectedSecondJetP4_AfterReco);
-    fMTT->SetBranchAddress("selectedLeptonP4_AfterChi2", &selectedLeptonP4_AfterReco);
-    fMTT->SetBranchAddress("selectedNeutrinoP4_AfterChi2", &selectedNeutrinoP4_AfterReco);
-    fMTT->SetBranchAddress("selectedHadronicBP4_AfterChi2", &selectedHadronicBP4_AfterReco);
-    fMTT->SetBranchAddress("selectedLeptonicBP4_AfterChi2", &selectedLeptonicBP4_AfterReco);
+    SetBranchAddress(fMTT, "lepTopP4_AfterMVA", &lepTopP4_AfterReco);
+    SetBranchAddress(fMTT, "hadTopP4_AfterMVA", &hadTopP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedFirstJetP4_AfterMVA", &selectedFirstJetP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedSecondJetP4_AfterMVA", &selectedSecondJetP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedLeptonP4", &selectedLeptonP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedNeutrinoP4_AfterMVA", &selectedNeutrinoP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedHadronicBP4_AfterMVA", &selectedHadronicBP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedLeptonicBP4_AfterMVA", &selectedLeptonicBP4_AfterReco);
+  } else if (mUseKF) {
+    SetBranchAddress(fMTT, "lepTopP4_AfterKF", &lepTopP4_AfterReco);
+    SetBranchAddress(fMTT, "hadTopP4_AfterKF", &hadTopP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedFirstJetP4_AfterKF", &selectedFirstJetP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedSecondJetP4_AfterKF", &selectedSecondJetP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedLeptonP4", &selectedLeptonP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedLeptonP4_AfterKF", &selectedLeptonP4_AfterKF);
+    SetBranchAddress(fMTT, "selectedNeutrinoP4_AfterKF", &selectedNeutrinoP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedHadronicBP4_AfterKF", &selectedHadronicBP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedLeptonicBP4_AfterKF", &selectedLeptonicBP4_AfterReco);
   } else {
-    fMTT->SetBranchStatus("lepTopP4_AfterChi2", 1);
-    fMTT->SetBranchStatus("hadTopP4_AfterChi2", 1);
-    fMTT->SetBranchStatus("selectedFirstJetP4_AfterChi2", 1);
-    fMTT->SetBranchStatus("selectedSecondJetP4_AfterChi2", 1);
-    fMTT->SetBranchStatus("selectedLeptonP4_AfterChi2", 1);
-    fMTT->SetBranchStatus("selectedNeutrinoP4_AfterChi2", 1);
-    fMTT->SetBranchStatus("selectedLeptonicBP4_AfterChi2", 1);
-    fMTT->SetBranchStatus("selectedHadronicBP4_AfterChi2", 1);
-    fMTT->SetBranchAddress("lepTopP4_AfterChi2", &lepTopP4_AfterReco);
-    fMTT->SetBranchAddress("hadTopP4_AfterChi2", &hadTopP4_AfterReco);
-    fMTT->SetBranchAddress("selectedFirstJetP4_AfterChi2", &selectedFirstJetP4_AfterReco);
-    fMTT->SetBranchAddress("selectedSecondJetP4_AfterChi2", &selectedSecondJetP4_AfterReco);
-    fMTT->SetBranchAddress("selectedLeptonP4_AfterChi2", &selectedLeptonP4_AfterReco);
-    fMTT->SetBranchAddress("selectedNeutrinoP4_AfterChi2", &selectedNeutrinoP4_AfterReco);
-    fMTT->SetBranchAddress("selectedHadronicBP4_AfterChi2", &selectedHadronicBP4_AfterReco);
-    fMTT->SetBranchAddress("selectedLeptonicBP4_AfterChi2", &selectedLeptonicBP4_AfterReco);
+    SetBranchAddress(fMTT, "lepTopP4_AfterChi2", &lepTopP4_AfterReco);
+    SetBranchAddress(fMTT, "hadTopP4_AfterChi2", &hadTopP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedFirstJetP4_AfterChi2", &selectedFirstJetP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedSecondJetP4_AfterChi2", &selectedSecondJetP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedLeptonP4", &selectedLeptonP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedNeutrinoP4_AfterChi2", &selectedNeutrinoP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedHadronicBP4_AfterChi2", &selectedHadronicBP4_AfterReco);
+    SetBranchAddress(fMTT, "selectedLeptonicBP4_AfterChi2", &selectedLeptonicBP4_AfterReco);
   }
 
   gen_top1_p4 = NULL;
   gen_top2_p4 = NULL;
 
   if (mIsMC) {
-    fMTT->SetBranchStatus("MC_Top1_p4", 1);
-    fMTT->SetBranchStatus("MC_Top2_p4", 1);
-    fMTT->SetBranchAddress("MC_Top1_p4", &gen_top1_p4);
-    fMTT->SetBranchAddress("MC_Top2_p4", &gen_top2_p4);
+    SetBranchAddress(fMTT, "MC_Top1_p4", &gen_top1_p4);
+    SetBranchAddress(fMTT, "MC_Top2_p4", &gen_top2_p4);
   }
 
   gen_lepton_p4 = NULL;
   gen_neutrino_p4 = NULL;
 
-  if (! mSkim && mIsMC) {
-    fMTT->SetBranchStatus("MC_lepton_p4", 1);
-    fMTT->SetBranchStatus("MC_neutrino_p4", 1);
-    fMTT->SetBranchAddress("MC_lepton_p4", &gen_lepton_p4);
-    fMTT->SetBranchAddress("MC_neutrino_p4", &gen_neutrino_p4);
+  if (mIsMC) {
+    SetBranchAddress(fMTT, "MC_lepton_p4", &gen_lepton_p4);
+    SetBranchAddress(fMTT, "MC_neutrino_p4", &gen_neutrino_p4);
   }
 
   gen_leptonic_B_p4 = NULL;
   gen_hadronic_B_p4 = NULL;
 
-  if (!mSkim && mIsMC) {
-    fMTT->SetBranchStatus("MC_leptonic_B_p4", 1);
-    fMTT->SetBranchStatus("MC_hadronic_B_p4", 1);
-    fMTT->SetBranchAddress("MC_leptonic_B_p4", &gen_leptonic_B_p4);
-    fMTT->SetBranchAddress("MC_hadronic_B_p4", &gen_hadronic_B_p4);
+  if (mIsMC) {
+    SetBranchAddress(fMTT, "MC_leptonic_B_p4", &gen_leptonic_B_p4);
+    SetBranchAddress(fMTT, "MC_hadronic_B_p4", &gen_hadronic_B_p4);
   }
 
   gen_lightJet1_p4 = NULL;
   gen_lightJet2_p4 = NULL;
 
-  if (!mSkim && mIsMC) {
-    fMTT->SetBranchStatus("MC_lightJet1_B_p4", 1);
-    fMTT->SetBranchStatus("MC_lightJet2_B_p4", 1);
-    fMTT->SetBranchAddress("MC_lightJet1_B_p4", &gen_lightJet1_p4);
-    fMTT->SetBranchAddress("MC_lightJet2_B_p4", &gen_lightJet2_p4);
+  if (mIsMC) {
+    SetBranchAddress(fMTT, "MC_lightJet1_B_p4", &gen_lightJet1_p4);
+    SetBranchAddress(fMTT, "MC_lightJet2_B_p4", &gen_lightJet2_p4);
   }
 
   fVertices->SetMakeClass(1);
@@ -1197,7 +1270,16 @@ int main(int argc, char** argv) {
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jet to require", true, 2, "int", cmd);
 
     TCLAP::SwitchArg skimArg("", "skim", "Run over a skimmed file", cmd, false);
-    TCLAP::SwitchArg mvaArg("", "mva", "Use MVA instead of chi2", cmd, false);
+    //TCLAP::SwitchArg mvaArg("", "mva", "Use MVA instead of chi2", cmd, false);
+
+    TCLAP::SwitchArg chi2Arg("", "chi2", "Use chi2 sorting algorithm", true);
+    TCLAP::SwitchArg mvaArg("", "mva", "Use MVA instead of chi2", false);
+    TCLAP::SwitchArg kfArg("", "kf", "Use KF instead of chi2", false);
+    std::vector<TCLAP::Arg*>  xorlist;
+    xorlist.push_back(&chi2Arg);
+    xorlist.push_back(&mvaArg);
+    xorlist.push_back(&kfArg);
+    cmd.xorAdd( xorlist );
 
     TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S10", "string", cmd);
 
@@ -1276,7 +1358,7 @@ int main(int argc, char** argv) {
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    Extractor2Histos convertor(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData, btagArg.getValue(), skimArg.getValue(), mvaArg.getValue(), triggerSyst, jecSyst, puSyst, pdfSyst, leptonSyst, btagSyst);
+    Extractor2Histos convertor(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData, btagArg.getValue(), skimArg.getValue(), mvaArg.getValue(), kfArg.getValue(), triggerSyst, jecSyst, puSyst, pdfSyst, leptonSyst, btagSyst);
     convertor.Loop();
 
   } catch (TCLAP::ArgException &e) {

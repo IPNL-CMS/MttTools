@@ -39,11 +39,18 @@ void GaussianProfile::createGraph() {
   ss << m_name << "_response";
   std::string responseName = ss.str();
 
+  ss.str("");
+  ss << m_name << "_rms";
+  std::string rmsName = ss.str();
+
   m_response.reset(new TGraphErrors(m_nXBins));
   m_response->SetName(responseName.c_str());
 
   m_resolution.reset(new TGraphErrors(m_nXBins));
   m_resolution->SetName(resolutionName.c_str());
+
+  m_rms.reset(new TGraphErrors(m_nXBins));
+  m_rms->SetName(rmsName.c_str());
   
   // Create gaussian for fitting
   TF1* gauss = new TF1("g", "gaus");
@@ -84,8 +91,11 @@ void GaussianProfile::createGraph() {
     m_response->SetPoint(i, mean, gauss->GetParameter(1));
     m_response->SetPointError(i, 0, gauss->GetParError(1));
 
-    m_resolution->SetPoint(i, mean, gauss->GetParameter(2));
-    m_resolution->SetPointError(i, 0, gauss->GetParError(2));
+    m_rms->SetPoint(i, mean, hist->GetRMS());
+    m_rms->SetPointError(i, 0, hist->GetRMSError());
+
+    m_resolution->SetPoint(i, mean, gauss->GetParameter(2) * 100.); // x100 : resolution in %
+    m_resolution->SetPointError(i, 0, gauss->GetParError(2) * 100.);
   }
 
   delete gauss;

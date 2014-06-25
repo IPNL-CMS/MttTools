@@ -8,6 +8,7 @@
 #include <TH1.h>
 #include <TGraphErrors.h>
 #include <TFile.h>
+#include <TDirectory.h>
 
 class GaussianProfile {
 
@@ -82,6 +83,28 @@ class GaussianProfile {
       return m_resolution.get();
     }
 
+    void drawRMS(Option_t* options) {
+      if (! m_doGraph)
+        return;
+
+      if (m_dirty) {
+        createGraph();
+      }
+
+      m_rms->Draw(options);
+    }
+
+    TGraphErrors* getRMSGraph() {
+      if (! m_doGraph)
+        return nullptr;
+
+      if (m_dirty) {
+        createGraph();
+      }
+
+      return m_rms.get();
+    }
+
     void setAutoBinningPercent(double lowPercent, double highPercent) {
       m_autoBinningLowPercent = lowPercent;
       m_autoBinningHighPercent = highPercent;
@@ -96,9 +119,15 @@ class GaussianProfile {
         createGraph();
       }
 
+      TDirectory* currentDir = NULL;
       if (f) {
+        currentDir = f;
         f->mkdir(m_name.c_str());
         f->cd(m_name.c_str());
+      } else {
+        currentDir = gDirectory;
+        gDirectory->mkdir(m_name.c_str());
+        gDirectory->cd(m_name.c_str());
       }
 
       for (TH1* h: m_profiles) {
@@ -111,10 +140,12 @@ class GaussianProfile {
 
         if (m_resolution.get())
           m_resolution->Write();
+
+        if (m_rms.get())
+          m_rms->Write();
       }
 
-      if (f)
-        f->cd();
+      currentDir->cd();
     }
 
   private:
@@ -149,6 +180,8 @@ class GaussianProfile {
     std::vector<TH1*> m_profiles;
     std::shared_ptr<TGraphErrors> m_response;
     std::shared_ptr<TGraphErrors> m_resolution;
+    std::shared_ptr<TGraphErrors> m_mean;
+    std::shared_ptr<TGraphErrors> m_rms;
 
     bool m_doGraph;
 };
