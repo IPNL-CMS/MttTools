@@ -1,5 +1,12 @@
 {
   "2btag": {
+    "500": {
+      "efficiency_mu": 0.917163304486474,
+      "efficiency_e": 0.962889078839,
+      "error_efficiency_mu": 0.00889330087360599986,
+      "error_efficiency_e": 0.00640032495124199987
+    },
+
     "750": {
       "efficiency_mu": 0.917163304486474,
       "efficiency_e": 0.962889078839,
@@ -26,10 +33,23 @@
       "efficiency_e": 0.95867889687774,
       "error_efficiency_mu": 0.005035374383869,
       "error_efficiency_e": 0.003762430369621
+    },
+
+    "2000": {
+      "efficiency_mu": 0.920540646888956,
+      "efficiency_e": 0.95867889687774,
+      "error_efficiency_mu": 0.0100707487677380008,
+      "error_efficiency_e": 0.00752486073924199961
     }
   },
 
   "1btag": {
+    "500": {
+      "efficiency_mu": 0.915122446654598,
+      "efficiency_e": 0.96969953545322,
+      "error_efficiency_mu": 0.00928476246098799973,
+      "error_efficiency_e": 0.00575901004891399976
+    },
     "750": {
       "efficiency_mu": 0.915122446654598,
       "efficiency_e": 0.96969953545322,
@@ -56,6 +76,13 @@
       "efficiency_e": 0.95439771390689,
       "error_efficiency_mu": 0.004688169399042,
       "error_efficiency_e": 0.003656738673623
+    },
+
+    "2000": {
+      "efficiency_mu": 0.921745651170932,
+      "efficiency_e": 0.95439771390689,
+      "error_efficiency_mu": 0.00937633879808399961,
+      "error_efficiency_e": 0.00731347734724599984
     }
   }
 }
