@@ -1047,6 +1047,15 @@ void fitMtt(std::map<int, TChain*> eventChain, int massParticle, bool fit, strin
     }
   }
 
+  if (analysisType == ZPRIME) {
+    for (int i = minBTag; i <= maxBTag; i++) {
+      hlt_eff_mu[i] = hlt_eff_mu[i] * trigger_scale_factor_muons;
+      hlt_eff_e[i] = hlt_eff_e[i] * trigger_scale_factor_electrons;
+      s_hlt_eff_mu[i] = sqrt( s_hlt_eff_mu[i]*s_hlt_eff_mu[i] + trigger_scale_factor_muons_error*trigger_scale_factor_muons_error );
+      s_hlt_eff_e[i] = sqrt( s_hlt_eff_e[i]*s_hlt_eff_e[i] + trigger_scale_factor_electrons_error*trigger_scale_factor_electrons_error );
+    }
+  }
+
   /*
      std::cout << "sel_eff_mu = " << sel_eff_mu << std::endl;
      std::cout << "sel_eff_e = " << sel_eff_e << std::endl;
