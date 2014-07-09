@@ -89,7 +89,12 @@ class Extractor2Histos {
     Int_t           isBestSolMatched;
     Float_t         KFChi2;
     Float_t         kf_proba;
+    Float_t         kf_chisquare;
     bool            kf_converged;
+    Float_t         mtt_AfterKF;
+    Float_t         mtt_AfterMVA;
+    Float_t         mtt_AfterChi2;
+    Int_t           numComb_chi2;
     Int_t           numComb;
     Float_t         solChi2[MAX_ARRAY_SIZE];   //[numComb]
     Float_t         mLepTop_AfterReco;
@@ -109,6 +114,28 @@ class Extractor2Histos {
     Float_t         selectedLeptonicBPt_AfterReco;
     Float_t         sumPt4JetsSel;
     Float_t         sumPtJetsInEvent;
+
+    Float_t mLepTop_AfterKF;
+    Float_t mHadTop_AfterKF;
+    Float_t pt_tt_AfterKF;
+    Float_t eta_tt_AfterKF;
+    Float_t beta_tt_AfterKF;
+
+    Float_t lepTopPt_AfterKF;
+    Float_t lepTopEta_AfterKF;
+    Float_t hadTopPt_AfterKF;
+    Float_t hadTopEta_AfterKF;
+
+    Float_t mLepTop_AfterChi2;
+    Float_t mHadTop_AfterChi2;
+    Float_t pt_tt_AfterChi2;
+    Float_t eta_tt_AfterChi2;
+    Float_t beta_tt_AfterChi2;
+
+    Float_t lepTopPt_AfterChi2;
+    Float_t lepTopEta_AfterChi2;
+    Float_t hadTopPt_AfterChi2;
+    Float_t hadTopEta_AfterChi2;
 
     bool            m_triggerPassed;
 
@@ -133,6 +160,22 @@ class Extractor2Histos {
     LorentzVector* selectedLeptonP4_AfterKF;
     TClonesArray* selectedLeptonP4_AfterReco;
     LorentzVector* selectedNeutrinoP4_AfterReco;
+
+    LorentzVector* lepTopP4_AfterChi2;
+    LorentzVector* hadTopP4_AfterChi2;
+    LorentzVector* selectedFirstJetP4_AfterChi2;
+    LorentzVector* selectedSecondJetP4_AfterChi2;
+    LorentzVector* selectedNeutrinoP4_AfterChi2;
+    LorentzVector* selectedHadronicBP4_AfterChi2;
+    LorentzVector* selectedLeptonicBP4_AfterChi2;
+
+    LorentzVector* lepTopP4_AfterKF;
+    LorentzVector* hadTopP4_AfterKF;
+    LorentzVector* selectedFirstJetP4_AfterKF;
+    LorentzVector* selectedSecondJetP4_AfterKF;
+    LorentzVector* selectedNeutrinoP4_AfterKF;
+    LorentzVector* selectedHadronicBP4_AfterKF;
+    LorentzVector* selectedLeptonicBP4_AfterKF;
 
     // List of branches
     TBranch        *b_MC_channel;   //!
@@ -188,6 +231,8 @@ class Extractor2Histos {
     bool            mSkim;
     bool            mUseMVA = false;
     bool            mUseKF = false;
+    bool            mUseChi2 = false;
+    bool            mUseHybrid = false;
     std::string     mTriggerSyst = "nominal";
     std::string     mJECSyst = "nominal";
     std::string     mPUSyst = "nominal";
@@ -203,11 +248,12 @@ class Extractor2Histos {
 
     TClonesArray*   jet_p4;
 
-    Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool useMVA, bool useKF, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst);
+    Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, bool chi2, bool kf, bool hybrid, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst);
 
     virtual ~Extractor2Histos();
     virtual Int_t    GetEntry(Long64_t entry);
     virtual void     Loop();
     virtual void     Init();
+    virtual void     Init(bool useKF);
     void SetBranchAddress(TTree* t, const char* branchName, void* ptr);
 };

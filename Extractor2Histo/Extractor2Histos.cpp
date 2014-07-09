@@ -605,17 +605,49 @@ void Extractor2Histos::Loop()
       }
     }
 
-    if (!mSkim && (isSel != 1 || numComb <= 0))
-      continue;
+    if (mUseHybrid) {
+      mUseChi2 = false;
+      mUseKF = false;    
+    }
 
     if (mUseMVA) {
-
+      if (!mSkim && (isSel != 1 || numComb <= 0))
+        continue;
+      mtt_AfterReco = mtt_AfterMVA;
     } else if(mUseKF) {
       if (! kf_converged)
         continue;
-    } else {
-      if (numComb == 0)
+      Init(true);
+    } else if (mUseChi2) {
+      if (numComb_chi2 == 0)
         continue;
+      Init(false);
+    } else if (mUseHybrid) {
+      if (numComb_chi2 == 0) {
+        if (kf_converged) {
+          mUseKF = true;
+          mUseChi2 = false;
+        } else
+          continue;
+      } else {
+        if (! kf_converged) {
+          mUseChi2 = true;
+          mUseKF = false;
+        } else {
+          if (kf_chisquare < 50.) {
+            mUseKF = true;
+            mUseChi2 = false;          
+          } else {
+            mUseChi2 = true;
+            mUseKF = false;          
+          }
+        }
+      } 
+
+      if (! mUseChi2 && ! mUseKF) continue;
+      if (!mSkim && isSel != 1)
+        continue;
+      Init(mUseKF);
     }
 
     hBestSolChi2->Fill(bestSolChi2, eventWeight);
@@ -654,8 +686,6 @@ void Extractor2Histos::Loop()
     hEtaTT_chi2sel->Fill(eta_tt_AfterReco, eventWeight);
 
     if (mIsMC && MC_channel != 0) {
-      h_mtt_resolution->Fill(mtt_AfterReco - MC_mtt, eventWeight);
-
       mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel.fill(MC_mtt, mtt_AfterReco, eventWeight);
       mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel.fill(MC_mtt, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
       mtt_gen_vs_mtt_reco_resolution_rmsVSmttreco_sortingAlgoSel.fill(mtt_AfterReco, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
@@ -717,13 +747,13 @@ void Extractor2Histos::Loop()
 
     float firstJetCut = 0, secondJetCut = 0, thirdJetCut = 0;
     if (isRun2012AB) {
-      firstJetCut = 45;
-      secondJetCut = 45;
-      thirdJetCut = 45;
+      firstJetCut = 70;
+      secondJetCut = 50;
+      thirdJetCut = 30;
     } else {
-      firstJetCut = 55;
-      secondJetCut = 45;
-      thirdJetCut = 35;
+      firstJetCut = 70;
+      secondJetCut = 50;
+      thirdJetCut = 30;
     }
 
     if (!mSkim && ptLepton <= ptLeptonCut)
@@ -751,7 +781,7 @@ void Extractor2Histos::Loop()
         else if (mTriggerSyst == "down")
           triggerWeight = triggerWeight - triggerWeights[1];
 
-        eventWeight *= triggerWeight;
+        //eventWeight *= triggerWeight;
 
         hWeight_fullsel->Fill(eventWeight);
         hLeptonWeight_fullsel->Fill(m_lepton_weight);
@@ -850,6 +880,8 @@ void Extractor2Histos::Loop()
 
       if (mtt_AfterReco > 500)
         hmttSelected_btag_sel_mass_cut->Fill(mtt_AfterReco, eventWeight);
+
+      h_mtt_resolution->Fill(mtt_AfterReco - MC_mtt, eventWeight);
     }
   }
 
@@ -902,7 +934,7 @@ void loadChain(const std::vector<std::string>& inputFiles, const std::string& tr
   output->SetCacheSize(30*1024*1024);
 }
 
-Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, bool kf, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst) : fMTT(0), fVertices(0), fEvent(0)
+Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, bool chi2, bool kf, bool hybrid, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst) : fMTT(0), fVertices(0), fEvent(0)
 {
   mIsSemiMu = isSemiMu;
   mIsMC = isMC;
@@ -910,7 +942,9 @@ Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, c
   mBTag = btag;
   mSkim = skim;
   mUseMVA = mva;
+  mUseChi2 = chi2;
   mUseKF = kf;
+  mUseHybrid = hybrid;
   mTriggerSyst = triggerSyst;
   mJECSyst = jecSyst;
   mPUSyst = puSyst;
@@ -993,11 +1027,132 @@ void Extractor2Histos::SetBranchAddress(TTree* t, const char* branchName, void* 
   t->SetBranchAddress(branchName, ptr, NULL);
 }
 
+void Extractor2Histos::Init(bool useKF) 
+{
+  if (useKF) {
+    mtt_AfterReco = mtt_AfterKF;
+    mLepTop_AfterReco = mLepTop_AfterKF;
+    mHadTop_AfterReco = mHadTop_AfterKF;
+    pt_tt_AfterReco = pt_tt_AfterKF;
+    eta_tt_AfterReco = eta_tt_AfterKF;
+    beta_tt_AfterReco = beta_tt_AfterKF;
+
+    lepTopPt_AfterReco = lepTopPt_AfterKF;
+    lepTopEta_AfterReco = lepTopEta_AfterKF;
+    hadTopPt_AfterReco = hadTopPt_AfterKF;
+    hadTopEta_AfterReco = hadTopEta_AfterKF;
+
+    lepTopP4_AfterReco = lepTopP4_AfterKF;
+    hadTopP4_AfterReco = hadTopP4_AfterKF;
+    selectedFirstJetP4_AfterReco = selectedFirstJetP4_AfterKF;
+    selectedSecondJetP4_AfterReco = selectedSecondJetP4_AfterKF;
+    selectedNeutrinoP4_AfterReco = selectedNeutrinoP4_AfterKF;
+    selectedHadronicBP4_AfterReco = selectedHadronicBP4_AfterKF;
+    selectedLeptonicBP4_AfterReco = selectedLeptonicBP4_AfterKF;
+  } else {
+    mtt_AfterReco = mtt_AfterChi2;
+    mLepTop_AfterReco = mLepTop_AfterChi2;
+    mHadTop_AfterReco = mHadTop_AfterChi2;
+    pt_tt_AfterReco = pt_tt_AfterChi2;
+    eta_tt_AfterReco = eta_tt_AfterChi2;
+    beta_tt_AfterReco = beta_tt_AfterChi2;
+
+    lepTopPt_AfterReco = lepTopPt_AfterChi2;
+    lepTopEta_AfterReco = lepTopEta_AfterChi2;
+    hadTopPt_AfterReco = hadTopPt_AfterChi2;
+    hadTopEta_AfterReco = hadTopEta_AfterChi2;
+
+    lepTopP4_AfterReco = lepTopP4_AfterChi2;
+    hadTopP4_AfterReco = hadTopP4_AfterChi2;
+    selectedFirstJetP4_AfterReco = selectedFirstJetP4_AfterChi2;
+    selectedSecondJetP4_AfterReco = selectedSecondJetP4_AfterChi2;
+    selectedNeutrinoP4_AfterReco = selectedNeutrinoP4_AfterChi2;
+    selectedHadronicBP4_AfterReco = selectedHadronicBP4_AfterChi2;
+    selectedLeptonicBP4_AfterReco = selectedLeptonicBP4_AfterChi2;
+  }
+}
+
 void Extractor2Histos::Init()
 {
   fCurrent = -1;
 
   fMTT->SetBranchStatus("*", 0);
+
+  lepTopP4_AfterReco = NULL;
+  hadTopP4_AfterReco = NULL;
+  selectedFirstJetP4_AfterReco = NULL;
+  selectedSecondJetP4_AfterReco = NULL;
+  selectedHadronicBP4_AfterReco = NULL;
+  selectedLeptonicBP4_AfterReco = NULL;
+  selectedNeutrinoP4_AfterReco = NULL;
+  selectedLeptonP4_AfterReco = NULL;
+  selectedLeptonP4_AfterKF = NULL;
+  lepTopP4_AfterChi2 = NULL;
+  hadTopP4_AfterChi2 = NULL;
+  selectedFirstJetP4_AfterChi2 = NULL;
+  selectedSecondJetP4_AfterChi2 = NULL;
+  selectedHadronicBP4_AfterChi2 = NULL;
+  selectedLeptonicBP4_AfterChi2 = NULL;
+  selectedNeutrinoP4_AfterChi2 = NULL;
+  lepTopP4_AfterKF = NULL;
+  hadTopP4_AfterKF = NULL;
+  selectedFirstJetP4_AfterKF = NULL;
+  selectedSecondJetP4_AfterKF = NULL;
+  selectedHadronicBP4_AfterKF = NULL;
+  selectedLeptonicBP4_AfterKF = NULL;
+  selectedNeutrinoP4_AfterKF = NULL;
+  selectedLeptonP4_AfterKF = NULL;
+
+  if (! mUseMVA) { // if we don't use MVA algo, variables to choose between Chi2 and KF
+    SetBranchAddress(fMTT, "kf_converged", &kf_converged);
+    SetBranchAddress(fMTT, "mtt_AfterKF", &mtt_AfterKF);
+    SetBranchAddress(fMTT, "kf_proba", &kf_proba);
+    SetBranchAddress(fMTT, "kf_chisquare", &kf_chisquare);
+    SetBranchAddress(fMTT, "mtt_AfterChi2", &mtt_AfterChi2);
+    SetBranchAddress(fMTT, "numComb_chi2", &numComb_chi2);
+
+    SetBranchAddress(fMTT, "mLepTop_AfterKF", &mLepTop_AfterKF);
+    SetBranchAddress(fMTT, "mHadTop_AfterKF", &mHadTop_AfterKF);
+    SetBranchAddress(fMTT, "pt_tt_AfterKF", &pt_tt_AfterKF);
+    SetBranchAddress(fMTT, "eta_tt_AfterKF", &eta_tt_AfterKF);
+    SetBranchAddress(fMTT, "beta_tt_AfterKF", &beta_tt_AfterKF);
+
+    SetBranchAddress(fMTT, "lepTopPt_AfterKF", &lepTopPt_AfterKF);
+    SetBranchAddress(fMTT, "lepTopEta_AfterKF", &lepTopEta_AfterKF);
+    SetBranchAddress(fMTT, "hadTopPt_AfterKF", &hadTopPt_AfterKF);
+    SetBranchAddress(fMTT, "hadTopEta_AfterKF", &hadTopEta_AfterKF);
+
+    SetBranchAddress(fMTT, "lepTopP4_AfterKF", &lepTopP4_AfterKF);
+    SetBranchAddress(fMTT, "hadTopP4_AfterKF", &hadTopP4_AfterKF);
+    SetBranchAddress(fMTT, "selectedFirstJetP4_AfterKF", &selectedFirstJetP4_AfterKF);
+    SetBranchAddress(fMTT, "selectedSecondJetP4_AfterKF", &selectedSecondJetP4_AfterKF);
+    SetBranchAddress(fMTT, "selectedNeutrinoP4_AfterKF", &selectedNeutrinoP4_AfterKF);
+    SetBranchAddress(fMTT, "selectedHadronicBP4_AfterKF", &selectedHadronicBP4_AfterKF);
+    SetBranchAddress(fMTT, "selectedLeptonicBP4_AfterKF", &selectedLeptonicBP4_AfterKF);
+
+    SetBranchAddress(fMTT, "selectedLeptonP4_AfterKF", &selectedLeptonP4_AfterKF);
+    SetBranchAddress(fMTT, "selectedLeptonP4", &selectedLeptonP4_AfterReco);
+
+    SetBranchAddress(fMTT, "mLepTop_AfterChi2", &mLepTop_AfterChi2);
+    SetBranchAddress(fMTT, "mHadTop_AfterChi2", &mHadTop_AfterChi2);
+    SetBranchAddress(fMTT, "mtt_AfterChi2", &mtt_AfterChi2);
+    SetBranchAddress(fMTT, "pt_tt_AfterChi2", &pt_tt_AfterChi2);
+    SetBranchAddress(fMTT, "eta_tt_AfterChi2", &eta_tt_AfterChi2);
+    SetBranchAddress(fMTT, "beta_tt_AfterChi2", &beta_tt_AfterChi2);
+
+    SetBranchAddress(fMTT, "lepTopPt_AfterChi2", &lepTopPt_AfterChi2);
+    SetBranchAddress(fMTT, "lepTopEta_AfterChi2", &lepTopEta_AfterChi2);
+    SetBranchAddress(fMTT, "hadTopPt_AfterChi2", &hadTopPt_AfterChi2);
+    SetBranchAddress(fMTT, "hadTopEta_AfterChi2", &hadTopEta_AfterChi2);
+
+    SetBranchAddress(fMTT, "lepTopP4_AfterChi2", &lepTopP4_AfterChi2);
+    SetBranchAddress(fMTT, "hadTopP4_AfterChi2", &hadTopP4_AfterChi2);
+    SetBranchAddress(fMTT, "selectedFirstJetP4_AfterChi2", &selectedFirstJetP4_AfterChi2);
+    SetBranchAddress(fMTT, "selectedSecondJetP4_AfterChi2", &selectedSecondJetP4_AfterChi2);
+    SetBranchAddress(fMTT, "selectedNeutrinoP4_AfterChi2", &selectedNeutrinoP4_AfterChi2);
+    SetBranchAddress(fMTT, "selectedHadronicBP4_AfterChi2", &selectedHadronicBP4_AfterChi2);
+    SetBranchAddress(fMTT, "selectedLeptonicBP4_AfterChi2", &selectedLeptonicBP4_AfterChi2);
+  }
 
   SetBranchAddress(fMTT, "MC_channel", &MC_channel);
   SetBranchAddress(fMTT, "MC_mtt", &MC_mtt);
@@ -1019,6 +1174,7 @@ void Extractor2Histos::Init()
     SetBranchAddress(fMTT, "electronEta", &electronEta);
     SetBranchAddress(fMTT, "elRelIso", &elRelIso);
   }
+
   SetBranchAddress(fMTT, "1stjetpt", &p_1stjetpt);
   SetBranchAddress(fMTT, "2ndjetpt", &p_2ndjetpt);
   SetBranchAddress(fMTT, "3rdjetpt", &p_3rdjetpt);
@@ -1041,17 +1197,11 @@ void Extractor2Histos::Init()
   //SetBranchAddress(fMTT, "isBestSolMatched", &isBestSolMatched, &b_isBestSolMatched);
   //SetBranchAddress(fMTT, "KFChi2", &KFChi2, &b_KFChi2);
 
-  if (mUseMVA)
-    SetBranchAddress(fMTT, "numComb_MVA", &numComb);
-  else if (mUseKF)
-    SetBranchAddress(fMTT, "numComb_KF", &numComb);
-  else
-    SetBranchAddress(fMTT, "numComb_chi2", &numComb);
-
   if (mUseMVA) {
+    SetBranchAddress(fMTT, "numComb_MVA", &numComb);
     SetBranchAddress(fMTT, "mLepTop_AfterMVA", &mLepTop_AfterReco);
     SetBranchAddress(fMTT, "mHadTop_AfterMVA", &mHadTop_AfterReco);
-    SetBranchAddress(fMTT, "mtt_AfterMVA", &mtt_AfterReco);
+    SetBranchAddress(fMTT, "mtt_AfterMVA", &mtt_AfterMVA);
     SetBranchAddress(fMTT, "pt_tt_AfterMVA", &pt_tt_AfterReco);
     SetBranchAddress(fMTT, "eta_tt_AfterMVA", &eta_tt_AfterReco);
     SetBranchAddress(fMTT, "beta_tt_AfterMVA", &beta_tt_AfterReco);
@@ -1060,34 +1210,7 @@ void Extractor2Histos::Init()
     SetBranchAddress(fMTT, "lepTopEta_AfterMVA", &lepTopEta_AfterReco);
     SetBranchAddress(fMTT, "hadTopPt_AfterMVA", &hadTopPt_AfterReco);
     SetBranchAddress(fMTT, "hadTopEta_AfterMVA", &hadTopEta_AfterReco);
-  } else if (mUseKF) {
-    SetBranchAddress(fMTT, "mLepTop_AfterKF", &mLepTop_AfterReco);
-    SetBranchAddress(fMTT, "mHadTop_AfterKF", &mHadTop_AfterReco);
-    SetBranchAddress(fMTT, "mtt_AfterKF", &mtt_AfterReco);
-    SetBranchAddress(fMTT, "pt_tt_AfterKF", &pt_tt_AfterReco);
-    SetBranchAddress(fMTT, "eta_tt_AfterKF", &eta_tt_AfterReco);
-    SetBranchAddress(fMTT, "beta_tt_AfterKF", &beta_tt_AfterReco);
-    SetBranchAddress(fMTT, "kf_proba", &kf_proba);
-
-    SetBranchAddress(fMTT, "lepTopPt_AfterKF", &lepTopPt_AfterReco);
-    SetBranchAddress(fMTT, "lepTopEta_AfterKF", &lepTopEta_AfterReco);
-    SetBranchAddress(fMTT, "hadTopPt_AfterKF", &hadTopPt_AfterReco);
-    SetBranchAddress(fMTT, "hadTopEta_AfterKF", &hadTopEta_AfterReco);
-  } else {
-    SetBranchAddress(fMTT, "mLepTop_AfterChi2", &mLepTop_AfterReco);
-    SetBranchAddress(fMTT, "mHadTop_AfterChi2", &mHadTop_AfterReco);
-    SetBranchAddress(fMTT, "mtt_AfterChi2", &mtt_AfterReco);
-    SetBranchAddress(fMTT, "pt_tt_AfterChi2", &pt_tt_AfterReco);
-    SetBranchAddress(fMTT, "eta_tt_AfterChi2", &eta_tt_AfterReco);
-    SetBranchAddress(fMTT, "beta_tt_AfterChi2", &beta_tt_AfterReco);
-    SetBranchAddress(fMTT, "kf_converged", &kf_converged);
-
-    SetBranchAddress(fMTT, "lepTopPt_AfterChi2", &lepTopPt_AfterReco);
-    SetBranchAddress(fMTT, "lepTopEta_AfterChi2", &lepTopEta_AfterReco);
-    SetBranchAddress(fMTT, "hadTopPt_AfterChi2", &hadTopPt_AfterReco);
-    SetBranchAddress(fMTT, "hadTopEta_AfterChi2", &hadTopEta_AfterReco);
-  }
-
+  } 
   SetBranchAddress(fMTT, "lepton_weight", &m_lepton_weight);
   SetBranchAddress(fMTT, "btag_weight", &m_btag_weight);
 
@@ -1110,17 +1233,6 @@ void Extractor2Histos::Init()
     m_triggerPassed = true;
   }
 
-  lepTopP4_AfterReco = NULL;
-  hadTopP4_AfterReco = NULL;
-  selectedFirstJetP4_AfterReco = NULL;
-  selectedSecondJetP4_AfterReco = NULL;
-  selectedHadronicBP4_AfterReco = NULL;
-  selectedLeptonicBP4_AfterReco = NULL;
-  selectedNeutrinoP4_AfterReco = NULL;
-  selectedLeptonP4_AfterReco = NULL;
-  selectedLeptonP4_AfterKF = NULL;
-
-
   if (mUseMVA) {
     SetBranchAddress(fMTT, "lepTopP4_AfterMVA", &lepTopP4_AfterReco);
     SetBranchAddress(fMTT, "hadTopP4_AfterMVA", &hadTopP4_AfterReco);
@@ -1130,27 +1242,7 @@ void Extractor2Histos::Init()
     SetBranchAddress(fMTT, "selectedNeutrinoP4_AfterMVA", &selectedNeutrinoP4_AfterReco);
     SetBranchAddress(fMTT, "selectedHadronicBP4_AfterMVA", &selectedHadronicBP4_AfterReco);
     SetBranchAddress(fMTT, "selectedLeptonicBP4_AfterMVA", &selectedLeptonicBP4_AfterReco);
-  } else if (mUseKF) {
-    SetBranchAddress(fMTT, "lepTopP4_AfterKF", &lepTopP4_AfterReco);
-    SetBranchAddress(fMTT, "hadTopP4_AfterKF", &hadTopP4_AfterReco);
-    SetBranchAddress(fMTT, "selectedFirstJetP4_AfterKF", &selectedFirstJetP4_AfterReco);
-    SetBranchAddress(fMTT, "selectedSecondJetP4_AfterKF", &selectedSecondJetP4_AfterReco);
-    SetBranchAddress(fMTT, "selectedLeptonP4", &selectedLeptonP4_AfterReco);
-    SetBranchAddress(fMTT, "selectedLeptonP4_AfterKF", &selectedLeptonP4_AfterKF);
-    SetBranchAddress(fMTT, "selectedNeutrinoP4_AfterKF", &selectedNeutrinoP4_AfterReco);
-    SetBranchAddress(fMTT, "selectedHadronicBP4_AfterKF", &selectedHadronicBP4_AfterReco);
-    SetBranchAddress(fMTT, "selectedLeptonicBP4_AfterKF", &selectedLeptonicBP4_AfterReco);
-  } else {
-    SetBranchAddress(fMTT, "lepTopP4_AfterChi2", &lepTopP4_AfterReco);
-    SetBranchAddress(fMTT, "hadTopP4_AfterChi2", &hadTopP4_AfterReco);
-    SetBranchAddress(fMTT, "selectedFirstJetP4_AfterChi2", &selectedFirstJetP4_AfterReco);
-    SetBranchAddress(fMTT, "selectedSecondJetP4_AfterChi2", &selectedSecondJetP4_AfterReco);
-    SetBranchAddress(fMTT, "selectedLeptonP4", &selectedLeptonP4_AfterReco);
-    SetBranchAddress(fMTT, "selectedNeutrinoP4_AfterChi2", &selectedNeutrinoP4_AfterReco);
-    SetBranchAddress(fMTT, "selectedHadronicBP4_AfterChi2", &selectedHadronicBP4_AfterReco);
-    SetBranchAddress(fMTT, "selectedLeptonicBP4_AfterChi2", &selectedLeptonicBP4_AfterReco);
-  }
-
+  } 
   gen_top1_p4 = NULL;
   gen_top2_p4 = NULL;
 
@@ -1270,15 +1362,16 @@ int main(int argc, char** argv) {
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jet to require", true, 2, "int", cmd);
 
     TCLAP::SwitchArg skimArg("", "skim", "Run over a skimmed file", cmd, false);
-    //TCLAP::SwitchArg mvaArg("", "mva", "Use MVA instead of chi2", cmd, false);
 
-    TCLAP::SwitchArg chi2Arg("", "chi2", "Use chi2 sorting algorithm", true);
+    TCLAP::SwitchArg chi2Arg("", "chi2", "Use chi2 sorting algorithm", false);
     TCLAP::SwitchArg mvaArg("", "mva", "Use MVA instead of chi2", false);
     TCLAP::SwitchArg kfArg("", "kf", "Use KF instead of chi2", false);
+    TCLAP::SwitchArg hybridArg("", "hybrid", "Use hybrid method for sorting algorithm", false);
     std::vector<TCLAP::Arg*>  xorlist;
     xorlist.push_back(&chi2Arg);
     xorlist.push_back(&mvaArg);
     xorlist.push_back(&kfArg);
+    xorlist.push_back(&hybridArg);
     cmd.xorAdd( xorlist );
 
     TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S10", "string", cmd);
@@ -1358,7 +1451,7 @@ int main(int argc, char** argv) {
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    Extractor2Histos convertor(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData, btagArg.getValue(), skimArg.getValue(), mvaArg.getValue(), kfArg.getValue(), triggerSyst, jecSyst, puSyst, pdfSyst, leptonSyst, btagSyst);
+    Extractor2Histos convertor(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData, btagArg.getValue(), skimArg.getValue(), mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue(), triggerSyst, jecSyst, puSyst, pdfSyst, leptonSyst, btagSyst);
     convertor.Loop();
 
   } catch (TCLAP::ArgException &e) {

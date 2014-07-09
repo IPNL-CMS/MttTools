@@ -28,7 +28,16 @@ PUProfile puProfile;
 
 ExtractorPostprocessing selection;
 
-void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& outputFile, bool isData, const std::string& type, int max, double lumi_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool runOnSkim) {
+void Init(bool useKF, float& mtt_afterReco, float& mtt_AfterKF, float& mtt_AfterChi2) 
+{
+  if (useKF) {
+    mtt_afterReco = mtt_AfterKF;
+  } else {
+    mtt_afterReco = mtt_AfterChi2;
+  }
+}
+
+void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& outputFile, bool isData, const std::string& type, int max, double lumi_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
 
   TString outputFileFormated = OVERRIDE_TYPE ? outputFile : TString::Format(outputFile.c_str(), (isData) ? "" : type.c_str());
 
@@ -38,7 +47,7 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
       {2, new TTree("dataset_2btag", "dataset for at least 2 b-tagged jets") }
   };
 
-  float mtt_afterReco, pt_1stJet, pt_2ndJet, pt_3rdJet, pt_4thJet, bestSolChi2;
+  float mtt_afterReco, pt_1stJet, pt_2ndJet, pt_3rdJet, pt_4thJet, bestSolChi2, mtt_AfterKF, mtt_AfterChi2, mtt_AfterMVA;
   int isSel = 1, nBtaggedJets_CSVM;
   uint32_t run = 0;
 
@@ -82,16 +91,23 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
   }
 
   int numComb = 0;
-  if (useMVA)
-    SetBranchAddress("numComb_MVA", &numComb);
-  else
-    SetBranchAddress("numComb_chi2", &numComb);
-
+  int numComb_chi2 = 0;
+  int numComb_kf = 0;
+  bool kf_converged = false;
+  float kf_chisquare = 0.;
+  float kf_proba = 0.;
   if (useMVA) {
+    SetBranchAddress("numComb_MVA", &numComb);
     SetBranchAddress("mtt_AfterMVA", &mtt_afterReco);
   } else {
-    SetBranchAddress("mtt_AfterChi2", &mtt_afterReco);
-    SetBranchAddress("bestSolChi2", &bestSolChi2);
+    //SetBranchAddress("numComb_chi2", &numComb);
+    SetBranchAddress("numComb_kf", &numComb_kf);
+    SetBranchAddress("kf_converged", &kf_converged);
+    SetBranchAddress("mtt_AfterKF", &mtt_AfterKF);
+    SetBranchAddress("kf_chisquare", &kf_chisquare);
+    SetBranchAddress("kf_proba", &kf_proba);
+    SetBranchAddress("mtt_AfterChi2", &mtt_AfterChi2);
+    SetBranchAddress("numComb_chi2", &numComb_chi2);
   }
 
   mtt->SetBranchAddress("1stjetpt", &pt_1stJet, NULL);
@@ -246,23 +262,58 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
       etaLepton = electronEta[0];
     }
 
+    if (useMVA) {
+      if (!runOnSkim && (isSel != 1 || numComb <= 0))
+        continue;
+      mtt_afterReco = mtt_AfterMVA;
+    } else if(useKF) {
+      if (! kf_converged)
+        continue;
+      mtt_afterReco = mtt_AfterKF;
+    } else if (useChi2) {
+      if (numComb_chi2 <= 0)
+        continue;
+      mtt_afterReco = mtt_AfterChi2;
+    } else if (useHybrid) {
+      if (numComb_chi2 <= 0) {
+        if (kf_converged) {
+          mtt_afterReco = mtt_AfterKF;
+        } else
+          continue;
+      } else {
+        if (! kf_converged) {
+          mtt_afterReco = mtt_AfterChi2;
+        } else {
+          //if (kf_chisquare < 50.) {
+          if (kf_proba > 0.2) {
+            mtt_afterReco = mtt_AfterKF;
+          } else {
+            mtt_afterReco = mtt_AfterChi2;
+          }
+        }
+      } 
+
+      if (!runOnSkim && isSel != 1)
+        continue;
+    }
+
     if (isSemiMu && !selection.passMuonSel(ptLepton, etaLepton))
       continue;
 
     if (!isSemiMu && !selection.passElectronSel(ptLepton, etaLepton))
       continue;
 
-    if (! selection.passExtractorSel(isSel, numComb, mtt_afterReco))
-      continue;
+/*    if (! selection.passExtractorSel(isSel, numComb, mtt_afterReco))*/
+      //continue;
 
-    if (! selection.passJetsSel(pt_1stJet, pt_2ndJet, pt_3rdJet, pt_4thJet, isRun2012AB))
-      continue;
+    //if (! selection.passJetsSel(pt_1stJet, pt_2ndJet, pt_3rdJet, pt_4thJet, isRun2012AB))
+      /*continue;*/
 
     if (useMVA) {
 
     } else {
-      if (! selection.passChi2Sel(bestSolChi2))
-        continue;
+      //if (! selection.passChi2Sel(bestSolChi2))
+        //continue;
     }
 
     // Good event
@@ -309,7 +360,8 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
       else if (btagSyst == "down")
         btag_weight -= btag_weight_error;
 
-      output_weight *= puReweigher->weight(n_trueInteractions) * generator_weight * lumi_weight * triggerWeight * lepton_weight * btag_weight;
+      //output_weight *= puReweigher->weight(n_trueInteractions) * generator_weight * lumi_weight * triggerWeight * lepton_weight * btag_weight;
+      output_weight *= puReweigher->weight(n_trueInteractions) * generator_weight * lumi_weight * lepton_weight * btag_weight;
     }
 
     if (doPDFSyst) {
@@ -376,12 +428,12 @@ void loadChain(const std::vector<std::string>& inputFiles, TChain*& mtt, TChain*
   vertices->SetCacheSize(30*1024*1024);
 }
 
-void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool runOnSkim) {
+void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
 
   TChain* mtt = NULL, *event = NULL, *vertices = NULL;
 
   loadChain(inputFiles, mtt, event, vertices);
-  reduce(mtt, event, vertices, outputFile, isData, type, max, generator_weight, puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, useMVA, runOnSkim);
+  reduce(mtt, event, vertices, outputFile, isData, type, max, generator_weight, puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, useMVA, useChi2, useKF, useHybrid, runOnSkim);
 
   delete mtt;
   delete event;
@@ -428,7 +480,17 @@ int main(int argc, char** argv)
     TCLAP::ValueArg<std::string> leptonSystArg("", "lepton-syst", "Compute lepton weight systematic", false, "nominal", "string", cmd);
 
     TCLAP::SwitchArg skimArg("", "skim", "Run over a skimmed file", cmd, false);
-    TCLAP::SwitchArg mvaArg("", "mva", "Use MVA instead of chi2", cmd, false);
+
+    TCLAP::SwitchArg chi2Arg("", "chi2", "Use chi2 sorting algorithm", false);
+    TCLAP::SwitchArg mvaArg("", "mva", "Use MVA instead of chi2", false);
+    TCLAP::SwitchArg kfArg("", "kf", "Use KF instead of chi2", false);
+    TCLAP::SwitchArg hybridArg("", "hybrid", "Use hybrid method for sorting algorithm", false);
+    std::vector<TCLAP::Arg*>  xorlist;
+    xorlist.push_back(&chi2Arg);
+    xorlist.push_back(&mvaArg);
+    xorlist.push_back(&kfArg);
+    xorlist.push_back(&hybridArg);
+    cmd.xorAdd( xorlist );
 
     cmd.parse(argc, argv);
 
@@ -493,7 +555,7 @@ int main(int argc, char** argv)
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue(), puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, mvaArg.getValue(), skimArg.getValue()); 
+    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue(), puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue(), skimArg.getValue()); 
 
   } catch (TCLAP::ArgException& e) {
     std::cout << e.what() << std::endl;
