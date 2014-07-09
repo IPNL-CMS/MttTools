@@ -1471,8 +1471,8 @@ void fitMtt(std::map<int, TChain*> eventChain, int massParticle, bool fit, strin
 
       std::cout << std::endl << "--- Bash code for systematics datacards ---" << std::endl;
 
-      std::vector<std::string> systematics = {"jecUp", "jecDown", "jerUp", "jerDown", "puUp", "puDown"};
-      std::vector<std::string> systematicsName = {"JECup", "JECdown", "JERup", "JERdown", "puUp", "puDown"};
+      std::vector<std::string> systematics = {"jecUp", "jecDown", "jerUp", "jerDown", "puUp", "puDown", "btagUp", "btagDown", "leptUp", "leptDown"};
+      std::vector<std::string> systematicsName = {"JECup", "JECdown", "JERup", "JERdown", "puUp", "puDown", "btagUp", "btagDown", "leptUp", "leptDown"};
       //std::vector<std::string> systematics = {"jecUp", "jecDown", "jerUp", "jerDown", "puUp", "puDown", "pdfUp", "pdfDown"};
       //std::vector<std::string> systematicsName = {"JECup", "JECdown", "JERup", "JERdown", "puUp", "puDown", "pdfUp", "pdfDown"};
 
@@ -1761,6 +1761,12 @@ void fitMtt(std::map<int, TChain*> eventChain, int massParticle, bool fit, strin
 
         importSystPdf("puUp", "puUp");
         importSystPdf("puUp", "puDown");
+
+        importSystPdf("btagUp", "btagUp");
+        importSystPdf("btagUp", "btagDown");
+
+        importSystPdf("leptUp", "leptUp");
+        importSystPdf("leptUp", "leptDown");
 
         //importSystPdf("pdfUp", "pdfUp");
         //importSystPdf("pdfUp", "pdfDown");

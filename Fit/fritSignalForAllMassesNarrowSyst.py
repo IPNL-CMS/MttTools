@@ -18,7 +18,11 @@ systs = {
         "JERup": "--jer up",
         "JERdown": "--jer down",
         "puUp": "--pileup up",
-        "puDown": "--pileup down"
+        "puDown": "--pileup down",
+        "btagUp": "--btag-syst up",
+        "btagDown": "--btag-syst down",
+        "leptUp": "--lepton up",
+        "leptDown": "--lepton down"
         }
 
 btag = [1, 2]

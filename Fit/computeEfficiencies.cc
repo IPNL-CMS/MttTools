@@ -240,6 +240,8 @@ int main(int argc, char** argv) {
     TCLAP::ValueArg<std::string> jecArg("", "jec", "JEC", false, "nominal", "nominal/JECup/JECdown", cmd);
     TCLAP::ValueArg<std::string> jerArg("", "jer", "JER", false, "nominal", "nominal/JECup/JECdown", cmd);
     TCLAP::ValueArg<std::string> puArg("", "pu", "PU", false, "nominal", "nominal/JECup/JECdown", cmd);
+    TCLAP::ValueArg<std::string> btagsystArg("", "btagsyst", "btag Syst", false, "nominal", "nominal/JECup/JECdown", cmd);
+    TCLAP::ValueArg<std::string> leptArg("", "lept", "lepton Syst", false, "nominal", "nominal/JECup/JECdown", cmd);
     TCLAP::ValueArg<std::string> pdfArg("", "pdf", "PDF", false, "nominal", "nominal/JECup/JECdown", cmd);
 
     // TCLAP::SwitchArg ignoreInterpolatedArg("", "ignore-interpolated", "Ignore interpolated mass for extrapolation", cmd, false);
@@ -252,6 +254,8 @@ int main(int argc, char** argv) {
     std::string jec = jecArg.getValue();
     std::string jer = jerArg.getValue();
     std::string pu = puArg.getValue();
+    std::string btagsyst = btagsystArg.getValue();
+    std::string lept = leptArg.getValue();
     std::string pdf = pdfArg.getValue();
 
     AnalysisType analysisType = getAnalysisType();
@@ -272,7 +276,7 @@ int main(int argc, char** argv) {
     }
 
     std::string syst = "nominal";
-    if (jec != "nominal" || jer != "nominal" || pu != "nominal" || pdf != "nominal") {
+    if (jec != "nominal" || jer != "nominal" || pu != "nominal" || pdf != "nominal" || btagsyst != "nominal" || lept != "nominal") {
       if (jec != "nominal") {
         if (jec == "up")
           syst = "JECup";
@@ -289,10 +293,20 @@ int main(int argc, char** argv) {
         else
           syst = "puDown";
       } else if (pdf != "nominal") {
-        if (pdf == "up")
-          syst = "pdfUp";
-        else
-          syst = "pdfDown";
+          if (pdf == "up")
+              syst = "pdfUp";
+          else
+              syst = "pdfDown";
+      } else if (btagsyst != "nominal") {
+          if (btagsyst == "up")
+              syst = "btagUp";
+          else
+              syst = "btagDown";
+      } else if (lept != "nominal") {
+          if (lept == "up")
+              syst = "leptUp";
+          else
+              syst = "leptDown";
       }
     }
 
@@ -310,6 +324,8 @@ int main(int argc, char** argv) {
     loadSelection(mass, syst, btag, Nsel_mu, ErrNsel_mu, Nsel_e, ErrNsel_e);
 
     float Ngen = loadNumberOfGeneratedEvents(genFilename, mass);
+
+    std::cout << "Working for systematics: " << syst << std::endl;
 
     std::cout << "Number of selected events for M=" << mass << std::endl;
     std::cout << "\t- semi-mu channel: " << Nsel_mu << " +/- " << ErrNsel_mu << std::endl;

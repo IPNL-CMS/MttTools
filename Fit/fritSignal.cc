@@ -58,7 +58,7 @@ int FIT_ERROR_LEVEL = -1;
 
 std::string base_path = "";
 
-void fritSignal(TChain* chain, const std::string& jecType, const std::string& jer, const std::string& pu, const std::string& pdf, const std::string& configFile, int massZprime, int btag, bool saveWorkspace);
+void fritSignal(TChain* chain, const std::string& jecType, const std::string& jer, const std::string& pu, const std::string& pdf, const std::string& btagsyst, const std::string& lept, const std::string& configFile, int massZprime, int btag, bool saveWorkspace);
 
 void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {
 
@@ -93,6 +93,8 @@ int main(int argc, char** argv) {
     TCLAP::ValueArg<std::string> jecArg("", "jec", "Run the frit for this specific jec.", false, "nominal", "string");
     TCLAP::ValueArg<std::string> jerArg("", "jer", "Run the frit for this specific jer.", false, "nominal", "string");
     TCLAP::ValueArg<std::string> puArg("", "pileup", "Run the frit for this specific pileup syst.", false, "nominal", "string");
+    TCLAP::ValueArg<std::string> btagsystArg("", "btag-syst", "Run the frit for this specific btag syst.", false, "nominal", "string");
+    TCLAP::ValueArg<std::string> leptonArg("", "lepton", "Run the frit for this specific lepton syst.", false, "nominal", "string");
     TCLAP::ValueArg<std::string> pdfArg("", "pdf", "Run the frit for this specific pdf syst.", false, "nominal", "string");
     TCLAP::ValueArg<int> massArg("m", "mass", "Zprime mass", true, 750, "integer");
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets", true, 2, "int");
@@ -100,6 +102,8 @@ int main(int argc, char** argv) {
     cmd.add(jecArg);
     cmd.add(jerArg);
     cmd.add(puArg);
+    cmd.add(leptonArg);
+    cmd.add(btagsystArg);
     cmd.add(pdfArg);
     cmd.add(massArg);
     cmd.add(btagArg);
@@ -134,6 +138,18 @@ int main(int argc, char** argv) {
       exit(1);
     }
 
+    std::string lept = leptonArg.getValue();
+    if (lept != "nominal" && lept != "up" && lept != "down") {
+      std::cerr << "--lepton can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
+
+    std::string btagsyst = btagsystArg.getValue();
+    if (btagsyst != "nominal" && btagsyst != "up" && btagsyst != "down") {
+      std::cerr << "--btag-syst can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
+
     std::string pdf = pdfArg.getValue();
     if (pdf != "nominal" && pdf != "up" && pdf != "down") {
       std::cerr << "--pdf can only be 'nominal', 'up' or 'down'" << std::endl;
@@ -150,7 +166,7 @@ int main(int argc, char** argv) {
       std::cerr << "Please set --pileup, --jec and --pdf separately" << std::endl;
     }
 
-    fritSignal(chain, jec, jer, pu, pdf, configFileArg.getValue(), massArg.getValue(), btagArg.getValue(), saveWorkspaceArg.getValue());
+    fritSignal(chain, jec, jer, pu, pdf, btagsyst, lept, configFileArg.getValue(), massArg.getValue(), btagArg.getValue(), saveWorkspaceArg.getValue());
 
     delete chain;
 
@@ -362,7 +378,7 @@ void drawHistograms(RooAbsCategoryLValue& categories, RooRealVar& observable, in
   std::cout << std::endl;
 }
 
-void fritSignal(TChain* chain, const std::string& jecType, const std::string& jer, const std::string& pu, const std::string& pdfSyst, const std::string& configFile, int massZprime, int btag, bool saveWorkspace) {
+void fritSignal(TChain* chain, const std::string& jecType, const std::string& jer, const std::string& pu, const std::string& pdfSyst, const std::string& btagsyst, const std::string& lept, const std::string& configFile, int massZprime, int btag, bool saveWorkspace) {
 
   std::cout << "[" << getpid() << "] Processing for " << jecType << std::endl;
 
@@ -429,7 +445,7 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& je
   }
 
   TString systPrefix;
-  if (jecType == "nominal" && pu == "nominal" && jer == "nominal" && pdfSyst == "nominal")
+  if (jecType == "nominal" && pu == "nominal" && jer == "nominal" && pdfSyst == "nominal" && btagsyst == "nominal" && lept == "nominal")
     systPrefix = "nominal";
   else if (jecType != "nominal")
     systPrefix = jecType.c_str();
@@ -445,6 +461,16 @@ void fritSignal(TChain* chain, const std::string& jecType, const std::string& je
       systPrefix = "pdfUp";
     else
       systPrefix = "pdfDown";
+  } else if (btagsyst != "nominal") {
+    if (btagsyst == "up")
+      systPrefix = "btagUp";
+    else
+      systPrefix = "btagDown";
+  } else if (lept != "nominal") {
+    if (lept == "up")
+      systPrefix = "leptUp";
+    else
+      systPrefix = "leptDown";
   }
   TString prefix = TString::Format("%s-%s%d_%s_%d_btag", systPrefix.Data(), getAnalysisPrefix(), massZprime, analysisName.c_str(), btag);
 
