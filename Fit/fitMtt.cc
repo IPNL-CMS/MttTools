@@ -1511,6 +1511,15 @@ void fitMtt(std::map<int, TChain*> eventChain, int massParticle, bool fit, strin
             loadTriggerEfficiencies(massParticle, systematicsName[index_syst], i, hlt_eff_mu_syst[i], hlt_eff_e_syst[i], s_hlt_eff_mu_syst[i], s_hlt_eff_e_syst[i], true);
         }
 
+        if (analysisType == ZPRIME) {
+          for (int i = minBTag; i <= maxBTag; i++) {
+            hlt_eff_mu_syst[i] = hlt_eff_mu_syst[i] * trigger_scale_factor_muons;
+            hlt_eff_e_syst[i] = hlt_eff_e_syst[i] * trigger_scale_factor_electrons;
+            s_hlt_eff_mu_syst[i] = sqrt( s_hlt_eff_mu_syst[i]*s_hlt_eff_mu_syst[i] + trigger_scale_factor_muons_error*trigger_scale_factor_muons_error );
+            s_hlt_eff_e_syst[i] = sqrt( s_hlt_eff_e_syst[i]*s_hlt_eff_e_syst[i] + trigger_scale_factor_electrons_error*trigger_scale_factor_electrons_error );
+          }
+        }
+
         if (analysisType == HIGGS) {
           total_eff_mu = sel_eff_mu_syst;
           total_eff_e = sel_eff_e_syst;
