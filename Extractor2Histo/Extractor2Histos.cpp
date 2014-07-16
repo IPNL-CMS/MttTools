@@ -2,6 +2,8 @@
 #include <TH2.h>
 #include <TStyle.h>
 #include <TCanvas.h>
+#include <TColor.h>
+#include <THStack.h>
 #include <TRandom2.h>
 #include <vector>
 #include <TProfile.h>
@@ -154,6 +156,8 @@ void Extractor2Histos::Loop()
   TH1D *hmttSelected_btag_sel_positive = new TH1D("mttSelected_btag_sel_reco_fullsel_positive", "", 150, 0., 2000.);
   TH1D *hmttSelected_btag_sel_negative = new TH1D("mttSelected_btag_sel_reco_fullsel_negative", "", 150, 0., 2000.);
 
+  TH1D *hmtt_AfterChi2 = new TH1D("mtt_AfterChi2", "", 150, 0., 2000.);
+  TH1D *hmtt_AfterKF = new TH1D("mtt_AfterKF", "", 150, 0., 2000.);
   TH1D *hmttSelected_btag_sel = new TH1D("mttSelected_btag_sel_reco_fullsel", "", 150, 0., 2000.);
   TH1D *hmttSelected_btag_sel_no_gen_weight = new TH1D("mttSelected_btag_sel_reco_fullsel_no_gen_weight", "", 150, 0., 2000.);
   TH1D *hmttSelected_btag_sel_mass_cut = new TH1D("mttSelected_btag_sel_mass_cut_reco_fullsel", "", 150, 0., 2000.);
@@ -178,6 +182,9 @@ void Extractor2Histos::Loop()
   hSelectedNeutrinoPt->SetXTitle("selected #nu p_{T} [GeV/c]");
   hSelectedNeutrinoPz->SetXTitle("selected #nu p_{Z} [GeV/c]");
 
+  hmtt_AfterChi2->SetXTitle("m_{t#bar{t}}^{Chi2} [GeV/c^{2}]");
+  hmtt_AfterKF->SetXTitle("m_{t#bar{t}}^{KF} [GeV/c^{2}]");
+
   TH1D *hNGoodJets = new TH1D("nGoodJets_reco_fullsel", "", 6, 3.5, 9.5);
   TH1D *hNGoodJets_chi2sel = new TH1D("nGoodJets_reco_chi2sel", "", 6, 3.5, 9.5);
 
@@ -186,6 +193,8 @@ void Extractor2Histos::Loop()
 
   TH1D *h_mtt_gen_nosel = new TH1D("mtt_gen_nosel", "", 300, 0., 1500.);
 
+  TH1D *h_mtt_resolution_AfterChi2 = new TH1D("mtt_resolution_AfterChi2", "", 100, -600., 600.);
+  TH1D *h_mtt_resolution_AfterKF = new TH1D("mtt_resolution_AfterKF", "", 100, -600., 600.);
   TH1D *h_mtt_resolution = new TH1D("mtt_resolution", "", 100, -600., 600.);
   TH1D *h_mtt_resolution_four_jets = new TH1D("mtt_resolution_four_jets", "", 100, -600., 600.);
 
@@ -835,6 +844,22 @@ void Extractor2Histos::Loop()
       hmtlep->Fill(mLepTop_AfterReco, eventWeight);
       hmthad->Fill(mHadTop_AfterReco, eventWeight);
 
+      if (mUseHybrid) {
+        if (mUseChi2) {
+          hmtt_AfterChi2->Fill(mtt_AfterReco, eventWeight);
+          if (mIsMC && MC_channel != 0) {
+            h_mtt_resolution_AfterChi2->Fill(mtt_AfterReco - MC_mtt, eventWeight);
+          }
+        }
+
+        else if (mUseKF) {
+          hmtt_AfterKF->Fill(mtt_AfterReco, eventWeight);
+          if (mIsMC && MC_channel != 0) {
+             h_mtt_resolution_AfterKF->Fill(mtt_AfterReco - MC_mtt, eventWeight);
+          }
+        }
+      }
+
       hmttSelected_btag_sel->Fill(mtt_AfterReco, eventWeight);
       hmttSelected_btag_sel_no_gen_weight->Fill(mtt_AfterReco, eventWeightNoGenWeight);
 
@@ -884,6 +909,26 @@ void Extractor2Histos::Loop()
       h_mtt_resolution->Fill(mtt_AfterReco - MC_mtt, eventWeight);
     }
   }
+
+  output->cd();
+
+  THStack* hsmtt_chi2_kf_fraction = new THStack("mtt_chi2_kf_fraction", "mtt_chi2_kf_fraction");
+  hmtt_AfterChi2->SetLineColor(kRed-7);
+  hmtt_AfterChi2->SetFillColor(kRed-7);
+  hmtt_AfterKF->SetLineColor(kGreen-8);
+  hmtt_AfterKF->SetFillColor(kGreen-8);
+  hsmtt_chi2_kf_fraction->Add(hmtt_AfterChi2);
+  hsmtt_chi2_kf_fraction->Add(hmtt_AfterKF);
+  hsmtt_chi2_kf_fraction->Write();
+
+  THStack* hs_mtt_resolution_chi2_kf_fraction = new THStack("mtt_resolution_chi2_kf_fraction", "mtt_resolution_chi2_kf_fraction");
+  h_mtt_resolution_AfterChi2->SetLineColor(kRed-7);
+  h_mtt_resolution_AfterChi2->SetFillColor(kRed-7);
+  h_mtt_resolution_AfterKF->SetLineColor(kGreen-8);
+  h_mtt_resolution_AfterKF->SetFillColor(kGreen-8);
+  hs_mtt_resolution_chi2_kf_fraction->Add(h_mtt_resolution_AfterChi2);
+  hs_mtt_resolution_chi2_kf_fraction->Add(h_mtt_resolution_AfterKF);
+  hs_mtt_resolution_chi2_kf_fraction->Write();
 
   if (mIsMC && hTopPtWeight_fullsel->GetEntries() > 0) {
     std::cout << "Top pt reweighting mean weight: " << hTopPtWeight_fullsel->GetMean() << std::endl;
