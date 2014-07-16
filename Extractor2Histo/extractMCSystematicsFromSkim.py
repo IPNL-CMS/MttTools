@@ -2,8 +2,16 @@
 
 from __future__ import division
 import os, subprocess, tempfile, datetime
+from optparse import OptionParser
 
 d = datetime.datetime.now().strftime("%d%b%y")
+
+parser = OptionParser()
+parser.add_option("", "--mva", action="store_true", dest="mva", default=False, help="Use MVA sorting algorithm")
+parser.add_option("", "--chi2", action="store_true", dest="chi2", default=False, help="Use Chi2 sorting algorithm")
+parser.add_option("", "--kf", action="store_true", dest="kf", default=False, help="Use KF sorting algorithm")
+parser.add_option("", "--hybrid", action="store_true", dest="hybrid", default=False, help="Use hybrid sorting algorithm")
+(option, args) = parser.parse_args()
 
 files = [
         # Background + Signal
@@ -88,6 +96,16 @@ files = [
         #["MC_QCD_pt150_bEnriched_MuEnrichedPt14_histos_%s.root", "skims/semimu/Systematics/MC_QCD_pt150_bEnriched_MuEnrichedPt14_skims_%s.root"],
         ]
 
+sortingAlgoArg = ""
+if option.mva:
+    sortingAlgoArg = "--mva"
+elif option.kf:
+    sortingAlgoArg = "--kf"
+elif option.chi2:
+    sortingAlgoArg = "--chi2"
+elif option.hybrid:
+    sortingAlgoArg = "--hybrid"
+
 systs = {"JECup": ["JECup", "--jec-syst up"], "JECdown": ["JECdown", "--jec-syst down"], "JERup": ["JERup", ""], "JERdown": ["JERdown", ""], "puUp": ["nominal", "--pileup-syst up"], "puDown": ["nominal", "--pileup-syst down"]}
 
 if True:
@@ -113,7 +131,7 @@ if True:
     systs["scaledown"] = ["scaledown", ""]
 
 def launch(input, output, btag, extra):
-    args = ["./extractorToHisto", "-i", input, "-o", output, "--mc", "--skim", "--b-tag", str(btag)]
+    args = ["./extractorToHisto", "-i", input, "-o", output, "--mc", "--skim", sortingAlgoArg, "--b-tag", str(btag)]
 
     if not os.path.exists(input):
         print("Warning: input file '%s' not found. Skipping this job." % input)

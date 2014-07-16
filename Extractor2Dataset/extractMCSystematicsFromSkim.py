@@ -2,8 +2,16 @@
 
 from __future__ import division
 import os, subprocess, tempfile, datetime
+from optparse import OptionParser
 
 d = datetime.datetime.now().strftime("%d%b%y")
+
+parser = OptionParser()
+parser.add_option("", "--mva", action="store_true", dest="mva", default=False, help="Use MVA sorting algorithm")
+parser.add_option("", "--chi2", action="store_true", dest="chi2", default=False, help="Use Chi2 sorting algorithm")
+parser.add_option("", "--kf", action="store_true", dest="kf", default=False, help="Use KF sorting algorithm")
+parser.add_option("", "--hybrid", action="store_true", dest="hybrid", default=False, help="Use hybrid sorting algorithm")
+(option, args) = parser.parse_args()
 
 files = [
         # Background + Signal
@@ -95,8 +103,18 @@ if False:
     systs["pdfUp"] = ["nominal", "--pdf-syst up"]
     systs["pdfDown"] = ["nominal", "--pdf-syst down"]
 
+sortingAlgoArg = ""
+if option.mva:
+    sortingAlgoArg = "--mva"
+elif option.kf:
+    sortingAlgoArg = "--kf"
+elif option.chi2:
+    sortingAlgoArg = "--chi2"
+elif option.hybrid:
+    sortingAlgoArg = "--hybrid"
+
 def launch(input, output, extra):
-    args = ["./extractor2Dataset", "-i", input, "-o", output, "--mc", "--skim"]
+    args = ["./extractor2Dataset", "-i", input, "-o", output, "--mc", "--skim", sortingAlgoArg]
 
     if len(extra) > 0:
         args.append(extra)

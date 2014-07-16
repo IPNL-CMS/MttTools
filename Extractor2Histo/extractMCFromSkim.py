@@ -2,8 +2,17 @@
 
 from __future__ import division
 import os, subprocess, tempfile, datetime
+from optparse import OptionParser
 
 d = datetime.datetime.now().strftime("%d%b%y")
+
+parser = OptionParser()
+parser.add_option("", "--mva", action="store_true", dest="mva", default=False, help="Use MVA sorting algorithm")
+parser.add_option("", "--chi2", action="store_true", dest="chi2", default=False, help="Use Chi2 sorting algorithm")
+parser.add_option("", "--kf", action="store_true", dest="kf", default=False, help="Use KF sorting algorithm")
+parser.add_option("", "--hybrid", action="store_true", dest="hybrid", default=False, help="Use hybrid sorting algorithm")
+(option, args) = parser.parse_args()
+
 
 files = [
         # Background
@@ -83,12 +92,22 @@ files = [
         ["Signal_ZPrimeToTTJets_M2000GeV_W200GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M2000GeV_W200GeV_skims_nominal_merged.root"],
         ]
 
+sortingAlgoArg = ""
+if option.mva:
+    sortingAlgoArg = "--mva"
+elif option.kf:
+    sortingAlgoArg = "--kf"
+elif option.chi2:
+    sortingAlgoArg = "--chi2"
+elif option.hybrid:
+    sortingAlgoArg = "--hybrid"
+
 def launch(input, output, btag):
     if not os.path.exists(input):
         print("Warning input file '%s' does not exist. Skipping job." % input)
         return ""
 
-    args = ["./extractorToHisto", "-i", input, "-o", output, "--mc", "--skim", "--b-tag", str(btag)]
+    args = ["./extractorToHisto", "-i", input, "-o", output, "--mc", "--skim", sortingAlgoArg, "--b-tag", str(btag)]
     if "semie" in input:
         args.append("--semie")
     elif "semimu" in input:
