@@ -643,7 +643,7 @@ void Extractor2Histos::Loop()
           mUseChi2 = true;
           mUseKF = false;
         } else {
-          if (kf_chisquare < 50.) {
+          if (kf_proba > 0.9) {
             mUseKF = true;
             mUseChi2 = false;          
           } else {

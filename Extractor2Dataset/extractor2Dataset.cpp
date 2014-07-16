@@ -285,7 +285,7 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
           mtt_afterReco = mtt_AfterChi2;
         } else {
           //if (kf_chisquare < 50.) {
-          if (kf_proba > 0.2) {
+          if (kf_proba > 0.9) {
             mtt_afterReco = mtt_AfterKF;
           } else {
             mtt_afterReco = mtt_AfterChi2;
