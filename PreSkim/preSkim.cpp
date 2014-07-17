@@ -324,7 +324,7 @@ void PreSkim::Loop()
 
     // isSel is 1 for a selected event.
     // Also check that at least one chi2 or mva combination has been done
-    if (isSel != 1 || (numComb_chi2 <= 0 && numComb_MVA <= 0) || ptLepton < ptLeptonCut)
+    if (isSel != 1 || ptLepton < ptLeptonCut)
       continue;
 
     mtt_clone->Fill();
@@ -454,7 +454,6 @@ void PreSkim::Init()
   //SetBranchAddress(fMTT, "isBestSolMatched", &isBestSolMatched);
   //SetBranchAddress(fMTT, "KFChi2", &KFChi2);
   SetBranchAddress(fMTT, "numComb_chi2", &numComb_chi2);
-  SetBranchAddress(fMTT, "numComb_MVA", &numComb_MVA);
   //SetBranchAddress(fMTT, "solChi2", solChi2);
 
   SetBranchAddress(fMTT, "mLepTop_AfterChi2", &mLepTop_AfterChi2);
