@@ -306,8 +306,8 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
 /*    if (! selection.passExtractorSel(isSel, numComb, mtt_afterReco))*/
       //continue;
 
-    //if (! selection.passJetsSel(pt_1stJet, pt_2ndJet, pt_3rdJet, pt_4thJet, isRun2012AB))
-      /*continue;*/
+    if (! selection.passJetsSel(pt_1stJet, pt_2ndJet, pt_3rdJet, pt_4thJet, isRun2012AB))
+      continue;
 
     if (useMVA) {
 
