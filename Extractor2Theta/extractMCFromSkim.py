@@ -2,8 +2,16 @@
 
 from __future__ import division
 import os, subprocess, tempfile, datetime
+from optparse import OptionParser
 
 d = datetime.datetime.now().strftime("%d%b%y")
+
+parser = OptionParser()
+parser.add_option("", "--mva", action="store_true", dest="mva", default=False, help="Use MVA sorting algorithm")
+parser.add_option("", "--chi2", action="store_true", dest="chi2", default=False, help="Use Chi2 sorting algorithm")
+parser.add_option("", "--kf", action="store_true", dest="kf", default=False, help="Use KF sorting algorithm")
+parser.add_option("", "--hybrid", action="store_true", dest="hybrid", default=False, help="Use hybrid sorting algorithm")
+(option, args) = parser.parse_args()
 
 files = [
         # Background
@@ -75,8 +83,18 @@ files = [
         ["MC_TT_madgraph_theta_nominal.root", "skims/%s/MC_TT_madgraph_skims_nominal.root", 6901778, 245.8],
         ]
 
+sortingAlgoArg = ""
+if option.mva:
+    sortingAlgoArg = "--mva"
+elif option.kf:
+    sortingAlgoArg = "--kf"
+elif option.chi2:
+    sortingAlgoArg = "--chi2"
+elif option.hybrid:
+    sortingAlgoArg = "--hybrid"
+
 def launch(input, output, weight):
-  args = ["./extractor2Theta", "-i", input, "-o", output, "--mc", "--skim"]
+  args = ["./extractor2Theta", "-i", input, "-o", output, "--mc", "--skim", sortingAlgoArg]
   if "semie" in input:
     args.append("--type semie")
   elif "semimu" in input:

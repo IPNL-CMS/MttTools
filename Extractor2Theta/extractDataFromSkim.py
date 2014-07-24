@@ -1,8 +1,16 @@
 #!/usr/bin/env python
 
 import os, subprocess, datetime, tempfile
+from optparse import OptionParser
 
 d = datetime.datetime.now().strftime("%d%b%y")
+
+parser = OptionParser()
+parser.add_option("", "--mva", action="store_true", dest="mva", default=False, help="Use MVA sorting algorithm")
+parser.add_option("", "--chi2", action="store_true", dest="chi2", default=False, help="Use Chi2 sorting algorithm")
+parser.add_option("", "--kf", action="store_true", dest="kf", default=False, help="Use KF sorting algorithm")
+parser.add_option("", "--hybrid", action="store_true", dest="hybrid", default=False, help="Use hybrid sorting algorithm")
+(option, args) = parser.parse_args()
 
 inputs = [
         ['MTT_MuHad_Run2012A-22Jan2013.root', 'skims/data/MTT_MuHad_Run2012A-22Jan2013.root', 'semimu'],
@@ -16,8 +24,19 @@ inputs = [
         ['MTT_SingleElectron_Run2012D-TOPElePlusJets-22Jan2013.root', 'skims/data/MTT_SingleElectron_Run2012D-TOPElePlusJets-22Jan2013.root', 'semie'],
         ]
 
+sortingAlgoArg = ""
+if option.mva:
+    sortingAlgoArg = "--mva"
+elif option.kf:
+    sortingAlgoArg = "--kf"
+elif option.chi2:
+    sortingAlgoArg = "--chi2"
+elif option.hybrid:
+    sortingAlgoArg = "--hybrid"
+
+
 def launch(input, output, type):
-  args = ["./extractor2Theta", "-i", input, "-o", output, "--data", "--type", type, "--skim"]
+  args = ["./extractor2Theta", "-i", input, "-o", output, "--data", "--type", type, "--skim", sortingAlgoArg]
   
   return " ".join(args)
 
