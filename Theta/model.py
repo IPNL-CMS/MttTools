@@ -119,7 +119,7 @@ def build_theta_model(file, filter, signal):
 
     return model
 
-def build_model(type, stat_only = False, lumi_only = False, no_data = False, no_shape_syst = False):
+def build_model(type, file, stat_only = False, lumi_only = False, no_data = False, no_shape_syst = False):
     global STAT_ONLY
     global LUMI_ONLY
     global NO_DATA
@@ -134,13 +134,13 @@ def build_model(type, stat_only = False, lumi_only = False, no_data = False, no_
     options.set('global', 'debug', 'True')
 
     if type == "scalar":
-        return build_theta_model("theta_histos_merged_BW10.root", select_scalar_signal_hist, "H*_scalar")
+        return build_theta_model(file, select_scalar_signal_hist, "H*_scalar")
     elif type == "pseudoscalar":
-        return build_theta_model("theta_histos_merged_BW10.root", select_pseudoscalar_signal_hist, "H*_pseudoscalar")
+        return build_theta_model(file, select_pseudoscalar_signal_hist, "H*_pseudoscalar")
     elif type == "zprime_narrow":
-        return build_theta_model("theta_histos_merged.root", select_zp_narrow_signal_hist, "zp*_narrow")
+        return build_theta_model(file, select_zp_narrow_signal_hist, "zp*_narrow")
     elif type == "zprime_large":
-        return build_theta_model("theta_histos_merged.root", select_zp_large_signal_hist, "zp*_large")
+        return build_theta_model(file, select_zp_large_signal_hist, "zp*_large")
 
     return None
 

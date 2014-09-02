@@ -49,36 +49,49 @@ We have four observables, based on number of b-tagged jets and lepton flavor :
 
 # How-to run
 
+## Pass options to model
+
+In theta driver, you can pass options to the model using the `--model` parameter. Its syntax is:
+```
+<model filename (without .py extension)>: <list of options separate by ';'>
+```
+
+Each option has a `key = value` syntax. Possibles keys are:
+
+ - `model` (mandatory): specify the model of the analysis ; see allowed values below
+ - `stat_only`: run without any systematics ; True / **False**
+ - `lumi_only`: run only with luminosity uncertainty ; True / **False**
+ - `no_data`: run only expected, no observed ; True / **False**
+ - `no_shape_syst`: run without any shape uncertainties, only normalisation uncertainties ; True / **False**
+
+
 Possible model type:
+
  - `scalar`: Higgs scalar
  - `pseudoscalar`: Higgs pseudo-scalar
  - `zprime_narrow`: Z' narrow
  - `zprime_large`: Z' large 
 
-Possible options (all booleans):
- - `stat_only`: run without any systematics
- - `lumi_only`: run only with luminosity uncertainty
- - `no_data`: run only expected, no observed
- - `no_shape_syst`: run without any shape uncertainties, only normalisation uncertainties
-
 ## Steps
+
+Below are examples of analysis steps
 
 Save analysis summary:
 ```shell
-theta_driver preprocess --model 'model: type = pseudoscalar' --workdir summary_scalar --analysis summary file.root
+theta_driver preprocess --model 'model: type = pseudoscalar' --workdir summary_pseudoscalar --analysis summary --file file.root
 ```
 
-Perform a maximum likehood fit of all the parameters :
+Perform a maximum likehood fit of all the parameters, with only lumi systematics:
 ```shell
-theta_driver preprocess --model 'model: type = pseudoscalar' --workdir mle_scalar --analysis mle file.root
+theta_driver preprocess --model 'model: type = pseudoscalar; lumi_only = True' --workdir mle_pseudoscalar --analysis mle --file file.root
 ```
 
-Compute expected and observed limit.
+Compute expected and observed limit:
 ```shell
-theta_driver preprocess --model 'model: type = pseudoscalar' --workdir bayesian_scalar --analysis 'bayesian: iterations = 160000' file.root
+theta_driver preprocess --model 'model: type = pseudoscalar' --workdir bayesian_pseudoscalar --analysis 'bayesian: iterations = 160000' --file file.root
 ```
 
-Compute pvalues
+Compute only expected pvalues:
 ```shell
-theta_driver preprocess --model 'model: type = pseudoscalar' --workdir pvalues2_scalar --analysis pvalues2 file.root
+theta_driver preprocess --model 'model: type = pseudoscalar; no_data = True' --workdir pvalues_pseudoscalar --analysis pvalues2 --file file.root
 ```
