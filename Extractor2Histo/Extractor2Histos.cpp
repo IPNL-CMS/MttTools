@@ -876,7 +876,7 @@ void Extractor2Histos::Loop()
 
       hBestSolChi2_fullsel->Fill(bestSolChi2, eventWeight);
       hBestSolChi2Exp_fullsel->Fill(exp(-bestSolChi2), eventWeight);
-      hBestSolChi2Proba_fullsel->Fill(TMath::Prob(bestSolChi2, 4), eventWeight);
+      hBestSolChi2Proba_fullsel->Fill(TMath::Prob(bestSolChi2, 3), eventWeight); // number of dof = n-1 with n = 4 (terms in chi2)
       hBoostTT->Fill(beta_tt_AfterReco, eventWeight);
       hPtTT->Fill(pt_tt_AfterReco, eventWeight);
       hEtaTT->Fill(eta_tt_AfterReco, eventWeight);
