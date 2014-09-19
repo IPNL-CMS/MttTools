@@ -7,6 +7,7 @@
 #include <TRandom2.h>
 #include <vector>
 #include <TProfile.h>
+#include <TMath.h>
 #include <fstream>
 #include <memory>
 #include <chrono>
@@ -77,6 +78,10 @@ void Extractor2Histos::Loop()
   TH1D *hIsSel = new TH1D("isSel", "", 10, 0, 10);
   TH1D *hBestSolChi2 = new TH1D("bestSolChi2", "", 400, 0, 1000);
   TH1D *hBestSolChi2_fullsel = new TH1D("bestSolChi2_fullsel", "", 400, 0, 500);
+  TH1D *hBestSolChi2Exp_fullsel = new TH1D("bestSolChi2_exp_fullsel", "", 100, 0., 1.);
+  hBestSolChi2Exp_fullsel->SetXTitle("exp(-#chi^{2})");
+  TH1D *hBestSolChi2Proba_fullsel = new TH1D("bestSolChi2Proba_fullsel", "", 100, 0., 1.);
+  hBestSolChi2Proba_fullsel->SetXTitle("#chi^{2} prob");
 
   TH1D *hNTrueInt = new TH1D("nTrueInt_reco_fullsel", "", 70, 0., 70);
   TH1D *hNTrueInt_nosel = new TH1D("nTrueInt_reco_nosel", "", 70, 0., 70);
@@ -170,6 +175,14 @@ void Extractor2Histos::Loop()
   TH1D *hSelectedLeptonPt = new TH1D("selectedLeptonPt_reco_fullsel", "", 50, 20., 200.);
   TH1D *hSelectedNeutrinoPt = new TH1D("selectedNeutrinoPt_reco_fullsel", "", 50, 20., 200.);
   TH1D *hSelectedNeutrinoPz = new TH1D("selectedNeutrinoPz_reco_fullsel", "", 50, 20., 200.);
+
+  TH1D *hkf_chisquare = new TH1D("kf_chisquare_fullsel", "", 1800, 0., 450.);
+  TH1D *hkf_proba = new TH1D("kf_proba_fullsel", "", 200, 0., 1.);
+  TH1D *hkf_proba_zoom = new TH1D("kf_proba_fullsel_zoom", "", 100, 0., 0.1);
+
+  hkf_chisquare->SetXTitle("#Chi^{2}_{KF}");
+  hkf_proba->SetXTitle("Proba_{KF}");
+  hkf_proba_zoom->SetXTitle("Proba_{KF}");
 
   if (mIsSemiMu) {
     hSelectedLeptonPt->SetXTitle("selected #mu p_{T} [GeV/c]");
@@ -809,6 +822,8 @@ void Extractor2Histos::Loop()
       }
 
       hBestSolChi2_fullsel->Fill(bestSolChi2, eventWeight);
+      hBestSolChi2Exp_fullsel->Fill(exp(-bestSolChi2), eventWeight);
+      hBestSolChi2Proba_fullsel->Fill(TMath::Prob(bestSolChi2, 4), eventWeight);
       hBoostTT->Fill(beta_tt_AfterReco, eventWeight);
       hPtTT->Fill(pt_tt_AfterReco, eventWeight);
       hEtaTT->Fill(eta_tt_AfterReco, eventWeight);
@@ -914,6 +929,9 @@ void Extractor2Histos::Loop()
         hmttSelected_btag_sel_mass_cut->Fill(mtt_AfterReco, eventWeight);
 
       h_mtt_resolution->Fill(mtt_AfterReco - MC_mtt, eventWeight);
+      hkf_chisquare->Fill(kf_chisquare, eventWeight);
+      hkf_proba->Fill(kf_proba, eventWeight);
+      hkf_proba_zoom->Fill(kf_proba, eventWeight);
     }
   }
 
