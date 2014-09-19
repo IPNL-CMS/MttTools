@@ -97,6 +97,10 @@ void Extractor2Histos::Loop()
   TH1D *hLeptTopPt = new TH1D("leptTopPt_reco_fullsel", "", 60, 20., 600.);
   TH1D *hLeptTopPt_chi2sel = new TH1D("leptTopPt_reco_chi2sel", "", 60, 20., 600.);
   TH1D *hLeptTopPz = new TH1D("leptTopPz_reco_fullsel", "", 60, 20., 600.);
+  TH1D *hLeptTopE = new TH1D("leptTopE_reco_fullsel", "", 60, 20., 600.);
+  hLeptTopE->SetXTitle("leptonic top E [GeV/c]");
+  TH1D *hLeptTopPhi = new TH1D("leptTopPhi_reco_fullsel", "", 200, -4., 4.);
+  hLeptTopPhi->SetXTitle("leptonic top #phi");
 
   TH1D *hBoostTT_gen = new TH1D("boostTT_gen", "", 50, 0., 1.);
   TH1D *hPtTT_gen = new TH1D("ptTT_gen", "", 60, 0., 600.);
@@ -108,6 +112,10 @@ void Extractor2Histos::Loop()
   TH1D *hHadrTopPt = new TH1D("hadrTopPt_reco_fullsel", "", 60, 20., 600.);
   TH1D *hHadrTopPt_chi2sel = new TH1D("hadrTopPt_reco_chi2sel", "", 60, 20., 600.);
   TH1D *hHadrTopPz = new TH1D("hadrTopPz_reco_fullsel", "", 60, 20., 600.);
+  TH1D *hHadrTopE = new TH1D("hadrTopE_reco_fullsel", "", 60, 20., 600.);
+  hHadrTopE->SetXTitle("hadronic top E [GeV/C]");
+  TH1D *hHadrTopPhi = new TH1D("hadrTopPhi_reco_fullsel", "", 200, -4., 4.);
+  hHadrTopPhi->SetXTitle("hadronic top #phi");
 
   TH1D *hHadrTopEta = new TH1D("hadrTopEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
   TH1D *hHadrTopEta_chi2sel = new TH1D("hadrTopEta_reco_chi2sel", "", 50, -2*M_PI, 2*M_PI);
@@ -176,6 +184,27 @@ void Extractor2Histos::Loop()
   TH1D *hSelectedNeutrinoPt = new TH1D("selectedNeutrinoPt_reco_fullsel", "", 50, 20., 200.);
   TH1D *hSelectedNeutrinoPz = new TH1D("selectedNeutrinoPz_reco_fullsel", "", 50, 20., 200.);
 
+  TH1D *hSelectedFirstJetEta = new TH1D("selectedFirstJetEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hSelectedSecondJetEta = new TH1D("selectedSecondJetEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hSelectedHadronicBEta = new TH1D("selectedHadronicBEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hSelectedLeptonicBEta = new TH1D("selectedLeptonicBEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hSelectedLeptonEta = new TH1D("selectedLeptonEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
+  TH1D *hSelectedNeutrinoEta = new TH1D("selectedNeutrinoEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
+
+  TH1D *hSelectedFirstJetPhi = new TH1D("selectedFirstJetPhi_reco_fullsel", "", 200, -4., 4.);
+  TH1D *hSelectedSecondJetPhi = new TH1D("selectedSecondJetPhi_reco_fullsel", "", 200, -4., 4.);
+  TH1D *hSelectedHadronicBPhi = new TH1D("selectedHadronicBPhi_reco_fullsel", "", 200, -4., 4.);
+  TH1D *hSelectedLeptonicBPhi = new TH1D("selectedLeptonicBPhi_reco_fullsel", "", 200, -4., 4.);
+  TH1D *hSelectedLeptonPhi = new TH1D("selectedLeptonPhi_reco_fullsel", "", 200, -4., 4.);
+  TH1D *hSelectedNeutrinoPhi = new TH1D("selectedNeutrinoPhi_reco_fullsel", "", 200, -4., 4.);
+
+  TH1D *hSelectedFirstJetE = new TH1D("selectedFirstJetE_reco_fullsel", "", 100, 70., 640.);
+  TH1D *hSelectedSecondJetE = new TH1D("selectedSecondJetE_reco_fullsel", "", 50, 30., 300.);
+  TH1D *hSelectedHadronicBE = new TH1D("selectedHadronicBE_reco_fullsel", "", 100, 70., 640.);
+  TH1D *hSelectedLeptonicBE = new TH1D("selectedLeptonicBE_reco_fullsel", "", 100, 70., 640.);
+  TH1D *hSelectedLeptonE = new TH1D("selectedLeptonE_reco_fullsel", "", 50, 20., 200.);
+  TH1D *hSelectedNeutrinoE = new TH1D("selectedNeutrinoE_reco_fullsel", "", 50, 20., 200.);
+
   TH1D *hkf_chisquare = new TH1D("kf_chisquare_fullsel", "", 1800, 0., 450.);
   TH1D *hkf_proba = new TH1D("kf_proba_fullsel", "", 200, 0., 1.);
   TH1D *hkf_proba_zoom = new TH1D("kf_proba_fullsel_zoom", "", 100, 0., 0.1);
@@ -186,8 +215,14 @@ void Extractor2Histos::Loop()
 
   if (mIsSemiMu) {
     hSelectedLeptonPt->SetXTitle("selected #mu p_{T} [GeV/c]");
+    hSelectedLeptonEta->SetXTitle("selected #mu #eta");
+    hSelectedLeptonPhi->SetXTitle("selected #mu #phi");
+    hSelectedLeptonE->SetXTitle("selected #mu E [GeV/c]");
   } else {
     hSelectedLeptonPt->SetXTitle("selected e p_{T} [GeV/c]");
+    hSelectedLeptonEta->SetXTitle("selected e #eta");
+    hSelectedLeptonPhi->SetXTitle("selected e #phi");
+    hSelectedLeptonE->SetXTitle("selected e E [GeV/c]");
   }
   hSelectedFirstJetPt->SetXTitle("selected 1^{st} jet p_{T} [GeV/c]");
   hSelectedSecondJetPt->SetXTitle("selected 2^{nd} jet p_{T} [GeV/c]");
@@ -195,6 +230,24 @@ void Extractor2Histos::Loop()
   hSelectedLeptonicBPt->SetXTitle("selected lep B p_{T} [GeV/c]");
   hSelectedNeutrinoPt->SetXTitle("selected #nu p_{T} [GeV/c]");
   hSelectedNeutrinoPz->SetXTitle("selected #nu p_{Z} [GeV/c]");
+
+  hSelectedFirstJetEta->SetXTitle("selected 1^{st} jet #eta");
+  hSelectedSecondJetEta->SetXTitle("selected 2^{nd} jet #eta");
+  hSelectedHadronicBEta->SetXTitle("selected had B #eta");
+  hSelectedLeptonicBEta->SetXTitle("selected lep B #eta");
+  hSelectedNeutrinoEta->SetXTitle("selected #nu #eta");
+
+  hSelectedFirstJetPhi->SetXTitle("selected 1^{st} jet #phi");
+  hSelectedSecondJetPhi->SetXTitle("selected 2^{nd} jet #phi");
+  hSelectedHadronicBPhi->SetXTitle("selected had B #phi");
+  hSelectedLeptonicBPhi->SetXTitle("selected lep B #phi");
+  hSelectedNeutrinoPhi->SetXTitle("selected #nu #phi");
+
+  hSelectedFirstJetE->SetXTitle("selected 1^{st} jet E [GeV/c]");
+  hSelectedSecondJetE->SetXTitle("selected 2^{nd} jet E [GeV/c]");
+  hSelectedHadronicBE->SetXTitle("selected had B E [GeV/c]");
+  hSelectedLeptonicBE->SetXTitle("selected lep B E [GeV/c]");
+  hSelectedNeutrinoE->SetXTitle("selected #nu E [GeV/c]");
 
   hmtt_AfterChi2->SetXTitle("m_{t#bar{t}}^{Chi2} [GeV/c^{2}]");
   hmtt_AfterKF->SetXTitle("m_{t#bar{t}}^{KF} [GeV/c^{2}]");
@@ -900,6 +953,12 @@ void Extractor2Histos::Loop()
       hLeptTopPz->Fill(lepTopP4_AfterReco->Pz(), eventWeight);
       hHadrTopPz->Fill(hadTopP4_AfterReco->Pz(), eventWeight);
 
+      hLeptTopPhi->Fill(lepTopP4_AfterReco->Phi(), eventWeight);
+      hHadrTopPhi->Fill(hadTopP4_AfterReco->Phi(), eventWeight);
+
+      hLeptTopE->Fill(lepTopP4_AfterReco->E(), eventWeight);
+      hHadrTopE->Fill(hadTopP4_AfterReco->E(), eventWeight);
+
       selectedFirstJetPt_AfterReco = selectedFirstJetP4_AfterReco->Pt();
       selectedSecondJetPt_AfterReco = selectedSecondJetP4_AfterReco->Pt();
       selectedHadronicBPt_AfterReco = selectedHadronicBP4_AfterReco->Pt();
@@ -907,15 +966,39 @@ void Extractor2Histos::Loop()
 
       hSelectedFirstJetPt->Fill(selectedFirstJetPt_AfterReco, eventWeight);
       hSelectedSecondJetPt->Fill(selectedSecondJetPt_AfterReco, eventWeight);
-      hSelectedNeutrinoPt->Fill(selectedNeutrinoP4_AfterReco->Pt(), eventWeight);
-      hSelectedNeutrinoPz->Fill(selectedFirstJetP4_AfterReco->Pz(), eventWeight);
-      if (mUseKF) {
-        hSelectedLeptonPt->Fill(selectedLeptonP4_AfterKF->Pt(), eventWeight);
-      } else {
-        hSelectedLeptonPt->Fill(getP4(selectedLeptonP4_AfterReco, 0)->Pt(), eventWeight);
-      }
       hSelectedHadronicBPt->Fill(selectedHadronicBPt_AfterReco, eventWeight);
       hSelectedLeptonicBPt->Fill(selectedLeptonicBPt_AfterReco, eventWeight);
+      hSelectedNeutrinoPt->Fill(selectedNeutrinoP4_AfterReco->Pt(), eventWeight);
+      hSelectedNeutrinoPz->Fill(selectedNeutrinoP4_AfterReco->Pz(), eventWeight);
+
+      hSelectedFirstJetEta->Fill(selectedFirstJetP4_AfterReco->Eta(), eventWeight);
+      hSelectedSecondJetEta->Fill(selectedSecondJetP4_AfterReco->Eta(), eventWeight);
+      hSelectedHadronicBEta->Fill(selectedHadronicBP4_AfterReco->Eta(), eventWeight);
+      hSelectedLeptonicBEta->Fill(selectedLeptonicBP4_AfterReco->Eta(), eventWeight);
+      hSelectedNeutrinoEta->Fill(selectedNeutrinoP4_AfterReco->Eta(), eventWeight);
+
+      hSelectedFirstJetPhi->Fill(selectedFirstJetP4_AfterReco->Phi(), eventWeight);
+      hSelectedSecondJetPhi->Fill(selectedSecondJetP4_AfterReco->Phi(), eventWeight);
+      hSelectedHadronicBPhi->Fill(selectedHadronicBP4_AfterReco->Phi(), eventWeight);
+      hSelectedLeptonicBPhi->Fill(selectedLeptonicBP4_AfterReco->Phi(), eventWeight);
+      hSelectedNeutrinoPhi->Fill(selectedNeutrinoP4_AfterReco->Phi(), eventWeight);
+
+      hSelectedFirstJetE->Fill(selectedFirstJetP4_AfterReco->E(), eventWeight);
+      hSelectedSecondJetE->Fill(selectedSecondJetP4_AfterReco->E(), eventWeight);
+      hSelectedHadronicBE->Fill(selectedHadronicBP4_AfterReco->E(), eventWeight);
+      hSelectedLeptonicBE->Fill(selectedLeptonicBP4_AfterReco->E(), eventWeight);
+      hSelectedNeutrinoE->Fill(selectedNeutrinoP4_AfterReco->E(), eventWeight);
+      if (mUseKF) {
+        hSelectedLeptonPt->Fill(selectedLeptonP4_AfterKF->Pt(), eventWeight);
+        hSelectedLeptonEta->Fill(selectedLeptonP4_AfterKF->Eta(), eventWeight);
+        hSelectedLeptonPhi->Fill(selectedLeptonP4_AfterKF->Phi(), eventWeight);
+        hSelectedLeptonE->Fill(selectedLeptonP4_AfterKF->E(), eventWeight);
+      } else {
+        hSelectedLeptonPt->Fill(getP4(selectedLeptonP4_AfterReco, 0)->Pt(), eventWeight);
+        hSelectedLeptonEta->Fill(getP4(selectedLeptonP4_AfterReco, 0)->Eta(), eventWeight);
+        hSelectedLeptonPhi->Fill(getP4(selectedLeptonP4_AfterReco, 0)->Phi(), eventWeight);
+        hSelectedLeptonE->Fill(getP4(selectedLeptonP4_AfterReco, 0)->E(), eventWeight);
+      }
 
       sumPt4JetsSel = selectedFirstJetPt_AfterReco + selectedSecondJetPt_AfterReco + selectedHadronicBPt_AfterReco + selectedLeptonicBPt_AfterReco;
       sumPtJetsInEvent = 0.;
