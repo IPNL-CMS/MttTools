@@ -34,6 +34,7 @@ class Extractor2Histos {
     TChain          *fEvent;
     TChain          *fLooseMuons;
     TChain          *fJet;
+    TChain          *fMET;
     TChain          *fElectrons;
     Int_t           fCurrent; //!current Tree number in a TChain
 
@@ -83,6 +84,7 @@ class Extractor2Histos {
     Float_t         jetPt[MAX_ARRAY_SIZE];   //[nJets]
     Int_t           nBtaggedJets_CSVM;
     Float_t         MET;
+    Float_t         METPhi;
     Int_t           isSel;
     Int_t           oneMatchedCombi;
     Float_t         bestSolChi2;
@@ -247,6 +249,7 @@ class Extractor2Histos {
     float           electron_SCEta[100];
 
     TClonesArray*   jet_p4;
+    TClonesArray*   met_p4;
 
     Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, bool chi2, bool kf, bool hybrid, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst);
 

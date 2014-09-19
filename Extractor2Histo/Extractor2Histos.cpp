@@ -147,6 +147,7 @@ void Extractor2Histos::Loop()
   TH1D *hFourthJetEta_nosel = new TH1D("fourthJetEta_reco_nosel", "", 100, -2*M_PI, 2*M_PI);
 
   TH1D *hMET = new TH1D("MET_reco_fullsel", "", 100, 20., 400.);
+  TH1D *hMETPhi = new TH1D("METPhi_reco_fullsel", "", 800, -4., 4.);
   TH1D *hMET_nosel = new TH1D("MET_reco_nosel", "", 100, 0., 400.);
   TH1D *hMET_chi2sel = new TH1D("MET_reco_chi2sel", "", 100, 20., 400.);
 
@@ -303,6 +304,7 @@ void Extractor2Histos::Loop()
   hFourthJetPt_chi2sel->SetXTitle("4^{th} jet p_{T} [GeV/c]");
 
   hMET->SetXTitle("MET [GeV]");
+  hMETPhi->SetXTitle("MET #phi [GeV]");
   hMET_chi2sel->SetXTitle("MET [GeV]");
 
   hmtlep->SetXTitle("leptonic m_{t} [GeV/c^{2}]");
@@ -823,6 +825,11 @@ void Extractor2Histos::Loop()
       hFourthJetEta->Fill(jetEta[3], eventWeight);
       hMET->Fill(MET, eventWeight);
 
+      if (met_p4->GetEntriesFast() > 0) {
+        TLorentzVector* p4 = (TLorentzVector*) (*met_p4)[0];
+        hMETPhi->Fill(p4->Phi(), eventWeight);
+      }
+
       hLeptTopPt->Fill(lepTopPt_AfterReco, eventWeight);
       hLeptTopEta->Fill(lepTopEta_AfterReco, eventWeight);
 
@@ -999,6 +1006,7 @@ Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, c
 
   fLooseMuons = nullptr;
   fJet = nullptr;
+  fMET = nullptr;
 
   // Get trees
   loadChain(inputFiles, "Mtt", fMTT);
@@ -1008,10 +1016,12 @@ Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, c
   if (! mSkim) {
     loadChain(inputFiles, "muon_loose_PF", fLooseMuons);
     loadChain(inputFiles, "jet_PF", fJet);
+    loadChain(inputFiles, "MET_PF", fMET);
   }
 
   if (true) {
     loadChain(inputFiles, "jet_PF", fJet);
+    loadChain(inputFiles, "MET_PF", fMET);
   }
 
   Init();
@@ -1045,6 +1055,9 @@ Int_t Extractor2Histos::GetEntry(Long64_t entry)
 
   if (fJet)
     fJet->GetEntry(entry);
+
+  if (fMET)
+    fMET->GetEntry(entry);
 
   //if (fElectrons)
   //fElectrons->GetEntry(entry);
@@ -1358,6 +1371,13 @@ void Extractor2Histos::Init()
     fJet->SetBranchStatus("jet_4vector", 1);
 
     fJet->SetBranchAddress("jet_4vector", &jet_p4, NULL);
+
+    met_p4 = NULL;
+    fMET->SetMakeClass(1);
+    fMET->SetBranchStatus("*", 0);
+    fMET->SetBranchStatus("met_4vector", 1);
+
+    fMET->SetBranchAddress("met_4vector", &met_p4, NULL);
   }
 
   if (true) {
@@ -1367,6 +1387,13 @@ void Extractor2Histos::Init()
     fJet->SetBranchStatus("jet_4vector", 1);
 
     fJet->SetBranchAddress("jet_4vector", &jet_p4, NULL);
+
+    met_p4 = NULL;
+    fMET->SetMakeClass(1);
+    fMET->SetBranchStatus("*", 0);
+    fMET->SetBranchStatus("met_4vector", 1);
+
+    fMET->SetBranchAddress("met_4vector", &met_p4, NULL);
   }
 }
 
