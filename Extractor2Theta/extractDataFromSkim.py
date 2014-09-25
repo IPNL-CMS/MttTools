@@ -10,6 +10,8 @@ parser.add_option("", "--mva", action="store_true", dest="mva", default=False, h
 parser.add_option("", "--chi2", action="store_true", dest="chi2", default=False, help="Use Chi2 sorting algorithm")
 parser.add_option("", "--kf", action="store_true", dest="kf", default=False, help="Use KF sorting algorithm")
 parser.add_option("", "--hybrid", action="store_true", dest="hybrid", default=False, help="Use hybrid sorting algorithm")
+parser.add_option("", "--zprime", action="store_true", dest="zprime", default=False, help="Change mtt range for Zprime analysis")
+parser.add_option("", "--higgs", action="store_true", dest="higgs", default=False, help="Change mtt range for Higgs analysis")
 (option, args) = parser.parse_args()
 
 inputs = [
@@ -34,9 +36,15 @@ elif option.chi2:
 elif option.hybrid:
     sortingAlgoArg = "--hybrid"
 
+typeArg = ""
+if option.zprime:
+    typeArg = "--zprime"
+elif option.higgs:
+    typeArg = "--higgs"
+
 
 def launch(input, output, type):
-  args = ["./extractor2Theta", "-i", input, "-o", output, "--data", "--type", type, "--skim", sortingAlgoArg]
+  args = ["./extractor2Theta", "-i", input, "-o", output, "--data", "--type", type, "--skim", sortingAlgoArg, typeArg]
   
   return " ".join(args)
 
@@ -65,3 +73,5 @@ for type in ["semie", "semimu"]:
     args += ([os.path.join(path, output[0]) for output in inputs if type in output[2]])
 
     subprocess.call(args)
+
+

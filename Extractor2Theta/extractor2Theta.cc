@@ -35,7 +35,7 @@ void Init(bool useKF, float& mtt_afterReco, float& mtt_AfterKF, float& mtt_After
   }
 }
 
-void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& outputFile, bool isData, const std::string& type, int max, double lumi_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
+void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& outputFile, bool isData, bool isZprime, const std::string& type, int max, double lumi_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
 
   float mtt_afterReco, pt_1stJet, pt_2ndJet, pt_3rdJet, pt_4thJet, bestSolChi2, mtt_AfterKF, mtt_AfterChi2, mtt_AfterMVA;
   int isSel = 1, nBtaggedJets_CSVM;
@@ -215,6 +215,10 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
 
   float hist_min = 250;
   float hist_max = 1250;
+  if (isZprime) {
+    hist_min = 550;
+    hist_max = 2000;
+  }
   int nBins = (hist_max - hist_min) / 5.;
   TH1::SetDefaultSumw2(true);
   TH1* h_mtt_0btag = new TH1D("mtt_0btag", "mtt", nBins, hist_min, hist_max);
@@ -424,12 +428,12 @@ void loadChain(const std::vector<std::string>& inputFiles, TChain*& mtt, TChain*
   vertices->SetCacheSize(30*1024*1024);
 }
 
-void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, const std::string& type, int max, double generator_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
+void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, bool isZprime, const std::string& type, int max, double generator_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
 
   TChain* mtt = NULL, *event = NULL, *vertices = NULL;
 
   loadChain(inputFiles, mtt, event, vertices);
-  reduce(mtt, event, vertices, outputFile, isData, type, max, generator_weight, puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, useMVA, useChi2, useKF, useHybrid, runOnSkim);
+  reduce(mtt, event, vertices, outputFile, isData, isZprime, type, max, generator_weight, puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, useMVA, useChi2, useKF, useHybrid, runOnSkim);
 
   delete mtt;
   delete event;
@@ -488,6 +492,10 @@ int main(int argc, char** argv)
     xorlist.push_back(&hybridArg);
     cmd.xorAdd( xorlist );
 
+    TCLAP::SwitchArg zprimeArg("", "zprime", "Is this Zprime analysis?", false);
+    TCLAP::SwitchArg higgsArg("", "higgs", "Is this Higgs analysis?", false);
+    cmd.xorAdd(zprimeArg, higgsArg);
+
     cmd.parse(argc, argv);
 
     std::string p = pileupArg.getValue();
@@ -543,6 +551,7 @@ int main(int argc, char** argv)
     }
     
     bool isData = dataArg.isSet();
+    bool isZprime = zprimeArg.isSet();
 
     std::vector<std::string> inputFiles;
     if (inputFileArg.isSet()) {
@@ -551,7 +560,7 @@ int main(int argc, char** argv)
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    reduce(inputFiles, outputFileArg.getValue(), isData, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue(), puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue(), skimArg.getValue()); 
+    reduce(inputFiles, outputFileArg.getValue(), isData, isZprime, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue(), puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue(), skimArg.getValue()); 
 
   } catch (TCLAP::ArgException& e) {
     std::cout << e.what() << std::endl;
