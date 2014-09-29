@@ -118,7 +118,7 @@ def launch(input, output, btag):
 tmpfile = tempfile.NamedTemporaryFile(dir = '/scratch/', delete = False)
 
 # Build output tree structure
-for btag in [1, 2]:
+for btag in [0, 1, 2]:
     for type in ["semie", "semimu"]:
         path = "plots/%s/%d-btag/%s" % (d, btag, type)
         try:
@@ -129,7 +129,7 @@ for btag in [1, 2]:
 print("Extracting datasets...")
 
 for file in files:
-    for btag in [1, 2]:
+    for btag in [0, 1, 2]:
     #for btag in [2]:
         #for type in ["semie", "semimu"]:
         for type in ["semie", "semimu"]:

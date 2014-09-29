@@ -150,7 +150,7 @@ def launch(input, output, btag, extra):
 tmpfile = tempfile.NamedTemporaryFile(dir = '/scratch/', delete = False)
 
 # Build output tree structure
-for btag in [1, 2]:
+for btag in [0, 1, 2]:
     for type in ["semie", "semimu"]:
         path = "plots/%s/%d-btag/%s/Systematics" % (d, btag, type)
         try:
@@ -161,7 +161,7 @@ for btag in [1, 2]:
 print("Extracting datasets...")
 
 for file in files:
-    for btag in [1, 2]:
+    for btag in [0, 1, 2]:
         for type in ["semie", "semimu"]:
             for syst, extra in systs.items():
                 if not "skims/%s" in file[1] and not type in file[1]:

@@ -42,7 +42,7 @@ def launch(input, output, type, btag):
 tmpfile = tempfile.NamedTemporaryFile(dir = '/scratch/', delete = False)
 
 # Build output tree structure
-for btag in [1, 2]:
+for btag in [0, 1, 2]:
     path = "plots/%s/%d-btag/data" % (d, btag)
     try:
         os.makedirs(path)
@@ -51,7 +51,7 @@ for btag in [1, 2]:
 
 print("Extracting dataset ...")
 for input in inputs:
-    for btag in [1, 2]:
+    for btag in [0, 1, 2]:
         path = "plots/%s/%d-btag/data" % (d, btag)
         tmpfile.write(launch(input[1], os.path.join(path, input[0]), input[2], btag) + "\n")
 
@@ -63,7 +63,7 @@ subprocess.call(args)
 ## All is done, merge
 
 print("Merging ...")
-for btag in [1, 2]:
+for btag in [0, 1, 2]:
     path = "plots/%s/%d-btag/data" % (d, btag)
     for type in ["semie", "semimu"]:
         args = ["hadd", "-f", os.path.join(path, "Data_SingleMu.root" if type == "semimu" else "Data_SingleElectron.root")]

@@ -817,7 +817,9 @@ void Extractor2Histos::Loop()
     }
 
     bool btagSel = false;
-    if (mBTag == 1)
+    if (mBTag == 0)
+      btagSel = nBtaggedJets_CSVM == 0;
+    else if (mBTag == 1)
       btagSel = nBtaggedJets_CSVM == 1;
     else if (mBTag == 2)
       btagSel = nBtaggedJets_CSVM > 1;
@@ -1342,19 +1344,9 @@ void Extractor2Histos::Init()
   SetBranchAddress(fMTT, "jetEta", jetEta);
   SetBranchAddress(fMTT, "jetPt", jetPt);
   SetBranchAddress(fMTT, "nBtaggedJets_CSVM", &nBtaggedJets_CSVM);
-  //SetBranchAddress(fMTT, "nBtaggedJets_TCHEM", &nBtaggedJets_TCHEM, &b_nBtaggedJets_TCHEM);
-  //SetBranchAddress(fMTT, "nBtaggedJets_TCHET", &nBtaggedJets_TCHET, &b_nBtaggedJets_TCHET);
-  //SetBranchAddress(fMTT, "nBtaggedJets_TCHPL", &nBtaggedJets_TCHPL, &b_nBtaggedJets_TCHPL);
-  //SetBranchAddress(fMTT, "nBtaggedJets_TCHPM", &nBtaggedJets_TCHPM, &b_nBtaggedJets_TCHPM);
-  //SetBranchAddress(fMTT, "nBtaggedJets_TCHPT", &nBtaggedJets_TCHPT, &b_nBtaggedJets_TCHPT);
-  //SetBranchAddress(fMTT, "nBtaggedJets_SSVHEM", &nBtaggedJets_SSVHEM, &b_nBtaggedJets_SSVHEM);
-  //SetBranchAddress(fMTT, "nBtaggedJets_SSVHPT", &nBtaggedJets_SSVHPT, &b_nBtaggedJets_SSVHPT);
   SetBranchAddress(fMTT, "MET", &MET);
   SetBranchAddress(fMTT, "isSel", &isSel);
-  //SetBranchAddress(fMTT, "oneMatchedCombi", &oneMatchedCombi, &b_oneMatchedCombi);
   SetBranchAddress(fMTT, "bestSolChi2", &bestSolChi2);
-  //SetBranchAddress(fMTT, "isBestSolMatched", &isBestSolMatched, &b_isBestSolMatched);
-  //SetBranchAddress(fMTT, "KFChi2", &KFChi2, &b_KFChi2);
 
   if (mUseMVA) {
     SetBranchAddress(fMTT, "numComb_MVA", &numComb);
