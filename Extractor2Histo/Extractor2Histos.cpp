@@ -538,7 +538,7 @@ void Extractor2Histos::Loop()
           if (top->Pt() > 400)
             return 1.;
 
-          return std::exp(0.156 - 0.00137 * top->Pt());
+          return std::exp(0.159 - 0.00141 * top->Pt());
         };
 
         topPtWeight = std::sqrt(SF(getP4(gen_top1_p4, 0)) * SF(getP4(gen_top2_p4, 0)));
