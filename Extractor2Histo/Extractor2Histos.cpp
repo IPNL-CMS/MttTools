@@ -117,6 +117,9 @@ void Extractor2Histos::Loop()
   TH1D *hHadrTopPhi = new TH1D("hadrTopPhi_reco_fullsel", "", 200, -4., 4.);
   hHadrTopPhi->SetXTitle("hadronic top #phi");
 
+  TH1D *hTopsDeltaY = new TH1D("TopsDeltaPhi_reco_fullsel", "", 200, -400., 400.);
+  hTopsDeltaY->SetXTitle("Top #Delta y");
+
   TH1D *hHadrTopEta = new TH1D("hadrTopEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
   TH1D *hHadrTopEta_chi2sel = new TH1D("hadrTopEta_reco_chi2sel", "", 50, -2*M_PI, 2*M_PI);
 
@@ -208,6 +211,15 @@ void Extractor2Histos::Loop()
   TH1D *hkf_chisquare = new TH1D("kf_chisquare_fullsel", "", 1800, 0., 450.);
   TH1D *hkf_proba = new TH1D("kf_proba_fullsel", "", 200, 0., 1.);
   TH1D *hkf_proba_zoom = new TH1D("kf_proba_fullsel_zoom", "", 100, 0., 0.1);
+
+  // Shape variables
+  TH1D *hAplanarity = new TH1D("aplanarity_reco_fullsel", "", 50, 0., 0.5);
+  TH1D *hCircularity = new TH1D("circularity_reco_fullsel", "", 50, 0., 1.);
+  TH1D *hSphericity = new TH1D("sphericity_reco_fullsel", "", 50, 0., 1.);
+
+  hAplanarity->SetXTitle("Aplanarity");
+  hCircularity->SetXTitle("Circularity");
+  hSphericity->SetXTitle("Spericity");
 
   hkf_chisquare->SetXTitle("#Chi^{2}_{KF}");
   hkf_proba->SetXTitle("Proba_{KF}");
@@ -958,6 +970,8 @@ void Extractor2Histos::Loop()
       hLeptTopPhi->Fill(lepTopP4_AfterReco->Phi(), eventWeight);
       hHadrTopPhi->Fill(hadTopP4_AfterReco->Phi(), eventWeight);
 
+      hTopsDeltaY->Fill(hadTopP4_AfterReco->Rapidity() - lepTopP4_AfterReco->Rapidity(), eventWeight);
+
       hLeptTopE->Fill(lepTopP4_AfterReco->E(), eventWeight);
       hHadrTopE->Fill(hadTopP4_AfterReco->E(), eventWeight);
 
@@ -1017,6 +1031,9 @@ void Extractor2Histos::Loop()
       hkf_chisquare->Fill(kf_chisquare, eventWeight);
       hkf_proba->Fill(kf_proba, eventWeight);
       hkf_proba_zoom->Fill(kf_proba, eventWeight);
+      hAplanarity->Fill(p_aplanarity, eventWeight);
+      hCircularity->Fill(p_circularity, eventWeight);
+      hSphericity->Fill(p_sphericity, eventWeight);
     }
   }
 
@@ -1347,6 +1364,9 @@ void Extractor2Histos::Init()
   SetBranchAddress(fMTT, "MET", &MET);
   SetBranchAddress(fMTT, "isSel", &isSel);
   SetBranchAddress(fMTT, "bestSolChi2", &bestSolChi2);
+  SetBranchAddress(fMTT, "aplanarity", &p_aplanarity);
+  SetBranchAddress(fMTT, "circularity", &p_circularity);
+  SetBranchAddress(fMTT, "sphericity", &p_sphericity);
 
   if (mUseMVA) {
     SetBranchAddress(fMTT, "numComb_MVA", &numComb);

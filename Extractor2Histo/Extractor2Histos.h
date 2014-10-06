@@ -79,6 +79,9 @@ class Extractor2Histos {
     Float_t         p_2ndjetpt;
     Float_t         p_3rdjetpt;
     Float_t         p_4thjetpt;
+    Float_t         p_aplanarity;
+    Float_t         p_circularity;
+    Float_t         p_sphericity;
     Int_t           nJets;
     Float_t         jetEta[MAX_ARRAY_SIZE];   //[nJets]
     Float_t         jetPt[MAX_ARRAY_SIZE];   //[nJets]
