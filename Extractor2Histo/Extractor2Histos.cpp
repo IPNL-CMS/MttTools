@@ -163,6 +163,8 @@ void Extractor2Histos::Loop()
   TH1D *hFourthJetEta_nosel = new TH1D("fourthJetEta_reco_nosel", "", 100, -2*M_PI, 2*M_PI);
 
   TH1D *hMET = new TH1D("MET_reco_fullsel", "", 100, 20., 400.);
+  TH1D *hMETx = new TH1D("METx_reco_fullsel", "", 100, -200., 200.);
+  TH1D *hMETy = new TH1D("METy_reco_fullsel", "", 100, -200., 200.);
   TH1D *hMETPhi = new TH1D("METPhi_reco_fullsel", "", 800, -4., 4.);
   TH1D *hMET_nosel = new TH1D("MET_reco_nosel", "", 100, 0., 400.);
   TH1D *hMET_chi2sel = new TH1D("MET_reco_chi2sel", "", 100, 20., 400.);
@@ -382,6 +384,8 @@ void Extractor2Histos::Loop()
   hFourthJetPt_chi2sel->SetXTitle("4^{th} jet p_{T} [GeV/c]");
 
   hMET->SetXTitle("MET [GeV]");
+  hMETx->SetXTitle("MET_{X} [GeV]");
+  hMETy->SetXTitle("MET_{Y} [GeV]");
   hMETPhi->SetXTitle("MET #phi [GeV]");
   hMET_chi2sel->SetXTitle("MET [GeV]");
 
@@ -910,6 +914,8 @@ void Extractor2Histos::Loop()
       if (met_p4->GetEntriesFast() > 0) {
         TLorentzVector* p4 = (TLorentzVector*) (*met_p4)[0];
         hMETPhi->Fill(p4->Phi(), eventWeight);
+        hMETx->Fill(p4->Px(), eventWeight);
+        hMETy->Fill(p4->Py(), eventWeight);
       }
 
       hLeptTopPt->Fill(lepTopPt_AfterReco, eventWeight);
