@@ -21,6 +21,7 @@
 
 #include <Math/Vector4D.h>
 #include <Math/VectorUtil.h>
+#include <Math/Vector3Dfwd.h>
 typedef ROOT::Math::PtEtaPhiEVector LorentzVector;
 
 PUProfile puProfile;
@@ -254,6 +255,12 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
   float lepton_rel_iso = 0;
   createBranch(tree, "lepton_rel_iso", lepton_rel_iso);
 
+  float theta_lepton = 0;
+  createBranch(tree, "theta_lepton", theta_lepton);
+
+  float cos_theta_lepton = 0;
+  createBranch(tree, "cos_theta_lepton", cos_theta_lepton);
+
   const auto& createObjectBranches = [&](const std::string& prefix, ObjectP4* p4) -> Object* {
     Object* obj = new Object();
     obj->create(tree, prefix, p4);
@@ -336,6 +343,25 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
 
     LorentzVector resonance_p4 = hadronic_T_p4 + leptonic_T_p4;
     resonance.p4 = &resonance_p4;
+
+    // Compute theta lepton
+    // θ_l is the production angle of the positively charged lepton in the rest frame of its parent top
+    // or anti-top, with respect to the direction of the parent top or anti-top in the tt rest frame
+    //
+    // Find the boost to go in tt rest frame, and apply it to the leptonic top to have the top direction
+    ROOT::Math::Boost resonance_in_rest_frame_boost = ROOT::Math::Boost(resonance_p4.BoostToCM());
+    LorentzVector leptonic_T_p4_in_resonance_rest_frame = resonance_in_rest_frame_boost(leptonic_T_p4);
+
+    ROOT::Math::XYZVector leptonic_T_direction = leptonic_T_p4_in_resonance_rest_frame.Vect();
+    
+    // Find the boost to go in the top rest frame, and apply it to the lepton to have the lepton direction
+    ROOT::Math::Boost leptonic_T_in_rest_frame_boost = ROOT::Math::Boost(leptonic_T_p4.BoostToCM());
+    LorentzVector lepton_p4_in_resonance_rest_frame = leptonic_T_in_rest_frame_boost(*lepton.p4);
+
+    ROOT::Math::XYZVector lepton_direction = lepton_p4_in_resonance_rest_frame.Vect();
+
+    cos_theta_lepton = ROOT::Math::VectorUtil::CosTheta(leptonic_T_direction, lepton_direction);
+    theta_lepton = std::acos(cos_theta_lepton);
 
     for (auto& object: objects) {
       object->fill();

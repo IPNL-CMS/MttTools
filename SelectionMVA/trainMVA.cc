@@ -87,6 +87,7 @@ int main(int argc, char** argv) {
     factory->AddVariable("st");
     factory->AddVariable("lepton_rel_iso");
     //factory->AddVariable("discriminant");
+    factory->AddVariable("theta_lepton");
 
     factory->AddVariable("neutrino_pt");
     //factory->AddVariable("neutrino_eta");
