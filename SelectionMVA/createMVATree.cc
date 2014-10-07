@@ -166,6 +166,7 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
   TClonesArray* chi2_lepton_p4 = nullptr;
 
   int numComb = 0;
+  float discriminant = 0;
   if (kf) {
     setBranchAddress(mtt, "selectedNeutrinoP4_AfterKF", neutrino.p4);
     setBranchAddress(mtt, "selectedLeptonP4_AfterKF", lepton.p4);
@@ -174,6 +175,7 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
     setBranchAddress(mtt, "selectedFirstJetP4_AfterKF", hadronic_first_jet.p4);
     setBranchAddress(mtt, "selectedSecondJetP4_AfterKF", hadronic_second_jet.p4);
     setBranchAddress(mtt, "numComb_kf", numComb);
+    setBranchAddress(mtt, "kf_chisquare", discriminant);
   } else if (chi2) {
     setBranchAddress(mtt, "selectedNeutrinoP4_AfterChi2", neutrino.p4);
     setBranchAddress(mtt, "selectedLeptonP4", chi2_lepton_p4);
@@ -182,6 +184,7 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
     setBranchAddress(mtt, "selectedFirstJetP4_AfterChi2", hadronic_first_jet.p4);
     setBranchAddress(mtt, "selectedSecondJetP4_AfterChi2", hadronic_second_jet.p4);
     setBranchAddress(mtt, "numComb_chi2", numComb);
+    setBranchAddress(mtt, "bestSolChi2", discriminant);
   }
 
   float aplanarity;
@@ -192,6 +195,15 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
 
   float sphericity;
   setBranchAddress(mtt, "sphericity", sphericity);
+
+  int lepton_index;
+  setBranchAddress(mtt, "selectedLeptonIndex_in_array", lepton_index);
+
+  int n_leptons;
+  setBranchAddress(mtt, "nGoodMuons", n_leptons);
+
+  float lepton_rel_iso_array[20];
+  setBranchAddress(mtt, "muRelIso", lepton_rel_iso_array);
 
   uint32_t n_jets;
   setBranchAddress(jets, "n_jets", n_jets);
@@ -228,9 +240,19 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
   createBranch(tree, "aplanarity", aplanarity);
   createBranch(tree, "circularity", circularity);
   createBranch(tree, "sphericity", sphericity);
+  createBranch(tree, "discriminant", discriminant);
 
   float mean_CSV = 0;
   createBranch(tree, "mean_csv", mean_CSV);
+
+  float HT = 0;
+  createBranch(tree, "ht", HT);
+
+  float ST = 0;
+  createBranch(tree, "st", ST);
+
+  float lepton_rel_iso = 0;
+  createBranch(tree, "lepton_rel_iso", lepton_rel_iso);
 
   const auto& createObjectBranches = [&](const std::string& prefix, ObjectP4* p4) -> Object* {
     Object* obj = new Object();
@@ -276,21 +298,29 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
     // Compute mean CSV value for all jets
     int n = 0;
     mean_CSV = 0;
+    HT = 0;
+    ST = 0;
     for (int i = 0; i < jets_p4->GetEntries(); i++) {
       TLorentzVector* p4 = (TLorentzVector*) (*jets_p4)[i];
-      if (p4->Pt() > 30) {
+      if (p4->Pt() > 30 && jets_CSV_discriminant[i] > 0.244) {
         n++;
         mean_CSV += jets_CSV_discriminant[i];
       }
+      HT += p4->Pt();
     }
 
-    mean_CSV /= n;
+    if (n > 0)
+      mean_CSV /= n;
 
     if (chi2_lepton_p4) {
       // Copy the quadrivector into lepton_p4
       TLorentzVector* p4 = (TLorentzVector*) (*chi2_lepton_p4)[0];
       lepton.p4 = new LorentzVector(p4->Pt(), p4->Eta(), p4->Phi(), p4->Energy());
     }
+
+    ST = HT + lepton.p4->Pt();
+
+    lepton_rel_iso = lepton_rel_iso_array[lepton_index];
 
     LorentzVector leptonic_W_p4 = *lepton.p4 + *neutrino.p4;
     leptonic_W.p4 = &leptonic_W_p4;

@@ -18,27 +18,27 @@ files = [
         # Background
         ["MC_TT_powheg_mva_nominal.root", "skims/%s/MC_TT_powheg_skims_nominal.root", 21675970, 245.8],
 
-        #["MC_T_tW-channel_mva_nominal.root", "skims/%s/MC_T_tW-channel_skims_nominal.root", 497658, 11.1],
-        #["MC_T_s-channel_mva_nominal.root", "skims/%s/MC_T_s-channel_skims_nominal.root", 259961, 3.79],
-        #["MC_T_t-channel_mva_nominal.root", "skims/%s/MC_T_t-channel_skims_nominal.root", 3728227, 56.4],
+        ["MC_T_tW-channel_mva_nominal.root", "skims/%s/MC_T_tW-channel_skims_nominal.root", 497658, 11.1],
+        ["MC_T_s-channel_mva_nominal.root", "skims/%s/MC_T_s-channel_skims_nominal.root", 259961, 3.79],
+        ["MC_T_t-channel_mva_nominal.root", "skims/%s/MC_T_t-channel_skims_nominal.root", 3728227, 56.4],
 
-        #["MC_Tbar_tW-channel_mva_nominal.root", "skims/%s/MC_Tbar_tW-channel_skims_nominal.root", 493460, 11.1],
-        #["MC_Tbar_s-channel_mva_nominal.root", "skims/%s/MC_Tbar_s-channel_skims_nominal.root", 139974, 1.76],
-        #["MC_Tbar_t-channel_mva_nominal.root", "skims/%s/MC_Tbar_t-channel_skims_nominal.root", 1935072, 30.7],
+        ["MC_Tbar_tW-channel_mva_nominal.root", "skims/%s/MC_Tbar_tW-channel_skims_nominal.root", 493460, 11.1],
+        ["MC_Tbar_s-channel_mva_nominal.root", "skims/%s/MC_Tbar_s-channel_skims_nominal.root", 139974, 1.76],
+        ["MC_Tbar_t-channel_mva_nominal.root", "skims/%s/MC_Tbar_t-channel_skims_nominal.root", 1935072, 30.7],
 
-        #["MC_DY1JetsToLL_M-50_mva_nominal.root", "skims/%s/MC_DY1JetsToLL_M-50_skims_nominal.root", 24045248, 666.3],
-        #["MC_DY2JetsToLL_M-50_mva_nominal.root", "skims/%s/MC_DY2JetsToLL_M-50_skims_nominal.root", 21852156, 215.0],
-        #["MC_DY3JetsToLL_M-50_mva_nominal.root", "skims/%s/MC_DY3JetsToLL_M-50_skims_nominal.root", 11015445, 60.7],
-        #["MC_DY4JetsToLL_M-50_mva_nominal.root", "skims/%s/MC_DY4JetsToLL_M-50_skims_nominal.root", 6402827, 27.3],
+        ["MC_DY1JetsToLL_M-50_mva_nominal.root", "skims/%s/MC_DY1JetsToLL_M-50_skims_nominal.root", 24045248, 666.3],
+        ["MC_DY2JetsToLL_M-50_mva_nominal.root", "skims/%s/MC_DY2JetsToLL_M-50_skims_nominal.root", 21852156, 215.0],
+        ["MC_DY3JetsToLL_M-50_mva_nominal.root", "skims/%s/MC_DY3JetsToLL_M-50_skims_nominal.root", 11015445, 60.7],
+        ["MC_DY4JetsToLL_M-50_mva_nominal.root", "skims/%s/MC_DY4JetsToLL_M-50_skims_nominal.root", 6402827, 27.3],
 
-        #["MC_W1JetsToLNu_mva_nominal.root", "skims/%s/MC_W1JetsToLNu_skims_nominal.root", 23141598, 6662.8],
-        #["MC_W2JetsToLNu_mva_nominal.root", "skims/%s/MC_W2JetsToLNu_skims_nominal.root", 34044921, 2159.2],
-        #["MC_W3JetsToLNu_mva_nominal.root", "skims/%s/MC_W3JetsToLNu_skims_nominal.root", 15539503, 640.4],
-        #["MC_W4JetsToLNu_mva_nominal.root", "skims/%s/MC_W4JetsToLNu_skims_nominal.root", 13382803, 264.0],
+        ["MC_W1JetsToLNu_mva_nominal.root", "skims/%s/MC_W1JetsToLNu_skims_nominal.root", 23141598, 6662.8],
+        ["MC_W2JetsToLNu_mva_nominal.root", "skims/%s/MC_W2JetsToLNu_skims_nominal.root", 34044921, 2159.2],
+        ["MC_W3JetsToLNu_mva_nominal.root", "skims/%s/MC_W3JetsToLNu_skims_nominal.root", 15539503, 640.4],
+        ["MC_W4JetsToLNu_mva_nominal.root", "skims/%s/MC_W4JetsToLNu_skims_nominal.root", 13382803, 264.0],
 
-        #["MC_WW_mva_nominal.root", "skims/%s/MC_WW_skims_nominal.root", 10000431, 56.0],
-        #["MC_ZZ_mva_nominal.root", "skims/%s/MC_ZZ_skims_nominal.root", 9799908, 7.6],
-        #["MC_WZ_mva_nominal.root", "skims/%s/MC_WZ_skims_nominal.root", 10000283, 33.6],
+        ["MC_WW_mva_nominal.root", "skims/%s/MC_WW_skims_nominal.root", 10000431, 56.0],
+        ["MC_ZZ_mva_nominal.root", "skims/%s/MC_ZZ_skims_nominal.root", 9799908, 7.6],
+        ["MC_WZ_mva_nominal.root", "skims/%s/MC_WZ_skims_nominal.root", 10000283, 33.6],
 
         ## QCD
         #["MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_mva_nominal.root", "skims/semimu/MC_QCD_pt15to30_bEnriched_MuEnrichedPt14_skims_nominal.root"],
@@ -81,6 +81,8 @@ files = [
         #["Signal_ZPrimeToTTJets_M2000GeV_W200GeV_mva_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M2000GeV_W200GeV_skims_nominal_merged.root", 97240 + 387897],
         ]
 
+outputPath = os.path.join("mva_trees_2", d)
+
 sortingAlgoArg = ""
 if option.mva:
     sortingAlgoArg = "--mva"
@@ -112,7 +114,7 @@ tmpfile = tempfile.NamedTemporaryFile(dir = '/tmp/', delete = False)
 
 # Build output tree structure
 for type in ["semie", "semimu"]:
-    path = "mva_trees/%s/%s" % (d, type)
+    path = os.path.join(outputPath, type)
     try:
         os.makedirs(path)
     except:
@@ -127,7 +129,7 @@ for file in files:
     for type in ["semie", "semimu"]:
         if not "%" in file[1] and not type in file[1]:
             continue
-        path = "mva_trees/%s/%s" % (d, type)
+        path = os.path.join(outputPath, type)
         if not "%" in file[1]:
             tmpfile.write(launch(file[1], "%s/%s" % (path, file[0]), weight) + "\n");
         else:
@@ -137,3 +139,14 @@ tmpfile.flush()
 
 args = ["parallel", "-u", "-a", tmpfile.name, "-j", "15"]
 subprocess.call(args)
+
+# Merge files
+for type in ["semie", "semimu"]:
+    path = os.path.join(outputPath, type)
+    output = os.path.join(path, "mva_trees.root")
+    args = ["hadd", "-f", output]
+    for file in files:
+        args.append(os.path.join(path, file[0]))
+
+    subprocess.call(args)
+
