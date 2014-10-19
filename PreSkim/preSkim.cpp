@@ -57,6 +57,7 @@ void PreSkim::Loop()
   TH1D *hBoostTT_gen = new TH1D("boostTT_gen", "", 50, 0., 1.);
   TH1D *hPtTT_gen = new TH1D("ptTT_gen", "", 60, 0., 600.);
   TH1D *hEtaTT_gen = new TH1D("etaTT_gen", "", 50, -2*M_PI, 2*M_PI);
+  TH1D *hEtaTops_gen = new TH1D("etaTops_gen", "", 50, -2*M_PI, 2*M_PI);
 
   TH1D *hFirstJetPt_nosel = new TH1D("firstJetPt_reco_nosel", "", 100, 0., 640.);
   TH1D *hSecondJetPt_nosel = new TH1D("secondJetPt_reco_nosel", "", 100, 0., 620.);
@@ -74,6 +75,9 @@ void PreSkim::Loop()
   TH1D *hNBtaggedJets_nosel = new TH1D("nBTaggedJets_reco_nosel", "", 6, 0, 6);
 
   TH1D *h_mtt_gen_nosel = new TH1D("mtt_gen_nosel", "", 300, 0., 1500.);
+  TH1D *h_mtt_gen_nosel_positive = new TH1D("mtt_gen_nosel_positive", "", 300, 0., 1500.);
+  TH1D *h_mtt_gen_nosel_negative = new TH1D("mtt_gen_nosel_negative", "", 300, 0., 1500.);
+
 
   TH1D *h_mtt_resolution = new TH1D("mtt_resolution", "", 100, -600., 600.);
 
@@ -127,9 +131,13 @@ void PreSkim::Loop()
 
   // Clone trees
   TTree* mtt_clone = fMTT->CloneTree(0);
+  mtt_clone->SetAutoSave(0);
   TTree* vertices_clone = fVertices->CloneTree(0);
+  vertices_clone->SetAutoSave(0);
   TTree* event_clone = fEvent->CloneTree(0);
+  event_clone->SetAutoSave(0);
   TTree* jet_clone = fJet->CloneTree(0);
+  jet_clone->SetAutoSave(0);
 
   //TTree* electron_clone = fElectron->CloneTree(0);
   //TTree* electron_loose_clone = fElectronLoose->CloneTree(0);
@@ -191,10 +199,18 @@ void PreSkim::Loop()
     // Fill gen value
     if (mIsMC && (MC_channel != 0)) {
       h_mtt_gen_nosel->Fill(MC_mtt, eventWeight);
+      if (eventWeight > 0)
+        h_mtt_gen_nosel_positive->Fill(MC_mtt, eventWeight);
+      else
+        h_mtt_gen_nosel_negative->Fill(MC_mtt, eventWeight);
+
       hBoostTT_gen->Fill(MC_boost_tt, eventWeight);
 
       hPtTT_gen->Fill(MC_pt_tt, eventWeight);
       hEtaTT_gen->Fill(MC_eta_tt, eventWeight);
+      hEtaTops_gen->Fill(getP4(gen_top1_p4, 0)->Eta(), eventWeight);
+      hEtaTops_gen->Fill(getP4(gen_top2_p4, 0)->Eta(), eventWeight);
+
       hDeltaPhiTops_gen->Fill(fabs(getP4(gen_top1_p4, 0)->DeltaPhi(*getP4(gen_top2_p4, 0))), eventWeight);
       hDeltaEtaTops_gen->Fill(getP4(gen_top1_p4, 0)->Eta() - getP4(gen_top2_p4, 0)->Eta(), eventWeight);
       hDeltaRTops_gen->Fill(getP4(gen_top1_p4, 0)->DeltaR(*getP4(gen_top2_p4, 0)), eventWeight);
@@ -352,7 +368,9 @@ void PreSkim::loadChain(const std::vector<std::string>& inputFiles, const std::s
     output->Add(file.c_str());
   }
 
-  output->SetCacheSize(30*1024*1024);
+  output->SetCacheSize(500*1024*1024);
+  output->AddBranchToCache("*", true);
+  output->SetBranchStatus("*", 1);
 }
 
 PreSkim::PreSkim(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC) : fMTT(0), fVertices(0), fEvent(0)
@@ -401,75 +419,46 @@ void PreSkim::Init()
 
   //fMTT->SetBranchStatus("*", 0);
 
-  SetBranchAddress(fMTT, "MC_channel", &MC_channel);
-  SetBranchAddress(fMTT, "MC_mtt", &MC_mtt);
-  SetBranchAddress(fMTT, "MC_beta_tt", &MC_boost_tt);
+  setBranchAddress(fMTT, "MC_channel", MC_channel);
+  setBranchAddress(fMTT, "MC_mtt", MC_mtt);
+  setBranchAddress(fMTT, "MC_beta_tt", MC_boost_tt);
 
-  SetBranchAddress(fMTT, "MC_pt_tt", &MC_pt_tt);
-  SetBranchAddress(fMTT, "MC_eta_tt", &MC_eta_tt);
+  setBranchAddress(fMTT, "MC_pt_tt", MC_pt_tt);
+  setBranchAddress(fMTT, "MC_eta_tt", MC_eta_tt);
 
-  //SetBranchAddress(fMTT, "MC_top1Pt", &MC_top1Pt);
-  //SetBranchAddress(fMTT, "MC_top2Pt", &MC_top2Pt);
-
-  //SetBranchAddress(fMTT, "MC_top1Eta", &MC_top1Eta);
-  //SetBranchAddress(fMTT, "MC_top2Eta", &MC_top2Eta);
-
-  //SetBranchAddress(fMTT, "MC_pt_tt_com", &MC_pt_tt_com);
-  //SetBranchAddress(fMTT, "MC_eta_tt_com", &MC_eta_tt_com);
-
-  //SetBranchAddress(fMTT, "MC_top1Pt_com", &MC_top1Pt_com);
-  //SetBranchAddress(fMTT, "MC_top2Pt_com", &MC_top2Pt_com);
-
-  //SetBranchAddress(fMTT, "MC_top1Eta_com", &MC_top1Eta_com);
-  //SetBranchAddress(fMTT, "MC_top2Eta_com", &MC_top2Eta_com);
-
-  SetBranchAddress(fMTT, "nGoodMuons", &nGoodMuons);
+  setBranchAddress(fMTT, "nGoodMuons", nGoodMuons);
   if (mIsSemiMu) {
-    SetBranchAddress(fMTT, "muonPt", muonPt);
-    SetBranchAddress(fMTT, "muonEta", muonEta);
+    setBranchAddress(fMTT, "muonPt", muonPt);
+    setBranchAddress(fMTT, "muonEta", muonEta);
   } else {
-    SetBranchAddress(fMTT, "nGoodElectrons", &nGoodElectrons);
-    SetBranchAddress(fMTT, "electronPt", &electronPt);
-    SetBranchAddress(fMTT, "electronEta", &electronEta);
+    setBranchAddress(fMTT, "nGoodElectrons", nGoodElectrons);
+    setBranchAddress(fMTT, "electronPt", electronPt);
+    setBranchAddress(fMTT, "electronEta", electronEta);
   }
-  SetBranchAddress(fMTT, "1stjetpt", &p_1stjetpt);
-  SetBranchAddress(fMTT, "2ndjetpt", &p_2ndjetpt);
-  SetBranchAddress(fMTT, "3rdjetpt", &p_3rdjetpt);
-  SetBranchAddress(fMTT, "4thjetpt", &p_4thjetpt);
-  SetBranchAddress(fMTT, "nJets", &nJets);
-  SetBranchAddress(fMTT, "jetEta", jetEta);
-  //SetBranchAddress(fMTT, "jetPt", jetPt);
-  SetBranchAddress(fMTT, "nBtaggedJets_CSVM", &nBtaggedJets_CSVM);
-  //SetBranchAddress(fMTT, "nBtaggedJets_TCHEM", &nBtaggedJets_TCHEM);
-  //SetBranchAddress(fMTT, "nBtaggedJets_TCHET", &nBtaggedJets_TCHET);
-  //SetBranchAddress(fMTT, "nBtaggedJets_TCHPL", &nBtaggedJets_TCHPL);
-  //SetBranchAddress(fMTT, "nBtaggedJets_TCHPM", &nBtaggedJets_TCHPM);
-  //SetBranchAddress(fMTT, "nBtaggedJets_TCHPT", &nBtaggedJets_TCHPT);
-  //SetBranchAddress(fMTT, "nBtaggedJets_SSVHEM", &nBtaggedJets_SSVHEM);
-  //SetBranchAddress(fMTT, "nBtaggedJets_SSVHPT", &nBtaggedJets_SSVHPT);
-  SetBranchAddress(fMTT, "MET", &MET);
-  SetBranchAddress(fMTT, "isSel", &isSel);
-  //SetBranchAddress(fMTT, "oneMatchedCombi", &oneMatchedCombi);
-  SetBranchAddress(fMTT, "bestSolChi2", &bestSolChi2);
-  //SetBranchAddress(fMTT, "isBestSolMatched", &isBestSolMatched);
-  //SetBranchAddress(fMTT, "KFChi2", &KFChi2);
-  SetBranchAddress(fMTT, "numComb_chi2", &numComb_chi2);
-  //SetBranchAddress(fMTT, "solChi2", solChi2);
-
-  SetBranchAddress(fMTT, "mLepTop_AfterChi2", &mLepTop_AfterChi2);
-  SetBranchAddress(fMTT, "mHadTop_AfterChi2", &mHadTop_AfterChi2);
-
-  SetBranchAddress(fMTT, "mLepTop_AfterChi2", &mLepTop_AfterChi2);
-  SetBranchAddress(fMTT, "mHadTop_AfterChi2", &mHadTop_AfterChi2);
-  SetBranchAddress(fMTT, "mtt_AfterChi2", &mtt_AfterChi2);
-  SetBranchAddress(fMTT, "pt_tt_AfterChi2", &pt_tt_AfterChi2);
-  SetBranchAddress(fMTT, "eta_tt_AfterChi2", &eta_tt_AfterChi2);
-  SetBranchAddress(fMTT, "beta_tt_AfterChi2", &beta_tt_AfterChi2);
-  SetBranchAddress(fMTT, "lepton_weight", &m_lepton_weight);
-  SetBranchAddress(fMTT, "btag_weight", &m_btag_weight);
+  setBranchAddress(fMTT, "1stjetpt", p_1stjetpt);
+  setBranchAddress(fMTT, "2ndjetpt", p_2ndjetpt);
+  setBranchAddress(fMTT, "3rdjetpt", p_3rdjetpt);
+  setBranchAddress(fMTT, "4thjetpt", p_4thjetpt);
+  setBranchAddress(fMTT, "nJets", nJets);
+  setBranchAddress(fMTT, "jetEta", jetEta);
+  setBranchAddress(fMTT, "nBtaggedJets_CSVM", nBtaggedJets_CSVM);
+  setBranchAddress(fMTT, "MET", MET);
+  setBranchAddress(fMTT, "isSel", isSel);
+  setBranchAddress(fMTT, "bestSolChi2", bestSolChi2);
+  setBranchAddress(fMTT, "numComb_chi2", numComb_chi2);
+  setBranchAddress(fMTT, "mLepTop_AfterChi2", mLepTop_AfterChi2);
+  setBranchAddress(fMTT, "mHadTop_AfterChi2", mHadTop_AfterChi2);
+  setBranchAddress(fMTT, "mLepTop_AfterChi2", mLepTop_AfterChi2);
+  setBranchAddress(fMTT, "mHadTop_AfterChi2", mHadTop_AfterChi2);
+  setBranchAddress(fMTT, "mtt_AfterChi2", mtt_AfterChi2);
+  setBranchAddress(fMTT, "pt_tt_AfterChi2", pt_tt_AfterChi2);
+  setBranchAddress(fMTT, "eta_tt_AfterChi2", eta_tt_AfterChi2);
+  setBranchAddress(fMTT, "beta_tt_AfterChi2", beta_tt_AfterChi2);
+  setBranchAddress(fMTT, "lepton_weight", m_lepton_weight);
+  setBranchAddress(fMTT, "btag_weight", m_btag_weight);
 
   if (fMTT->GetBranch("trigger_passed")) {
-    SetBranchAddress(fMTT, "trigger_passed", &m_triggerPassed);
+    setBranchAddress(fMTT, "trigger_passed", m_triggerPassed);
   } else {
     // Backward compatibilty
     m_triggerPassed = true;
@@ -477,39 +466,31 @@ void PreSkim::Init()
 
   gen_top1_p4 = NULL;
   gen_top2_p4 = NULL;
-  SetBranchAddress(fMTT, "MC_Top1_p4", &gen_top1_p4);
-  SetBranchAddress(fMTT, "MC_Top2_p4", &gen_top2_p4);
+  setBranchAddress(fMTT, "MC_Top1_p4", gen_top1_p4);
+  setBranchAddress(fMTT, "MC_Top2_p4", gen_top2_p4);
 
   gen_lepton_p4 = NULL;
   gen_neutrino_p4 = NULL;
-  SetBranchAddress(fMTT, "MC_lepton_p4", &gen_lepton_p4);
-  SetBranchAddress(fMTT, "MC_neutrino_p4", &gen_neutrino_p4);
+  setBranchAddress(fMTT, "MC_lepton_p4", gen_lepton_p4);
+  setBranchAddress(fMTT, "MC_neutrino_p4", gen_neutrino_p4);
 
   gen_leptonic_B_p4 = NULL;
   gen_hadronic_B_p4 = NULL;
-  SetBranchAddress(fMTT, "MC_leptonic_B_p4", &gen_leptonic_B_p4);
-  SetBranchAddress(fMTT, "MC_hadronic_B_p4", &gen_hadronic_B_p4);
+  setBranchAddress(fMTT, "MC_leptonic_B_p4", gen_leptonic_B_p4);
+  setBranchAddress(fMTT, "MC_hadronic_B_p4", gen_hadronic_B_p4);
 
   gen_lightJet1_p4 = NULL;
   gen_lightJet2_p4 = NULL;
-  SetBranchAddress(fMTT, "MC_lightJet1_B_p4", &gen_lightJet1_p4);
-  SetBranchAddress(fMTT, "MC_lightJet2_B_p4", &gen_lightJet2_p4);
+  setBranchAddress(fMTT, "MC_lightJet1_B_p4", gen_lightJet1_p4);
+  setBranchAddress(fMTT, "MC_lightJet2_B_p4", gen_lightJet2_p4);
 
-  //fVertices->SetBranchStatus("*", 0);
-  SetBranchAddress(fVertices, "n_vertices", &n_vertices);
-
-  //fEvent->SetBranchStatus("*", 0);
-  SetBranchAddress(fEvent, "nTrueInteractions", &n_trueInteractions);
+  setBranchAddress(fVertices, "n_vertices", n_vertices);
+  setBranchAddress(fEvent, "nTrueInteractions", n_trueInteractions);
   generator_weight = 1;
-  SetBranchAddress(fEvent, "generator_weight", &generator_weight);
+  setBranchAddress(fEvent, "generator_weight", generator_weight);
 
   jet_p4 = NULL;
-  //fJet->SetBranchStatus("*", 0);
-  SetBranchAddress(fJet, "jet_4vector", &jet_p4);
-
-  met_p4 = NULL;
-  //fJet->SetBranchStatus("*", 0);
-  SetBranchAddress(fJet, "met_4vector", &met_p4);
+  setBranchAddress(fJet, "jet_4vector", jet_p4);
 }
 
 void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {

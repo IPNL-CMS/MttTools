@@ -105,7 +105,7 @@ class PreSkim: public TObject {
     TClonesArray* gen_lightJet1_p4;
     TClonesArray* gen_lightJet2_p4;
 
-    int             n_vertices;
+    uint32_t             n_vertices;
     float           n_trueInteractions;
     float           m_lepton_weight;
     float           m_btag_weight;
@@ -126,21 +126,18 @@ class PreSkim: public TObject {
 
     std::set<TChain*> m_chains;
 
-    void SetBranchAddress(TChain* t, const char* branchName, void* ptr) {
-      if (! m_chains.count(t))
-        m_chains.insert(t);
+    template<typename T>
+      void setBranchAddress(TChain* chain, const std::string& name, T& address) {
 
-      t->SetBranchStatus(branchName, 1);
-      t->SetBranchAddress(branchName, ptr);
-    }
+        if (! m_chains.count(chain))
+          m_chains.insert(chain);
 
-    template <class T> void SetBranchAddress(TChain* t, const char *bname, T **add) {
-      if (! m_chains.count(t))
-        m_chains.insert(t);
+        TBranch* branch = chain->FindBranch(name.c_str());
+        if (!branch)
+          return;
 
-      t->SetBranchStatus(TString(bname).ReplaceAll(".", "*"), 1);
-      t->SetBranchAddress(bname, add);
-    }
+        chain->SetBranchAddress(name.c_str(), &address);
+      }
 
     void loadChain(const std::vector<std::string>& inputFiles, const std::string& treeName, TChain*& output);
 };
