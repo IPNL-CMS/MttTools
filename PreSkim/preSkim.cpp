@@ -506,6 +506,10 @@ void PreSkim::Init()
   jet_p4 = NULL;
   //fJet->SetBranchStatus("*", 0);
   SetBranchAddress(fJet, "jet_4vector", &jet_p4);
+
+  met_p4 = NULL;
+  //fJet->SetBranchStatus("*", 0);
+  SetBranchAddress(fJet, "met_4vector", &met_p4);
 }
 
 void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {

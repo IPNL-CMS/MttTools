@@ -115,6 +115,7 @@ class PreSkim: public TObject {
     std::string     mOutputFile;
 
     TClonesArray*   jet_p4;
+    TClonesArray*   met_p4;
 
     PreSkim(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC);
 
