@@ -28,6 +28,7 @@ class PreSkim: public TObject {
     TChain          *fVertices;
     TChain          *fEvent;
     TChain          *fJet;
+    TChain          *fMet;
 
     TChain          *fMC;
     TChain          *fElectron;

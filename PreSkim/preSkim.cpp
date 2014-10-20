@@ -138,6 +138,8 @@ void PreSkim::Loop()
   event_clone->SetAutoSave(0);
   TTree* jet_clone = fJet->CloneTree(0);
   jet_clone->SetAutoSave(0);
+  TTree* met_clone = fMet->CloneTree(0);
+  met_clone->SetAutoSave(0);
 
   //TTree* electron_clone = fElectron->CloneTree(0);
   //TTree* electron_loose_clone = fElectronLoose->CloneTree(0);
@@ -346,6 +348,7 @@ void PreSkim::Loop()
     mtt_clone->Fill();
     event_clone->Fill();
     jet_clone->Fill();
+    met_clone->Fill();
     vertices_clone->Fill();
 
     //electron_loose_clone->Fill();
@@ -384,6 +387,9 @@ PreSkim::PreSkim(const std::vector<std::string>& inputFiles, const std::string& 
   loadChain(inputFiles, "Vertices", fVertices);
   loadChain(inputFiles, "event", fEvent);
   loadChain(inputFiles, "jet_PF", fJet);
+  loadChain(inputFiles, "MET_PF", fMet);
+
+  m_chains.insert(fMet);
 
   // Only for skimming
   //loadChain(inputFiles, "MC", fMC);
