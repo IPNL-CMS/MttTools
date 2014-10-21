@@ -13,11 +13,13 @@
 #include <TFile.h>
 #include <TClonesArray.h>
 #include <TLorentzVector.h>
+#include <TRandom2.h>
 
 #include <tclap/CmdLine.h>
 
 #include "../PUReweighting/PUReweighter.h"
 #include "TopTriggerEfficiencyProvider.h"
+#include "ExtractorPostprocessing.h"
 
 #include <Math/Vector4D.h>
 #include <Math/VectorUtil.h>
@@ -144,9 +146,11 @@ void setBranchAddress(TChain* chain, const std::string& name, T& address) {
   chain->SetBranchAddress(name.c_str(), &address);
 }
 
-void createTree(const std::vector<std::string>& inputFiles, const std::string& outputFile, int64_t maxEntries, float weight, bool isSignal, bool mva, bool chi2, bool kf, bool hybrid) {
+void createTree(const std::vector<std::string>& inputFiles, const std::string& outputFile, int64_t maxEntries, float weight, bool isSignal, bool isSemiMu, int btag, bool mva, bool chi2, bool kf, bool hybrid) {
   TChain* mtt = loadChain(inputFiles, "Mtt");
   TChain* jets = loadChain(inputFiles, "jet_PF");
+  TChain* events = loadChain(inputFiles, "event");
+  TChain* vertices = loadChain(inputFiles, "Vertices");
 
   // Retrieve P4 of selected objects
   ObjectP4 neutrino = {nullptr, "neutrino"};
@@ -201,10 +205,51 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
   setBranchAddress(mtt, "selectedLeptonIndex_in_array", lepton_index);
 
   int n_leptons;
-  setBranchAddress(mtt, "nGoodMuons", n_leptons);
+  if (isSemiMu) {
+    setBranchAddress(mtt, "nGoodMuons", n_leptons);
+  } else {
+    setBranchAddress(mtt, "nGoodElectrons", n_leptons);
+  }
 
   float lepton_rel_iso_array[20];
   setBranchAddress(mtt, "muRelIso", lepton_rel_iso_array);
+
+  float muonPt[20];
+  float muonEta[20];
+  float electronPt[20];
+  float electronEta[20];
+  if (isSemiMu) {
+    setBranchAddress(mtt, "muonPt", muonPt);
+    setBranchAddress(mtt, "muonEta", muonEta);
+  } else {
+    setBranchAddress(mtt, "electronPt", electronPt);
+    setBranchAddress(mtt, "electronEta", electronEta);
+  }
+
+  float met;
+  setBranchAddress(mtt, "MET", met);
+
+  int32_t n_jets_mtt;
+  setBranchAddress(mtt, "nJets", n_jets_mtt);
+
+  float jetEta[100];
+  setBranchAddress(mtt, "jetEta", jetEta);
+
+  float pt_1stJet = 0;
+  setBranchAddress(mtt, "1stjetpt", pt_1stJet);
+
+  float pt_2ndJet = 0;
+  setBranchAddress(mtt, "2ndjetpt", pt_2ndJet);
+
+  float pt_3rdJet = 0;
+  setBranchAddress(mtt, "3rdjetpt", pt_3rdJet);
+
+  float pt_4thJet = 0;
+  setBranchAddress(mtt, "4thjetpt", pt_4thJet);
+
+  int n_btagged_jet = 0;
+  if (btag >= 0)
+    setBranchAddress(mtt, "nBtaggedJets_CSVM", n_btagged_jet);
 
   uint32_t n_jets;
   setBranchAddress(jets, "n_jets", n_jets);
@@ -232,6 +277,55 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
     &resonance
   };
 
+  float lepton_weight = 0;
+  setBranchAddress(mtt, "lepton_weight", lepton_weight);
+
+  float btag_weight = 0;
+  setBranchAddress(mtt, "btag_weight", btag_weight);
+
+  float n_trueInteractions = 0;
+  setBranchAddress(events, "nTrueInteractions", n_trueInteractions);
+  
+  uint32_t run = 0;
+  setBranchAddress(events, "run", run);
+
+  float generator_weight = 0;
+  setBranchAddress(events, "generator_weight", generator_weight);
+
+  uint32_t n_vertices = 0;
+  setBranchAddress(vertices, "n_vertices", n_vertices);
+
+  float output_weight = 0;
+
+  PUReweighter* puReweigher = new PUReweighter(isSemiMu, puProfile, Systematic::NOMINAL);
+  TopTriggerEfficiencyProvider::JES triggerJESSyst = TopTriggerEfficiencyProvider::NOMINAL;
+
+  float lumi_run2012_A = 0;
+  float lumi_run2012_B = 0;
+  float lumi_run2012_C = 0;
+  float lumi_run2012_D = 0;
+
+  if (isSemiMu) {
+    lumi_run2012_A = 0.876225;
+    lumi_run2012_B = 4.412;
+    lumi_run2012_C = 7.044;
+    lumi_run2012_D = 7.368;
+  } else {
+    lumi_run2012_A = 0.876225;
+    lumi_run2012_B = 4.399;
+    lumi_run2012_C = 7.022;
+    lumi_run2012_D = 7.369;
+  }
+
+  float lumi_run2012_AB = lumi_run2012_A + lumi_run2012_B;
+  float lumi_run2012_CD = lumi_run2012_C + lumi_run2012_D;
+  float lumi_total = lumi_run2012_AB + lumi_run2012_CD;
+
+  float lumi_run2012_AB_over_total = lumi_run2012_AB / lumi_total;
+
+  std::shared_ptr<TopTriggerEfficiencyProvider> m_trigger_efficiency_provider = std::make_shared<TopTriggerEfficiencyProvider>();
+  TRandom2 random_generator;
+
   // Create output tree
   TFile* output = TFile::Open(outputFile.c_str(), "recreate");
   TTree* tree = new TTree(isSignal ? "signal" : "background", "");
@@ -245,6 +339,8 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
 
   float mean_CSV = 0;
   createBranch(tree, "mean_csv", mean_CSV);
+  
+  createBranch(tree, "met", met);
 
   float HT = 0;
   createBranch(tree, "ht", HT);
@@ -260,6 +356,9 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
 
   float cos_theta_lepton = 0;
   createBranch(tree, "cos_theta_lepton", cos_theta_lepton);
+
+  float cos_theta_leading_top_resonance = 0;
+  createBranch(tree, "cos_theta_leading_top_resonance", cos_theta_leading_top_resonance);
 
   const auto& createObjectBranches = [&](const std::string& prefix, ObjectP4* p4) -> Object* {
     Object* obj = new Object();
@@ -290,6 +389,8 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
   if (maxEntries > 0)
     entries = maxEntries;
 
+  ExtractorPostprocessing selection;
+
   for (uint64_t i = 0; i < entries; i++) {
 
     if ((i % 10000) == 0) {
@@ -298,9 +399,79 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
 
     mtt->GetEntry(i);
     jets->GetEntry(i);
+    events->GetEntry(i);
+    vertices->GetEntry(i);
+    
+    // Choose if we are run2012 A+B, or C+D
+
+    bool isRun2012AB = false;
+    double r = random_generator.Rndm();
+    if (r < lumi_run2012_AB_over_total)
+      isRun2012AB = true;
+
+    // Selection
 
     if (numComb <= 0)
       continue;
+
+    if (! selection.passJetsSel(pt_1stJet, pt_2ndJet, pt_3rdJet, pt_4thJet, isRun2012AB))
+      continue;
+
+    if (btag >= 0) {
+
+      switch (btag) {
+        case 0:
+          if (n_btagged_jet != 0)
+            continue;
+
+          break;
+
+        case 1:
+          if (n_btagged_jet != 1)
+            continue;
+
+          break;
+
+        case 2:
+          if (n_btagged_jet < 2)
+            continue;
+
+          break;
+
+        default:
+          continue;
+      }
+
+    }
+
+    double pt_lepton = 0;
+    double eta_lepton = 0;
+    if (isSemiMu) {
+      pt_lepton = muonPt[lepton_index];
+      eta_lepton = muonEta[lepton_index];
+    } else {
+      pt_lepton = electronPt[lepton_index];
+      eta_lepton = electronEta[lepton_index];
+    }
+
+    output_weight = 1.;
+    if (isRun2012AB) {
+      m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunA, lumi_run2012_A);
+      m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunB, lumi_run2012_B);
+      m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunC, 0);
+      m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunD, 0);
+    } else {
+      m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunA, 0);
+      m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunB, 0);
+      m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunC, lumi_run2012_C);
+      m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunD, lumi_run2012_D);
+    }
+
+    // Compute trigger weight
+    std::vector<double> triggerWeights = m_trigger_efficiency_provider->get_weight(pt_lepton, eta_lepton, pt_4thJet, jetEta[3], n_vertices, n_jets_mtt, isSemiMu, triggerJESSyst);
+    double triggerWeight = triggerWeights[0];
+
+    output_weight *= puReweigher->weight(n_trueInteractions) /* * generator_weight */ * weight * triggerWeight * lepton_weight * btag_weight;
 
     // Compute mean CSV value for all jets
     int n = 0;
@@ -363,6 +534,13 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
     cos_theta_lepton = ROOT::Math::VectorUtil::CosTheta(leptonic_T_direction, lepton_direction);
     theta_lepton = std::acos(cos_theta_lepton);
 
+    // Compute cos(highest_pt_top, resonance) in resonance rest frame
+    LorentzVector& leading_top = (leptonic_T_p4.Pt() > hadronic_T_p4.Pt())
+      ? leptonic_T_p4
+      : hadronic_T_p4;
+
+    cos_theta_leading_top_resonance = ROOT::Math::VectorUtil::CosTheta(leading_top.Vect(), resonance_p4.Vect());    
+
     for (auto& object: objects) {
       object->fill();
     }
@@ -385,6 +563,8 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
 
   delete mtt;
   delete jets;
+  delete events;
+  delete vertices;
 }
 
 int main(int argc, char** argv) {
@@ -403,6 +583,13 @@ int main(int argc, char** argv) {
     TCLAP::SwitchArg bkgArg("", "background", "Is this background?", false);
 
     cmd.xorAdd(signalArg, bkgArg);
+
+    TCLAP::SwitchArg semimuArg("", "semimu", "Semi mu?", false);
+    TCLAP::SwitchArg semieArg("", "semie", "Semi e?", false);
+
+    cmd.xorAdd(semimuArg, semieArg);
+
+    TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets to select", true, -1, "int", cmd);
 
     //TCLAP::ValueArg<std::string> typeArg("", "type", "current inputfile type (semie or semimu)", true, "", "string", cmd);
     TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S10", "string", cmd);
@@ -497,7 +684,7 @@ int main(int argc, char** argv) {
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    createTree(inputFiles, outputFileArg.getValue(), maxEntriesArg.getValue(), weightArg.getValue(), isSignal, mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue()); 
+    createTree(inputFiles, outputFileArg.getValue(), maxEntriesArg.getValue(), weightArg.getValue(), isSignal, semimuArg.isSet(), btagArg.getValue(), mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue()); 
 
   } catch (TCLAP::ArgException& e) {
     std::cout << e.what() << std::endl;

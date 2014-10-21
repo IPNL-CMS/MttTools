@@ -96,17 +96,19 @@ elif option.hybrid:
 if len(sortingAlgoArg) == 0:
     raise ValueError("Sorting algorithm is not specified")
 
-def launch(input, output, weight):
+def launch(input, output, weight, type, btag):
     if not os.path.exists(input):
         print("Warning input file '%s' does not exist. Skipping job." % input)
         return ""
 
-    args = ["./createMVATree", "-i", input, "-o", output, "--weight", str(weight), sortingAlgoArg]
+    args = ["./createMVATree", "-i", input, "-o", output, "--b-tag", str(btag), "--weight", str(weight), sortingAlgoArg]
 
     if not "Signal" in input:
         args.append("--background")
     else:
         args.append("--signal")
+
+    args.append("--%s" % type)
 
     return " ".join(args)
 
@@ -114,11 +116,15 @@ tmpfile = tempfile.NamedTemporaryFile(dir = '/tmp/', delete = False)
 
 # Build output tree structure
 for type in ["semie", "semimu"]:
-    path = os.path.join(outputPath, type)
-    try:
-        os.makedirs(path)
-    except:
-        pass
+    for btag in [-1, 0, 1, 2]:
+        b = "%d-btag" % btag
+        if btag == -1:
+            b = "all-btag"
+        path = os.path.join(outputPath, b, type)
+        try:
+            os.makedirs(path)
+        except:
+            pass
 
 print("Creating MVA trees...")
 
@@ -129,11 +135,15 @@ for file in files:
     for type in ["semie", "semimu"]:
         if not "%" in file[1] and not type in file[1]:
             continue
-        path = os.path.join(outputPath, type)
-        if not "%" in file[1]:
-            tmpfile.write(launch(file[1], "%s/%s" % (path, file[0]), weight) + "\n");
-        else:
-            tmpfile.write(launch(file[1] % type, "%s/%s" % (path, file[0]), weight) + "\n");
+        for btag in [-1, 0, 1, 2]:
+            b = "%d-btag" % btag
+            if btag == -1:
+                b = "all-btag"
+            path = os.path.join(outputPath, b, type)
+            if not "%" in file[1]:
+                tmpfile.write(launch(file[1], "%s/%s" % (path, file[0]), weight, type, btag) + "\n");
+            else:
+                tmpfile.write(launch(file[1] % type, "%s/%s" % (path, file[0]), weight, type, btag) + "\n");
 
 tmpfile.flush()
 
@@ -142,11 +152,26 @@ subprocess.call(args)
 
 # Merge files
 for type in ["semie", "semimu"]:
-    path = os.path.join(outputPath, type)
-    output = os.path.join(path, "mva_trees.root")
+    for btag in [-1, 0, 1, 2]:
+        b = "%d-btag" % btag
+        if btag == -1:
+            b = "all-btag"
+        path = os.path.join(outputPath, b, type)
+        output = os.path.join(path, "mva_trees.root")
+        args = ["hadd", "-f", output]
+        for file in files:
+            args.append(os.path.join(path, file[0]))
+
+        subprocess.call(args)
+
+# Merge files
+for btag in [-1, 0, 1, 2]:
+    b = "%d-btag" % btag
+    if btag == -1:
+        b = "all-btag"
+    output = os.path.join(outputPath, b, "mva_trees.root")
     args = ["hadd", "-f", output]
-    for file in files:
-        args.append(os.path.join(path, file[0]))
+    for type in ["semie", "semimu"]:
+        args.append(os.path.join(outputPath, b, type, "mva_trees.root"))
 
     subprocess.call(args)
-
