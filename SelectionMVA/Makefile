@@ -1,5 +1,5 @@
 ObjSuf        = o
-SrcSuf        = cpp
+SrcSuf        = cc
 ExeSuf        =
 DllSuf        = so
 OutPutOpt     = -o
@@ -25,11 +25,11 @@ ARFLAGS       = -cq
 
 LDDIR         = $(shell echo "-L" $$LD_LIBRARY_PATH | sed -e 's/:/ -L/g') -L$(ROOFIT_LIBDIR)/ -L../lib/
 
-CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/ -I../external/ -I../ExtractorPostprocessing
+CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -Iinclude
 LIBS  		    = $(LDDIR) $(ROOTLIBS) -lGenVector -lTMVA
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
-SOURCES		= $(wildcard *.$(SrcSuf))
+SOURCES		= $(wildcard src/*.$(SrcSuf))
 OBJECTS		= $(SOURCES:.$(SrcSuf)=.$(ObjSuf))
 DEPENDS		= $(SOURCES:.$(SrcSuf)=.d)
 SOBJECTS	= $(SOURCES:.$(SrcSuf)=.$(DllSuf))
@@ -38,23 +38,21 @@ SOBJECTS	= $(SOURCES:.$(SrcSuf)=.$(DllSuf))
 
 ###
 
-all: createMVATree trainMVA
+all: libMVAReader.a
 
 clean:
-	@rm *.o;
-	@rm ../PUReweighting/*.o;
+	@rm -f *.o;
 
-createMVATree: createMVATree.o ../PUReweighting/PUReweighter.o ../external/TopTriggerEfficiencyProvider.o
-	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS)
+libMVAReader.a: $(OBJECTS)
+	@echo "Generating libMVAReader.a"
+	@ar cru lib/libMVAReader.a $(OBJECTS)
+	@ranlib lib/libMVAReader.a
 
-trainMVA: trainMVA.o
-	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS)
-
-%.o: %.cpp
+%.o: %.cc
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 # Make the dependencies
-%.d: %.cpp
+%.d: %.cc
 	@echo "Generating dependencies for $<"
 	@set -e; $(CXX) -M $(CXXFLAGS) $< \
 	| sed 's%\($*\)\.o[ :]*%\1.o $@ : %g' > $@; \
@@ -62,4 +60,4 @@ trainMVA: trainMVA.o
 
 ifneq ($(MAKECMDGOALS), clean) 
 -include $(DEPENDS) 
-endif 
+endif
