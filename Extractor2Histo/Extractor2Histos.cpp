@@ -19,8 +19,13 @@
 
 #include "GaussianProfile.h"
 #include "TopTriggerEfficiencyProvider.h"
-#include "../PUReweighting/PUReweighter.h"
+
+#include <PUReweighting/PUReweighter.h>
+#include <BkgVsTTBDTReader.h>
+
 #include "tclap/CmdLine.h"
+
+#include "TMVA/Reader.h"
 
 // Load libdpm at startup, on order to be sure that rfio files are working
 #include <dlfcn.h>
@@ -209,6 +214,8 @@ void Extractor2Histos::Loop()
   TH1D *hSelectedLeptonicBE = new TH1D("selectedLeptonicBE_reco_fullsel", "", 100, 70., 640.);
   TH1D *hSelectedLeptonE = new TH1D("selectedLeptonE_reco_fullsel", "", 50, 20., 200.);
   TH1D *hSelectedNeutrinoE = new TH1D("selectedNeutrinoE_reco_fullsel", "", 50, 20., 200.);
+
+  TH1* hBDTDiscriminant = new TH1D("bdt_discriminant", "", 50, -1, 1);
 
   TH1D *hkf_chisquare = new TH1D("kf_chisquare_fullsel", "", 1800, 0., 450.);
   TH1D *hkf_proba = new TH1D("kf_proba_fullsel", "", 200, 0., 1.);
@@ -455,6 +462,9 @@ void Extractor2Histos::Loop()
   uint64_t positive_events = 0;
   uint64_t negative_events = 0;
 
+  BkgVsTTBDTReader bkgVsTTBDTReader(m_inputFiles);
+  bkgVsTTBDTReader.initMVA(m_bdtWeights);
+
   std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now(), end;
   for (Long64_t jentry = 0; jentry < nentries; jentry++)
   {
@@ -621,6 +631,18 @@ void Extractor2Histos::Loop()
       }
     }
 
+    float HT = 0;
+    float HT30 = 0;
+    for (uint32_t i = 0; i < (uint32_t) jet_p4->GetEntriesFast(); i++) {
+      float pt = ((TLorentzVector*) (*jet_p4)[i])->Pt();
+
+      HT += pt;
+      if (pt > 30)
+        HT30 += pt;
+    }
+
+    float HTFull = HT + ptLepton + MET;
+
     float mtt_four_leading_jets = 0.;
     if (! mSkim) {
       hNTrueInt_nosel->Fill(n_trueInteractions, eventWeight);
@@ -652,18 +674,6 @@ void Extractor2Histos::Loop()
         hFourthJetPt_nosel->Fill(p4->Eta(), eventWeight);
         hFourthJetEta_nosel->Fill(p4->Pt(), eventWeight);
       }
-
-      float HT = 0;
-      float HT30 = 0;
-      for (uint32_t i = 0; i < (uint32_t) jet_p4->GetEntriesFast(); i++) {
-        float pt = ((TLorentzVector*) (*jet_p4)[i])->Pt();
-
-        HT += pt;
-        if (pt > 30)
-          HT30 += pt;
-      }
-
-      float HTFull = HT + ptLepton + MET;
 
       hHT_reco_nosel->Fill(HT, eventWeight);
       hHT30_reco_nosel->Fill(HT30, eventWeight);
@@ -778,6 +788,13 @@ void Extractor2Histos::Loop()
     hPtTT_chi2sel->Fill(pt_tt_AfterReco, eventWeight);
     hEtaTT_chi2sel->Fill(eta_tt_AfterReco, eventWeight);
 
+    LorentzVector selectedLeptonP4_LV_AfterReco;
+    if (mUseKF) {
+      selectedLeptonP4_LV_AfterReco = *selectedLeptonP4_AfterKF;
+    } else {
+      selectedLeptonP4_LV_AfterReco = LorentzVector(getP4(selectedLeptonP4_AfterReco, 0)->Pt(), getP4(selectedLeptonP4_AfterReco, 0)->Eta(), getP4(selectedLeptonP4_AfterReco, 0)->Phi(), getP4(selectedLeptonP4_AfterReco, 0)->E());
+    }
+
     if (mIsMC && MC_channel != 0) {
       mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel.fill(MC_mtt, mtt_AfterReco, eventWeight);
       mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel.fill(MC_mtt, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
@@ -797,13 +814,6 @@ void Extractor2Histos::Loop()
       if (true) {
 
         // Reconstruct mtt using the four leading jet
-
-        LorentzVector selectedLeptonP4_LV_AfterReco;
-        if (mUseKF) {
-          selectedLeptonP4_LV_AfterReco = *selectedLeptonP4_AfterKF;
-        } else {
-          selectedLeptonP4_LV_AfterReco = LorentzVector(getP4(selectedLeptonP4_AfterReco, 0)->Pt(), getP4(selectedLeptonP4_AfterReco, 0)->Eta(), getP4(selectedLeptonP4_AfterReco, 0)->Phi(), getP4(selectedLeptonP4_AfterReco, 0)->E());
-        }
 
         LorentzVector tt_system = selectedLeptonP4_LV_AfterReco + *selectedNeutrinoP4_AfterReco;
         int njets = 0;
@@ -842,13 +852,13 @@ void Extractor2Histos::Loop()
 
     float firstJetCut = 0, secondJetCut = 0, thirdJetCut = 0;
     if (isRun2012AB) {
-      firstJetCut = 70;
-      secondJetCut = 50;
-      thirdJetCut = 30;
+      firstJetCut = 45;
+      secondJetCut = 45;
+      thirdJetCut = 45;
     } else {
-      firstJetCut = 70;
-      secondJetCut = 50;
-      thirdJetCut = 30;
+      firstJetCut = 55;
+      secondJetCut = 45;
+      thirdJetCut = 35;
     }
 
     if (!mSkim && ptLepton <= ptLeptonCut)
@@ -1040,6 +1050,9 @@ void Extractor2Histos::Loop()
       hAplanarity->Fill(p_aplanarity, eventWeight);
       hCircularity->Fill(p_circularity, eventWeight);
       hSphericity->Fill(p_sphericity, eventWeight);
+
+      float discriminant = bkgVsTTBDTReader.evaluate(jentry);
+      hBDTDiscriminant->Fill(discriminant, eventWeightNoGenWeight);
     }
   }
 
@@ -1112,7 +1125,7 @@ void loadChain(const std::vector<std::string>& inputFiles, const std::string& tr
   output->SetCacheSize(30*1024*1024);
 }
 
-Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, bool chi2, bool kf, bool hybrid, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst) : fMTT(0), fVertices(0), fEvent(0)
+Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, bool chi2, bool kf, bool hybrid, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst, const std::string& bdtWeights) : fMTT(0), fVertices(0), fEvent(0)
 {
   mIsSemiMu = isSemiMu;
   mIsMC = isMC;
@@ -1129,6 +1142,8 @@ Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, c
   mPDFSyst = pdfSyst;
   mLeptonSyst = leptonSyst;
   mBTagSyst = btagSyst;
+  m_bdtWeights = bdtWeights;
+  m_inputFiles = inputFiles;
 
   fLooseMuons = nullptr;
   fJet = nullptr;
@@ -1141,14 +1156,10 @@ Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, c
 
   if (! mSkim) {
     loadChain(inputFiles, "muon_loose_PF", fLooseMuons);
-    loadChain(inputFiles, "jet_PF", fJet);
-    loadChain(inputFiles, "MET_PF", fMET);
   }
 
-  if (true) {
-    loadChain(inputFiles, "jet_PF", fJet);
-    loadChain(inputFiles, "MET_PF", fMET);
-  }
+  loadChain(inputFiles, "jet_PF", fJet);
+  loadChain(inputFiles, "MET_PF", fMET);
 
   Init();
 }
@@ -1483,37 +1494,21 @@ void Extractor2Histos::Init()
     fLooseMuons->SetBranchAddress("muon_4vector", &muon_p4, NULL);
     fLooseMuons->SetBranchAddress("n_muons", &n_muons, NULL);
     fLooseMuons->SetBranchAddress("muon_deltaBetaCorrectedRelIsolation", &muon_relIso, NULL);
-
-    jet_p4 = NULL;
-    fJet->SetMakeClass(1);
-    fJet->SetBranchStatus("*", 0);
-    fJet->SetBranchStatus("jet_4vector", 1);
-
-    fJet->SetBranchAddress("jet_4vector", &jet_p4, NULL);
-
-    met_p4 = NULL;
-    fMET->SetMakeClass(1);
-    fMET->SetBranchStatus("*", 0);
-    fMET->SetBranchStatus("met_4vector", 1);
-
-    fMET->SetBranchAddress("met_4vector", &met_p4, NULL);
   }
 
-  if (true) {
-    jet_p4 = NULL;
-    fJet->SetMakeClass(1);
-    fJet->SetBranchStatus("*", 0);
-    fJet->SetBranchStatus("jet_4vector", 1);
+  jet_p4 = NULL;
+  fJet->SetMakeClass(1);
+  fJet->SetBranchStatus("*", 0);
+  fJet->SetBranchStatus("jet_4vector", 1);
 
-    fJet->SetBranchAddress("jet_4vector", &jet_p4, NULL);
+  fJet->SetBranchAddress("jet_4vector", &jet_p4, NULL);
 
-    met_p4 = NULL;
-    fMET->SetMakeClass(1);
-    fMET->SetBranchStatus("*", 0);
-    fMET->SetBranchStatus("met_4vector", 1);
+  met_p4 = NULL;
+  fMET->SetMakeClass(1);
+  fMET->SetBranchStatus("*", 0);
+  fMET->SetBranchStatus("met_4vector", 1);
 
-    fMET->SetBranchAddress("met_4vector", &met_p4, NULL);
-  }
+  fMET->SetBranchAddress("met_4vector", &met_p4, NULL);
 }
 
 void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {
@@ -1565,6 +1560,8 @@ int main(int argc, char** argv) {
     xorlist.push_back(&hybridArg);
     cmd.xorAdd( xorlist );
 
+    TCLAP::ValueArg<std::string> bdtWeightsArg("", "bdt-weights", "Full path to the BDT weights (the XML file)", true, "", "string", cmd);
+
     TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S10", "string", cmd);
 
     TCLAP::ValueArg<std::string> jecSystArg("", "jec-syst", "Computing trigger weight for this JEC up / down", false, "nominal", "string", cmd);
@@ -1596,7 +1593,6 @@ int main(int argc, char** argv) {
       std::cerr << "--trigger-syst can only be 'nominal', 'up' or 'down'" << std::endl;
       exit(1);
     }
-
 
     std::string jecSyst = jecSystArg.getValue();
     std::transform(jecSyst.begin(), jecSyst.end(), jecSyst.begin(), ::tolower);
@@ -1642,7 +1638,7 @@ int main(int argc, char** argv) {
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    Extractor2Histos convertor(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData, btagArg.getValue(), skimArg.getValue(), mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue(), triggerSyst, jecSyst, puSyst, pdfSyst, leptonSyst, btagSyst);
+    Extractor2Histos convertor(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData, btagArg.getValue(), skimArg.getValue(), mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue(), triggerSyst, jecSyst, puSyst, pdfSyst, leptonSyst, btagSyst, bdtWeightsArg.getValue());
     convertor.Loop();
 
   } catch (TCLAP::ArgException &e) {

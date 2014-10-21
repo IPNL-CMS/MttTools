@@ -20,14 +20,14 @@ ROOTLIBS   = $(shell root-config --noldflags --libs)
 CXX           = g++
 CXXFLAGS	    = -O2 -g -Wall -fPIC --std=c++0x
 LD			      = g++
-LDDIR         = -L$(shell root-config --libdir) -L../external/lib -L$(BOOST_ROOT)/lib/
+LDDIR         = -L$(shell root-config --libdir) -L../external/lib -L$(BOOST_ROOT)/lib/ -L../SelectionMVA/lib
 LDFLAGS		    = -fPIC $(shell root-config --ldflags) $(LDDIR)
 SOFLAGS		    = 
 AR            = ar
 ARFLAGS       = -cq
 
-CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../external/ -I../include/ -I../external/include/ -I$(shell echo $(BOOST_ROOT))/include
-LIBS  		    = $(ROOTLIBS) -lboost_filesystem -lboost_regex -lGenVector
+CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I.. -I../SelectionMVA/include -I../external/ -I../include/ -I../external/include/ -I$(shell echo $(BOOST_ROOT))/include
+LIBS  		    = $(ROOTLIBS) -lboost_filesystem -lboost_regex -lGenVector -lTMVA
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
 SOURCES		= $(wildcard *.$(SrcSuf))
@@ -47,8 +47,8 @@ clean:
 	@rm ../PUReweighting/*.o;
 	@rm ../external/*.o;
 
-extractorToHisto: ../external/TopTriggerEfficiencyProvider.o Extractor2Histos.o GaussianProfile.o ../PUReweighting/PUReweighter.o
-	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS)
+extractorToHisto: ../external/TopTriggerEfficiencyProvider.o Extractor2Histos.o GaussianProfile.o ../PUReweighting/PUReweighter.o ../SelectionMVA/lib/libMVAReader.a
+	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ -Wl,-Bstatic -lMVAReader -Wl,-Bdynamic $(LIBS)
 
 substractHistos: substractHistos.o
 	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ -Wl,-Bstatic -lyaml-cpp -Wl,-Bdynamic $(LIBS)
