@@ -5,10 +5,9 @@
 
 #include <iostream>
 
-PUReweighter::PUReweighter(bool isSemiMu, PUProfile profile/* = PUProfile::S10*/, Systematic syst/* = Systematic::NOMINAL*/):
+PUReweighter::PUReweighter(bool isSemiMu, PUProfile profile/* = PUProfile::S10*/, Systematic syst/* = Systematic::NOMINAL*/, const std::string& path/* = "../PUReweighting/"*/):
   puHisto(NULL) {
-    const std::string path = "../PUReweighting/";
-    const std::string dataFileName = path + ((isSemiMu) ? "pileup_SingleMu_full_stat_19Nov13_%s.root" : "pileup_SingleElectron_full_stat_19Nov13_%s.root");
+    const std::string dataFileName = path + ((isSemiMu) ? "pileup_SingleMu_full_stat_%s.root" : "pileup_SingleElectron_full_stat_%s.root");
 
     std::string suffix = "nominal";
     if (syst == Systematic::UP) {
