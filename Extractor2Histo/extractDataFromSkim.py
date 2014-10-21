@@ -34,16 +34,29 @@ elif option.chi2:
 elif option.hybrid:
     sortingAlgoArg = "--hybrid"
 
+btags = [-1, 0, 1, 2]
+def getBFolderName(btag):
+    b = "%d-btag" % btag
+    if btag == -1:
+        b = "all-btag"
+
+    return b
+
+bkg_bdt_weights_root = "/gridgroup/cms/brochet/HTT/CMSSW_analysis/SL6/MttTools/SelectionMVA/BkgVsTT/bdt_trained/16Oct14"
+
 def launch(input, output, type, btag):
-    args = ["./extractorToHisto", "-i", input, "-o", output, "--data", "--skim", sortingAlgoArg, "--%s" % type, "--b-tag", str(btag)]
+    btag_string = "%d-btag" % btag
+    bdt_weights = os.path.join(bkg_bdt_weights_root, "all-btag", "weights", "BDT_all-btag_BDT_boost_grad_0p2.weights.xml")
+
+    args = ["./extractorToHisto", "-i", input, "-o", output, "--data", "--skim", sortingAlgoArg, "--%s" % type, "--b-tag", str(btag), "--bdt-weights", bdt_weights]
 
     return " ".join(args)
 
 tmpfile = tempfile.NamedTemporaryFile(dir = '/scratch/', delete = False)
 
 # Build output tree structure
-for btag in [0, 1, 2]:
-    path = "plots/%s/%d-btag/data" % (d, btag)
+for btag in btags:
+    path = "plots/%s/%s/data" % (d, getBFolderName(btag))
     try:
         os.makedirs(path)
     except:
@@ -51,8 +64,8 @@ for btag in [0, 1, 2]:
 
 print("Extracting dataset ...")
 for input in inputs:
-    for btag in [0, 1, 2]:
-        path = "plots/%s/%d-btag/data" % (d, btag)
+    for btag in btags:
+        path = "plots/%s/%s/data" % (d, getBFolderName(btag))
         tmpfile.write(launch(input[1], os.path.join(path, input[0]), input[2], btag) + "\n")
 
 tmpfile.flush()
@@ -63,9 +76,10 @@ subprocess.call(args)
 ## All is done, merge
 
 print("Merging ...")
-for btag in [0, 1, 2]:
-    path = "plots/%s/%d-btag/data" % (d, btag)
+for btag in btags:
+    path = "plots/%s/%s/data" % (d, getBFolderName(btag))
     for type in ["semie", "semimu"]:
+    #for type in ["semimu"]:
         args = ["hadd", "-f", os.path.join(path, "Data_SingleMu.root" if type == "semimu" else "Data_SingleElectron.root")]
         for output in inputs:
             if type == output[2]:

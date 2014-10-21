@@ -843,7 +843,9 @@ void Extractor2Histos::Loop()
     }
 
     bool btagSel = false;
-    if (mBTag == 0)
+    if (mBTag < 0)
+      btagSel = true;
+    else if (mBTag == 0)
       btagSel = nBtaggedJets_CSVM == 0;
     else if (mBTag == 1)
       btagSel = nBtaggedJets_CSVM == 1;
@@ -921,7 +923,7 @@ void Extractor2Histos::Loop()
       hFourthJetEta->Fill(jetEta[3], eventWeight);
       hMET->Fill(MET, eventWeight);
 
-      if (met_p4->GetEntriesFast() > 0) {
+      if (met_p4 && met_p4->GetEntriesFast() > 0) {
         TLorentzVector* p4 = (TLorentzVector*) (*met_p4)[0];
         hMETPhi->Fill(p4->Phi(), eventWeight);
         hMETx->Fill(p4->Px(), eventWeight);
@@ -1159,7 +1161,7 @@ Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, c
   }
 
   loadChain(inputFiles, "jet_PF", fJet);
-  loadChain(inputFiles, "MET_PF", fMET);
+  //loadChain(inputFiles, "MET_PF", fMET);
 
   Init();
 }
@@ -1504,11 +1506,13 @@ void Extractor2Histos::Init()
   fJet->SetBranchAddress("jet_4vector", &jet_p4, NULL);
 
   met_p4 = NULL;
-  fMET->SetMakeClass(1);
-  fMET->SetBranchStatus("*", 0);
-  fMET->SetBranchStatus("met_4vector", 1);
+  if (fMET) {
+    fMET->SetMakeClass(1);
+    fMET->SetBranchStatus("*", 0);
+    fMET->SetBranchStatus("met_4vector", 1);
 
-  fMET->SetBranchAddress("met_4vector", &met_p4, NULL);
+    fMET->SetBranchAddress("met_4vector", &met_p4, NULL);
+  }
 }
 
 void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 from __future__ import division
 import os, subprocess, tempfile, datetime
 from optparse import OptionParser
@@ -15,13 +14,13 @@ parser.add_option("", "--hybrid", action="store_true", dest="hybrid", default=Fa
 
 
 files = [
-        # Background
+        ## Background
         ["MC_TT_powheg_histos_nominal.root", "skims/%s/MC_TT_powheg_skims_nominal.root"],
-        ["MC_TT_madgraph_histos_nominal.root", "skims/%s/MC_TT_madgraph_skims_nominal.root"],
-        ["MC_TT_mcatnlo_histos_nominal.root", "skims/%s/MC_TT_mcatnlo_skims_nominal.root"],
-        ["MC_TT_madgraph_dilept_histos_nominal.root", "skims/%s/MC_TT_madgraph_dilept_skims_nominal.root"],
-        ["MC_TT_madgraph_semilept_histos_nominal.root", "skims/%s/MC_TT_madgraph_semilept_skims_nominal.root"],
-        ["MC_TT_madgraph_hadronic_histos_nominal.root", "skims/%s/MC_TT_madgraph_hadronic_skims_nominal.root"],
+        #["MC_TT_madgraph_histos_nominal.root", "skims/%s/MC_TT_madgraph_skims_nominal.root"],
+        ##["MC_TT_mcatnlo_histos_nominal.root", "skims/%s/MC_TT_mcatnlo_skims_nominal.root"],
+        #["MC_TT_madgraph_dilept_histos_nominal.root", "skims/%s/MC_TT_madgraph_dilept_skims_nominal.root"],
+        #["MC_TT_madgraph_semilept_histos_nominal.root", "skims/%s/MC_TT_madgraph_semilept_skims_nominal.root"],
+        #["MC_TT_madgraph_hadronic_histos_nominal.root", "skims/%s/MC_TT_madgraph_hadronic_skims_nominal.root"],
 
         ["MC_T_tW-channel_histos_nominal.root", "skims/%s/MC_T_tW-channel_skims_nominal.root"],
         ["MC_T_s-channel_histos_nominal.root", "skims/%s/MC_T_s-channel_skims_nominal.root"],
@@ -65,11 +64,11 @@ files = [
         #["MC_QCD_Pt_350_BCtoE_histos_nominal.root", "skims/semie/MC_QCD_Pt_350_BCtoE_skims_nominal.root"],
 
         # Background + Signal
-        ["Signal_S0_S_i_M400_cpl1_scalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M400_cpl1_scalar_skims_nominal.root"],
-        ["Signal_S0_S_i_M500_cpl1_scalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M500_cpl1_scalar_skims_nominal.root"],
-        ["Signal_S0_S_i_M600_cpl1_scalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M600_cpl1_scalar_skims_nominal.root"],
-        ["Signal_S0_S_i_M700_cpl1_scalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M700_cpl1_scalar_skims_nominal.root"],
-        ["Signal_S0_S_i_M800_cpl1_scalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M800_cpl1_scalar_skims_nominal.root"],
+        #["Signal_S0_S_i_M400_cpl1_scalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M400_cpl1_scalar_skims_nominal.root"],
+        #["Signal_S0_S_i_M500_cpl1_scalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M500_cpl1_scalar_skims_nominal.root"],
+        #["Signal_S0_S_i_M600_cpl1_scalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M600_cpl1_scalar_skims_nominal.root"],
+        #["Signal_S0_S_i_M700_cpl1_scalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M700_cpl1_scalar_skims_nominal.root"],
+        #["Signal_S0_S_i_M800_cpl1_scalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M800_cpl1_scalar_skims_nominal.root"],
 
         ["Signal_S0_S_i_M400_cpl1_pseudoscalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M400_cpl1_pseudoscalar_skims_nominal.root"],
         ["Signal_S0_S_i_M500_cpl1_pseudoscalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M500_cpl1_pseudoscalar_skims_nominal.root"],
@@ -77,19 +76,19 @@ files = [
         ["Signal_S0_S_i_M700_cpl1_pseudoscalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M700_cpl1_pseudoscalar_skims_nominal.root"],
         ["Signal_S0_S_i_M800_cpl1_pseudoscalar_histos_nominal.root", "skims/%s/Signal_S0_S_i_M800_cpl1_pseudoscalar_skims_nominal.root"],
 
-        ["Signal_ZPrimeToTTJets_M500GeV_W5GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M500GeV_W5GeV_skims_nominal_merged.root"],
-        ["Signal_ZPrimeToTTJets_M750GeV_W7p5GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M750GeV_W7p5GeV_skims_nominal_merged.root"],
-        ["Signal_ZPrimeToTTJets_M1000GeV_W10GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1000GeV_W10GeV_skims_nominal_merged.root"],
-        ["Signal_ZPrimeToTTJets_M1250GeV_W12p5GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1250GeV_W12p5GeV_skims_nominal_merged.root"],
-        ["Signal_ZPrimeToTTJets_M1500GeV_W15GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1500GeV_W15GeV_skims_nominal_merged.root"],
-        ["Signal_ZPrimeToTTJets_M2000GeV_W20GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M2000GeV_W20GeV_skims_nominal_merged.root"],
+        #["Signal_ZPrimeToTTJets_M500GeV_W5GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M500GeV_W5GeV_skims_nominal_merged.root"],
+        #["Signal_ZPrimeToTTJets_M750GeV_W7p5GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M750GeV_W7p5GeV_skims_nominal_merged.root"],
+        #["Signal_ZPrimeToTTJets_M1000GeV_W10GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1000GeV_W10GeV_skims_nominal_merged.root"],
+        #["Signal_ZPrimeToTTJets_M1250GeV_W12p5GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1250GeV_W12p5GeV_skims_nominal_merged.root"],
+        #["Signal_ZPrimeToTTJets_M1500GeV_W15GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1500GeV_W15GeV_skims_nominal_merged.root"],
+        #["Signal_ZPrimeToTTJets_M2000GeV_W20GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M2000GeV_W20GeV_skims_nominal_merged.root"],
 
-        ["Signal_ZPrimeToTTJets_M500GeV_W50GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M500GeV_W50GeV_skims_nominal_merged.root"],
-        ["Signal_ZPrimeToTTJets_M750GeV_W75GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M750GeV_W75GeV_skims_nominal_merged.root"],
-        ["Signal_ZPrimeToTTJets_M1000GeV_W100GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1000GeV_W100GeV_skims_nominal_merged.root"],
-        ["Signal_ZPrimeToTTJets_M1250GeV_W125GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1250GeV_W125GeV_skims_nominal_merged.root"],
-        ["Signal_ZPrimeToTTJets_M1500GeV_W150GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1500GeV_W150GeV_skims_nominal_merged.root"],
-        ["Signal_ZPrimeToTTJets_M2000GeV_W200GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M2000GeV_W200GeV_skims_nominal_merged.root"],
+        #["Signal_ZPrimeToTTJets_M500GeV_W50GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M500GeV_W50GeV_skims_nominal_merged.root"],
+        #["Signal_ZPrimeToTTJets_M750GeV_W75GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M750GeV_W75GeV_skims_nominal_merged.root"],
+        #["Signal_ZPrimeToTTJets_M1000GeV_W100GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1000GeV_W100GeV_skims_nominal_merged.root"],
+        #["Signal_ZPrimeToTTJets_M1250GeV_W125GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1250GeV_W125GeV_skims_nominal_merged.root"],
+        #["Signal_ZPrimeToTTJets_M1500GeV_W150GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M1500GeV_W150GeV_skims_nominal_merged.root"],
+        #["Signal_ZPrimeToTTJets_M2000GeV_W200GeV_histos_nominal.root", "skims/%s/Signal_ZPrimeToTTJets_M2000GeV_W200GeV_skims_nominal_merged.root"],
         ]
 
 sortingAlgoArg = ""
@@ -102,12 +101,25 @@ elif option.chi2:
 elif option.hybrid:
     sortingAlgoArg = "--hybrid"
 
+btags = [-1, 0, 1, 2]
+def getBFolderName(btag):
+    b = "%d-btag" % btag
+    if btag == -1:
+        b = "all-btag"
+
+    return b
+
+bkg_bdt_weights_root = "/gridgroup/cms/brochet/HTT/CMSSW_analysis/SL6/MttTools/SelectionMVA/BkgVsTT/bdt_trained/16Oct14"
+
 def launch(input, output, btag):
     if not os.path.exists(input):
         print("Warning input file '%s' does not exist. Skipping job." % input)
         return ""
 
-    args = ["./extractorToHisto", "-i", input, "-o", output, "--mc", "--skim", sortingAlgoArg, "--b-tag", str(btag)]
+    btag_string = "%d-btag" % btag
+    bdt_weights = os.path.join(bkg_bdt_weights_root, "all-btag", "weights", "BDT_all-btag_BDT_boost_grad_0p2.weights.xml")
+
+    args = ["./extractorToHisto", "-i", input, "-o", output, "--mc", "--skim", sortingAlgoArg, "--b-tag", str(btag), "--bdt-weights", bdt_weights]
     if "semie" in input:
         args.append("--semie")
     elif "semimu" in input:
@@ -118,9 +130,9 @@ def launch(input, output, btag):
 tmpfile = tempfile.NamedTemporaryFile(dir = '/scratch/', delete = False)
 
 # Build output tree structure
-for btag in [0, 1, 2]:
+for btag in btags:
     for type in ["semie", "semimu"]:
-        path = "plots/%s/%d-btag/%s" % (d, btag, type)
+        path = "plots/%s/%s/%s" % (d, getBFolderName(btag), type)
         try:
             os.makedirs(path)
         except:
@@ -129,13 +141,13 @@ for btag in [0, 1, 2]:
 print("Extracting datasets...")
 
 for file in files:
-    for btag in [0, 1, 2]:
+    for btag in btags:
     #for btag in [2]:
         #for type in ["semie", "semimu"]:
-        for type in ["semie", "semimu"]:
+        for type in ["semimu"]:
             if not "%" in file[1] and not type in file[1]:
                 continue
-            path = "plots/%s/%d-btag/%s" % (d, btag, type)
+            path = "plots/%s/%s/%s" % (d, getBFolderName(btag), type)
             if not "%" in file[1]:
                 tmpfile.write(launch(file[1], "%s/%s" % (path, file[0]), btag) + "\n");
             else:
@@ -144,5 +156,5 @@ for file in files:
 tmpfile.flush()
 
 print tmpfile.name
-args = ["parallel", "-u", "-a", tmpfile.name, "-j", "15"]
+args = ["parallel", "-u", "-a", tmpfile.name, "-j", "25"]
 subprocess.call(args)
