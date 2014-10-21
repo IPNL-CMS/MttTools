@@ -100,10 +100,12 @@ void Extractor2Histos::Loop()
   TH1D *hLeptonEta_nosel = new TH1D("leptonEta_reco_nosel", "", 100, -2*M_PI, 2*M_PI);
 
   TH1D *hLeptTopPt = new TH1D("leptTopPt_reco_fullsel", "", 60, 20., 600.);
+  TH1D *hLeptTopMt = new TH1D("leptTopMt_reco_fullsel", "", 60, 20., 600.);
   TH1D *hLeptTopPt_chi2sel = new TH1D("leptTopPt_reco_chi2sel", "", 60, 20., 600.);
   TH1D *hLeptTopPz = new TH1D("leptTopPz_reco_fullsel", "", 60, 20., 600.);
   TH1D *hLeptTopE = new TH1D("leptTopE_reco_fullsel", "", 60, 20., 600.);
   hLeptTopE->SetXTitle("leptonic top E [GeV/c]");
+  hLeptTopMt->SetXTitle("leptonic top M_{t} [GeV/c]");
   TH1D *hLeptTopPhi = new TH1D("leptTopPhi_reco_fullsel", "", 200, -4., 4.);
   hLeptTopPhi->SetXTitle("leptonic top #phi");
 
@@ -115,10 +117,12 @@ void Extractor2Histos::Loop()
   TH1D *hLeptTopEta_chi2sel = new TH1D("leptTopEta_reco_chi2sel", "", 50, -2*M_PI, 2*M_PI);
 
   TH1D *hHadrTopPt = new TH1D("hadrTopPt_reco_fullsel", "", 60, 20., 600.);
+  TH1D *hHadrTopMt = new TH1D("hadrTopMt_reco_fullsel", "", 60, 20., 600.);
   TH1D *hHadrTopPt_chi2sel = new TH1D("hadrTopPt_reco_chi2sel", "", 60, 20., 600.);
   TH1D *hHadrTopPz = new TH1D("hadrTopPz_reco_fullsel", "", 60, 20., 600.);
   TH1D *hHadrTopE = new TH1D("hadrTopE_reco_fullsel", "", 60, 20., 600.);
   hHadrTopE->SetXTitle("hadronic top E [GeV/C]");
+  hHadrTopMt->SetXTitle("hadronic top M_{t} [GeV/C]");
   TH1D *hHadrTopPhi = new TH1D("hadrTopPhi_reco_fullsel", "", 200, -4., 4.);
   hHadrTopPhi->SetXTitle("hadronic top #phi");
 
@@ -225,10 +229,16 @@ void Extractor2Histos::Loop()
   TH1D *hAplanarity = new TH1D("aplanarity_reco_fullsel", "", 50, 0., 0.5);
   TH1D *hCircularity = new TH1D("circularity_reco_fullsel", "", 50, 0., 1.);
   TH1D *hSphericity = new TH1D("sphericity_reco_fullsel", "", 50, 0., 1.);
+  TH1D *hIsotropy = new TH1D("isotropy_reco_fullsel", "", 50, 0., 1.);
+  TH1D *hD = new TH1D("D_reco_fullsel", "", 50, 0., 1.);
+  TH1D *hC = new TH1D("C_reco_fullsel", "", 50, 0., 1.);
 
   hAplanarity->SetXTitle("Aplanarity");
   hCircularity->SetXTitle("Circularity");
   hSphericity->SetXTitle("Spericity");
+  hIsotropy->SetXTitle("Isotropy");
+  hD->SetXTitle("D");
+  hC->SetXTitle("C");
 
   hkf_chisquare->SetXTitle("#Chi^{2}_{KF}");
   hkf_proba->SetXTitle("Proba_{KF}");
@@ -341,6 +351,8 @@ void Extractor2Histos::Loop()
 
   // W
   TH1* hLeptonicWPt_gen = new TH1D("ptWLeptonic_gen", "", 60, 0, 600.);
+  TH1* hLeptonicWMt = new TH1D("mtWLeptonic_reco_fullsel", "", 60, 0, 600.);
+  hLeptonicWMt->SetXTitle("Leptonic W M_{t} [GeV/c]");
   TH1* hLeptonicWEta_gen = new TH1D("etaWLeptonic_gen", "", 50, -3*M_PI, 3*M_PI);
 
   /*****
@@ -352,6 +364,8 @@ void Extractor2Histos::Loop()
 
   // W
   TH1* hHadronicWPt_gen = new TH1D("ptWHadronic_gen", "", 60, 0, 600.);
+  TH1* hHadronicWMt = new TH1D("mtWHadronic_reco_fullsel", "", 60, 0, 600.);
+  hHadronicWMt->SetXTitle("Hadronic W M_{t} [GeV/c]");
   TH1* hHadronicWEta_gen = new TH1D("etaWHadronic_gen", "", 50, -3*M_PI, 3*M_PI);
 
 
@@ -982,6 +996,12 @@ void Extractor2Histos::Loop()
       hDeltaRTops_reco_fullsel->Fill(ROOT::Math::VectorUtil::DeltaR(*lepTopP4_AfterReco, *hadTopP4_AfterReco), eventWeight);
       hDeltaThetaTops_reco_fullsel->Fill(fabs(lepTopP4_AfterReco->Theta() - hadTopP4_AfterReco->Theta()), eventWeight);
 
+      LorentzVector selectedHadronicWP4 = *selectedFirstJetP4_AfterReco + *selectedSecondJetP4_AfterReco + *selectedHadronicBP4_AfterReco;
+      LorentzVector selectedLeptonicWP4 = *selectedLeptonicBP4_AfterReco + *selectedNeutrinoP4_AfterReco + selectedLeptonP4_LV_AfterReco;
+
+      hLeptonicWMt->Fill(selectedLeptonicWP4.Mt(), eventWeight);
+      hHadronicWMt->Fill(selectedHadronicWP4.Mt(), eventWeight);
+
       hLeptTopPz->Fill(lepTopP4_AfterReco->Pz(), eventWeight);
       hHadrTopPz->Fill(hadTopP4_AfterReco->Pz(), eventWeight);
 
@@ -991,7 +1011,9 @@ void Extractor2Histos::Loop()
       hTopsDeltaY->Fill(hadTopP4_AfterReco->Rapidity() - lepTopP4_AfterReco->Rapidity(), eventWeight);
 
       hLeptTopE->Fill(lepTopP4_AfterReco->E(), eventWeight);
+      hLeptTopMt->Fill(lepTopP4_AfterReco->Mt(), eventWeight);
       hHadrTopE->Fill(hadTopP4_AfterReco->E(), eventWeight);
+      hHadrTopMt->Fill(hadTopP4_AfterReco->Mt(), eventWeight);
 
       selectedFirstJetPt_AfterReco = selectedFirstJetP4_AfterReco->Pt();
       selectedSecondJetPt_AfterReco = selectedSecondJetP4_AfterReco->Pt();
@@ -1052,6 +1074,9 @@ void Extractor2Histos::Loop()
       hAplanarity->Fill(p_aplanarity, eventWeight);
       hCircularity->Fill(p_circularity, eventWeight);
       hSphericity->Fill(p_sphericity, eventWeight);
+      hIsotropy->Fill(p_isotropy, eventWeight);
+      hD->Fill(p_D, eventWeight);
+      hC->Fill(p_C, eventWeight);
 
       float discriminant = bkgVsTTBDTReader.evaluate(jentry);
       hBDTDiscriminant->Fill(discriminant, eventWeightNoGenWeight);
@@ -1386,6 +1411,9 @@ void Extractor2Histos::Init()
   SetBranchAddress(fMTT, "aplanarity", &p_aplanarity);
   SetBranchAddress(fMTT, "circularity", &p_circularity);
   SetBranchAddress(fMTT, "sphericity", &p_sphericity);
+  SetBranchAddress(fMTT, "isotropy", &p_isotropy);
+  SetBranchAddress(fMTT, "D", &p_D);
+  SetBranchAddress(fMTT, "C", &p_C);
 
   if (mUseMVA) {
     SetBranchAddress(fMTT, "numComb_MVA", &numComb);
