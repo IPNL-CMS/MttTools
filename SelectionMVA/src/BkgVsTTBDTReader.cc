@@ -82,6 +82,7 @@ void BkgVsTTBDTReader::computeVariables() {
 
   uint32_t n = 0;
   float HT = 0;
+  mean_csv = 0;
   for (uint32_t i = 0; i < (uint32_t) jets_p4->GetEntriesFast(); i++) {
     float pt = ((TLorentzVector*) (*jets_p4)[i])->Pt();
     if (pt > 30 && jets_CSV_discriminant[i] > 0.244) {
