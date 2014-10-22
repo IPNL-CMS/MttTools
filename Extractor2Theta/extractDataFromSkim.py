@@ -42,9 +42,10 @@ if option.zprime:
 elif option.higgs:
     typeArg = "--higgs"
 
+bdt_weights = "/gridgroup/cms/brochet/HTT/CMSSW_analysis/SL6/MttTools/SelectionMVA/BkgVsTT/bdt_trained/16Oct14/all-btag/weights/BDT_all-btag_BDT_boost_grad_0p2.weights.xml"
 
 def launch(input, output, type):
-  args = ["./extractor2Theta", "-i", input, "-o", output, "--data", "--type", type, "--skim", sortingAlgoArg, typeArg]
+  args = ["./extractor2Theta", "-i", input, "-o", output, "--data", "--type", type, "--skim", sortingAlgoArg, typeArg, "--bdt-weights", bdt_weights]
   
   return " ".join(args)
 

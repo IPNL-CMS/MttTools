@@ -16,17 +16,17 @@ ROOTCFLAGS = $(shell root-config --cflags)
 ROOTLIBS   = $(shell root-config --libs)
 
 CXX           = g++
-CXXFLAGS	    = -O2 -Wall -fPIC -std=c++0x
+CXXFLAGS	    = -g -O2 -Wall -fPIC -std=c++0x
 LD			      = g++
-LDFLAGS		    = $(shell root-config --ldflags) -Wl,--as-needed
+LDFLAGS		    = $(shell root-config --ldflags) 
 SOFLAGS		    = 
 AR            = ar
 ARFLAGS       = -cq
 
-LDDIR         = $(shell echo "-L" $$LD_LIBRARY_PATH | sed -e 's/:/ -L/g') -L$(ROOFIT_LIBDIR)/ -L../lib/
+LDDIR         = $(shell echo "-L" $$LD_LIBRARY_PATH | sed -e 's/:/ -L/g') -L$(ROOFIT_LIBDIR)/ -L../lib/ -L../SelectionMVA/lib -L../external/lib
 
-CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/ -I../external/ -I../ExtractorPostprocessing
-LIBS  		    = $(LDDIR) $(ROOTLIBS) 
+CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/ -I../external/ -I../ExtractorPostprocessing -I../SelectionMVA/include
+LIBS  		    = $(LDDIR) $(ROOTLIBS) -lGenVector -lTMVA 
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
 SOURCES		= $(wildcard *.$(SrcSuf))
@@ -44,8 +44,8 @@ clean:
 	@rm *.o;
 	@rm ../PUReweighting/*.o;
 
-extractor2Theta: extractor2Theta.o ../PUReweighting/PUReweighter.o ../external/TopTriggerEfficiencyProvider.o ../ExtractorPostprocessing/ExtractorPostprocessing.o
-	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS)
+extractor2Theta: extractor2Theta.o ../PUReweighting/PUReweighter.o ../external/TopTriggerEfficiencyProvider.o ../ExtractorPostprocessing/ExtractorPostprocessing.o ../SelectionMVA/lib/libMVAReader.a ../SelectionMVA/lib/libBDTCuts.a
+	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ -Wl,-Bstatic -lMVAReader -lBDTCuts -lyaml-cpp -Wl,-Bdynamic $(LIBS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<

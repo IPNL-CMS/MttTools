@@ -14,7 +14,12 @@
 #include <TFile.h>
 #include <TRandom2.h>
 
-#include <tclap/CmdLine.h>
+#include <BkgVsTTBDTReader.h>
+#include <BDTCuts.h>
+
+#include "tclap/CmdLine.h"
+
+#include "TMVA/Reader.h"
 
 #include "ExtractorPostprocessing.h"
 
@@ -26,16 +31,7 @@ PUProfile puProfile;
 
 ExtractorPostprocessing selection;
 
-void Init(bool useKF, float& mtt_afterReco, float& mtt_AfterKF, float& mtt_AfterChi2) 
-{
-  if (useKF) {
-    mtt_afterReco = mtt_AfterKF;
-  } else {
-    mtt_afterReco = mtt_AfterChi2;
-  }
-}
-
-void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& outputFile, bool isData, bool isZprime, const std::string& type, int max, double lumi_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
+void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* event, TChain* vertices, const std::string& outputFile, bool isData, bool isZprime, const std::string& type, int max, double lumi_weight, const std::string& bdtWeights, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
 
   float mtt_afterReco, pt_1stJet, pt_2ndJet, pt_3rdJet, pt_4thJet, bestSolChi2, mtt_AfterKF, mtt_AfterChi2, mtt_AfterMVA;
   int isSel = 1, nBtaggedJets_CSVM;
@@ -88,7 +84,7 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
   float kf_proba = 0.;
   if (useMVA) {
     SetBranchAddress("numComb_MVA", &numComb);
-    SetBranchAddress("mtt_AfterMVA", &mtt_afterReco);
+    SetBranchAddress("mtt_AfterMVA", &mtt_AfterMVA);
   } else {
     //SetBranchAddress("numComb_chi2", &numComb);
     SetBranchAddress("numComb_kf", &numComb_kf);
@@ -213,13 +209,20 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
   std::shared_ptr<TopTriggerEfficiencyProvider> m_trigger_efficiency_provider = std::make_shared<TopTriggerEfficiencyProvider>();
   TRandom2 random_generator;
 
+  BkgVsTTBDTReader bkgVsTTBDTReader(inputFiles);
+  bkgVsTTBDTReader.initMVA(bdtWeights);
+
+  BDTCuts bdtCuts;
+
+  float background_bdt_cut = bdtCuts.getCut(BDTType::BACKGROUND, -1);
+
   float hist_min = 250;
   float hist_max = 1250;
   if (isZprime) {
     hist_min = 550;
     hist_max = 2000;
   }
-  int nBins = (hist_max - hist_min) / 5.;
+  int nBins = (hist_max - hist_min) / 30.;
   TH1::SetDefaultSumw2(true);
   TH1* h_mtt_0btag = new TH1D("mtt_0btag", "mtt", nBins, hist_min, hist_max);
   TH1* h_mtt_1btag = new TH1D("mtt_1btag", "mtt", nBins, hist_min, hist_max);
@@ -297,6 +300,8 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
 
       if (!runOnSkim && isSel != 1)
         continue;
+    } else {
+      return;
     }
 
     if (isSemiMu && !selection.passMuonSel(ptLepton, etaLepton))
@@ -315,9 +320,13 @@ void reduce(TChain* mtt, TChain* event, TChain* vertices, const std::string& out
 
     } else {
       //if (! selection.passChi2Sel(bestSolChi2))
-        //continue;
+      //continue;
     }
 
+    float discriminant = bkgVsTTBDTReader.evaluate(i);
+
+    if (discriminant < background_bdt_cut) 
+      continue;
 
     // Good event
     int index;
@@ -428,12 +437,12 @@ void loadChain(const std::vector<std::string>& inputFiles, TChain*& mtt, TChain*
   vertices->SetCacheSize(30*1024*1024);
 }
 
-void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, bool isZprime, const std::string& type, int max, double generator_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
+void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, bool isZprime, const std::string& type, int max, double generator_weight, const std::string& bdtWeights, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
 
   TChain* mtt = NULL, *event = NULL, *vertices = NULL;
 
   loadChain(inputFiles, mtt, event, vertices);
-  reduce(mtt, event, vertices, outputFile, isData, isZprime, type, max, generator_weight, puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, useMVA, useChi2, useKF, useHybrid, runOnSkim);
+  reduce(inputFiles, mtt, event, vertices, outputFile, isData, isZprime, type, max, generator_weight, bdtWeights, puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, useMVA, useChi2, useKF, useHybrid, runOnSkim);
 
   delete mtt;
   delete event;
@@ -471,6 +480,7 @@ int main(int argc, char** argv)
     TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S10", "string", cmd);
     TCLAP::ValueArg<int> maxEntriesArg("n", "", "Maximal number of entries to process", false, -1, "int", cmd);
     TCLAP::ValueArg<double> generatorWeightArg("", "weight", "MC generator weight", false, 1., "double", cmd);
+    TCLAP::ValueArg<std::string> bdtWeightsArg("", "bdt-weights", "BDT weight", true, "", "string", cmd);
 
     TCLAP::ValueArg<std::string> pdfSystArg("", "pdf-syst", "PDF systematic to compute", false, "nominal", "string", cmd);
     TCLAP::ValueArg<std::string> jecSystArg("", "jec-syst", "Computing trigger weight for this JEC up / down", false, "nominal", "string", cmd);
@@ -560,7 +570,7 @@ int main(int argc, char** argv)
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    reduce(inputFiles, outputFileArg.getValue(), isData, isZprime, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue(), puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue(), skimArg.getValue()); 
+    reduce(inputFiles, outputFileArg.getValue(), isData, isZprime, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue(), bdtWeightsArg.getValue(), puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue(), skimArg.getValue()); 
 
   } catch (TCLAP::ArgException& e) {
     std::cout << e.what() << std::endl;
