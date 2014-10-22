@@ -61,8 +61,8 @@ files = [
         #["Signal_S0_S_i_M800_cpl1_scalar_mva_nominal.root", "skims/%s/Signal_S0_S_i_M800_cpl1_scalar_skims_nominal.root", 1999938, 0.09436 * 2.888],
 
         #["Signal_S0_S_i_M400_cpl1_pseudoscalar_mva_nominal.root", "skims/%s/Signal_S0_S_i_M400_cpl1_pseudoscalar_skims_nominal.root", 2276384, 1.169 * 5.039],
-        ["Signal_S0_S_i_M500_cpl1_pseudoscalar_mva_nominal.root", "skims/%s/Signal_S0_S_i_M500_cpl1_pseudoscalar_skims_nominal.root", 1999940, 0.6756 * 3.803],
-        #["Signal_S0_S_i_M600_cpl1_pseudoscalar_mva_nominal.root", "skims/%s/Signal_S0_S_i_M600_cpl1_pseudoscalar_skims_nominal.root", 1999949, 0.4414 * 2.709],
+        #["Signal_S0_S_i_M500_cpl1_pseudoscalar_mva_nominal.root", "skims/%s/Signal_S0_S_i_M500_cpl1_pseudoscalar_skims_nominal.root", 1999940, 0.6756 * 3.803],
+        ["Signal_S0_S_i_M600_cpl1_pseudoscalar_mva_nominal.root", "skims/%s/Signal_S0_S_i_M600_cpl1_pseudoscalar_skims_nominal.root", 1999949, 0.4414 * 2.709],
         #["Signal_S0_S_i_M700_cpl1_pseudoscalar_mva_nominal.root", "skims/%s/Signal_S0_S_i_M700_cpl1_pseudoscalar_skims_nominal.root", 1999932, 0.3121 * 2.057],
         #["Signal_S0_S_i_M800_cpl1_pseudoscalar_mva_nominal.root", "skims/%s/Signal_S0_S_i_M800_cpl1_pseudoscalar_skims_nominal.root", 1999940, 0.2325 * 1.697],
 
@@ -93,6 +93,8 @@ elif option.chi2:
 elif option.hybrid:
     sortingAlgoArg = "--hybrid"
 
+bkg_bdt_weights_root = "/gridgroup/cms/brochet/HTT/CMSSW_analysis/SL6/MttTools/SelectionMVA/BkgVsTT/bdt_trained/16Oct14"
+
 if len(sortingAlgoArg) == 0:
     raise ValueError("Sorting algorithm is not specified")
 
@@ -101,7 +103,8 @@ def launch(input, output, weight, type, btag):
         print("Warning input file '%s' does not exist. Skipping job." % input)
         return ""
 
-    args = ["./createMVATree", "-i", input, "-o", output, "--b-tag", str(btag), "--weight", str(weight), sortingAlgoArg]
+    bdt_weights = os.path.join(bkg_bdt_weights_root, "all-btag", "weights", "BDT_all-btag_BDT_boost_grad_0p2.weights.xml")
+    args = ["./createMVATree", "-i", input, "-o", output, "--b-tag", str(btag), "--weight", str(weight), sortingAlgoArg, "--bdt-weights", bdt_weights]
 
     if not "Signal" in input:
         args.append("--background")

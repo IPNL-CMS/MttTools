@@ -23,9 +23,9 @@ SOFLAGS		    =
 AR            = ar
 ARFLAGS       = -cq
 
-LDDIR         = $(shell echo "-L" $$LD_LIBRARY_PATH | sed -e 's/:/ -L/g') -L$(ROOFIT_LIBDIR)/ -L../lib/
+LDDIR         = $(shell echo "-L" $$LD_LIBRARY_PATH | sed -e 's/:/ -L/g') -L$(ROOFIT_LIBDIR)/ -L../lib/ -L../../external/lib
 
-CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/ -I../external/ -I../ExtractorPostprocessing
+CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../../external/ -I../../external/include -I../../PUReweighting -I../../ExtractorPostprocessing -I../../SelectionMVA/include
 LIBS  		    = $(LDDIR) $(ROOTLIBS) -lGenVector -lTMVA
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
@@ -42,10 +42,10 @@ all: createMVATree trainMVA
 
 clean:
 	@rm *.o;
-	@rm ../PUReweighting/*.o;
+	@rm ../../PUReweighting/*.o;
 
-createMVATree: createMVATree.o ../PUReweighting/PUReweighter.o ../external/TopTriggerEfficiencyProvider.o ../ExtractorPostprocessing/ExtractorPostprocessing.o
-	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS)
+createMVATree: createMVATree.o ../../PUReweighting/PUReweighter.o ../../external/TopTriggerEfficiencyProvider.o ../../ExtractorPostprocessing/ExtractorPostprocessing.o ../../SelectionMVA/lib/libMVAReader.a ../../SelectionMVA/lib/libBDTCuts.a
+	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ -Wl,-Bstatic -lMVAReader -lBDTCuts -lyaml-cpp -Wl,-Bdynamic $(LIBS)
 
 trainMVA: trainMVA.o
 	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS)

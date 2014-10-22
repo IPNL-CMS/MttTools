@@ -17,9 +17,12 @@
 
 #include <tclap/CmdLine.h>
 
-#include "../PUReweighting/PUReweighter.h"
+#include <PUReweighter.h>
 #include "TopTriggerEfficiencyProvider.h"
 #include "ExtractorPostprocessing.h"
+
+#include <BkgVsTTBDTReader.h>
+#include <BDTCuts.h>
 
 #include <Math/Vector4D.h>
 #include <Math/VectorUtil.h>
@@ -146,11 +149,17 @@ void setBranchAddress(TChain* chain, const std::string& name, T& address) {
   chain->SetBranchAddress(name.c_str(), &address);
 }
 
-void createTree(const std::vector<std::string>& inputFiles, const std::string& outputFile, int64_t maxEntries, float weight, bool isSignal, bool isSemiMu, int btag, bool mva, bool chi2, bool kf, bool hybrid) {
+void createTree(const std::vector<std::string>& inputFiles, const std::string& outputFile, int64_t maxEntries, float weight, bool isSignal, bool isSemiMu, int btag, bool mva, bool chi2, bool kf, bool hybrid, const std::string& bdtWeights) {
   TChain* mtt = loadChain(inputFiles, "Mtt");
   TChain* jets = loadChain(inputFiles, "jet_PF");
   TChain* events = loadChain(inputFiles, "event");
   TChain* vertices = loadChain(inputFiles, "Vertices");
+
+  BkgVsTTBDTReader bkgVsTTBDTReader(inputFiles);
+  bkgVsTTBDTReader.initMVA(bdtWeights);
+
+  BDTCuts bdtCuts("../../SelectionMVA/bdt_cuts.yml");
+  float background_bdt_cut = bdtCuts.getCut(BDTType::BACKGROUND, -1);  
 
   // Retrieve P4 of selected objects
   ObjectP4 neutrino = {nullptr, "neutrino"};
@@ -297,7 +306,7 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
 
   float output_weight = 0;
 
-  PUReweighter* puReweigher = new PUReweighter(isSemiMu, puProfile, Systematic::NOMINAL);
+  PUReweighter* puReweigher = new PUReweighter(isSemiMu, puProfile, Systematic::NOMINAL, "../../PUReweighting/");
   TopTriggerEfficiencyProvider::JES triggerJESSyst = TopTriggerEfficiencyProvider::NOMINAL;
 
   float lumi_run2012_A = 0;
@@ -443,6 +452,10 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
       }
 
     }
+
+    float discriminant = bkgVsTTBDTReader.evaluate(i);
+    if (discriminant <= background_bdt_cut)
+      continue;
 
     double pt_lepton = 0;
     double eta_lepton = 0;
@@ -591,6 +604,8 @@ int main(int argc, char** argv) {
 
     TCLAP::ValueArg<int> btagArg("", "b-tag", "Number of b-tagged jets to select", true, -1, "int", cmd);
 
+    TCLAP::ValueArg<std::string> bdtWeightsArg("", "bdt-weights", "XML file containing the BDT weighted created by TMVA", true, "", "string", cmd);
+
     //TCLAP::ValueArg<std::string> typeArg("", "type", "current inputfile type (semie or semimu)", true, "", "string", cmd);
     TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S10", "string", cmd);
     TCLAP::ValueArg<int> maxEntriesArg("n", "", "Maximal number of entries to process", false, -1, "int", cmd);
@@ -684,7 +699,7 @@ int main(int argc, char** argv) {
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    createTree(inputFiles, outputFileArg.getValue(), maxEntriesArg.getValue(), weightArg.getValue(), isSignal, semimuArg.isSet(), btagArg.getValue(), mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue()); 
+    createTree(inputFiles, outputFileArg.getValue(), maxEntriesArg.getValue(), weightArg.getValue(), isSignal, semimuArg.isSet(), btagArg.getValue(), mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue(), bdtWeightsArg.getValue()); 
 
   } catch (TCLAP::ArgException& e) {
     std::cout << e.what() << std::endl;
