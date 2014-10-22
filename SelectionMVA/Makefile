@@ -18,14 +18,14 @@ ROOTLIBS   = $(shell root-config --libs)
 CXX           = g++
 CXXFLAGS	    = -O2 -g -Wall -fPIC -std=c++0x
 LD			      = g++
-LDFLAGS		    = $(shell root-config --ldflags)
+LDFLAGS		    = $(shell root-config --ldflags) -Lexternal/lib -L$(BOOST_ROOT)/lib/
 SOFLAGS		    = 
 AR            = ar
 ARFLAGS       = -cq
 
-LDDIR         = $(shell echo "-L" $$LD_LIBRARY_PATH | sed -e 's/:/ -L/g') -L$(ROOFIT_LIBDIR)/ -L../lib/
+LDDIR         = $(shell echo "-L" $$LD_LIBRARY_PATH | sed -e 's/:/ -L/g') -L$(ROOFIT_LIBDIR)/ -L../lib/ 
 
-CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -Iinclude
+CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -Iinclude -I../external/include -I$(shell echo $(BOOST_ROOT))/include
 LIBS  		    = $(LDDIR) $(ROOTLIBS) -lGenVector -lTMVA
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
@@ -34,19 +34,30 @@ OBJECTS		= $(SOURCES:.$(SrcSuf)=.$(ObjSuf))
 DEPENDS		= $(SOURCES:.$(SrcSuf)=.d)
 SOBJECTS	= $(SOURCES:.$(SrcSuf)=.$(DllSuf))
 
+MVAREADER_OBJECTS = src/MVAReader.o src/BkgVsTTBDTReader.o
+BDTCUTS_OBJECTS = src/BDTCuts.o
+
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf)
 
 ###
 
-all: libMVAReader.a
+all: libMVAReader.a libBDTCuts.a
 
 clean:
-	@rm -f *.o;
+	@rm -f $(OBJECTS);
+	@rm -f lib/*;
 
-libMVAReader.a: $(OBJECTS)
+libMVAReader.a: $(MVAREADER_OBJECTS)
 	@echo "Generating libMVAReader.a"
-	@ar cru lib/libMVAReader.a $(OBJECTS)
+	@mkdir -p lib
+	@ar cru lib/libMVAReader.a $(MVAREADER_OBJECTS)
 	@ranlib lib/libMVAReader.a
+
+libBDTCuts.a: $(BDTCUTS_OBJECTS)
+	@echo "Generating libBDTCuts.a"
+	@mkdir -p lib
+	@ar cru lib/libBDTCuts.a $(BDTCUTS_OBJECTS)
+	@ranlib lib/libBDTCuts.a
 
 %.o: %.cc
 	$(CXX) $(CXXFLAGS) -c -o $@ $<

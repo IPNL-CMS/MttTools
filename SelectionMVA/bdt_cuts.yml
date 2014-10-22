@@ -1,0 +1,6 @@
+background:
+  - b-tag: -1
+    cut: 0.072
+signal:
+  - b-tag: -1
+    cut: -1
