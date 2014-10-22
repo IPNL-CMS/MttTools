@@ -182,14 +182,14 @@ void Extractor2Histos::Loop()
   TH1D *hmtlep = new TH1D("mtLep_reco_fullsel", "", 100, 120., 240.);
   TH1D *hmthad = new TH1D("mtHad_reco_fullsel", "", 150, 120., 300.);
 
-  TH1D *hmttSelected_btag_sel_positive = new TH1D("mttSelected_btag_sel_reco_fullsel_positive", "", 150, 0., 2000.);
-  TH1D *hmttSelected_btag_sel_negative = new TH1D("mttSelected_btag_sel_reco_fullsel_negative", "", 150, 0., 2000.);
+  TH1D *hmttSelected_btag_sel_positive = new TH1D("mttSelected_btag_sel_reco_fullsel_positive", "", 40, 0., 2000.);
+  TH1D *hmttSelected_btag_sel_negative = new TH1D("mttSelected_btag_sel_reco_fullsel_negative", "", 40, 0., 2000.);
 
-  TH1D *hmtt_AfterChi2 = new TH1D("mtt_AfterChi2", "", 150, 0., 2000.);
-  TH1D *hmtt_AfterKF = new TH1D("mtt_AfterKF", "", 150, 0., 2000.);
-  TH1D *hmttSelected_btag_sel = new TH1D("mttSelected_btag_sel_reco_fullsel", "", 150, 0., 2000.);
-  TH1D *hmttSelected_btag_sel_no_gen_weight = new TH1D("mttSelected_btag_sel_reco_fullsel_no_gen_weight", "", 150, 0., 2000.);
-  TH1D *hmttSelected_btag_sel_mass_cut = new TH1D("mttSelected_btag_sel_mass_cut_reco_fullsel", "", 150, 0., 2000.);
+  TH1D *hmtt_AfterChi2 = new TH1D("mtt_AfterChi2", "", 40, 0., 2000.);
+  TH1D *hmtt_AfterKF = new TH1D("mtt_AfterKF", "", 40, 0., 2000.);
+  TH1D *hmttSelected_btag_sel = new TH1D("mttSelected_btag_sel_reco_fullsel", "", 40, 0., 2000.);
+  TH1D *hmttSelected_btag_sel_no_gen_weight = new TH1D("mttSelected_btag_sel_reco_fullsel_no_gen_weight", "", 40, 0., 2000.);
+  TH1D *hmttSelected_btag_sel_mass_cut = new TH1D("mttSelected_btag_sel_mass_cut_reco_fullsel", "", 40, 0., 2000.);
 
   TH1D *hmttSelected_background_bdt_btag_sel = new TH1D("mttSelected_bkg_bdt_btag_sel_reco_fullsel", "", 150, 0., 2000.);
 
