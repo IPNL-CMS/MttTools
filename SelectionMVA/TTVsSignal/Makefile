@@ -42,7 +42,7 @@ all: createMVATree trainMVA
 
 clean:
 	@rm *.o;
-	@rm ../PUReweighting/*.o;
+	@rm ../../PUReweighting/*.o;
 
 createMVATree: createMVATree.o ../../PUReweighting/PUReweighter.o ../../external/TopTriggerEfficiencyProvider.o ../../ExtractorPostprocessing/ExtractorPostprocessing.o ../../SelectionMVA/lib/libMVAReader.a ../../SelectionMVA/lib/libBDTCuts.a
 	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ -Wl,-Bstatic -lMVAReader -lBDTCuts -lyaml-cpp -Wl,-Bdynamic $(LIBS)

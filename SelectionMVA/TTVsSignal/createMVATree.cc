@@ -158,7 +158,7 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
   BkgVsTTBDTReader bkgVsTTBDTReader(inputFiles);
   bkgVsTTBDTReader.initMVA(bdtWeights);
 
-  BDTCuts bdtCuts;
+  BDTCuts bdtCuts("../../SelectionMVA/bdt_cuts.yml");
   float background_bdt_cut = bdtCuts.getCut(BDTType::BACKGROUND, -1);  
 
   // Retrieve P4 of selected objects
@@ -306,7 +306,7 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
 
   float output_weight = 0;
 
-  PUReweighter* puReweigher = new PUReweighter(isSemiMu, puProfile, Systematic::NOMINAL);
+  PUReweighter* puReweigher = new PUReweighter(isSemiMu, puProfile, Systematic::NOMINAL, "../../PUReweighting/");
   TopTriggerEfficiencyProvider::JES triggerJESSyst = TopTriggerEfficiencyProvider::NOMINAL;
 
   float lumi_run2012_A = 0;
