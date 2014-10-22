@@ -47,8 +47,8 @@ clean:
 	@rm ../PUReweighting/*.o;
 	@rm ../external/*.o;
 
-extractorToHisto: ../external/TopTriggerEfficiencyProvider.o Extractor2Histos.o GaussianProfile.o ../PUReweighting/PUReweighter.o ../SelectionMVA/lib/libMVAReader.a
-	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ -Wl,-Bstatic -lMVAReader -Wl,-Bdynamic $(LIBS)
+extractorToHisto: ../external/TopTriggerEfficiencyProvider.o Extractor2Histos.o GaussianProfile.o ../PUReweighting/PUReweighter.o ../SelectionMVA/lib/libMVAReader.a ../SelectionMVA/lib/libBDTCuts.a
+	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ -Wl,-Bstatic -lMVAReader -lBDTCuts -lyaml-cpp -Wl,-Bdynamic $(LIBS)
 
 substractHistos: substractHistos.o
 	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ -Wl,-Bstatic -lyaml-cpp -Wl,-Bdynamic $(LIBS)

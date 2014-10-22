@@ -22,6 +22,7 @@
 
 #include <PUReweighting/PUReweighter.h>
 #include <BkgVsTTBDTReader.h>
+#include <BDTCuts.h>
 
 #include "tclap/CmdLine.h"
 
@@ -189,6 +190,8 @@ void Extractor2Histos::Loop()
   TH1D *hmttSelected_btag_sel = new TH1D("mttSelected_btag_sel_reco_fullsel", "", 150, 0., 2000.);
   TH1D *hmttSelected_btag_sel_no_gen_weight = new TH1D("mttSelected_btag_sel_reco_fullsel_no_gen_weight", "", 150, 0., 2000.);
   TH1D *hmttSelected_btag_sel_mass_cut = new TH1D("mttSelected_btag_sel_mass_cut_reco_fullsel", "", 150, 0., 2000.);
+
+  TH1D *hmttSelected_background_bdt_btag_sel = new TH1D("mttSelected_bkg_bdt_btag_sel_reco_fullsel", "", 150, 0., 2000.);
 
   TH1D *hSelectedFirstJetPt = new TH1D("selectedFirstJetPt_reco_fullsel", "", 100, 70., 640.);
   TH1D *hSelectedSecondJetPt = new TH1D("selectedSecondJetPt_reco_fullsel", "", 50, 30., 300.);
@@ -478,6 +481,10 @@ void Extractor2Histos::Loop()
 
   BkgVsTTBDTReader bkgVsTTBDTReader(m_inputFiles);
   bkgVsTTBDTReader.initMVA(m_bdtWeights);
+
+  BDTCuts bdtCuts;
+
+  float background_bdt_cut = bdtCuts.getCut(BDTType::BACKGROUND, -1);
 
   std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now(), end;
   for (Long64_t jentry = 0; jentry < nentries; jentry++)
@@ -1080,6 +1087,10 @@ void Extractor2Histos::Loop()
 
       float discriminant = bkgVsTTBDTReader.evaluate(jentry);
       hBDTDiscriminant->Fill(discriminant, eventWeightNoGenWeight);
+
+      if (discriminant > background_bdt_cut) {
+        hmttSelected_background_bdt_btag_sel->Fill(mtt_AfterReco, eventWeight);
+      }
     }
   }
 
