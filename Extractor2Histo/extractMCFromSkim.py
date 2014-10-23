@@ -16,8 +16,8 @@ parser.add_option("", "--hybrid", action="store_true", dest="hybrid", default=Fa
 files = [
         ## Background
         ["MC_TT_powheg_histos_nominal.root", "skims/%s/MC_TT_powheg_skims_nominal.root"],
-        #["MC_TT_madgraph_histos_nominal.root", "skims/%s/MC_TT_madgraph_skims_nominal.root"],
-        ##["MC_TT_mcatnlo_histos_nominal.root", "skims/%s/MC_TT_mcatnlo_skims_nominal.root"],
+        ["MC_TT_madgraph_histos_nominal.root", "skims/%s/MC_TT_madgraph_skims_nominal.root"],
+        #["MC_TT_mcatnlo_histos_nominal.root", "skims/%s/MC_TT_mcatnlo_skims_nominal.root"],
         #["MC_TT_madgraph_dilept_histos_nominal.root", "skims/%s/MC_TT_madgraph_dilept_skims_nominal.root"],
         #["MC_TT_madgraph_semilept_histos_nominal.root", "skims/%s/MC_TT_madgraph_semilept_skims_nominal.root"],
         #["MC_TT_madgraph_hadronic_histos_nominal.root", "skims/%s/MC_TT_madgraph_hadronic_skims_nominal.root"],
@@ -109,17 +109,12 @@ def getBFolderName(btag):
 
     return b
 
-bkg_bdt_weights_root = "/gridgroup/cms/brochet/HTT/CMSSW_analysis/SL6/MttTools/SelectionMVA/BkgVsTT/bdt_trained/16Oct14"
-
 def launch(input, output, btag):
     if not os.path.exists(input):
         print("Warning input file '%s' does not exist. Skipping job." % input)
         return ""
 
-    btag_string = "%d-btag" % btag
-    bdt_weights = os.path.join(bkg_bdt_weights_root, "all-btag", "weights", "BDT_all-btag_BDT_boost_grad_0p2.weights.xml")
-
-    args = ["./extractorToHisto", "-i", input, "-o", output, "--mc", "--skim", sortingAlgoArg, "--b-tag", str(btag), "--bdt-weights", bdt_weights]
+    args = ["./extractorToHisto", "-i", input, "-o", output, "--mc", "--skim", sortingAlgoArg, "--b-tag", str(btag)]
     if "semie" in input:
         args.append("--semie")
     elif "semimu" in input:
@@ -143,8 +138,7 @@ print("Extracting datasets...")
 for file in files:
     for btag in btags:
     #for btag in [2]:
-        #for type in ["semie", "semimu"]:
-        for type in ["semimu"]:
+        for type in ["semie", "semimu"]:
             if not "%" in file[1] and not type in file[1]:
                 continue
             path = "plots/%s/%s/%s" % (d, getBFolderName(btag), type)

@@ -479,12 +479,13 @@ void Extractor2Histos::Loop()
   uint64_t positive_events = 0;
   uint64_t negative_events = 0;
 
-  BkgVsTTBDTReader bkgVsTTBDTReader(m_inputFiles);
-  bkgVsTTBDTReader.initMVA(m_bdtWeights);
-
   BDTCuts bdtCuts;
 
   float background_bdt_cut = bdtCuts.getCut(BDTType::BACKGROUND, -1);
+  std::string background_bdt_weights = bdtCuts.getWeights(BDTType::BACKGROUND, -1);
+
+  BkgVsTTBDTReader bkgVsTTBDTReader(m_inputFiles);
+  bkgVsTTBDTReader.initMVA(background_bdt_weights);
 
   std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now(), end;
   for (Long64_t jentry = 0; jentry < nentries; jentry++)
@@ -1163,7 +1164,7 @@ void loadChain(const std::vector<std::string>& inputFiles, const std::string& tr
   output->SetCacheSize(30*1024*1024);
 }
 
-Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, bool chi2, bool kf, bool hybrid, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst, const std::string& bdtWeights) : fMTT(0), fVertices(0), fEvent(0)
+Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, bool chi2, bool kf, bool hybrid, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst) : fMTT(0), fVertices(0), fEvent(0)
 {
   mIsSemiMu = isSemiMu;
   mIsMC = isMC;
@@ -1180,7 +1181,6 @@ Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, c
   mPDFSyst = pdfSyst;
   mLeptonSyst = leptonSyst;
   mBTagSyst = btagSyst;
-  m_bdtWeights = bdtWeights;
   m_inputFiles = inputFiles;
 
   fLooseMuons = nullptr;
@@ -1603,8 +1603,6 @@ int main(int argc, char** argv) {
     xorlist.push_back(&hybridArg);
     cmd.xorAdd( xorlist );
 
-    TCLAP::ValueArg<std::string> bdtWeightsArg("", "bdt-weights", "Full path to the BDT weights (the XML file)", true, "", "string", cmd);
-
     TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S10", "string", cmd);
 
     TCLAP::ValueArg<std::string> jecSystArg("", "jec-syst", "Computing trigger weight for this JEC up / down", false, "nominal", "string", cmd);
@@ -1681,7 +1679,7 @@ int main(int argc, char** argv) {
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    Extractor2Histos convertor(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData, btagArg.getValue(), skimArg.getValue(), mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue(), triggerSyst, jecSyst, puSyst, pdfSyst, leptonSyst, btagSyst, bdtWeightsArg.getValue());
+    Extractor2Histos convertor(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData, btagArg.getValue(), skimArg.getValue(), mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue(), triggerSyst, jecSyst, puSyst, pdfSyst, leptonSyst, btagSyst);
     convertor.Loop();
 
   } catch (TCLAP::ArgException &e) {

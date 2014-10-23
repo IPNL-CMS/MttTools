@@ -18,14 +18,20 @@ void BDTCuts::parse() {
     for (std::size_t i = 0; i < cutNode.size(); i++) {
       int btagCategory = cutNode[i]["b-tag"].as<int>();
       float cut = cutNode[i]["cut"].as<float>();
+      std::string weights = cutNode[i]["weights"].as<std::string>();
 
-      m_cuts[std::make_pair(stringToBDTType(category), btagCategory)] = cut;
+      m_cuts[std::make_pair(stringToBDTType(category), btagCategory)].cut = cut;
+      m_cuts[std::make_pair(stringToBDTType(category), btagCategory)].weights = weights;
     }
   }
 }
 
 float BDTCuts::getCut(BDTType bdtType, int btagCategory) {
-  return m_cuts[std::make_pair(bdtType, btagCategory)];
+  return m_cuts[std::make_pair(bdtType, btagCategory)].cut;
+}
+
+std::string BDTCuts::getWeights(BDTType bdtType, int btagCategory) {
+  return m_cuts[std::make_pair(bdtType, btagCategory)].weights;
 }
 
 std::string BDTTypeToString(BDTType type) {

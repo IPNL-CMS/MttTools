@@ -259,7 +259,7 @@ class Extractor2Histos {
     TClonesArray*   jet_p4;
     TClonesArray*   met_p4;
 
-    Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, bool chi2, bool kf, bool hybrid, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst, const std::string& bdtWeights);
+    Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, bool chi2, bool kf, bool hybrid, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst);
 
     virtual ~Extractor2Histos();
     virtual Int_t    GetEntry(Long64_t entry);

@@ -42,13 +42,8 @@ def getBFolderName(btag):
 
     return b
 
-bkg_bdt_weights_root = "/gridgroup/cms/brochet/HTT/CMSSW_analysis/SL6/MttTools/SelectionMVA/BkgVsTT/bdt_trained/16Oct14"
-
 def launch(input, output, type, btag):
-    btag_string = "%d-btag" % btag
-    bdt_weights = os.path.join(bkg_bdt_weights_root, "all-btag", "weights", "BDT_all-btag_BDT_boost_grad_0p2.weights.xml")
-
-    args = ["./extractorToHisto", "-i", input, "-o", output, "--data", "--skim", sortingAlgoArg, "--%s" % type, "--b-tag", str(btag), "--bdt-weights", bdt_weights]
+    args = ["./extractorToHisto", "-i", input, "-o", output, "--data", "--skim", sortingAlgoArg, "--%s" % type, "--b-tag", str(btag)]
 
     return " ".join(args)
 
