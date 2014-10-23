@@ -17,9 +17,42 @@ files:
     type: data
     legend: "Data"
 
+  'Signal_S0_S_i_M400_cpl1_pseudoscalar_histos_nominal.root':
+    type: signal
+    cross-section: 1.169
+    generated-events: 2276384
+    legend: 'S0, M = 400, pseudo-scalar'
+    line-color: '#0B486B'
+    line-width: 2
+    fill-type: 0
+    line-type: 1
+    scale: 10
+
+  'Signal_S0_S_i_M500_cpl1_pseudoscalar_histos_nominal.root':
+    type: signal
+    cross-section: 0.6756
+    generated-events: 1999940
+    legend: 'S0, M = 500, pseudo-scalar'
+    line-color: 2
+    line-width: 2
+    fill-type: 0
+    line-type: 1
+    scale: 10
+
+  'Signal_S0_S_i_M800_cpl1_pseudoscalar_histos_nominal.root':
+    type: signal
+    cross-section: 0.2325
+    generated-events: 1999940
+    legend: 'S0, M = 800, pseudo-scalar'
+    line-color: '#E97F02'
+    line-width: 2
+    fill-type: 0
+    line-type: 1
+    scale: 10
+
   'MC_TT_powheg_histos_nominal.root':
     type: mc
-    scale: 1.11496355859
+    #scale: 1.11496355859
     cross-section: 245.8
     generated-events: 21675970
     generated-events-weighted: 20934846.90973
@@ -30,7 +63,7 @@ files:
 
   'MC_T_s-channel_histos_nominal.root':
     type: mc
-    scale: 0.787992049192
+    #scale: 0.787992049192
     cross-section: 3.79
     generated-events: 259961
     group: single-t
@@ -38,7 +71,7 @@ files:
     systematics: 'Systematics/MC_T_s-channel_histos_total_syst_errors.root'
   'MC_T_t-channel_histos_nominal.root':
     type: mc
-    scale: 0.787992049192
+    #scale: 0.787992049192
     cross-section: 56.4
     generated-events: 3728227
     group: single-t
@@ -46,7 +79,7 @@ files:
     systematics: 'Systematics/MC_T_t-channel_histos_total_syst_errors.root'
   'MC_T_tW-channel_histos_nominal.root':
     type: mc
-    scale: 0.787992049192
+    #scale: 0.787992049192
     cross-section: 11.1
     generated-events: 497658
     group: single-t
@@ -54,7 +87,7 @@ files:
     systematics: 'Systematics/MC_T_tW-channel_histos_total_syst_errors.root'
   'MC_Tbar_s-channel_histos_nominal.root':
     type: mc
-    scale: 0.842153851487
+    #scale: 0.842153851487
     cross-section: 1.76
     generated-events: 139974
     group: single-t
@@ -62,7 +95,7 @@ files:
     systematics: 'Systematics/MC_Tbar_s-channel_histos_total_syst_errors.root'
   'MC_Tbar_t-channel_histos_nominal.root':
     type: mc
-    scale: 0.842153851487
+    #scale: 0.842153851487
     cross-section: 30.7
     generated-events: 1935072
     group: single-t
@@ -70,7 +103,7 @@ files:
     systematics: 'Systematics/MC_Tbar_t-channel_histos_total_syst_errors.root'
   'MC_Tbar_tW-channel_histos_nominal.root':
     type: mc
-    scale: 0.842153851487
+    #scale: 0.842153851487
     cross-section: 11.1
     generated-events: 493460
     group: "single-t"
@@ -79,7 +112,7 @@ files:
 
   'MC_DY1JetsToLL_M-50_histos_nominal.root':
     type: mc
-    scale: 1.23902008274
+    #scale: 1.23902008274
     cross-section: 666.3
     generated-events: 24045248
     group: DY
@@ -87,7 +120,7 @@ files:
     systematics: 'Systematics/MC_DY1JetsToLL_M-50_histos_total_syst_errors.root'
   'MC_DY2JetsToLL_M-50_histos_nominal.root':
     type: mc
-    scale: 1.23902008274
+    #scale: 1.23902008274
     cross-section: 215.0
     generated-events: 21852156
     group: DY
@@ -95,7 +128,7 @@ files:
     systematics: 'Systematics/MC_DY2JetsToLL_M-50_histos_total_syst_errors.root'
   'MC_DY3JetsToLL_M-50_histos_nominal.root':
     type: mc
-    scale: 1.23902008274
+    #scale: 1.23902008274
     cross-section: 60.7
     generated-events: 11015445
     group: DY
@@ -103,7 +136,7 @@ files:
     systematics: 'Systematics/MC_DY3JetsToLL_M-50_histos_total_syst_errors.root'
   'MC_DY4JetsToLL_M-50_histos_nominal.root':
     type: mc
-    scale: 1.23902008274
+    #scale: 1.23902008274
     cross-section: 27.3
     generated-events: 6402827
     group: DY
@@ -112,7 +145,7 @@ files:
 
   'MC_W1JetsToLNu_histos_nominal.root':
     type: mc
-    scale: 0.978489806133
+    #scale: 0.978489806133
     cross-section: 6662.8
     generated-events: 23141598
     group: W
@@ -120,7 +153,7 @@ files:
     systematics: 'Systematics/MC_W1JetsToLNu_histos_total_syst_errors.root'
   'MC_W2JetsToLNu_histos_nominal.root':
     type: mc
-    scale: 0.978489806133
+    #scale: 0.978489806133
     cross-section: 2159.2
     generated-events: 34044921
     group: W
@@ -128,7 +161,7 @@ files:
     systematics: 'Systematics/MC_W2JetsToLNu_histos_total_syst_errors.root'
   'MC_W3JetsToLNu_histos_nominal.root':
     type: mc
-    scale: 0.978489806133
+    #scale: 0.978489806133
     cross-section: 640.4
     generated-events: 15539503
     group: W
@@ -136,7 +169,7 @@ files:
     systematics: 'Systematics/MC_W3JetsToLNu_histos_total_syst_errors.root'
   'MC_W4JetsToLNu_histos_nominal.root':
     type: mc
-    scale: 0.978489806133
+    #scale: 0.978489806133
     cross-section: 264.0
     generated-events: 13382803
     group: W
@@ -145,7 +178,7 @@ files:
 
   'MC_WW_histos_nominal.root':
     type: mc
-    scale: 0.843010939384
+    #scale: 0.843010939384
     cross-section:  56.0 
     generated-events: 10000431
     group: diboson
@@ -153,7 +186,7 @@ files:
     systematics: 'Systematics/MC_WW_histos_total_syst_errors.root'
   'MC_WZ_histos_nominal.root':
     type: mc
-    scale: 0.843010939384
+    #scale: 0.843010939384
     cross-section: 33.6
     generated-events: 10000283
     group: diboson
@@ -161,7 +194,7 @@ files:
     systematics: 'Systematics/MC_WZ_histos_total_syst_errors.root'
   'MC_ZZ_histos_nominal.root':
     type: mc
-    scale: 0.843010939384
+    #scale: 0.843010939384
     cross-section: 7.6 
     generated-events: 9799908
     group: diboson
@@ -170,8 +203,15 @@ files:
 
 plots:
   'mttSelected_btag_sel_reco_fullsel':
-    rebin: 4
-    log-y: true 
+    log-y: true
+    show-ratio: true
+    fit-ratio: true
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'mttSelected_bkg_bdt_btag_sel_reco_fullsel':
+    log-y: true
     show-ratio: true
     fit-ratio: true
     fit-function: "pol1"
@@ -313,6 +353,14 @@ plots:
     #fit-function: "pol1"
     #show-errors: true
     #save-extensions: ["pdf"]
+
+  'bdt*':
+    log-y: true 
+    show-ratio: true
+    fit-ratio: true
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
 
 legend:
   position: [0.7, 0.65, 0.9, 0.9]

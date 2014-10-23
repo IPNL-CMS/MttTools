@@ -2,7 +2,7 @@ configuration:
   width: 800
   height: 800
   title: 'CMS preliminary, L = %lumi% fb^{-1}, #sqrt{s} = 8 TeV'
-  root: 'inputs/Latest/1-btag/semie'
+  root: 'inputs/Latest/2-btag/semie'
   luminosity: 19667
   luminosity-error: 0.026
   error-fill-style: 3154
@@ -16,6 +16,39 @@ files:
   '../data/Data_SingleElectron.root':
     type: data
     legend: "Data"
+
+  'Signal_S0_S_i_M400_cpl1_pseudoscalar_histos_nominal.root':
+    type: signal
+    cross-section: 1.169
+    generated-events: 2276384
+    legend: 'S0, M = 400, pseudo-scalar'
+    line-color: '#0B486B'
+    line-width: 2
+    fill-type: 0
+    line-type: 1
+    scale: 10
+
+  'Signal_S0_S_i_M500_cpl1_pseudoscalar_histos_nominal.root':
+    type: signal
+    cross-section: 0.6756
+    generated-events: 1999940
+    legend: 'S0, M = 500, pseudo-scalar'
+    line-color: 2
+    line-width: 2
+    fill-type: 0
+    line-type: 1
+    scale: 10
+
+  'Signal_S0_S_i_M800_cpl1_pseudoscalar_histos_nominal.root':
+    type: signal
+    cross-section: 0.2325
+    generated-events: 1999940
+    legend: 'S0, M = 800, pseudo-scalar'
+    line-color: '#E97F02'
+    line-width: 2
+    fill-type: 0
+    line-type: 1
+    scale: 10
 
   'MC_TT_powheg_histos_nominal.root':
     type: mc
@@ -112,7 +145,7 @@ files:
 
   'MC_W1JetsToLNu_histos_nominal.root':
     type: mc
-    scale: 0.978489806133
+    #scale: 0.978489806133
     cross-section: 6662.8
     generated-events: 23141598
     group: W
@@ -187,7 +220,7 @@ plots:
 
   'MET_reco_fullsel':
     rebin: 4
-    log-y: true 
+    log-y: false 
     show-ratio: true
     fit-ratio: true
     fit-function: "pol1"
@@ -320,8 +353,9 @@ plots:
     #fit-function: "pol1"
     #show-errors: true
     #save-extensions: ["pdf"]
-
+    
   'bdt*':
+    #rebin: 1
     log-y: true 
     show-ratio: true
     fit-ratio: true
