@@ -10,12 +10,34 @@ configuration:
   ratio-fit-error-fill-style: 1001
   ratio-fit-error-fill-color: "#aa556270"
   ratio-fit-line-color: "#0B486B"
-  #scale: 1.34502
+  ##scale: 1.34502
 
 files:
   '../data/Data_SingleElectron.root':
     type: data
     legend: "Data"
+
+#  'Signal_S0_S_i_M500_cpl1_scalar_histos_nominal.root':
+    #type: signal
+    ##cross-section: 0.315
+    #cross-section: 3.15 # x10
+    #generated-events: 259982
+    #legend: 'S0, M = 500, scalar'
+    #line-color: 1
+    #line-width: 2
+    #fill-type: 0
+    #line-type: 1
+
+  #'Signal_S0_S_i_M700_cpl1_scalar_histos_nominal.root':
+    #type: signal
+    ##cross-section: 0.131
+    #cross-section: 1.31 # x10
+    #generated-events: 489965
+    #legend: 'S0, M = 700, scalar'
+    #line-color: 1
+    #line-width: 2
+    #fill-type: 0
+    #line-type: 2
 
   'MC_TT_powheg_histos_nominal.root':
     type: mc
@@ -112,7 +134,7 @@ files:
 
   'MC_W1JetsToLNu_histos_nominal.root':
     type: mc
-    scale: 0.978489806133
+    #scale: 0.944972436325
     cross-section: 6662.8
     generated-events: 23141598
     group: W
@@ -180,7 +202,7 @@ plots:
   'mttSelected_bkg_bdt_btag_sel_reco_fullsel':
     log-y: true
     show-ratio: true
-    fit-ratio: true
+    fit-ratio: false
     fit-function: "pol1"
     show-errors: true
     save-extensions: ["pdf"]
@@ -189,7 +211,16 @@ plots:
     rebin: 4
     log-y: true 
     show-ratio: true
-    fit-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+    
+  'MET?_reco_fullsel':
+    rebin: 4
+    log-y: false 
+    show-ratio: true
+    fit-ratio: false
     fit-function: "pol1"
     show-errors: true
     save-extensions: ["pdf"]
@@ -198,7 +229,7 @@ plots:
     rebin: 4
     log-y: true 
     show-ratio: true
-    fit-ratio: true
+    fit-ratio: false
     fit-function: "pol1"
     show-errors: true
     save-extensions: ["pdf"]
@@ -207,7 +238,7 @@ plots:
     rebin: 5
     log-y: true 
     show-ratio: true
-    fit-ratio: true
+    fit-ratio: false
     fit-function: "pol1"
     show-errors: true
     save-extensions: ["pdf"]
@@ -216,7 +247,7 @@ plots:
     #rebin: 4
     #log-y: true 
     #show-ratio: true
-    #fit-ratio: true
+    #fit-ratio: false
     #fit-function: "pol1"
     #show-errors: true
     #save-extensions: ["pdf"]
@@ -234,7 +265,7 @@ plots:
     rebin: 1
     log-y: true 
     show-ratio: true
-    fit-ratio: true
+    fit-ratio: false
     fit-function: "pol1"
     show-errors: true
     save-extensions: ["pdf"]
@@ -243,7 +274,7 @@ plots:
     rebin: 2
     log-y: true 
     show-ratio: true
-    fit-ratio: true
+    fit-ratio: false
     fit-function: "pol1"
     show-errors: true
     #fit-label: '%1% + %2%*x'
@@ -253,61 +284,220 @@ plots:
     #rebin: 4
     #log-y: true 
     #show-ratio: true
-    #fit-ratio: true
+    #fit-ratio: false
     #fit-function: "pol1"
     #show-errors: true
     #save-extensions: ["pdf"]
 
-  #'selected*_reco_fullsel':
-    #rebin: 4
-    #log-y: true 
-    #show-ratio: true
-    #fit-ratio: true
-    #fit-function: "pol1"
-    #show-errors: true
-    #save-extensions: ["pdf"]
+  'selected*_reco_fullsel':
+    rebin: 4
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
 
-  #'leptTop*_reco_fullsel':
-    #rebin: 4
-    #log-y: true 
-    #show-ratio: true
-    #fit-ratio: true
-    #fit-function: "pol1"
-    #show-errors: true
-    #save-extensions: ["pdf"]
+  'kf_chisquare_fullsel':
+    rebin: 16
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
 
-  #'mtLep_reco_fullsel':
-    #rebin: 4
-    #log-y: true 
-    #show-ratio: true
-    #fit-ratio: true
-    #fit-function: "pol1"
-    #show-errors: true
-    #save-extensions: ["pdf"]
+  'kf_proba_fullsel':
+    rebin: 4
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+    y-axis-range: [0.001, 100000.]
 
-  #'hadrTop*_reco_fullsel':
-    #rebin: 4
-    #log-y: true 
-    #show-ratio: true
-    #fit-ratio: true
-    #fit-function: "pol1"
-    #show-errors: true
-    #save-extensions: ["pdf"]
+  'kf_proba_fullsel_zoom':
+    rebin: 8 
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+    y-axis-range: [0.001, 100000.]
 
-  #'mtHad_reco_fullsel':
-    #rebin: 4
-    #log-y: true 
-    #show-ratio: true
-    #fit-ratio: true
-    #fit-function: "pol1"
-    #show-errors: true
-    #save-extensions: ["pdf"]
+  'METPhi_reco_fullsel':
+    rebin: 10
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'bestSolChi2_fullsel':
+    rebin: 6
+    log-y: True 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'bestSolChi2_exp_fullsel':
+    rebin: 6
+    log-y: True 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'bestSolChi2Proba_fullsel':
+    rebin: 6
+    log-y: True 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'mtWLeptonic_reco_fullsel':
+    rebin: 4
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'leptTopPt_reco_fullsel':
+    rebin: 4
+    x-axis: "leptonic top p_{T} [GeV/c]"
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'leptTopMt_reco_fullsel':
+    rebin: 4
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'leptTopEta_reco_fullsel':
+    rebin: 4
+    x-axis: "leptonic top #eta"
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'leptTopPhi_reco_fullsel':
+    rebin: 4
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'leptTopE_reco_fullsel':
+    rebin: 4
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'mtLep_reco_fullsel':
+    rebin: 4
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'mtWHadronic_reco_fullsel':
+    rebin: 4
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'hadrTopPt_reco_fullsel':
+    rebin: 4
+    x-axis: "hadronic top p_{T} [GeV/c]"
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'hadrTopMt_reco_fullsel':
+    rebin: 4
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'hadrTopEta_reco_fullsel':
+    rebin: 4
+    x-axis: "hadronic top #eta"
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'hadrTopPhi_reco_fullsel':
+    rebin: 4
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'hadrTopE_reco_fullsel':
+    rebin: 4
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'mtHad_reco_fullsel':
+    rebin: 4
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
 
   #'delta*Tops_reco_fullsel':
     #rebin: 4
     #log-y: true 
     #show-ratio: true
-    #fit-ratio: true
+    #fit-ratio: false
     #fit-function: "pol1"
     #show-errors: true
     #save-extensions: ["pdf"]
@@ -316,7 +506,7 @@ plots:
     #rebin: 2
     #log-y: true 
     #show-ratio: true
-    #fit-ratio: true
+    #fit-ratio: false
     #fit-function: "pol1"
     #show-errors: true
     #save-extensions: ["pdf"]
@@ -325,6 +515,44 @@ plots:
     log-y: true 
     show-ratio: true
     fit-ratio: true
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  '*ity_reco_fullsel':
+    rebin: 2
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+  'isotropy_reco_fullsel':
+    rebin: 2
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+
+  'D_reco_fullsel':
+    rebin: 2
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
+    fit-function: "pol1"
+    show-errors: true
+    save-extensions: ["pdf"]
+
+
+  'C_reco_fullsel':
+    rebin: 2
+    log-y: true 
+    show-ratio: true
+    fit-ratio: false
     fit-function: "pol1"
     show-errors: true
     save-extensions: ["pdf"]
