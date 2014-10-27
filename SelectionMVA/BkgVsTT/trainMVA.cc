@@ -150,11 +150,11 @@ int main(int argc, char** argv) {
       //factory->AddVariable("neutrino_hadronic_B_delta_eta");
       //factory->AddVariable("neutrino_hadronic_B_delta_phi");
       //factory->AddVariable("neutrino_hadronic_B_delta_rapidity");
-      factory->AddVariable("neutrino_hadronic_first_jet_delta_R");
+      factory->AddVariable("neutrino_hadronic_first_jet_delta_R+neutrino_hadronic_second_jet_delta_R");
       //factory->AddVariable("neutrino_hadronic_first_jet_delta_eta");
       //factory->AddVariable("neutrino_hadronic_first_jet_delta_phi");
       //factory->AddVariable("neutrino_hadronic_first_jet_delta_rapidity");
-      factory->AddVariable("neutrino_hadronic_second_jet_delta_R");
+      //factory->AddVariable("neutrino_hadronic_second_jet_delta_R");
       //factory->AddVariable("neutrino_hadronic_second_jet_delta_eta");
       //factory->AddVariable("neutrino_hadronic_second_jet_delta_phi");
       //factory->AddVariable("neutrino_hadronic_second_jet_delta_rapidity");
@@ -168,12 +168,12 @@ int main(int argc, char** argv) {
       //factory->AddVariable("lepton_hadronic_B_delta_phi");
       //factory->AddVariable("lepton_hadronic_B_delta_rapidity");
     }
-    factory->AddVariable("lepton_hadronic_first_jet_delta_R");
+    factory->AddVariable("lepton_hadronic_first_jet_delta_R+lepton_hadronic_second_jet_delta_R");
     //factory->AddVariable("lepton_hadronic_first_jet_delta_eta");
     //factory->AddVariable("lepton_hadronic_first_jet_delta_phi");
     //factory->AddVariable("lepton_hadronic_first_jet_delta_rapidity");
     if (useBDT) {
-      factory->AddVariable("lepton_hadronic_second_jet_delta_R");
+      //factory->AddVariable("lepton_hadronic_second_jet_delta_R");
       //factory->AddVariable("lepton_hadronic_second_jet_delta_eta");
       //factory->AddVariable("lepton_hadronic_second_jet_delta_phi");
       //factory->AddVariable("lepton_hadronic_second_jet_delta_rapidity");
@@ -181,19 +181,19 @@ int main(int argc, char** argv) {
       //factory->AddVariable("leptonic_B_hadronic_B_delta_eta");
       //factory->AddVariable("leptonic_B_hadronic_B_delta_phi");
       //factory->AddVariable("leptonic_B_hadronic_B_delta_rapidity");
-      factory->AddVariable("leptonic_B_hadronic_first_jet_delta_R");
+      factory->AddVariable("leptonic_B_hadronic_first_jet_delta_R+leptonic_B_hadronic_second_jet_delta_R");
       //factory->AddVariable("leptonic_B_hadronic_first_jet_delta_eta");
       //factory->AddVariable("leptonic_B_hadronic_first_jet_delta_phi");
       //factory->AddVariable("leptonic_B_hadronic_first_jet_delta_rapidity");
-      factory->AddVariable("leptonic_B_hadronic_second_jet_delta_R");
+      //factory->AddVariable("leptonic_B_hadronic_second_jet_delta_R");
       //factory->AddVariable("leptonic_B_hadronic_second_jet_delta_eta");
       //factory->AddVariable("leptonic_B_hadronic_second_jet_delta_phi");
       //factory->AddVariable("leptonic_B_hadronic_second_jet_delta_rapidity");
-      factory->AddVariable("hadronic_B_hadronic_first_jet_delta_R");
+      factory->AddVariable("hadronic_B_hadronic_first_jet_delta_R+hadronic_B_hadronic_second_jet_delta_R");
       //factory->AddVariable("hadronic_B_hadronic_first_jet_delta_eta");
       //factory->AddVariable("hadronic_B_hadronic_first_jet_delta_phi");
       //factory->AddVariable("hadronic_B_hadronic_first_jet_delta_rapidity");
-      factory->AddVariable("hadronic_B_hadronic_second_jet_delta_R");
+      //factory->AddVariable("hadronic_B_hadronic_second_jet_delta_R");
       //factory->AddVariable("hadronic_B_hadronic_second_jet_delta_eta");
       //factory->AddVariable("hadronic_B_hadronic_second_jet_delta_phi");
       //factory->AddVariable("hadronic_B_hadronic_second_jet_delta_rapidity");
@@ -213,9 +213,9 @@ int main(int argc, char** argv) {
 
     if (useBDT) {
       //factory->BookMethod(TMVA::Types::kBDT, "BDT", "V:nCuts=1000:NTrees=1000:MaxDepth=3:SeparationType=GiniIndexWithLaplace");
-      factory->BookMethod(TMVA::Types::kBDT, "BDT_default", "V:nCuts=200:NTrees=1000:MaxDepth=3");
+      //factory->BookMethod(TMVA::Types::kBDT, "BDT_default", "V:nCuts=200:NTrees=1000:MaxDepth=3");
       //factory->BookMethod(TMVA::Types::kBDT, "BDT_beta_0p2", "V:nCuts=200:NTrees=1000:MaxDepth=3:AdaBoostBeta=0.2");
-      factory->BookMethod(TMVA::Types::kBDT, "BDT_boost_grad", "V:nCuts=200:NTrees=1000:MaxDepth=3:BoostType=Grad");
+      //factory->BookMethod(TMVA::Types::kBDT, "BDT_boost_grad", "V:nCuts=200:NTrees=1000:MaxDepth=3:BoostType=Grad");
       factory->BookMethod(TMVA::Types::kBDT, "BDT_boost_grad_0p2", "V:nCuts=200:NTrees=2000:MaxDepth=3:BoostType=Grad:Shrinkage=0.2");
       //factory->BookMethod(TMVA::Types::kBDT, "BDT_boost_grad_0p2_bagging", "V:nCuts=200:NTrees=2000:MaxDepth=3:BoostType=Grad:Shrinkage=0.2:UseBaggedGrad:GradBaggingFraction=0.6");
       //factory->BookMethod(TMVA::Types::kBDT, "BDT_boost_grad_0p2_bagging_pruning", "V:nCuts=200:NTrees=2000:MaxDepth=5:BoostType=Grad:Shrinkage=0.2:UseBaggedGrad:GradBaggingFraction=0.6:PruneMethod=CostComplexity:PruneStrength=50");
