@@ -86,14 +86,17 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
     SetBranchAddress("numComb_MVA", &numComb);
     SetBranchAddress("mtt_AfterMVA", &mtt_AfterMVA);
   } else {
-    //SetBranchAddress("numComb_chi2", &numComb);
-    SetBranchAddress("numComb_kf", &numComb_kf);
-    SetBranchAddress("kf_converged", &kf_converged);
-    SetBranchAddress("mtt_AfterKF", &mtt_AfterKF);
-    SetBranchAddress("kf_chisquare", &kf_chisquare);
-    SetBranchAddress("kf_proba", &kf_proba);
-    SetBranchAddress("mtt_AfterChi2", &mtt_AfterChi2);
-    SetBranchAddress("numComb_chi2", &numComb_chi2);
+    if (useKF || useHybrid) {
+      SetBranchAddress("numComb_kf", &numComb_kf);
+      SetBranchAddress("kf_converged", &kf_converged);
+      SetBranchAddress("mtt_AfterKF", &mtt_AfterKF);
+      SetBranchAddress("kf_chisquare", &kf_chisquare);
+      SetBranchAddress("kf_proba", &kf_proba);
+    }
+    if (useChi2 || useHybrid) {
+      SetBranchAddress("mtt_AfterChi2", &mtt_AfterChi2);
+      SetBranchAddress("numComb_chi2", &numComb_chi2);
+    }
   }
 
   mtt->SetBranchAddress("1stjetpt", &pt_1stJet, NULL);
@@ -223,7 +226,7 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
     hist_min = 550;
     hist_max = 2000;
   }
-  int nBins = (hist_max - hist_min) / 30.;
+  int nBins = (hist_max - hist_min) / 15.;
   TH1::SetDefaultSumw2(true);
   TH1* h_mtt_0btag = new TH1D("mtt_0btag", "mtt", nBins, hist_min, hist_max);
   TH1* h_mtt_1btag = new TH1D("mtt_1btag", "mtt", nBins, hist_min, hist_max);
