@@ -25,11 +25,11 @@ void BkgVsTTBDTReader::initTrees() {
   setBranchAddress(m_mtt, "nBtaggedJets_CSVM", n_btagged_jets);
 
   setBranchAddress(m_mtt, "selectedLeptonP4", selectedLeptonP4_AfterChi2);
-  setBranchAddress(m_mtt, "selectedFirstJetP4_AfterKF", selectedFirstJetP4_AfterReco);
-  setBranchAddress(m_mtt, "selectedSecondJetP4_AfterKF", selectedSecondJetP4_AfterReco);
-  setBranchAddress(m_mtt, "selectedNeutrinoP4_AfterKF", selectedNeutrinoP4_AfterReco);
-  setBranchAddress(m_mtt, "selectedHadronicBP4_AfterKF", selectedHadronicBP4_AfterReco);
-  setBranchAddress(m_mtt, "selectedLeptonicBP4_AfterKF", selectedLeptonicBP4_AfterReco);  
+  setBranchAddress(m_mtt, "selectedFirstJetP4_AfterChi2", selectedFirstJetP4_AfterReco);
+  setBranchAddress(m_mtt, "selectedSecondJetP4_AfterChi2", selectedSecondJetP4_AfterReco);
+  setBranchAddress(m_mtt, "selectedNeutrinoP4_AfterChi2", selectedNeutrinoP4_AfterReco);
+  setBranchAddress(m_mtt, "selectedHadronicBP4_AfterChi2", selectedHadronicBP4_AfterReco);
+  setBranchAddress(m_mtt, "selectedLeptonicBP4_AfterChi2", selectedLeptonicBP4_AfterReco);  
 
   setBranchAddress(m_jets, "n_jets", n_jets);
   setBranchAddress(m_jets, "jet_4vector", jets_p4);
