@@ -18,6 +18,8 @@ if not options.root:
 if not options.output:
     parser.error("--output argument is required")
 
+btags = [0, 1, 2]
+
 MC = {
         "TT_powheg": "TT",
         "T": "single_top",
@@ -87,7 +89,7 @@ for type in ["semie", "semimu"]:
     for filename, title in MC.items():
         f = os.path.join(root, type, "MC_%s_theta_nominal.root" % filename)
         f_ = TFile.Open(f)
-        for btag in [1, 2]:
+        for btag in btags:
             hist_name = "mtt_%dbtag" % btag
             hist = f_.Get(hist_name).Clone()
             hist.SetDirectory(0)
@@ -104,7 +106,7 @@ for type in ["semie", "semimu"]:
             if not os.path.exists(f):
                 continue
             f_ = TFile.Open(f)
-            for btag in [1, 2]:
+            for btag in btags:
                 hist_name = "mtt_%dbtag" % btag
                 hist = f_.Get(hist_name).Clone()
                 hist.SetDirectory(0)
@@ -118,7 +120,7 @@ for type in ["semie", "semimu"]:
     tag = "e" if "semie" in type else "mu"
     f = os.path.join(root, "data", "MTT_Data_%s.root" % type)
     f_ = TFile.Open(f)
-    for btag in [1, 2]:
+    for btag in btags:
         hist_name = "mtt_%dbtag" % btag
         hist = f_.Get(hist_name).Clone()
         hist.SetDirectory(0)
@@ -133,7 +135,7 @@ for type in ["semie", "semimu"]:
     for filename, title in Signal.items():
         f = os.path.join(root, type, "Signal_%s_theta_nominal.root" % filename)
         f_ = TFile.Open(f)
-        for btag in [1, 2]:
+        for btag in btags:
             hist_name = "mtt_%dbtag" % btag
             hist = f_.Get(hist_name).Clone()
             hist.SetDirectory(0)
@@ -149,7 +151,7 @@ for type in ["semie", "semimu"]:
             if not os.path.exists(f):
                 continue
             f_ = TFile.Open(f)
-            for btag in [1, 2]:
+            for btag in btags:
                 hist_name = "mtt_%dbtag" % btag
                 hist = f_.Get(hist_name).Clone()
                 hist.SetDirectory(0)
@@ -159,7 +161,6 @@ for type in ["semie", "semimu"]:
 
 output = TFile.Open(options.output, "recreate")
 for hist in histos:
-    hist.Rebin(2)
     hist.Write()
 
 output.Close()
