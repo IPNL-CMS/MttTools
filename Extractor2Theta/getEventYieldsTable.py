@@ -103,7 +103,7 @@ def getPrettyName(name):
         type = name[5:]
         return "\\sz (m = %s\\,\\GeV, %s)" % (
           mass,
-          "scalar" if type is "scalar" else "pseudo-scalar"
+          "scalar" if type == "scalar" else "pseudo-scalar"
         )
 
     if name is "TT":
