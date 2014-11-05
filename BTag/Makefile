@@ -26,28 +26,37 @@ SOFLAGS		    =
 AR            = ar
 ARFLAGS       = -cq
 
-CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/ -I../external/include/ -I$(shell echo $(BOOST_ROOT))/include
+CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -Iinclude -I../include/ -I../external/include/ -I$(shell echo $(BOOST_ROOT))/include
 LIBS  		    = $(ROOTLIBS) -lboost_filesystem -lboost_regex
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
-SOURCES		= $(wildcard *.$(SrcSuf))
+SOURCES		= $(wildcard src/*.$(SrcSuf))
 OBJECTS		= $(SOURCES:.$(SrcSuf)=.$(ObjSuf))
 DEPENDS		= $(SOURCES:.$(SrcSuf)=.d)
 SOBJECTS	= $(SOURCES:.$(SrcSuf)=.$(DllSuf))
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf)
 
+BTAG_UTILS_OBJECTS = src/BTagUtils.o
+
 ###
 
-all: createBTaggingEffHistos
+all: createBTaggingEffHistos libBTagUtils.a
 
 clean:
-	@rm *.o;
-	@rm *.d;
-	@rm ../PUReweighting/*.o;
+	@rm  -f *.o $(OBJECTS);
+	@rm -f *.d $(DEPENDS);
+	@rm -f lib/*
+	@rm -f ../PUReweighting/*.o;
 
 createBTaggingEffHistos: createBTaggingEffHistos.o
 	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS)
+
+libBTagUtils.a: $(BTAG_UTILS_OBJECTS)
+	@echo "Generating libBTagUtils.a"
+	@mkdir -p lib
+	@ar cru lib/libBTagUtils.a $(BTAG_UTILS_OBJECTS)
+	@ranlib lib/libBTagUtils.a
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<

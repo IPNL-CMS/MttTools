@@ -226,6 +226,7 @@ class Extractor2Histos {
     int             n_vertices;
     float           n_trueInteractions;
     uint32_t        run;
+    uint32_t        eventNumber;
     float           m_lepton_weight;
     float           m_lepton_weight_error = 0;
     float           m_btag_weight;
@@ -258,6 +259,12 @@ class Extractor2Histos {
 
     TClonesArray*   jet_p4;
     TClonesArray*   met_p4;
+
+    uint32_t n_jets;
+    int      jet_isPFLoose[100];
+    int      jet_flavor[100];
+    float   jet_CSV[100];
+    std::vector<std::vector<double>>* jet_scaleFactor;
 
     Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, bool chi2, bool kf, bool hybrid, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst);
 
