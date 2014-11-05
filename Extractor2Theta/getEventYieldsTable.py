@@ -156,7 +156,7 @@ def getPrettyName(name):
         type = name[5:]
         return "\\sz (m = %s\\,\\GeV, %s)" % (
           mass,
-          "scalar" if type == "scalar" else "pseudo-scalar"
+          "sc." if type == "scalar" else "p-sc."
         )
 
     if name is "TT":
@@ -210,7 +210,7 @@ def computeSystError(nominal, up, down):
     return (math.fabs(up - nominal) + math.fabs(nominal - down)) / 2
     
 print("\\midrule")
-print("Total & $%.2f \pm %.2f$ & $%.2f \pm %.2f$ & $%.2f \pm %.2f$ & $%.2f \pm %.2f$ \\\\" % (
+print("Total & \small $%.2f \pm %.2f$ & \small $%.2f \pm %.2f$ & \small $%.2f \pm %.2f$ & \small $%.2f \pm %.2f$ \\\\" % (
     events[("e", 1)], math.sqrt( events[("e", 1)] + sys_errors[("e", 1)]**2 ),
     events[("e", 2)], math.sqrt( events[("e", 2)] + sys_errors[("e", 2)]**2 ),
     events[("mu", 1)], math.sqrt( events[("mu", 1)] + sys_errors[("mu", 1)]**2 ),
@@ -218,7 +218,7 @@ print("Total & $%.2f \pm %.2f$ & $%.2f \pm %.2f$ & $%.2f \pm %.2f$ & $%.2f \pm %
     ))
 
 print("\\midrule")
-print("Data & %.2f & %.2f & %.2f & %.2f \\\\" % (
+print("Data & %d & %d & %d & %d \\\\" % (
     events[("e", 1, "DATA")],
     events[("e", 2, "DATA")],
     events[("mu", 1, "DATA")],
