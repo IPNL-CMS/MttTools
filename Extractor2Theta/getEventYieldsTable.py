@@ -156,7 +156,7 @@ def getPrettyName(name):
         type = name[5:]
         return "\\sz (m = %s\\,\\GeV, %s)" % (
           mass,
-          "sc." if type == "scalar" else "p-sc."
+          "scalar" if type == "scalar" else "pseudo-scalar"
         )
 
     if name is "TT":
@@ -186,7 +186,7 @@ for bkg in final_backgrounds:
         print("\\midrule")
         continue
 
-    print("%s & %.2f & %.2f & %.2f & %.2f \\\\" % (
+    print("%s & %.1f & %.1f & %.1f & %.1f \\\\" % (
         getPrettyName(bkg),
         events[("e", 1, bkg)],
         events[("e", 2, bkg)],
@@ -210,7 +210,7 @@ def computeSystError(nominal, up, down):
     return (math.fabs(up - nominal) + math.fabs(nominal - down)) / 2
     
 print("\\midrule")
-print("Total & \small $%.2f \pm %.2f$ & \small $%.2f \pm %.2f$ & \small $%.2f \pm %.2f$ & \small $%.2f \pm %.2f$ \\\\" % (
+print("Total & \small $%d \pm %d$ & \small $%d \pm %d$ & \small $%d \pm %d$ & \small $%d \pm %d$ \\\\" % (
     events[("e", 1)], math.sqrt( events[("e", 1)] + sys_errors[("e", 1)]**2 ),
     events[("e", 2)], math.sqrt( events[("e", 2)] + sys_errors[("e", 2)]**2 ),
     events[("mu", 1)], math.sqrt( events[("mu", 1)] + sys_errors[("mu", 1)]**2 ),
