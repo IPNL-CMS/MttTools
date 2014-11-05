@@ -562,7 +562,6 @@ void Extractor2Histos::Loop()
 
       eventWeight *= puWeight;
       eventWeight *= m_lepton_weight;
-      eventWeight *= m_btag_weight;
 
       // Top pt reweighting: see https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting
       if (MC_channel != 0) {
@@ -865,14 +864,21 @@ void Extractor2Histos::Loop()
     }
 
     bool btagSel = false;
-    if (mBTag < 0)
+    bool useBTagWeight = true;
+    if (mBTag < 0) {
       btagSel = true;
-    else if (mBTag == 0)
+      useBTagWeight = false;
+    } else if (mBTag == 0)
       btagSel = nBtaggedJets_CSVM == 0;
     else if (mBTag == 1)
       btagSel = nBtaggedJets_CSVM == 1;
     else if (mBTag == 2)
       btagSel = nBtaggedJets_CSVM > 1;
+
+
+    if (useBTagWeight) {
+      eventWeight *= m_btag_weight;
+    }
 
     float firstJetCut = 0, secondJetCut = 0, thirdJetCut = 0;
     if (isRun2012AB) {
@@ -910,7 +916,7 @@ void Extractor2Histos::Loop()
         else if (mTriggerSyst == "down")
           triggerWeight = triggerWeight - triggerWeights[1];
 
-        //eventWeight *= triggerWeight;
+        eventWeight *= triggerWeight;
 
         hWeight_fullsel->Fill(eventWeight);
         hLeptonWeight_fullsel->Fill(m_lepton_weight);
