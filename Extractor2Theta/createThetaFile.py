@@ -102,6 +102,10 @@ for type in ["semie", "semimu"]:
             sign = "up" if "up" in syst.lower() else "down"
             theta_syst = syst.lower().replace("up", "").replace("down", "")
 
+            # Special treatment for lept syst ; split into muon & electron as these systematics are not correlated
+            if theta_syst == "lept":
+                theta_syst = "%s_%s" % (theta_syst, tag)
+
             f = os.path.join(root, type, "Systematics", "MC_%s_theta_%s.root" % (filename, syst))
             if not os.path.exists(f):
                 continue
@@ -146,6 +150,10 @@ for type in ["semie", "semimu"]:
         for syst in systs:
             sign = "up" if "up" in syst.lower() else "down"
             theta_syst = syst.lower().replace("up", "").replace("down", "")
+
+            # Special treatment for lept syst ; split into muon & electron as these systematics are not correlated
+            if theta_syst == "lept":
+                theta_syst = "%s_%s" % (theta_syst, tag)
 
             f = os.path.join(root, type, "Systematics", "Signal_%s_theta_%s.root" % (filename, syst))
             if not os.path.exists(f):
