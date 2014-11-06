@@ -190,6 +190,13 @@ void Extractor2Histos::Loop()
   TH1D *hmtt_AfterChi2 = new TH1D("mtt_AfterChi2", "", 40, 0., 2000.);
   TH1D *hmtt_AfterKF = new TH1D("mtt_AfterKF", "", 40, 0., 2000.);
   TH1D *hmttSelected_btag_sel = new TH1D("mttSelected_btag_sel_reco_fullsel", "", 40, 0., 2000.);
+
+  float hist_min = 250;
+  float hist_max = 1250;
+  int nBins = (hist_max - hist_min) / 15.;
+
+  TH1D *hmttSelected_btag_sel_binning15GeV = new TH1D("mttSelected_btag_sel_reco_fullsel_binning15GeV", "", nBins, hist_min, hist_max);
+
   TH1D *hmttSelected_btag_sel_no_gen_weight = new TH1D("mttSelected_btag_sel_reco_fullsel_no_gen_weight", "", 40, 0., 2000.);
   TH1D *hmttSelected_btag_sel_mass_cut = new TH1D("mttSelected_btag_sel_mass_cut_reco_fullsel", "", 40, 0., 2000.);
 
@@ -426,6 +433,7 @@ void Extractor2Histos::Loop()
   h_mtt_resolution->SetXTitle("m_{t#bar{t}}^{reco} - m_{t#bar{t}}^{gen} [GeV/c^{2}]");
 
   hmttSelected_btag_sel->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
+  hmttSelected_btag_sel_binning15GeV->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
   hmttSelected_btag_sel_mass_cut->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
   hNGoodJets->SetXTitle("Num good jets");
   hNGoodJets_chi2sel->SetXTitle("Num good jets");
@@ -1055,6 +1063,7 @@ void Extractor2Histos::Loop()
       }
 
       hmttSelected_btag_sel->Fill(mtt_AfterReco, eventWeight);
+      hmttSelected_btag_sel_binning15GeV->Fill(mtt_AfterReco, eventWeight);
       hmttSelected_btag_sel_no_gen_weight->Fill(mtt_AfterReco, eventWeightNoGenWeight);
 
       if (eventWeight > 0)
