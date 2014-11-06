@@ -95,6 +95,7 @@ void Extractor2Histos::Loop()
   TH1D *hNTrueInt_nosel = new TH1D("nTrueInt_reco_nosel", "", 70, 0., 70);
 
   TH1D *hLeptonPt = new TH1D("leptonPt_reco_fullsel", "", 50, 20., 200.);
+  TH1D *hLeptonPt_bdtsel = new TH1D("leptonPt_reco_fullsel_bdtsel", "", 50, 20., 200.);
   TH1D *hLeptonPt_chi2sel = new TH1D("leptonPt_reco_chi2sel", "", 50, 20., 200.);
   TH1D *hLeptonPt_nosel = new TH1D("leptonPt_reco_nosel", "", 100, 0., 200.);
 
@@ -103,6 +104,7 @@ void Extractor2Histos::Loop()
   TH1D *hLeptonEta_nosel = new TH1D("leptonEta_reco_nosel", "", 100, -2*M_PI, 2*M_PI);
 
   TH1D *hLeptTopPt = new TH1D("leptTopPt_reco_fullsel", "", 60, 20., 600.);
+  TH1D *hLeptTopPt_bdtsel = new TH1D("leptTopPt_reco_fullsel_bdtsel", "", 60, 20., 600.);
   TH1D *hLeptTopMt = new TH1D("leptTopMt_reco_fullsel", "", 60, 20., 600.);
   TH1D *hLeptTopPt_chi2sel = new TH1D("leptTopPt_reco_chi2sel", "", 60, 20., 600.);
   TH1D *hLeptTopPz = new TH1D("leptTopPz_reco_fullsel", "", 60, 20., 600.);
@@ -120,6 +122,7 @@ void Extractor2Histos::Loop()
   TH1D *hLeptTopEta_chi2sel = new TH1D("leptTopEta_reco_chi2sel", "", 50, -2*M_PI, 2*M_PI);
 
   TH1D *hHadrTopPt = new TH1D("hadrTopPt_reco_fullsel", "", 60, 20., 600.);
+  TH1D *hHadrTopPt_bdtsel = new TH1D("hadrTopPt_reco_fullsel_bdtsel", "", 60, 20., 600.);
   TH1D *hHadrTopMt = new TH1D("hadrTopMt_reco_fullsel", "", 60, 20., 600.);
   TH1D *hHadrTopPt_chi2sel = new TH1D("hadrTopPt_reco_chi2sel", "", 60, 20., 600.);
   TH1D *hHadrTopPz = new TH1D("hadrTopPz_reco_fullsel", "", 60, 20., 600.);
@@ -143,18 +146,22 @@ void Extractor2Histos::Loop()
   TH1D *hElRelIso_chi2sel = new TH1D("elRelIso_reco_chi2sel", "", 50, 0., 0.15);
 
   TH1D *hFirstJetPt = new TH1D("firstJetPt_reco_fullsel", "", 70, 0., 700.);
+  TH1D *hFirstJetPt_bdtsel = new TH1D("firstJetPt_reco_fullsel_bdtsel", "", 70, 0., 700.);
   TH1D *hFirstJetPt_nosel = new TH1D("firstJetPt_reco_nosel", "", 70, 0., 700.);
   TH1D *hFirstJetPt_chi2sel = new TH1D("firstJetPt_reco_chi2sel", "", 70, 0., 700.);
 
   TH1D *hSecondJetPt = new TH1D("secondJetPt_reco_fullsel", "", 63, 0., 630.);
+  TH1D *hSecondJetPt_bdtsel = new TH1D("secondJetPt_reco_fullsel_bdtsel", "", 63, 0., 630.);
   TH1D *hSecondJetPt_chi2sel = new TH1D("secondJetPt_reco_chi2sel", "", 63, 0., 630.);
   TH1D *hSecondJetPt_nosel = new TH1D("secondJetPt_reco_nosel", "", 63, 0., 630.);
 
   TH1D *hThirdJetPt = new TH1D("thirdJetPt_reco_fullsel", "", 35, 0., 350.);
+  TH1D *hThirdJetPt_bdtsel = new TH1D("thirdJetPt_reco_fullsel_bdtsel", "", 35, 0., 350.);
   TH1D *hThirdJetPt_chi2sel = new TH1D("thirdJetPt_reco_chi2sel", "", 35, 0., 350.);
   TH1D *hThirdJetPt_nosel = new TH1D("thirdJetPt_reco_nosel", "", 35, 0., 350.);
 
   TH1D *hFourthJetPt = new TH1D("fourthJetPt_reco_fullsel", "", 30, 0., 300.);
+  TH1D *hFourthJetPt_bdtsel = new TH1D("fourthJetPt_reco_fullsel_bdtsel", "", 30, 0., 300.);
   TH1D *hFourthJetPt_chi2sel = new TH1D("fourthJetPt_reco_chi2sel", "", 30, 0., 300.);
   TH1D *hFourthJetPt_nosel = new TH1D("fourthJetPt_reco_nosel", "", 30, 0., 300.);
 
@@ -175,6 +182,7 @@ void Extractor2Histos::Loop()
   TH1D *hFourthJetEta_nosel = new TH1D("fourthJetEta_reco_nosel", "", 100, -2*M_PI, 2*M_PI);
 
   TH1D *hMET = new TH1D("MET_reco_fullsel", "", 100, 0., 400.);
+  TH1D *hMET_bdtsel = new TH1D("MET_reco_fullsel_bdtsel", "", 100, 0., 400.);
   TH1D *hMETx = new TH1D("METx_reco_fullsel", "", 100, -200., 200.);
   TH1D *hMETy = new TH1D("METy_reco_fullsel", "", 100, -200., 200.);
   TH1D *hMETPhi = new TH1D("METPhi_reco_fullsel", "", 800, -4., 4.);
@@ -203,11 +211,17 @@ void Extractor2Histos::Loop()
   TH1D *hmttSelected_background_bdt_btag_sel = new TH1D("mttSelected_bkg_bdt_btag_sel_reco_fullsel", "", 40, 0., 2000.);
 
   TH1D *hSelectedFirstJetPt = new TH1D("selectedFirstJetPt_reco_fullsel", "", 30, 0., 300.);
+  TH1D *hSelectedFirstJetPt_bdtsel = new TH1D("selectedFirstJetPt_reco_fullsel_bdtsel", "", 30, 0., 300.);
   TH1D *hSelectedSecondJetPt = new TH1D("selectedSecondJetPt_reco_fullsel", "", 30, 0., 300.);
+  TH1D *hSelectedSecondJetPt_bdtsel = new TH1D("selectedSecondJetPt_reco_fullsel_bdtsel", "", 30, 0., 300.);
   TH1D *hSelectedHadronicBPt = new TH1D("selectedHadronicBPt_reco_fullsel", "", 64, 0., 640.);
+  TH1D *hSelectedHadronicBPt_bdtsel = new TH1D("selectedHadronicBPt_reco_fullsel_bdtsel", "", 64, 0., 640.);
   TH1D *hSelectedLeptonicBPt = new TH1D("selectedLeptonicBPt_reco_fullsel", "", 64, 0., 640.);
+  TH1D *hSelectedLeptonicBPt_bdtsel = new TH1D("selectedLeptonicBPt_reco_fullsel_bdtsel", "", 64, 0., 640.);
   TH1D *hSelectedLeptonPt = new TH1D("selectedLeptonPt_reco_fullsel", "", 40, 0., 400.);
+  TH1D *hSelectedLeptonPt_bdtsel = new TH1D("selectedLeptonPt_reco_fullsel_bdtsel", "", 40, 0., 400.);
   TH1D *hSelectedNeutrinoPt = new TH1D("selectedNeutrinoPt_reco_fullsel", "", 40, 0., 400.);
+  TH1D *hSelectedNeutrinoPt_bdtsel = new TH1D("selectedNeutrinoPt_reco_fullsel_bdtsel", "", 40, 0., 400.);
   TH1D *hSelectedNeutrinoPz = new TH1D("selectedNeutrinoPz_reco_fullsel", "", 40, 0., 400.);
 
   TH1D *hSelectedFirstJetEta = new TH1D("selectedFirstJetEta_reco_fullsel", "", 100, -2*M_PI, 2*M_PI);
@@ -300,6 +314,9 @@ void Extractor2Histos::Loop()
 
   TH1D *hNBtaggedJets_extractor = new TH1D("nBTaggedJets_extractor_reco_fullsel", "", 5, -0.5, 4.5);
   TH1D *hNBtaggedJets = new TH1D("nBTaggedJets_reco_fullsel", "", 5, -0.5, 4.5);
+
+  TH1D *hNBtaggedJets_extractor_bdtsel = new TH1D("nBTaggedJets_extractor_reco_fullsel_bdtsel", "", 5, -0.5, 4.5);
+  TH1D *hNBtaggedJets_bdtsel = new TH1D("nBTaggedJets_reco_fullsel_bdtsel", "", 5, -0.5, 4.5);
 
   TH1D *hNBtaggedJets_chi2sel_extractor = new TH1D("nBTaggedJets_extractor_reco_chi2sel", "", 5, -0.5, 4.5);
   TH1D *hNBtaggedJets_chi2sel = new TH1D("nBTaggedJets_reco_chi2sel", "", 5, -0.5, 4.5);
@@ -1165,6 +1182,32 @@ void Extractor2Histos::Loop()
 
       if (discriminant > background_bdt_cut) {
         hmttSelected_background_bdt_btag_sel->Fill(mtt_AfterReco, eventWeight);
+
+        hNBtaggedJets_extractor_bdtsel->Fill(nBtaggedJets_CSVM, eventWeight);
+        hNBtaggedJets_bdtsel->Fill(numberOfBTaggedJets, eventWeight);
+
+        hLeptonPt_bdtsel->Fill(ptLepton, eventWeight);
+        hFirstJetPt_bdtsel->Fill(p_1stjetpt, eventWeight);
+        hSecondJetPt_bdtsel->Fill(p_2ndjetpt, eventWeight);
+        hThirdJetPt_bdtsel->Fill(p_3rdjetpt, eventWeight);
+        hFourthJetPt_bdtsel->Fill(p_4thjetpt, eventWeight);
+        hMET_bdtsel->Fill(MET, eventWeight);
+
+        hSelectedFirstJetPt_bdtsel->Fill(selectedFirstJetPt_AfterReco, eventWeight);
+        hSelectedSecondJetPt_bdtsel->Fill(selectedSecondJetPt_AfterReco, eventWeight);
+        hSelectedHadronicBPt_bdtsel->Fill(selectedHadronicBPt_AfterReco, eventWeight);
+        hSelectedLeptonicBPt_bdtsel->Fill(selectedLeptonicBPt_AfterReco, eventWeight);
+        hSelectedNeutrinoPt_bdtsel->Fill(selectedNeutrinoP4_AfterReco->Pt(), eventWeight);
+
+        if (mUseKF) {
+          hSelectedLeptonPt_bdtsel->Fill(selectedLeptonP4_AfterKF->Pt(), eventWeight);
+        } else {
+          hSelectedLeptonPt_bdtsel->Fill(getP4(selectedLeptonP4_AfterReco, 0)->Pt(), eventWeight);
+        }
+
+        hLeptTopPt_bdtsel->Fill(lepTopPt_AfterReco, eventWeight);
+        hHadrTopPt_bdtsel->Fill(hadTopPt_AfterReco, eventWeight);
+
       }
     }
   }
