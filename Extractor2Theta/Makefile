@@ -23,9 +23,9 @@ SOFLAGS		    =
 AR            = ar
 ARFLAGS       = -cq
 
-LDDIR         = $(shell echo "-L" $$LD_LIBRARY_PATH | sed -e 's/:/ -L/g') -L$(ROOFIT_LIBDIR)/ -L../lib/ -L../SelectionMVA/lib -L../external/lib
+LDDIR         = $(shell echo "-L" $$LD_LIBRARY_PATH | sed -e 's/:/ -L/g') -L$(ROOFIT_LIBDIR)/ -L../lib/ -L../SelectionMVA/lib -L../external/lib -L../BTag/lib
 
-CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/ -I../external/ -I../ExtractorPostprocessing -I../SelectionMVA/include
+CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../BTag/include -I../include/ -I../external/ -I../ExtractorPostprocessing -I../SelectionMVA/include
 LIBS  		    = $(LDDIR) $(ROOTLIBS) -lGenVector -lTMVA 
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
@@ -45,7 +45,7 @@ clean:
 	@rm ../PUReweighting/*.o;
 
 extractor2Theta: extractor2Theta.o ../PUReweighting/PUReweighter.o ../external/TopTriggerEfficiencyProvider.o ../ExtractorPostprocessing/ExtractorPostprocessing.o ../SelectionMVA/lib/libMVAReader.a ../SelectionMVA/lib/libBDTCuts.a
-	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ -Wl,-Bstatic -lMVAReader -lBDTCuts -lyaml-cpp -Wl,-Bdynamic $(LIBS)
+	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ -Wl,-Bstatic -lMVAReader -lBDTCuts -lBTagUtils -lyaml-cpp -Wl,-Bdynamic $(LIBS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
