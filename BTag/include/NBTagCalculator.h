@@ -13,7 +13,7 @@
 class NBTagCalculator {
 
   public:
-    NBTagCalculator(const std::vector<std::string>& inputFiles, SystVariation systVariation):
+    NBTagCalculator(const std::vector<std::string>& inputFiles, SystVariation systVariation, const std::string& btag_efficiency_file = "../BTag/TT_powheg_btagging_efficiency.root"):
       m_systVariation(systVariation) {
 
         m_inputFiles = inputFiles;
@@ -32,7 +32,7 @@ class NBTagCalculator {
         setBranchAddress(event, "evtID", eventNumber);
 
         // B-tagging efficiency provider for computing correct number of b-tagged jets
-        m_btagging_efficiency_provider = std::make_shared<BTaggingEfficiencyProvider>("../BTag/TT_powheg_btagging_efficiency.root");
+        m_btagging_efficiency_provider = std::make_shared<BTaggingEfficiencyProvider>(btag_efficiency_file);
       }
 
     uint32_t getNumberOfBTaggedJets(uint32_t entry);

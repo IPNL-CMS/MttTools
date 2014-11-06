@@ -53,4 +53,5 @@ uint32_t NBTagCalculator::getNumberOfBTaggedJets(uint32_t entry) {
 
   }
 
+  return numberOfBTaggedJets;
 }
