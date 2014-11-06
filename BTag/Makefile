@@ -37,7 +37,7 @@ SOBJECTS	= $(SOURCES:.$(SrcSuf)=.$(DllSuf))
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf)
 
-BTAG_UTILS_OBJECTS = src/BTagUtils.o
+BTAG_UTILS_OBJECTS = src/BTagUtils.o src/NBTagCalculator.o
 
 ###
 
