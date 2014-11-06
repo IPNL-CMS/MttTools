@@ -16,8 +16,7 @@
 
 #include <BkgVsTTBDTReader.h>
 #include <BDTCuts.h>
-#include <BTagUtils.h>
-#include <BTaggingEfficiencyProvider.h>
+#include <NBTagCalculator.h>
 
 #include "tclap/CmdLine.h"
 
@@ -33,12 +32,11 @@ PUProfile puProfile;
 
 ExtractorPostprocessing selection;
 
-void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* event, TChain* vertices, TChain* jets, const std::string& outputFile, bool isData, bool isZprime, const std::string& type, int max, double lumi_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
+void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* event, TChain* vertices, const std::string& outputFile, bool isData, bool isZprime, const std::string& type, int max, double lumi_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
 
   float mtt_afterReco, pt_1stJet, pt_2ndJet, pt_3rdJet, pt_4thJet, mtt_AfterKF, mtt_AfterChi2, mtt_AfterMVA;
   int isSel = 1, nBtaggedJets_CSVM;
   uint32_t run = 0;
-  uint32_t eventNumber = 0;
 
   float lepton_weight = 1;
   //float btag_weight = 1;
@@ -151,29 +149,12 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
 
   event->SetBranchAddress("nTrueInteractions", &n_trueInteractions, NULL);
   event->SetBranchAddress("run", &run, NULL);
-  SetBranchAddress(event, "evtID", &eventNumber);
   event->SetBranchAddress("generator_weight", &generator_weight, NULL);
 
   int32_t n_vertices = 0;
   vertices->SetBranchStatus("*", 0);
   vertices->SetBranchStatus("n_vertices", 1);
   vertices->SetBranchAddress("n_vertices", &n_vertices);
-
-
-  uint32_t n_jets = 0;
-  int      jet_isPFLoose[100];
-  int      jet_flavor[100];
-  float    jet_CSV[100];
-  std::vector<std::vector<double>>* jet_scaleFactor = nullptr;
-  TClonesArray* jet_p4 = nullptr;
-  jets->SetBranchStatus("*", 0);
-
-  SetBranchAddress(jets, "n_jets", &n_jets);
-  SetBranchAddress(jets, "jet_4vector", &jet_p4);
-  SetBranchAddress(jets, "jet_isPFJetLoose", &jet_isPFLoose);
-  SetBranchAddress(jets, "jet_algo_parton_flavor", &jet_flavor);
-  SetBranchAddress(jets, "jet_btag_CSV", &jet_CSV);
-  SetBranchAddress(jets, "jet_scaleFactor", &jet_scaleFactor);
 
   float output_weight;
 
@@ -240,8 +221,14 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
   BkgVsTTBDTReader bkgVsTTBDTReader(inputFiles);
   bkgVsTTBDTReader.initMVA(background_bdt_weights);
   
-  // B-tagging efficiency provider for computing correct number of b-tagged jets
-  std::shared_ptr<BTaggingEfficiencyProvider> btagging_efficiency_provider = std::make_shared<BTaggingEfficiencyProvider>("../BTag/TT_powheg_btagging_efficiency.root");
+  SystVariation btagSystVariation = NOMINAL;
+  if (btagSyst == "up") {
+    btagSystVariation = UP;
+  } else if (btagSyst == "down") {
+    btagSystVariation = DOWN;
+  }
+
+  NBTagCalculator btagCalculator(inputFiles, btagSystVariation);
 
   float hist_min = 250;
   float hist_max = 1250;
@@ -265,7 +252,6 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
     mtt->GetEntry(i);
     event->GetEntry(i);
     vertices->GetEntry(i);
-    jets->GetEntry(i);
 
     if (i % 1000000 == 0) {
       std::cout << "Processing event #" << i + 1 << " over " << entries << " (" << (float) i / entries * 100 << " %)" << std::endl;
@@ -356,52 +342,9 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
     //if (discriminant < background_bdt_cut) 
       //continue;
     
-    BTagUtils btagUtil(run, eventNumber, btagging_efficiency_provider);
-
     uint32_t numberOfBTaggedJets = 0;
     if (! isData) {
-      // Recompute number of b-tagged jets
-      for (uint32_t j = 0; j < n_jets; j++) {
-      
-        TLorentzVector* p4 = static_cast<TLorentzVector*>((*jet_p4)[j]);
-        Flavor flavor;
-        switch (abs(jet_flavor[j])) {
-          case 5:
-            flavor = B;
-            break;
-
-          case 4:
-            flavor = C;
-            break;
-
-          default:
-            flavor = LIGHT;
-            break;
-        }
-
-        float pt = p4->Pt();
-        float eta = fabs(p4->Eta());
-
-        if (pt < 30 || eta > 2.4)
-          continue;
-
-        bool isBTagged = jet_CSV[j] > 0.679;
-
-        float scale_factor = (*jet_scaleFactor)[j][0];
-
-        SystVariation btag_efficiency_syst_variation = NOMINAL;
-        if (btagSyst == "up") {
-          scale_factor += (*jet_scaleFactor)[j][1];
-          btag_efficiency_syst_variation = UP;
-        } else if (btagSyst == "down") {
-          scale_factor -= (*jet_scaleFactor)[j][2];
-          btag_efficiency_syst_variation = DOWN;
-        }
-
-        if (btagUtil.updateJetBTagStatus(isBTagged, pt, eta, flavor, (*jet_scaleFactor)[j][0], btag_efficiency_syst_variation))
-          numberOfBTaggedJets++;
-      
-      }
+      numberOfBTaggedJets = btagCalculator.getNumberOfBTaggedJets(i);
     } else {
       numberOfBTaggedJets = nBtaggedJets_CSVM;
     }
@@ -498,32 +441,29 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
   delete puReweigher;
 }
 
-void loadChain(const std::vector<std::string>& inputFiles, TChain*& mtt, TChain*& event, TChain*& vertices, TChain*& jets) {
+void loadChain(const std::vector<std::string>& inputFiles, TChain*& mtt, TChain*& event, TChain*& vertices) {
 
   mtt = new TChain("Mtt");
   event = new TChain("event");
   vertices = new TChain("Vertices");
-  jets = new TChain("jet_PF");
 
   for (const std::string& file: inputFiles) {
     mtt->Add(file.c_str());
     event->Add(file.c_str());
     vertices->Add(file.c_str());
-    jets->Add(file.c_str());
   }
 
   event->SetCacheSize(30*1024*1024);
   mtt->SetCacheSize(30*1024*1024);
   vertices->SetCacheSize(30*1024*1024);
-  jets->SetCacheSize(30*1024*1024);
 }
 
 void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, bool isZprime, const std::string& type, int max, double generator_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
 
-  TChain* mtt = NULL, *event = NULL, *vertices = NULL, *jets = nullptr;
+  TChain* mtt = NULL, *event = NULL, *vertices = NULL;
 
-  loadChain(inputFiles, mtt, event, vertices, jets);
-  reduce(inputFiles, mtt, event, vertices, jets, outputFile, isData, isZprime, type, max, generator_weight, puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, useMVA, useChi2, useKF, useHybrid, runOnSkim);
+  loadChain(inputFiles, mtt, event, vertices);
+  reduce(inputFiles, mtt, event, vertices, outputFile, isData, isZprime, type, max, generator_weight, puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, useMVA, useChi2, useKF, useHybrid, runOnSkim);
 
   delete mtt;
   delete event;
