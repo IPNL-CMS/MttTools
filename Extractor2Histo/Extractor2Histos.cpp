@@ -23,8 +23,7 @@
 #include <PUReweighting/PUReweighter.h>
 #include <BkgVsTTBDTReader.h>
 #include <BDTCuts.h>
-#include <BTagUtils.h>
-#include <BTaggingEfficiencyProvider.h>
+#include <NBTagCalculator.h>
 
 #include "tclap/CmdLine.h"
 
@@ -517,8 +516,13 @@ void Extractor2Histos::Loop()
   BkgVsTTBDTReader bkgVsTTBDTReader(m_inputFiles);
   bkgVsTTBDTReader.initMVA(background_bdt_weights);
 
-  // B-tagging efficiency provider for computing correct number of b-tagged jets
-  std::shared_ptr<BTaggingEfficiencyProvider> btagging_efficiency_provider = std::make_shared<BTaggingEfficiencyProvider>("../BTag/TT_powheg_btagging_efficiency.root");
+  SystVariation btagSystVariation = NOMINAL;
+  if (mBTagSyst == "up") {
+    btagSystVariation = UP;
+  } else if (mBTagSyst == "down") {
+    btagSystVariation = DOWN;
+  }
+  NBTagCalculator btagCalculator(m_inputFiles, btagSystVariation);
 
   std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now(), end;
   for (Long64_t jentry = 0; jentry < nentries; jentry++)
@@ -620,52 +624,9 @@ void Extractor2Histos::Loop()
       eventWeight = 1.;
     }
 
-    BTagUtils btagUtil(run, eventNumber, btagging_efficiency_provider);
-
     uint32_t numberOfBTaggedJets = 0;
     if (mIsMC) {
-      // Recompute number of b-tagged jets
-      for (uint32_t j = 0; j < n_jets; j++) {
-      
-        TLorentzVector* p4 = static_cast<TLorentzVector*>((*jet_p4)[j]);
-        Flavor flavor;
-        switch (abs(jet_flavor[j])) {
-          case 5:
-            flavor = B;
-            break;
-
-          case 4:
-            flavor = C;
-            break;
-
-          default:
-            flavor = LIGHT;
-            break;
-        }
-
-        float pt = p4->Pt();
-        float eta = fabs(p4->Eta());
-
-        if (pt < 30 || eta > 2.4)
-          continue;
-
-        bool isBTagged = jet_CSV[j] > 0.679;
-
-        float scale_factor = (*jet_scaleFactor)[j][0];
-
-        SystVariation btag_efficiency_syst_variation = NOMINAL;
-        if (mBTagSyst == "up") {
-          scale_factor += (*jet_scaleFactor)[j][1];
-          btag_efficiency_syst_variation = UP;
-        } else if (mBTagSyst == "down") {
-          scale_factor -= (*jet_scaleFactor)[j][2];
-          btag_efficiency_syst_variation = DOWN;
-        }
-
-        if (btagUtil.updateJetBTagStatus(isBTagged, pt, eta, flavor, (*jet_scaleFactor)[j][0], btag_efficiency_syst_variation))
-          numberOfBTaggedJets++;
-      
-      }
+      numberOfBTaggedJets = btagCalculator.getNumberOfBTaggedJets(jentry);
     } else {
       numberOfBTaggedJets = nBtaggedJets_CSVM;
     }
@@ -1642,8 +1603,6 @@ void Extractor2Histos::Init()
   fEvent->SetBranchStatus("run", 1);
   fEvent->SetBranchAddress("run", &run, NULL);
 
-  SetBranchAddress(fEvent, "evtID", &eventNumber);
-
   if (! mSkim) {
     muon_p4 = NULL;
     fLooseMuons->SetMakeClass(1);
@@ -1657,16 +1616,9 @@ void Extractor2Histos::Init()
   }
 
   jet_p4 = NULL;
-  jet_scaleFactor = NULL;
   fJet->SetBranchStatus("*", 0);
 
-  SetBranchAddress(fJet, "n_jets", &n_jets);
   SetBranchAddress(fJet, "jet_4vector", &jet_p4);
-  SetBranchAddress(fJet, "jet_isPFJetLoose", &jet_isPFLoose);
-  SetBranchAddress(fJet, "jet_algo_parton_flavor", &jet_flavor);
-  SetBranchAddress(fJet, "jet_btag_CSV", &jet_CSV);
-  SetBranchAddress(fJet, "jet_scaleFactor", &jet_scaleFactor);
-
 
   met_p4 = NULL;
   if (fMET) {
