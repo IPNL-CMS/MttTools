@@ -130,6 +130,14 @@ if True:
     systs["scaleup"] = ["scaleup", ""]
     systs["scaledown"] = ["scaledown", ""]
 
+btags = [-1, 0, 1, 2]
+
+def getBFolderName(btag):
+    b = "%d-btag" % btag
+    if btag == -1:
+        b = "all-btag"
+    return b
+
 def launch(input, output, btag, extra):
     args = ["./extractorToHisto", "-i", input, "-o", output, "--mc", "--skim", sortingAlgoArg, "--b-tag", str(btag)]
 
@@ -150,9 +158,9 @@ def launch(input, output, btag, extra):
 tmpfile = tempfile.NamedTemporaryFile(dir = '/scratch/', delete = False)
 
 # Build output tree structure
-for btag in [0, 1, 2]:
+for btag in btags:
     for type in ["semie", "semimu"]:
-        path = "plots/%s/%d-btag/%s/Systematics" % (d, btag, type)
+        path = "plots/%s/%s/%s/Systematics" % (d, getBFolderName(btag), type)
         try:
             os.makedirs(path)
         except:
@@ -161,13 +169,13 @@ for btag in [0, 1, 2]:
 print("Extracting datasets...")
 
 for file in files:
-    for btag in [0, 1, 2]:
+    for btag in btags:
         for type in ["semie", "semimu"]:
             for syst, extra in systs.items():
                 if not "skims/%s" in file[1] and not type in file[1]:
                     continue
 
-                path = "plots/%s/%d-btag/%s/Systematics" % (d, btag, type)
+                path = "plots/%s/%s/%s/Systematics" % (d, getBFolderName(btag), type)
                 if not "skims/%s" in file[1]:
                     inputFile = file[1] % extra[0]
                 else:
