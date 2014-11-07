@@ -139,6 +139,9 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
   mtt->SetBranchAddress("nJets", &nJets);
   mtt->SetBranchAddress("jetEta", jetEta);
 
+  float MET = 0;
+  SetBranchAddress(mtt, "MET", &MET);
+
   float n_trueInteractions;
   float generator_weight;
 
@@ -360,6 +363,12 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
 
     if (max > 0 && selectedEntries[index] >= max)
       continue;
+
+    // Cut on MET < 50 for btag == 1 && semi-e category
+    if (numberOfBTaggedJets == 1 && !isSemiMu) {
+      if (MET < 50)
+        continue;
+    }
 
     output_weight = 1.;
     if (! isData) {
