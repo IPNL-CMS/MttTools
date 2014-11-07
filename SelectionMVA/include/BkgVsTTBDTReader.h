@@ -1,6 +1,9 @@
 #pragma once
 
+#include <memory>
+
 #include <MVAReader.h>
+#include <NBTagCalculator.h>
 
 #include <TClonesArray.h>
 #include <TLorentzVector.h>
@@ -11,14 +14,16 @@ typedef ROOT::Math::PtEtaPhiEVector LorentzVector;
 
 class BkgVsTTBDTReader: public MVAReader {
   public:
-    BkgVsTTBDTReader(const std::vector<std::string>& inputFiles);
+    BkgVsTTBDTReader(const std::vector<std::string>& inputFiles, bool isMC);
 
   protected:
     virtual void initTrees() override;
     virtual void setupVariables() override;
-    virtual void computeVariables() override;
+    virtual void computeVariables(uint64_t entry) override;
 
   private:
+
+    std::shared_ptr<NBTagCalculator> m_btagCalculator;
 
     TChain* m_mtt;
     TChain* m_jets;

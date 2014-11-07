@@ -513,7 +513,7 @@ void Extractor2Histos::Loop()
   float background_bdt_cut = bdtCuts.getCut(BDTType::BACKGROUND, -1);
   std::string background_bdt_weights = bdtCuts.getWeights(BDTType::BACKGROUND, -1);
 
-  BkgVsTTBDTReader bkgVsTTBDTReader(m_inputFiles);
+  BkgVsTTBDTReader bkgVsTTBDTReader(m_inputFiles, mIsMC);
   bkgVsTTBDTReader.initMVA(background_bdt_weights);
 
   SystVariation btagSystVariation = NOMINAL;

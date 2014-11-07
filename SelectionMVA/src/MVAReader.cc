@@ -1,7 +1,7 @@
 #include <MVAReader.h>
 
-MVAReader::MVAReader(const std::vector<std::string>& inputFiles):
-  m_inputFiles(inputFiles) {
+MVAReader::MVAReader(const std::vector<std::string>& inputFiles, bool isMC):
+  m_isMC(isMC), m_inputFiles(inputFiles) {
 }
 
 void MVAReader::initMVA(const std::string& weightFile) {
@@ -23,7 +23,7 @@ float MVAReader::evaluate(uint64_t entry) {
     chain->GetEntry(entry);
   }
 
-  computeVariables();
+  computeVariables(entry);
 
   return m_reader->EvaluateMVA("mva");
 }

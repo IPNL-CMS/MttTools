@@ -10,7 +10,7 @@
 
 class MVAReader {
   public:
-    MVAReader(const std::vector<std::string>& inputFiles);
+    MVAReader(const std::vector<std::string>& inputFiles, bool isMC);
 
     virtual void initMVA(const std::string& weightFile);
     virtual float evaluate(uint64_t entry) final;
@@ -45,11 +45,12 @@ class MVAReader {
     virtual void initTrees() = 0;
     virtual void setupVariables() = 0;
 
-    virtual void computeVariables() {
+    virtual void computeVariables(uint64_t entry) {
       // Empty
     }
 
     std::shared_ptr<TMVA::Reader> m_reader;
+    bool m_isMC;
 
   private:
     void activateBranch(TBranch* branch) {

@@ -8,9 +8,10 @@ namespace MVAReaderUtils {
   }
 };
 
-BkgVsTTBDTReader::BkgVsTTBDTReader(const std::vector<std::string>& inputFiles):
-  MVAReader(inputFiles) {
+BkgVsTTBDTReader::BkgVsTTBDTReader(const std::vector<std::string>& inputFiles, bool isMC):
+  MVAReader(inputFiles, isMC) {
 
+    m_btagCalculator = std::make_shared<NBTagCalculator>(inputFiles, NOMINAL);
   }
 
 
@@ -41,7 +42,7 @@ void BkgVsTTBDTReader::setupVariables() {
   m_reader->AddVariable("aplanarity", &aplanarity);
   m_reader->AddVariable("circularity", &circularity);
   m_reader->AddVariable("sphericity", &sphericity);
-  m_reader->AddVariable("mean_csv", &mean_csv);
+  //m_reader->AddVariable("mean_csv", &mean_csv);
   m_reader->AddVariable("n_btagged_jets", &n_btagged_jets_float);
   m_reader->AddVariable("st", &st);
   m_reader->AddVariable("theta_lepton", &theta_lepton);
@@ -78,23 +79,26 @@ void BkgVsTTBDTReader::setupVariables() {
   //m_reader->AddVariable("cos_theta_leading_top_resonance", &cos_theta_leading_top_resonance);
 }
 
-void BkgVsTTBDTReader::computeVariables() {
+void BkgVsTTBDTReader::computeVariables(uint64_t entry) {
 
-  uint32_t n = 0;
+  //uint32_t n = 0;
   float HT = 0;
-  mean_csv = 0;
+  //mean_csv = 0;
   for (uint32_t i = 0; i < (uint32_t) jets_p4->GetEntriesFast(); i++) {
     float pt = ((TLorentzVector*) (*jets_p4)[i])->Pt();
-    if (pt > 30 && jets_CSV_discriminant[i] > 0.244) {
-      n++;
-      mean_csv += jets_CSV_discriminant[i];
-    }
+    //if (pt > 30 && jets_CSV_discriminant[i] > 0.244) {
+      //n++;
+      //mean_csv += jets_CSV_discriminant[i];
+    //}
 
     HT += pt;
   }
 
-  if (n > 0)
-    mean_csv /= n;
+  //if (n > 0)
+    //mean_csv /= n;
+ 
+  if (m_isMC)
+    n_btagged_jets = m_btagCalculator->getNumberOfBTaggedJets(entry);
 
   n_btagged_jets_float = n_btagged_jets;
 

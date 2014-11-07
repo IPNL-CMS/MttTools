@@ -25,7 +25,7 @@ ARFLAGS       = -cq
 
 LDDIR         = $(shell echo "-L" $$LD_LIBRARY_PATH | sed -e 's/:/ -L/g') -L$(ROOFIT_LIBDIR)/ -L../lib/ 
 
-CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -Iinclude -I../external/include -I$(shell echo $(BOOST_ROOT))/include
+CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -Iinclude -I../external/include -I../BTag/include -I$(shell echo $(BOOST_ROOT))/include
 LIBS  		    = $(LDDIR) $(ROOTLIBS) -lGenVector -lTMVA
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------

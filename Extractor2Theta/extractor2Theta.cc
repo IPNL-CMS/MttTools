@@ -221,7 +221,7 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
   float background_bdt_cut = bdtCuts.getCut(BDTType::BACKGROUND, -1);
   std::string background_bdt_weights = bdtCuts.getWeights(BDTType::BACKGROUND, -1);
 
-  BkgVsTTBDTReader bkgVsTTBDTReader(inputFiles);
+  BkgVsTTBDTReader bkgVsTTBDTReader(inputFiles, !isData);
   bkgVsTTBDTReader.initMVA(background_bdt_weights);
   
   SystVariation btagSystVariation = NOMINAL;

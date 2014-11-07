@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
       factory->AddVariable("aplanarity");
     factory->AddVariable("circularity");
     factory->AddVariable("sphericity");
-    factory->AddVariable("mean_csv");
+    //factory->AddVariable("mean_csv");
     factory->AddVariable("n_btagged_jets", 'I');
     //factory->AddVariable("ht");
     factory->AddVariable("st");

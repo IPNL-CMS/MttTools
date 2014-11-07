@@ -19,6 +19,7 @@
 
 #include "../PUReweighting/PUReweighter.h"
 #include "TopTriggerEfficiencyProvider.h"
+#include "NBTagCalculator.h"
 #include "ExtractorPostprocessing.h"
 
 #include <Math/Vector4D.h>
@@ -253,7 +254,7 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
   setBranchAddress(mtt, "4thjetpt", pt_4thJet);
 
   int n_btagged_jet = 0;
-  setBranchAddress(mtt, "nBtaggedJets_CSVM", n_btagged_jet);
+  //setBranchAddress(mtt, "nBtaggedJets_CSVM", n_btagged_jet);
 
   uint32_t n_jets;
   setBranchAddress(jets, "n_jets", n_jets);
@@ -284,8 +285,8 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
   float lepton_weight = 0;
   setBranchAddress(mtt, "lepton_weight", lepton_weight);
 
-  float btag_weight = 0;
-  setBranchAddress(mtt, "btag_weight", btag_weight);
+  //float btag_weight = 0;
+  //setBranchAddress(mtt, "btag_weight", btag_weight);
 
   float n_trueInteractions = 0;
   setBranchAddress(events, "nTrueInteractions", n_trueInteractions);
@@ -303,6 +304,8 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
 
   PUReweighter* puReweigher = new PUReweighter(isSemiMu, puProfile, Systematic::NOMINAL, "../../PUReweighting/");
   TopTriggerEfficiencyProvider::JES triggerJESSyst = TopTriggerEfficiencyProvider::NOMINAL;
+
+  NBTagCalculator btagCalculator(inputFiles, NOMINAL, "../../BTag/TT_powheg_btagging_efficiency.root");
 
   float lumi_run2012_A = 0;
   float lumi_run2012_B = 0;
@@ -341,8 +344,8 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
   createBranch(tree, "sphericity", sphericity);
   createBranch(tree, "discriminant", discriminant);
 
-  float mean_CSV = 0;
-  createBranch(tree, "mean_csv", mean_CSV);
+  //float mean_CSV = 0;
+  //createBranch(tree, "mean_csv", mean_CSV);
   
   createBranch(tree, "met", met);
 
@@ -420,6 +423,8 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
     if (numComb <= 0)
       continue;
 
+    n_btagged_jet = btagCalculator.getNumberOfBTaggedJets(i);
+
     //if (! selection.passJetsSel(pt_1stJet, pt_2ndJet, pt_3rdJet, pt_4thJet, isRun2012AB))
       //continue;
 
@@ -478,24 +483,24 @@ void createTree(const std::vector<std::string>& inputFiles, const std::string& o
     //double triggerWeight = triggerWeights[0];
     double triggerWeight = 1;
 
-    output_weight *= puReweigher->weight(n_trueInteractions) /* * generator_weight */ * weight * triggerWeight * lepton_weight * btag_weight;
+    output_weight *= puReweigher->weight(n_trueInteractions) /* * generator_weight */ * weight * triggerWeight * lepton_weight;
 
     // Compute mean CSV value for all jets
-    int n = 0;
-    mean_CSV = 0;
+    //int n = 0;
+    //mean_CSV = 0;
     HT = 0;
     ST = 0;
     for (int i = 0; i < jets_p4->GetEntries(); i++) {
       TLorentzVector* p4 = (TLorentzVector*) (*jets_p4)[i];
-      if (p4->Pt() > 30 && jets_CSV_discriminant[i] > 0.244) {
-        n++;
-        mean_CSV += jets_CSV_discriminant[i];
-      }
+      //if (p4->Pt() > 30 && jets_CSV_discriminant[i] > 0.244) {
+        //n++;
+        //mean_CSV += jets_CSV_discriminant[i];
+      //}
       HT += p4->Pt();
     }
 
-    if (n > 0)
-      mean_CSV /= n;
+    //if (n > 0)
+      //mean_CSV /= n;
 
     if (chi2_lepton_p4) {
       // Copy the quadrivector into lepton_p4
