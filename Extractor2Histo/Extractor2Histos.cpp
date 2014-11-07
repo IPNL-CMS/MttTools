@@ -939,6 +939,13 @@ void Extractor2Histos::Loop()
       continue;
 
     if (btagSel && p_1stjetpt > firstJetCut && p_2ndjetpt > secondJetCut && p_3rdjetpt > thirdJetCut) {
+
+      // New cut: MET > 50 for electron, 1 b-tag category
+      if (mBTag == 1 && !mIsSemiMu) {
+        if (MET < 50)
+          continue;
+      }
+
       if (mIsMC) {
         if (isRun2012AB) {
           m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunA, lumi_run2012_A);
