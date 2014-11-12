@@ -39,7 +39,7 @@ if not option.input:
 import sys
 sys.argv.append( '-b' )
 
-from ROOT import TFile, TCanvas, TColor, TLegend, TLine, gPad, gROOT
+from ROOT import TFile, TCanvas, TColor, TLegend, TLine, gPad, gROOT, TPaveText
 gROOT.ProcessLine(".L tdrstyle.cc")
 gROOT.ProcessLine("setTDRStyle();")
 
@@ -145,6 +145,16 @@ def drawRatio(nominal, up, down, syst, filename):
     l.AddEntry(ratio_down, "%s down" % getPrettySysName(syst), "L")
 
     l.Draw()
+
+    title = TPaveText(c.GetLeftMargin(), 1 - c.GetTopMargin() + 0.005, 1 - c.GetRightMargin(), 1, "brNDC")
+    title.SetFillStyle(0)
+    title.SetBorderSize(0)
+    title.SetMargin(0)
+    title.SetTextSize(0.03)
+    title.SetTextFont(42)
+    title.SetTextAlign(32)
+    title.AddText("CMS preliminary, L = 19.67 fb^{-1}, #sqrt{s} = 8 TeV")
+    title.Draw()
 
     c.Print(filename)
     pass

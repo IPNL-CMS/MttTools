@@ -5,7 +5,7 @@ import os, subprocess, datetime, tempfile, sys, math, json
 import sys
 sys.argv.append( '-b' )
 
-from ROOT import TH1F, TCanvas, TColor, TBox, gROOT
+from ROOT import TH1F, TCanvas, TColor, TBox, gROOT, TPaveText
 
 gROOT.ProcessLine(".L tdrstyle.cc")
 gROOT.ProcessLine("setTDRStyle();")
@@ -78,5 +78,15 @@ one_sigma.Draw()
 
 h.Draw("L same")
 h.Draw("same axis")
+
+title = TPaveText(c.GetLeftMargin(), 1 - c.GetTopMargin() + 0.005, 1 - c.GetRightMargin(), 1, "brNDC")
+title.SetFillStyle(0)
+title.SetBorderSize(0)
+title.SetMargin(0)
+title.SetTextSize(0.03)
+title.SetTextFont(42)
+title.SetTextAlign(32)
+title.AddText("CMS preliminary, L = 19.67 fb^{-1}, #sqrt{s} = 8 TeV")
+title.Draw()
 
 c.SaveAs("normalization_systs.pdf")

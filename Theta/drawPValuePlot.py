@@ -35,7 +35,6 @@ graph95  = ROOT.TGraphAsymmErrors()
 graph95.SetFillColor(ROOT.TColor.GetColor("#A8DBA8"))
 
 
-
 graphMed = ROOT.TGraphErrors()
 graphMed.SetLineColor(ROOT.TColor.GetColor("#3B8686"))
 graphMed.SetLineWidth(3)
@@ -165,6 +164,16 @@ def MakePvalPlot(MG):
 
     legend.Draw()
     c.Update()
+
+    title = ROOT.TPaveText(c.GetLeftMargin(), 1 - c.GetTopMargin() + 0.005, 1 - c.GetRightMargin(), 1, "brNDC")
+    title.SetFillStyle(0)
+    title.SetBorderSize(0)
+    title.SetMargin(0)
+    title.SetTextSize(FONTSIZE)
+    title.SetTextFont(42)
+    title.SetTextAlign(32)
+    title.AddText("CMS preliminary, L = 19.67 fb^{-1}, #sqrt{s} = 8 TeV")
+    title.Draw()
 
     c.Print("plot.pdf")
 
