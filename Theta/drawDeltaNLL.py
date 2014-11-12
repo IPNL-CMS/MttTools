@@ -42,6 +42,8 @@ max_95 = expected_sorted[int(0.998 * len(expected))]
 h = ROOT.TH1F("expected", "expected", 50, min_, max_95)
 h.SetLineColor(ROOT.TColor.GetColor("#542437"))
 h.GetXaxis().SetTitle("q")
+h.GetYaxis().SetTitleOffset(1.5)
+h.GetYaxis().SetTitle("Number of pseudo-experiments")
 
 q_data = dnll_ratios["observed_deltall_ratios"][0]
 
@@ -50,6 +52,8 @@ max_95_toy = toy_ratios_sorted[int(0.998 * len(toy_ratios))]
 toy = ROOT.TH1F("toy", "toy", 50, min_toy, max_95_toy)
 toy.SetLineColor(ROOT.TColor.GetColor("#542437"))
 toy.GetXaxis().SetTitle("q")
+toy.GetYaxis().SetTitleOffset(1.5)
+toy.GetYaxis().SetTitle("Number of pseudo-experiments")
 
 for dnll in expected:
     h.Fill(dnll)
@@ -89,12 +93,23 @@ h_95.SetFillColor(ROOT.TColor.GetColor("#A8DBA8"))
 h_95.SetLineColor(h_68.GetFillColor())
 
 c = ROOT.TCanvas("c", "c", 600, 600)
+
+title = ROOT.TPaveText(c.GetLeftMargin(), 1 - c.GetTopMargin() + 0.005, 1 - c.GetRightMargin(), 1, "brNDC")
+title.SetFillStyle(0)
+title.SetBorderSize(0)
+title.SetMargin(0)
+title.SetTextSize(0.03)
+title.SetTextFont(42)
+title.SetTextAlign(32)
+title.AddText("CMS preliminary, L = 19.67 fb^{-1}, #sqrt{s} = 8 TeV")
+
 h.Draw()
 h_95.Draw("hist same")
 h_68.Draw("hist same")
 h.Draw("same")
 h.Draw("same axis")
 line.Draw("same")
+title.Draw()
 
 c.SetLogy()
 c.Print("dnll_expected.pdf")
@@ -130,11 +145,14 @@ fill.Draw("hist same")
 toy.Draw("same")
 line.Draw("same")
 
+toy.Draw("axis same")
+
 line_data = ROOT.TLine(x_data, 0, x_data, toy.GetBinContent(toy.FindBin(q_data)))
 line_data.SetLineColor(ROOT.TColor.GetColor("#490A3D"))
 line_data.SetLineStyle(ROOT.kDashed)
 line_data.SetLineWidth(3)
 line_data.Draw("same")
 fill_data.Draw("hist same")
+title.Draw()
 
 c.Print("dnll_toy.pdf")
