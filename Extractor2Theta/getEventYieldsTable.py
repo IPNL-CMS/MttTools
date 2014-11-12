@@ -49,12 +49,12 @@ toMerge = [
 final_backgrounds = ["H400_scalar", "H500_scalar", "H600_scalar", "H700_scalar", "H800_scalar", "H400_pseudoscalar", "H500_pseudoscalar", "H600_pseudoscalar", "H700_pseudoscalar", "H800_pseudoscalar", "LINE", "dibosons", "st", "wjets", "zjets", "TT"]
 
 scales = {
-        'TT': 1,
-        'single_top': 1,
-        'single_antitop': 1,
-        'wjets': 1,
-        'zjets': 1,
-        'dibosons': 1
+        'TT': 1.11656917895,
+        'single_top': 0.752977096273,
+        'single_antitop': 0.726020758287,
+        'wjets': 0.752756649328,
+        'zjets': 0.798077448158,
+        'dibosons': 0.89601062945
         }
 
 categories = ["e", "mu"]

@@ -39,7 +39,9 @@ if not option.input:
 import sys
 sys.argv.append( '-b' )
 
-from ROOT import TFile, TCanvas, TColor, TLegend
+from ROOT import TFile, TCanvas, TColor, TLegend, TLine, gPad, gROOT
+gROOT.ProcessLine(".L tdrstyle.cc")
+gROOT.ProcessLine("setTDRStyle();")
 
 backgrounds = ["DATA", "TT", "single_antitop", "single_top", "zjets", "wjets", "dibosons", "H400_scalar", "H500_scalar", "H600_scalar", "H700_scalar", "H800_scalar", "H400_pseudoscalar", "H500_pseudoscalar", "H600_pseudoscalar", "H700_pseudoscalar", "H800_pseudoscalar"]
 
@@ -51,15 +53,6 @@ toMerge = [
         ]
 
 final_backgrounds = ["H400_scalar", "H500_scalar", "H600_scalar", "H700_scalar", "H800_scalar", "H400_pseudoscalar", "H500_pseudoscalar", "H600_pseudoscalar", "H700_pseudoscalar", "H800_pseudoscalar", "LINE", "dibosons", "st", "wjets", "zjets", "TT"]
-
-scales = {
-        'TT': 1,
-        'single_top': 1,
-        'single_antitop': 1,
-        'wjets': 1,
-        'zjets': 1,
-        'dibosons': 1
-        }
 
 categories = ["e", "mu"]
 btags = [1, 2]
@@ -86,9 +79,22 @@ def getChannelSyst(category, btag, background, syst, syst_variation):
     syst_channel = "%s__%s__%s" % (channel, syst, syst_variation)
     return syst_channel
 
+def getMax(a, b):
+    return max(a.GetMaximum(), b.GetMaximum())
+
+def getMin(a, b):
+    return min(a.GetMinimum(), b.GetMinimum())
+
 def drawRatio(nominal, up, down, syst, filename):
+
+    # Clear first 3 bins
+    for bin in range(1, 4):
+        nominal.SetBinContent(bin, 1)
+        up.SetBinContent(bin, 1)
+        down.SetBinContent(bin, 1)
+
     c = TCanvas("c", "c", 800, 800)
-    c.SetLeftMargin(0.15)
+    #c.SetLeftMargin(0.15)
 
     ratio_up = up.Clone()
     ratio_up.Divide(nominal)
@@ -99,28 +105,44 @@ def drawRatio(nominal, up, down, syst, filename):
     ratio_down.Divide(nominal)
 
     ratio_up.SetLineColor(TColor.GetColor('#C02942'))
-    ratio_down.SetLineColor(TColor.GetColor('#53777A'))
+    ratio_up.SetLineWidth(1)
+    ratio_down.SetLineColor(TColor.GetColor('#031634'))
+    ratio_down.SetLineStyle(2);
+    ratio_down.SetLineWidth(1)
 
-    ratio_up.Draw("hist L")
-    ratio_down.Draw("hist L same")
+    ratio_up.Draw("hist")
 
-    max = ratio_up.GetMaximum() * 1.02
-    min = ratio_down.GetMinimum() * 0.98
+    line = TLine(ratio_up.GetBinLowEdge(1), 1, ratio_up.GetXaxis().GetBinUpEdge(ratio_up.GetNbinsX()), 1)
+    line.SetLineColor(TColor.GetColor("#bbbbbb"))
+    line.SetLineWidth(1)
+    line.SetLineStyle(1)
+    line.Draw()
 
-    ratio_up.GetYaxis().SetTitle("ratio")
+    ratio_up.Draw("hist same")
+    ratio_down.Draw("hist same")
+
+    max_ = getMax(ratio_up, ratio_down) * 1.02
+    min_ = getMin(ratio_up, ratio_down) * 0.98
+
+    ratio_up.GetYaxis().SetTitle("ratio (#pm 1 #sigma / nominal)")
     ratio_up.GetYaxis().SetTitleOffset(2)
+    ratio_up.GetYaxis().SetLabelOffset(0.02)
+    ratio_up.GetXaxis().SetTitleOffset(1.5)
     ratio_up.GetXaxis().SetNdivisions(505)
     ratio_up.GetXaxis().SetTitle("m_{t#bar{t}}")
-    ratio_up.SetMaximum(max)
-    ratio_up.SetMinimum(min)
+    ratio_up.SetMaximum(max_)
+    ratio_up.SetMinimum(min_)
+    
+    gPad.RedrawAxis()
 
-    l = TLegend(0.67, 0.79, 0.87, 0.89)
+    l = TLegend(0.60, 0.79, 0.87, 0.89)
     l.SetBorderSize(0)
     l.SetTextFont(42)
     l.SetFillColor(0)
+    l.SetTextSize(0.03)
 
-    l.AddEntry(ratio_up, "%s up" % syst, "L")
-    l.AddEntry(ratio_down, "%s down" % syst, "L")
+    l.AddEntry(ratio_up, "%s up" % getPrettySysName(syst), "L")
+    l.AddEntry(ratio_down, "%s down" % getPrettySysName(syst), "L")
 
     l.Draw()
 
@@ -129,6 +151,11 @@ def drawRatio(nominal, up, down, syst, filename):
 
 f = TFile.Open(option.input)
 
+try:
+    os.makedirs("systematics_ratios")
+except:
+    pass
+    
 histos = {}
 for category in categories:
     for btag in btags:
@@ -138,6 +165,10 @@ for category in categories:
             histos[(category, btag, background)] = h
 
             for syst in systs:
+
+                if syst == "lept":
+                    syst = "lept_" + category
+
                 up = f.Get(getChannelSyst(category, btag, background, syst, "up"))
                 down = f.Get(getChannelSyst(category, btag, background, syst, "down"))
 
@@ -158,6 +189,9 @@ for mergeData in toMerge:
                     histos[(category, btag, mergeData["output"])] = histos[(category, btag, background)].Clone()
 
                 for syst in systs:
+
+                    if syst == "lept":
+                        syst = "lept_" + category
 
                     if not (category, btag, background, syst, "up") in histos:
                         continue
@@ -196,6 +230,26 @@ def getPrettyName(name):
 
     return name
 
+def getPrettySysName(name):
+    if name == "jec":
+        return "JES"
+    elif name == "jer":
+        return "JER"
+    elif name == "pu":
+        return "Pile-up"
+    elif name == "btag":
+        return "b-tagging"
+    elif "lept" in name:
+        return "Lepton id"
+    elif name == "scale":
+        return "Scale"
+    elif name == "matching":
+        return "Matching"
+    elif name == "trig":
+        return "Trigger"
+
+    return name
+
 
 for category in categories:
     for btag in btags:
@@ -203,8 +257,12 @@ for category in categories:
         for background in ['TT']:
             for syst in systs:
 
+                if syst == "lept":
+                    syst = "lept_" + category
+
                 if not (category, btag, background, syst, "up") in histos:
+                    print("Systematic '%s' not found for category %s:%d" % (syst, category, btag))
                     continue
 
                 filename = "%s_%s_%db_%s.pdf" % (background, category, btag, syst)
-                drawRatio(histos[(category, btag, background)], histos[(category, btag, background, syst, "up")], histos[(category, btag, background, syst, "down")], syst, filename)
+                drawRatio(histos[(category, btag, background)], histos[(category, btag, background, syst, "up")], histos[(category, btag, background, syst, "down")], syst, os.path.join("systematics_ratios", filename))

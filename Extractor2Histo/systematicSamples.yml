@@ -1,6 +1,6 @@
-btags: [1, 2]
+btags: [2]
 systs: ['JEC', 'JER', 'pu', 'trig', 'btag', 'lept']
-types: ['semie', 'semimu']
+types: ['semimu']
 
 data:
   -
@@ -9,144 +9,144 @@ data:
       - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_powheg_histos_%3%.root', type: down}
       - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_powheg_histos_%3%.root', type: up}
     output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_powheg_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_TT_madgraph_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_TT_madgraph_semilept_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_semilept_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_semilept_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_semilept_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_TT_madgraph_dilept_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_dilept_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_dilept_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_dilept_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_TT_madgraph_hadronic_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_hadronic_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_hadronic_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_hadronic_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_T_tW-channel_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_tW-channel_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_tW-channel_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_tW-channel_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_T_s-channel_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_s-channel_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_s-channel_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_s-channel_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_T_t-channel_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_t-channel_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_t-channel_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_t-channel_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_Tbar_tW-channel_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_tW-channel_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_tW-channel_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_tW-channel_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_Tbar_s-channel_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_s-channel_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_s-channel_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_s-channel_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_Tbar_t-channel_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_t-channel_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_t-channel_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_t-channel_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_WW_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_WW_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_WW_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_WW_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_WZ_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_WZ_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_WZ_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_WZ_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_ZZ_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_ZZ_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_ZZ_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_ZZ_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_DY1JetsToLL_M-50_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY1JetsToLL_M-50_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY1JetsToLL_M-50_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY1JetsToLL_M-50_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_DY2JetsToLL_M-50_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY2JetsToLL_M-50_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY2JetsToLL_M-50_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY2JetsToLL_M-50_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_DY3JetsToLL_M-50_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY3JetsToLL_M-50_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY3JetsToLL_M-50_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY3JetsToLL_M-50_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_DY4JetsToLL_M-50_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY4JetsToLL_M-50_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY4JetsToLL_M-50_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY4JetsToLL_M-50_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_W1JetsToLNu_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W1JetsToLNu_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W1JetsToLNu_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W1JetsToLNu_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_W2JetsToLNu_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W2JetsToLNu_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W2JetsToLNu_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W2JetsToLNu_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_W3JetsToLNu_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W3JetsToLNu_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W3JetsToLNu_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W3JetsToLNu_histos_%3%.root'
-  -
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_W4JetsToLNu_histos_nominal.root', type: nominal}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W4JetsToLNu_histos_%3%.root', type: down}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W4JetsToLNu_histos_%3%.root', type: up}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W4JetsToLNu_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_TT_madgraph_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_TT_madgraph_semilept_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_semilept_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_semilept_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_semilept_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_TT_madgraph_dilept_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_dilept_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_dilept_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_dilept_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_TT_madgraph_hadronic_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_hadronic_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_hadronic_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_hadronic_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_T_tW-channel_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_tW-channel_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_tW-channel_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_tW-channel_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_T_s-channel_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_s-channel_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_s-channel_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_s-channel_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_T_t-channel_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_t-channel_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_t-channel_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_T_t-channel_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_Tbar_tW-channel_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_tW-channel_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_tW-channel_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_tW-channel_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_Tbar_s-channel_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_s-channel_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_s-channel_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_s-channel_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_Tbar_t-channel_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_t-channel_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_t-channel_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_Tbar_t-channel_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_WW_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_WW_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_WW_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_WW_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_WZ_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_WZ_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_WZ_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_WZ_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_ZZ_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_ZZ_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_ZZ_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_ZZ_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_DY1JetsToLL_M-50_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY1JetsToLL_M-50_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY1JetsToLL_M-50_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY1JetsToLL_M-50_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_DY2JetsToLL_M-50_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY2JetsToLL_M-50_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY2JetsToLL_M-50_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY2JetsToLL_M-50_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_DY3JetsToLL_M-50_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY3JetsToLL_M-50_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY3JetsToLL_M-50_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY3JetsToLL_M-50_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_DY4JetsToLL_M-50_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY4JetsToLL_M-50_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY4JetsToLL_M-50_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_DY4JetsToLL_M-50_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_W1JetsToLNu_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W1JetsToLNu_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W1JetsToLNu_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W1JetsToLNu_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_W2JetsToLNu_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W2JetsToLNu_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W2JetsToLNu_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W2JetsToLNu_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_W3JetsToLNu_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W3JetsToLNu_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W3JetsToLNu_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W3JetsToLNu_histos_%3%.root'
+  #-
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_W4JetsToLNu_histos_nominal.root', type: nominal}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W4JetsToLNu_histos_%3%.root', type: down}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W4JetsToLNu_histos_%3%.root', type: up}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_W4JetsToLNu_histos_%3%.root'
 
-  -
-    manual: true
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_TT_madgraph_histos_nominal.root', type: nominal, cross-section: 245.8, generated-events: 6901778}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_scaleup.root', type: up, cross-section: 245.8, generated-events: 5009488}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_scaledown.root', type: down, cross-section: 245.8, generated-events: 5387181}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_scale.root'
-  -
-    manual: true
-    inputs:
-      - {file: 'plots/Latest/%1%-btag/%2%/MC_TT_madgraph_histos_nominal.root', type: nominal, cross-section: 245.8, generated-events: 6901778}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_matchingup.root', type: up, cross-section: 245.8, generated-events: 5415010}
-      - {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_matchingdown.root', type: down, cross-section: 245.8, generated-events: 5476728}
-    output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_matching.root'
+  #-
+    #manual: true
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_TT_madgraph_histos_nominal.root', type: nominal, cross-section: 245.8, generated-events: 6901778}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_scaleup.root', type: up, cross-section: 245.8, generated-events: 5009488}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_scaledown.root', type: down, cross-section: 245.8, generated-events: 5387181}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_scale.root'
+  #-
+    #manual: true
+    #inputs:
+      #- {file: 'plots/Latest/%1%-btag/%2%/MC_TT_madgraph_histos_nominal.root', type: nominal, cross-section: 245.8, generated-events: 6901778}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_matchingup.root', type: up, cross-section: 245.8, generated-events: 5415010}
+      #- {file: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_matchingdown.root', type: down, cross-section: 245.8, generated-events: 5476728}
+    #output: 'plots/Latest/%1%-btag/%2%/Systematics/MC_TT_madgraph_histos_matching.root'

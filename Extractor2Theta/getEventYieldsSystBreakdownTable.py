@@ -49,12 +49,12 @@ toMerge = [
 final_backgrounds = ["dibosons", "st", "wjets", "zjets", "TT"]
 
 scales = {
-        'TT': 1,
-        'single_top': 1,
-        'single_antitop': 1,
-        'wjets': 1,
-        'zjets': 1,
-        'dibosons': 1
+        'TT': 1.11656917895,
+        'single_top': 0.752977096273,
+        'single_antitop': 0.726020758287,
+        'wjets': 0.752756649328,
+        'zjets': 0.798077448158,
+        'dibosons': 0.89601062945
         }
 
 categories = ["e", "mu"]
@@ -119,6 +119,9 @@ for category in categories:
 
             sys_error = 0
             for syst in systs:
+                if syst == "lept":
+                    syst = "lept_" + category
+
                 up = getEventsSyst(f, category, btag, background, syst, "up")
                 down = getEventsSyst(f, category, btag, background, syst, "down")
 
@@ -137,17 +140,30 @@ for mergeData in toMerge:
     for category in categories:
         for btag in btags:
             event = 0
-            sys_error = 0
+            sys_error_total = 0
             for input in mergeData["inputs"]:
                 event += events[(category, btag, input)]
                 del events[(category, btag, input)]
 
+                for syst in systs:
+                    if syst == "lept":
+                        syst = "lept_" + category
+
+                    if not (category, btag, input, syst) in sys_errors:
+                        continue
+
+                    if not (category, btag, mergeData["output"], syst) in sys_errors:
+                        sys_errors[(category, btag, mergeData["output"], syst)] = 0
+
+                    sys_error = math.sqrt(sys_errors[(category, btag, mergeData["output"], syst)]**2 + sys_errors[(category, btag, input, syst)])
+                    sys_errors[(category, btag, mergeData["output"], syst)] = sys_error
+
                 # Merge systematic errors
-                sys_error = math.sqrt(sys_error**2 + sys_errors[(category, btag, input)]**2)
+                sys_error_total = math.sqrt(sys_error**2 + sys_errors[(category, btag, input)]**2)
                 del sys_errors[(category, btag, input)]
 
             events[(category, btag, mergeData["output"])] = event
-            sys_errors[(category, btag, mergeData["output"])] = sys_error
+            sys_errors[(category, btag, mergeData["output"])] = sys_error_total
 
 def getPrettyName(name):
 
@@ -181,7 +197,7 @@ def getPrettySysName(name):
         return "Pileup"
     elif name == "btag":
         return "b-tagging"
-    elif name == "lept":
+    elif "lept" in name:
         return "Lepton id and iso"
     elif name == "scale":
         return "Scale"
@@ -204,10 +220,15 @@ sys_errors[("mu", 2)] = 0
 
 for syst in systs:
     sys.stdout.write(' %s & ' % getPrettySysName(syst))
+    precision = 1
+    if "btag" in syst:
+        precision = 2
     for category in categories:
+        if "lept" in syst:
+            syst = "lept_" + category
         for btag in btags:
             syst_percent = sys_errors[(category, btag, 'TT', syst)] / events[(category, btag, 'TT')] * 100
-            sys.stdout.write("$%.1f\\,\\%%$" % (syst_percent))
+            sys.stdout.write((("$%%.%df\\,\\%%%%$") % (precision)) % (syst_percent))
 
             if category != "mu" or btag != 2:
                 sys.stdout.write(" & ")

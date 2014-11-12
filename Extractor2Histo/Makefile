@@ -27,7 +27,7 @@ AR            = ar
 ARFLAGS       = -cq
 
 CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I.. -I../SelectionMVA/include -I../BTag/include -I../external/ -I../include/ -I../external/include/ -I$(shell echo $(BOOST_ROOT))/include
-LIBS  		    = $(ROOTLIBS) -lboost_filesystem -lboost_regex -lGenVector -lTMVA
+LIBS  		    = $(ROOTLIBS) -lboost_filesystem -lboost_regex -lGenVector -lTMVA -lboost_system
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
 SOURCES		= $(wildcard *.$(SrcSuf))
