@@ -163,7 +163,7 @@ def drawRatio(nominal, up, down, syst, filename):
     title.SetTextSize(0.75 * c.GetTopMargin())
     title.SetTextFont(62)
     title.SetTextAlign(13)
-    title.AddText("CMS #font[52]{#scale[0.76]{Preliminary}}")
+    title.AddText("CMS #font[52]{#scale[0.76]{Simulation Preliminary}}")
     title.Draw()
 
     c.Print(filename)
