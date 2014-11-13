@@ -1,8 +1,10 @@
 configuration:
   width: 800
   height: 800
-  title: 'CMS preliminary, L = %lumi% fb^{-1}, #sqrt{s} = 8 TeV'
-  root: 'inputs/Latest/2-btag/semie'
+  luminosity-label: '%lumi% fb^{-1} (8 TeV)'
+  experiment: "CMS"
+  extra-label: "Preliminary"
+  root: 'inputs/Latest/0-btag/semie'
   luminosity: 19667
   luminosity-error: 0.026
   error-fill-style: 3154
