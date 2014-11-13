@@ -194,7 +194,7 @@ def getPrettySysName(name):
     elif name == "jer":
         return "Jet Energy Resolution"
     elif name == "pu":
-        return "Pileup"
+        return "Pile-up"
     elif name == "btag":
         return "b-tagging"
     elif "lept" in name:
@@ -220,7 +220,7 @@ sys_errors[("mu", 2)] = 0
 
 for syst in systs:
     sys.stdout.write(' %s & ' % getPrettySysName(syst))
-    precision = 1
+    precision = 2
     if "btag" in syst:
         precision = 2
     for category in categories:
