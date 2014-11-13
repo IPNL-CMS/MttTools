@@ -118,10 +118,15 @@ int main(int argc, char** argv) {
       for (auto& btag: btags) {
         for (auto& type: types) {
 
+          std::string btag_str = std::to_string(btag);
+          if (btag < 0) {
+            btag_str = "all";
+          }
+
           // Create main output file, containing all systematic uncertainties merged
           boost::format mainFormatter(output.string());
           mainFormatter.exceptions(boost::io::all_error_bits ^ (boost::io::too_many_args_bit | boost::io::too_few_args_bit )  );
-          mainFormatter % btag % type % "total_syst_errors";
+          mainFormatter % btag_str % type % "total_syst_errors";
 
           std::shared_ptr<TFile> mainOutputFile;
           
@@ -150,7 +155,7 @@ int main(int argc, char** argv) {
                 std::transform(systSuffix.begin(), systSuffix.end(), systSuffix.begin(), ::tolower);
 
               std::string fullSyst = syst + systSuffix;
-              formatter % btag % type;
+              formatter % btag_str % type;
 
               if (! manual)
                 formatter % fullSyst;
@@ -187,7 +192,7 @@ int main(int argc, char** argv) {
             // Create output file
             boost::format formatter(output.string());
             formatter.exceptions(boost::io::all_error_bits ^ (boost::io::too_many_args_bit | boost::io::too_few_args_bit )  );
-            formatter % btag % type % syst;
+            formatter % btag_str % type % syst;
 
             std::shared_ptr<TFile> outputFile(TFile::Open(formatter.str().c_str(), "recreate"));
             std::vector<std::shared_ptr<TH1>> uncertainties_hists;
