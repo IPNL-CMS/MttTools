@@ -99,7 +99,7 @@ MAXMH = 800
 
 def MakePvalPlot(MG):
 
-    c = ROOT.TCanvas("c","c",600,600)
+    c = ROOT.TCanvas("c","c", 800, 800)
 
     dhist = ROOT.TH1F("dh", "dh", 100, MINMH, MAXMH)
     dhist.GetYaxis().SetTitleOffset(1.5)
@@ -165,14 +165,24 @@ def MakePvalPlot(MG):
     legend.Draw()
     c.Update()
 
-    title = ROOT.TPaveText(c.GetLeftMargin(), 1 - c.GetTopMargin() + 0.005, 1 - c.GetRightMargin(), 1, "brNDC")
+    lumi = ROOT.TPaveText(c.GetLeftMargin(), 1 - 0.5 * c.GetTopMargin(), 1 - c.GetRightMargin(), 1, "brNDC")
+    lumi.SetFillStyle(0)
+    lumi.SetBorderSize(0)
+    lumi.SetMargin(0)
+    lumi.SetTextSize(0.6 * c.GetTopMargin())
+    lumi.SetTextFont(42)
+    lumi.SetTextAlign(33)
+    lumi.AddText("19.67 fb^{-1} (8 TeV)")
+    lumi.Draw()
+
+    title = ROOT.TPaveText(c.GetLeftMargin(), 1 - 0.5 * c.GetTopMargin(), 1 - c.GetRightMargin(), 1, "brNDC")
     title.SetFillStyle(0)
     title.SetBorderSize(0)
     title.SetMargin(0)
-    title.SetTextSize(FONTSIZE)
-    title.SetTextFont(42)
-    title.SetTextAlign(32)
-    title.AddText("CMS preliminary, L = 19.67 fb^{-1}, #sqrt{s} = 8 TeV")
+    title.SetTextSize(0.75 * c.GetTopMargin())
+    title.SetTextFont(62)
+    title.SetTextAlign(13)
+    title.AddText("CMS #font[52]{#scale[0.76]{Preliminary}}")
     title.Draw()
 
     c.Print("plot.pdf")
