@@ -234,10 +234,7 @@ int main(int argc, char** argv) {
               for (int i = 1; i <= uncertainties->GetNbinsX(); i++) {
                 float nominal_x = nominal->GetBinCenter(i);
                 float nominal_value = nominal->GetBinContent(i);
-                //float error_high = fabs(up->GetBinContent(i) - nominal_value);
-                //float error_low = fabs(nominal_value - down->GetBinContent(i));
 
-                // Normal approximation
                 float norm_plus = 0;
                 float norm_minus = 0;
                 if (up->GetBinError(i) / up->GetBinContent(i) < 0.4)
@@ -245,31 +242,20 @@ int main(int argc, char** argv) {
                 if (down->GetBinError(i) / down->GetBinContent(i) < 0.4)
                   norm_minus = nominal_value - down->GetBinContent(i);
 
-                float mu = (norm_plus + norm_minus) / 3.;
-                float mu_percent = (mu == 0 || nominal_value == 0) ? 0 : mu / nominal_value;
-                float sigma = std::sqrt(( std::pow(norm_plus - mu, 2) + mu * mu + std::pow(norm_minus - mu, 2) ) / 2.);
-                float sigma_percent = (sigma == 0 || nominal_value == 0) ? 0 : sigma / nominal_value;
+                float delta = (fabs(norm_plus) + fabs(norm_minus)) / 2.;
+                float delta_percent = (delta == 0 || nominal_value == 0) ? 0 : delta / nominal_value;
 
-                //float mean_error = (error_high + error_low) / 2.;
-                //float error = (nominal_value == 0) ? 0. : mean_error / nominal_value;
+                uncertainties->SetBinContent(i, 0.);
+                uncertainties->SetBinError(i, delta_percent);
 
-                //std::cout << "Nominal: " << nominal_value << std::endl;
-                //std::cout << "Nominal + mu: " << nominal_value + mu << std::endl;
-
-                //std::cout << "Error: " << mean_error << std::endl;
-                //std::cout << "Sigma: " << sigma << std::endl;
-
-                uncertainties->SetBinContent(i, mu_percent);
-                uncertainties->SetBinError(i, sigma_percent);
-
-                uncertainties_asym->SetPoint(index, nominal_x, nominal_value + mu);
-                uncertainties_asym->SetPointError(index, 0, 0, sigma, sigma);
+                uncertainties_asym->SetPoint(index, nominal_x, 0.);
+                uncertainties_asym->SetPointError(index, 0, 0, delta_percent, delta_percent);
                 index++;
 
                 if (! manual) {
-                  total_uncertainties->SetBinContent(i, total_uncertainties->GetBinContent(i) + mu_percent);
+                  total_uncertainties->SetBinContent(i, 0);
                   float total_error = total_uncertainties->GetBinError(i);
-                  total_uncertainties->SetBinError(i, sqrt(sigma_percent * sigma_percent + total_error * total_error));
+                  total_uncertainties->SetBinError(i, sqrt(delta_percent * delta_percent + total_error * total_error));
                 }
               }
 
