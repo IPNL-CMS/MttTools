@@ -85,7 +85,7 @@ void Extractor2Histos::Loop()
 
   TH1D *hIsSel = new TH1D("isSel", "", 10, 0, 10);
   TH1D *hBestSolChi2 = new TH1D("bestSolChi2", "", 400, 0, 1000);
-  TH1D *hBestSolChi2_fullsel = new TH1D("bestSolChi2_fullsel", "", 62, 0, 504);
+  TH1D *hBestSolChi2_fullsel = new TH1D("bestSolChi2_fullsel", "", 63, 0, 504);
   hBestSolChi2_fullsel->SetXTitle("#chi^{2}_{min}");
   TH1D *hBestSolChi2Exp_fullsel = new TH1D("bestSolChi2_exp_fullsel", "", 100, 0., 1.);
   hBestSolChi2Exp_fullsel->SetXTitle("exp(-#chi^{2})");
@@ -110,8 +110,8 @@ void Extractor2Histos::Loop()
   TH1D *hLeptTopPt_chi2sel = new TH1D("leptTopPt_reco_chi2sel", "", 15, 0., 600.);
   TH1D *hLeptTopPz = new TH1D("leptTopPz_reco_fullsel", "", 15, 0., 600.);
   TH1D *hLeptTopE = new TH1D("leptTopE_reco_fullsel", "", 15, 0., 600.);
-  hLeptTopE->SetXTitle("leptonic top E [GeV/c]");
-  hLeptTopMt->SetXTitle("leptonic top M_{t} [GeV/c]");
+  hLeptTopE->SetXTitle("leptonic top E (GeV)");
+  hLeptTopMt->SetXTitle("leptonic top M_{t} (GeV)");
   TH1D *hLeptTopPhi = new TH1D("leptTopPhi_reco_fullsel", "", 200, -4., 4.);
   hLeptTopPhi->SetXTitle("leptonic top #phi");
 
@@ -195,6 +195,9 @@ void Extractor2Histos::Loop()
   TH1D *hmtlep = new TH1D("mtLep_reco_fullsel", "", 50, 100., 350.);
   TH1D *hmthad = new TH1D("mtHad_reco_fullsel", "", 50, 100., 350.);
 
+  TH1D *hmWlep = new TH1D("mWLep_reco_fullsel", "", 40, 0., 200.);
+  TH1D *hmWhad = new TH1D("mWHad_reco_fullsel", "", 40, 0., 200.);
+
   TH1D *hmttSelected_btag_sel_positive = new TH1D("mttSelected_btag_sel_reco_fullsel_positive", "", 40, 0., 2000.);
   TH1D *hmttSelected_btag_sel_negative = new TH1D("mttSelected_btag_sel_reco_fullsel_negative", "", 40, 0., 2000.);
 
@@ -274,43 +277,43 @@ void Extractor2Histos::Loop()
   hkf_proba_zoom->SetXTitle("Proba_{KF}");
 
   if (mIsSemiMu) {
-    hSelectedLeptonPt->SetXTitle("selected #mu p_{T} [GeV/c]");
+    hSelectedLeptonPt->SetXTitle("selected #mu p_{T} (GeV)");
     hSelectedLeptonEta->SetXTitle("selected #mu #eta");
     hSelectedLeptonPhi->SetXTitle("selected #mu #phi");
-    hSelectedLeptonE->SetXTitle("selected #mu E [GeV/c]");
+    hSelectedLeptonE->SetXTitle("selected #mu E (GeV)");
   } else {
-    hSelectedLeptonPt->SetXTitle("selected e p_{T} [GeV/c]");
+    hSelectedLeptonPt->SetXTitle("selected e p_{T} (GeV)");
     hSelectedLeptonEta->SetXTitle("selected e #eta");
     hSelectedLeptonPhi->SetXTitle("selected e #phi");
-    hSelectedLeptonE->SetXTitle("selected e E [GeV/c]");
+    hSelectedLeptonE->SetXTitle("selected e E (GeV)");
   }
-  hSelectedFirstJetPt->SetXTitle("selected 1^{st} jet p_{T} [GeV/c]");
-  hSelectedSecondJetPt->SetXTitle("selected 2^{nd} jet p_{T} [GeV/c]");
-  hSelectedHadronicBPt->SetXTitle("selected had B p_{T} [GeV/c]");
-  hSelectedLeptonicBPt->SetXTitle("selected lep B p_{T} [GeV/c]");
-  hSelectedNeutrinoPt->SetXTitle("selected #nu p_{T} [GeV/c]");
-  hSelectedNeutrinoPz->SetXTitle("selected #nu p_{Z} [GeV/c]");
+  hSelectedFirstJetPt->SetXTitle("selected 1^{st} jet p_{T} (GeV)");
+  hSelectedSecondJetPt->SetXTitle("selected 2^{nd} jet p_{T} (GeV)");
+  hSelectedHadronicBPt->SetXTitle("selected hadronic B p_{T} (GeV)");
+  hSelectedLeptonicBPt->SetXTitle("selected leptonic B p_{T} (GeV)");
+  hSelectedNeutrinoPt->SetXTitle("selected #nu p_{T} (GeV)");
+  hSelectedNeutrinoPz->SetXTitle("selected #nu p_{Z} (GeV)");
 
   hSelectedFirstJetEta->SetXTitle("selected 1^{st} jet #eta");
   hSelectedSecondJetEta->SetXTitle("selected 2^{nd} jet #eta");
-  hSelectedHadronicBEta->SetXTitle("selected had B #eta");
-  hSelectedLeptonicBEta->SetXTitle("selected lep B #eta");
+  hSelectedHadronicBEta->SetXTitle("selected hadronic B #eta");
+  hSelectedLeptonicBEta->SetXTitle("selected leptonic B #eta");
   hSelectedNeutrinoEta->SetXTitle("selected #nu #eta");
 
   hSelectedFirstJetPhi->SetXTitle("selected 1^{st} jet #phi");
   hSelectedSecondJetPhi->SetXTitle("selected 2^{nd} jet #phi");
-  hSelectedHadronicBPhi->SetXTitle("selected had B #phi");
-  hSelectedLeptonicBPhi->SetXTitle("selected lep B #phi");
+  hSelectedHadronicBPhi->SetXTitle("selected hadronic B #phi");
+  hSelectedLeptonicBPhi->SetXTitle("selected leptonic B #phi");
   hSelectedNeutrinoPhi->SetXTitle("selected #nu #phi");
 
-  hSelectedFirstJetE->SetXTitle("selected 1^{st} jet E [GeV/c]");
-  hSelectedSecondJetE->SetXTitle("selected 2^{nd} jet E [GeV/c]");
-  hSelectedHadronicBE->SetXTitle("selected had B E [GeV/c]");
-  hSelectedLeptonicBE->SetXTitle("selected lep B E [GeV/c]");
-  hSelectedNeutrinoE->SetXTitle("selected #nu E [GeV/c]");
+  hSelectedFirstJetE->SetXTitle("selected 1^{st} jet E (GeV)");
+  hSelectedSecondJetE->SetXTitle("selected 2^{nd} jet E (GeV)");
+  hSelectedHadronicBE->SetXTitle("selected hadronic B E (GeV)");
+  hSelectedLeptonicBE->SetXTitle("selected leptonic B E (GeV)");
+  hSelectedNeutrinoE->SetXTitle("selected #nu E (GeV)");
 
-  hmtt_AfterChi2->SetXTitle("m_{t#bar{t}}^{Chi2} [GeV/c^{2}]");
-  hmtt_AfterKF->SetXTitle("m_{t#bar{t}}^{KF} [GeV/c^{2}]");
+  hmtt_AfterChi2->SetXTitle("m_{t#bar{t}}^{Chi2} (GeV)");
+  hmtt_AfterKF->SetXTitle("m_{t#bar{t}}^{KF} (GeV)");
 
   TH1D *hNGoodJets = new TH1D("nGoodJets_reco_fullsel", "", 6, 3.5, 9.5);
   TH1D *hNGoodJets_chi2sel = new TH1D("nGoodJets_reco_chi2sel", "", 6, 3.5, 9.5);
@@ -362,7 +365,7 @@ void Extractor2Histos::Loop()
   GaussianProfile mtt_gen_vs_mtt_reco_resolution_fourJets_fullSel("mtt_gen_vs_mtt_reco_resolution_fourJets_fullSel", nBins, bins, 100, -1.2, 1.2);
 
   TProfile *pMttResolution_btag_sel = new TProfile("pMttResolution_btag_sel", "", nBins, bins);
-  pMttResolution_btag_sel->SetXTitle("m_{t#bar{t}}^{gen} [GeV/c^{2}]");
+  pMttResolution_btag_sel->SetXTitle("m_{t#bar{t}}^{gen} (GeV)");
 
   TH1D *hBoostTT = new TH1D("boostTT_reco_fullsel", "", 50, 0., 1.);
   TH1D *hPtTT = new TH1D("ptTT_reco_fullsel", "", 60, 0., 600.);
@@ -395,7 +398,7 @@ void Extractor2Histos::Loop()
   // W
   TH1* hLeptonicWPt_gen = new TH1D("ptWLeptonic_gen", "", 15, 0, 600.);
   TH1* hLeptonicWMt = new TH1D("mtWLeptonic_reco_fullsel", "", 15, 0, 600.);
-  hLeptonicWMt->SetXTitle("Leptonic W M_{t} [GeV/c]");
+  hLeptonicWMt->SetXTitle("Leptonic W M_{t} (GeV)");
   TH1* hLeptonicWEta_gen = new TH1D("etaWLeptonic_gen", "", 25, -4*M_PI, 4*M_PI);
 
   /*****
@@ -408,7 +411,7 @@ void Extractor2Histos::Loop()
   // W
   TH1* hHadronicWPt_gen = new TH1D("ptWHadronic_gen", "", 15, 0, 600.);
   TH1* hHadronicWMt = new TH1D("mtWHadronic_reco_fullsel", "", 15, 0, 600.);
-  hHadronicWMt->SetXTitle("Hadronic W M_{t} [GeV/c]");
+  hHadronicWMt->SetXTitle("Hadronic W M_{t} (GeV)");
   TH1* hHadronicWEta_gen = new TH1D("etaWHadronic_gen", "", 25, -4*M_PI, 4*M_PI);
 
 
@@ -422,60 +425,65 @@ void Extractor2Histos::Loop()
 
   TH1* hHTFull_reco_nosel = new TH1D("HTFull_reco_nosel", "", 100, 0, 1000);
 
-  TH1* hHTFrac = new TH1D("HTFrac", "", 100, 0, 1);
+  TH1* hHTFrac = new TH1D("HTFrac", "", 50, 0, 1);
+  hHTFrac->SetXTitle("H_{T} fraction");
 
   if (mIsSemiMu) {
-    hLeptonPt->SetXTitle("#mu p_{T} [GeV/c]");
-    hLeptonPt_chi2sel->SetXTitle("#mu p_{T} [GeV/c]");
+    hLeptonPt->SetXTitle("#mu p_{T} (GeV)");
+    hLeptonPt_chi2sel->SetXTitle("#mu p_{T} (GeV)");
   } else {
-    hLeptonPt_chi2sel->SetXTitle("e p_{T} [GeV/c]");
-    hLeptonPt->SetXTitle("e p_{T} [GeV/c]");
+    hLeptonPt_chi2sel->SetXTitle("e p_{T} (GeV)");
+    hLeptonPt->SetXTitle("e p_{T} (GeV)");
   }
 
-  hLeptTopPz->SetXTitle("leptonic top p_{Z} [GeV/c]");
-  hHadrTopPz->SetXTitle("hadronic top p_{Z} [GeV/c]");
+  hLeptTopPz->SetXTitle("leptonic top p_{Z} (GeV)");
+  hHadrTopPz->SetXTitle("hadronic top p_{Z} (GeV)");
 
-  hFirstJetPt->SetXTitle("1^{st} jet p_{T} [GeV/c]");
-  hFirstJetPt_nosel->SetXTitle("1^{st} jet p_{T} [GeV/c]");
-  hFirstJetPt_chi2sel->SetXTitle("1^{st} jet p_{T} [GeV/c]");
+  hFirstJetPt->SetXTitle("1^{st} jet p_{T} (GeV)");
+  hFirstJetPt_nosel->SetXTitle("1^{st} jet p_{T} (GeV)");
+  hFirstJetPt_chi2sel->SetXTitle("1^{st} jet p_{T} (GeV)");
 
-  hSecondJetPt->SetXTitle("2^{nd} jet p_{T} [GeV/c]");
-  hSecondJetPt_chi2sel->SetXTitle("2^{nd} jet p_{T} [GeV/c]");
+  hSecondJetPt->SetXTitle("2^{nd} jet p_{T} (GeV)");
+  hSecondJetPt_chi2sel->SetXTitle("2^{nd} jet p_{T} (GeV)");
 
-  hThirdJetPt->SetXTitle("3^{rd} jet p_{T} [GeV/c]");
-  hThirdJetPt_chi2sel->SetXTitle("3^{rd} jet p_{T} [GeV/c]");
+  hThirdJetPt->SetXTitle("3^{rd} jet p_{T} (GeV)");
+  hThirdJetPt_chi2sel->SetXTitle("3^{rd} jet p_{T} (GeV)");
 
-  hFourthJetPt_chi2sel->SetXTitle("4^{th} jet p_{T} [GeV/c]");
+  hFourthJetPt->SetXTitle("4^{th} jet p_{T} (GeV)");
+  hFourthJetPt_chi2sel->SetXTitle("4^{th} jet p_{T} (GeV)");
 
-  hMET->SetXTitle("MET [GeV/c^{2}]");
-  hMETx->SetXTitle("MET_{X} [GeV/c^{2}]");
-  hMETy->SetXTitle("MET_{Y} [GeV/c^{2}]");
-  hMETPhi->SetXTitle("MET #phi [GeV/c^{2}]");
-  hMET_chi2sel->SetXTitle("MET [GeV/c^{2}]");
+  hMET->SetXTitle("MET (GeV)");
+  hMETx->SetXTitle("MET_{X} (GeV)");
+  hMETy->SetXTitle("MET_{Y} (GeV)");
+  hMETPhi->SetXTitle("MET #phi (GeV)");
+  hMET_chi2sel->SetXTitle("MET (GeV)");
 
-  hmtlep->SetXTitle("leptonic top mass [GeV/c^{2}]");
-  hmthad->SetXTitle("hadronic top mass [GeV/c^{2}]");
+  hmtlep->SetXTitle("leptonic top mass (GeV)");
+  hmthad->SetXTitle("hadronic top mass (GeV)");
 
-  h_mtt_gen_nosel->SetXTitle("m_{t#bar{t}}^{gen} [GeV/c^{2}]");
+  hmWlep->SetXTitle("leptonic W mass (GeV)");
+  hmWhad->SetXTitle("hadronic W mass (GeV)");
 
-  h_mtt_resolution->SetXTitle("m_{t#bar{t}}^{reco} - m_{t#bar{t}}^{gen} [GeV/c^{2}]");
+  h_mtt_gen_nosel->SetXTitle("m_{t#bar{t}}^{gen} (GeV)");
 
-  hmttSelected_btag_sel->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
-  hmttSelected_btag_sel_binning15GeV->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
-  hmttSelected_btag_sel_mass_cut->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
+  h_mtt_resolution->SetXTitle("m_{t#bar{t}}^{reco} - m_{t#bar{t}}^{gen} (GeV)");
 
-
-  hmttSelected_btag_sel_positive->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
-  hmttSelected_btag_sel_negative->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
-  hmttSelected_btag_sel->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
-  hmttSelected_btag_sel_binning15GeV->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
-  hmttSelected_btag_sel_no_gen_weight->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
-  hmttSelected_btag_sel_mass_cut->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
-  hmttSelected_background_bdt_btag_sel->SetXTitle("m_{t#bar{t}} [GeV/c^{2}]");
+  hmttSelected_btag_sel->SetXTitle("m_{t#bar{t}} (GeV)");
+  hmttSelected_btag_sel_binning15GeV->SetXTitle("m_{t#bar{t}} (GeV)");
+  hmttSelected_btag_sel_mass_cut->SetXTitle("m_{t#bar{t}} (GeV)");
 
 
-  hNGoodJets->SetXTitle("Number of good jets");
-  hNGoodJets_chi2sel->SetXTitle("Number of good jets");
+  hmttSelected_btag_sel_positive->SetXTitle("m_{t#bar{t}} (GeV)");
+  hmttSelected_btag_sel_negative->SetXTitle("m_{t#bar{t}} (GeV)");
+  hmttSelected_btag_sel->SetXTitle("m_{t#bar{t}} (GeV)");
+  hmttSelected_btag_sel_binning15GeV->SetXTitle("m_{t#bar{t}} (GeV)");
+  hmttSelected_btag_sel_no_gen_weight->SetXTitle("m_{t#bar{t}} (GeV)");
+  hmttSelected_btag_sel_mass_cut->SetXTitle("m_{t#bar{t}} (GeV)");
+  hmttSelected_background_bdt_btag_sel->SetXTitle("m_{t#bar{t}} (GeV)");
+
+
+  hNGoodJets->SetXTitle("Number of selected jets");
+  hNGoodJets_chi2sel->SetXTitle("Number of selected jets");
 
   Long64_t nentries = fMTT->GetEntries();
   //nentries = 10000;
