@@ -1091,11 +1091,14 @@ void Extractor2Histos::Loop()
       hDeltaRTops_reco_fullsel->Fill(ROOT::Math::VectorUtil::DeltaR(*lepTopP4_AfterReco, *hadTopP4_AfterReco), eventWeight);
       hDeltaThetaTops_reco_fullsel->Fill(fabs(lepTopP4_AfterReco->Theta() - hadTopP4_AfterReco->Theta()), eventWeight);
 
-      LorentzVector selectedHadronicWP4 = *selectedFirstJetP4_AfterReco + *selectedSecondJetP4_AfterReco + *selectedHadronicBP4_AfterReco;
-      LorentzVector selectedLeptonicWP4 = *selectedLeptonicBP4_AfterReco + *selectedNeutrinoP4_AfterReco + selectedLeptonP4_LV_AfterReco;
+      LorentzVector selectedHadronicWP4 = *selectedFirstJetP4_AfterReco + *selectedSecondJetP4_AfterReco;
+      LorentzVector selectedLeptonicWP4 = *selectedNeutrinoP4_AfterReco + selectedLeptonP4_LV_AfterReco;
 
       hLeptonicWMt->Fill(selectedLeptonicWP4.Mt(), eventWeight);
       hHadronicWMt->Fill(selectedHadronicWP4.Mt(), eventWeight);
+
+      hmWlep->Fill(selectedLeptonicWP4.M(), eventWeight);
+      hmWhad->Fill(selectedHadronicWP4.M(), eventWeight);
 
       hLeptTopPz->Fill(lepTopP4_AfterReco->Pz(), eventWeight);
       hHadrTopPz->Fill(hadTopP4_AfterReco->Pz(), eventWeight);
