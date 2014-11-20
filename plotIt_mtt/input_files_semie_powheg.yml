@@ -1,0 +1,5 @@
+'../data/Data_SingleElectron.root':
+  type: data
+  legend: "Data"
+
+include: ['input_files_mc_powheg.yml']
