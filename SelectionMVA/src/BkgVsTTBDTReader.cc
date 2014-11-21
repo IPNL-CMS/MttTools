@@ -3,6 +3,8 @@
 #include <Math/Vector3Dfwd.h>
 #include <TMath.h>
 
+#define USE_CATEGORIES true
+
 namespace MVAReaderUtils {
   TLorentzVector* getP4(TClonesArray* array, int index) {
     return (TLorentzVector*) array->At(index);
@@ -44,7 +46,11 @@ void BkgVsTTBDTReader::setupVariables() {
   m_reader->AddVariable("circularity", &circularity);
   m_reader->AddVariable("sphericity", &sphericity);
   //m_reader->AddVariable("mean_csv", &mean_csv);
+#if USE_CATEGORIES
+  m_reader->AddSpectator("n_btagged_jets", &n_btagged_jets_float);
+#else
   m_reader->AddVariable("n_btagged_jets", &n_btagged_jets_float);
+#endif
   m_reader->AddVariable("st", &st);
   m_reader->AddVariable("theta_lepton", &theta_lepton);
   m_reader->AddVariable("met", &MET);

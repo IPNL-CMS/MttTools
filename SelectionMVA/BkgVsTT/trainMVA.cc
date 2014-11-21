@@ -1,5 +1,6 @@
 #include "TMVA/Config.h"
 #include "TMVA/Factory.h"
+#include "TMVA/MethodCategory.h"
 
 #include <vector>
 #include <fstream>
@@ -9,6 +10,8 @@
 #include <TFile.h>
 
 #include "tclap/CmdLine.h"
+
+#define USE_CATEGORIES true
 
 void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {
 
@@ -87,7 +90,11 @@ int main(int argc, char** argv) {
     factory->AddVariable("circularity");
     factory->AddVariable("sphericity");
     //factory->AddVariable("mean_csv");
+#if USE_CATEGORIES
+    factory->AddSpectator("n_btagged_jets", 'I');
+#else
     factory->AddVariable("n_btagged_jets", 'I');
+#endif
     //factory->AddVariable("ht");
     factory->AddVariable("st");
     //if (useBDT) {
@@ -211,13 +218,24 @@ int main(int argc, char** argv) {
 
     factory->PrepareTrainingAndTestTree("", "", "V:VerboseLevel=Info");
 
+#if USE_CATEGORIES
+    TMVA::MethodCategory* category = dynamic_cast<TMVA::MethodCategory*>(factory->BookMethod(TMVA::Types::kCategory, "b_tag_category", "V"));
+#endif
+
     if (useBDT) {
       //factory->BookMethod(TMVA::Types::kBDT, "BDT", "V:nCuts=1000:NTrees=1000:MaxDepth=3:SeparationType=GiniIndexWithLaplace");
       //factory->BookMethod(TMVA::Types::kBDT, "BDT_default", "V:nCuts=200:NTrees=1000:MaxDepth=3");
       //factory->BookMethod(TMVA::Types::kBDT, "BDT_beta_0p2", "V:nCuts=200:NTrees=1000:MaxDepth=3:AdaBoostBeta=0.2");
       //factory->BookMethod(TMVA::Types::kBDT, "BDT_boost_grad", "V:nCuts=200:NTrees=1000:MaxDepth=3:BoostType=Grad");
-      factory->BookMethod(TMVA::Types::kBDT, "BDT_boost_grad_0p2", "V:nCuts=200:NTrees=2000:MaxDepth=3:BoostType=Grad:Shrinkage=0.2");
-      //factory->BookMethod(TMVA::Types::kBDT, "BDT_boost_grad_0p2_bagging", "V:nCuts=200:NTrees=2000:MaxDepth=3:BoostType=Grad:Shrinkage=0.2:UseBaggedGrad:GradBaggingFraction=0.6");
+      
+#if USE_CATEGORIES
+      category->AddMethod("n_btagged_jets == 0", "", TMVA::Types::kBDT, "0b_BDT_boost_grad_0p2", "V:nCuts=200:NTrees=2000:MaxDepth=3:BoostType=Grad:Shrinkage=0.2");
+      category->AddMethod("n_btagged_jets == 1", "", TMVA::Types::kBDT, "1b_BDT_boost_grad_0p2", "V:nCuts=200:NTrees=2000:MaxDepth=3:BoostType=Grad:Shrinkage=0.2");
+      category->AddMethod("n_btagged_jets >= 2", "", TMVA::Types::kBDT, "2b_BDT_boost_grad_0p2", "V:nCuts=200:NTrees=2000:MaxDepth=3:BoostType=Grad:Shrinkage=0.2");
+#else
+      factory->BookMethod(TMVA::Types::kBDT, "BDT_boost_grad_0p2_bagging", "V:nCuts=200:NTrees=2000:MaxDepth=3:BoostType=Grad:Shrinkage=0.2:UseBaggedGrad:GradBaggingFraction=0.6");
+#endif
+
       //factory->BookMethod(TMVA::Types::kBDT, "BDT_boost_grad_0p2_bagging_pruning", "V:nCuts=200:NTrees=2000:MaxDepth=5:BoostType=Grad:Shrinkage=0.2:UseBaggedGrad:GradBaggingFraction=0.6:PruneMethod=CostComplexity:PruneStrength=50");
       //factory->BookMethod(TMVA::Types::kBDT, "BDT_boost_grad_0p1", "V:nCuts=200:NTrees=2500:MaxDepth=3:BoostType=Grad:Shrinkage=0.1");
       //factory->BookMethod(TMVA::Types::kBDT, "BDT_boost_grad_0p1_bagging", "V:nCuts=200:NTrees=2500:MaxDepth=3:BoostType=Grad:Shrinkage=0.1:UseBaggedGrad:GradBaggingFraction=0.6");
