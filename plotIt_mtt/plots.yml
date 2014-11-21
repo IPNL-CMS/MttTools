@@ -318,7 +318,7 @@
   #show-errors: true
   #save-extensions: ["pdf"]
 
-'bdt*':
+'*bdt*':
   log-y: true 
   show-ratio: true
   fit-ratio: true
