@@ -1,6 +1,7 @@
 #include <BkgVsTTBDTReader.h>
 
 #include <Math/Vector3Dfwd.h>
+#include <TMath.h>
 
 namespace MVAReaderUtils {
   TLorentzVector* getP4(TClonesArray* array, int index) {
@@ -163,4 +164,188 @@ void BkgVsTTBDTReader::computeVariables(uint64_t entry) {
 
   ROOT::Math::XYZVector lepton_direction = lepton_p4_in_resonance_rest_frame.Vect();
   theta_lepton = ROOT::Math::VectorUtil::Angle(leptonic_T_direction, lepton_direction);
+}
+
+void BkgVsTTBDTReader::createPlots(TFile* f) {
+  f->cd();
+
+  h_aplanarity = new TH1F("aplanarity_bdt", "", 25, 0., 0.5);
+  h_circularity = new TH1F("circularity_bdt", "", 25, 0., 1.);
+  h_sphericity = new TH1F("sphericity_bdt", "", 25, 0., 1.);
+  h_mean_csv = new TH1F("mean_csv_bdt", "", 25, 0., 1.);
+  h_n_btagged_jets = new TH1F("n_btagged_jets_bdt", "", 6, -1, 5);
+  h_st = new TH1F("st_bdt", "", 40, 0, 2000);
+  h_theta_lepton = new TH1F("theta_lepton_bdt", "", 5, 0, M_PI);
+  h_MET = new TH1F("MET_bdt", "", 20, 0., 400.);
+  //h_neutrino_pt;
+  h_lepton_pt = new TH1F("lepton_pt_bdt", "", 20, 0., 400.);
+  h_lepton_eta = new TH1F("lepton_eta_bdt", "", 25, -2*M_PI, 2*M_PI);
+  h_leptonic_B_eta = new TH1F("leptonic_B_eta_bdt", "", 25, -2*M_PI, 2*M_PI);
+  h_hadronic_B_eta = new TH1F("hadronic_B_eta_bdt", "", 25, -2*M_PI, 2*M_PI);
+  h_hadronic_first_jet_pt_plus_hadronic_second_jet_pt = new TH1F("hadronic_first_jet_pt_plus_hadronic_second_jet_pt_bdt", "", 15, 0., 600.);
+  h_hadronic_first_jet_eta_plus_hadronic_second_jet_eta = new TH1F("hadronic_first_jet_eta_plus_hadronic_second_jet_eta_bdt", "", 25, -2*M_PI, 2*M_PI);
+  h_leptonic_T_pt = new TH1F("leptonic_T_pt_bdt", "", 15, 0., 600.);
+  h_leptonic_T_transverse_mass = new TH1F("leptonic_T_transverse_mass_bdt", "", 15, 0., 600.);
+  h_hadronic_T_pt = new TH1F("hadronic_T_pt_bdt", "", 15, 0., 600.);
+  //h_resonance_pt;
+  //h_resonance_eta;
+  h_neutrino_leptonic_B_delta_R = new TH1F("neutrino_leptonic_B_delta_R_bdt", "", 50, 0, 10);
+  h_neutrino_lepton_delta_R = new TH1F("neutrino_lepton_delta_R _bdt", "", 50, 0, 10);
+  h_neutrino_hadronic_B_delta_R = new TH1F("neutrino_hadronic_B_delta_R_bdt", "", 50, 0, 10);
+  h_neutrino_hadronic_first_jet_delta_R_plus_neutrino_hadronic_second_jet_delta_R = new TH1F("neutrino_hadronic_first_jet_delta_R_plus_neutrino_hadronic_second_jet_delta_R_bdt", "", 100, 0, 20);
+  h_neutrino_hadronic_first_jet_delta_R = new TH1F("neutrino_hadronic_first_jet_delta_R_bdt", "", 50, 0, 10);
+  h_neutrino_hadronic_second_jet_delta_R = new TH1F("neutrino_hadronic_second_jet_delta_R_bdt", "", 50, 0, 10);
+  h_lepton_leptonic_B_delta_R = new TH1F("lepton_leptonic_B_delta_R_bdt", "", 50, 0, 10);
+  h_lepton_hadronic_B_delta_R = new TH1F("lepton_hadronic_B_delta_R_bdt", "", 50, 0, 10);
+  h_lepton_hadronic_first_jet_delta_R_plus_lepton_hadronic_second_jet_delta_R = new TH1F("lepton_hadronic_first_jet_delta_R_plus_lepton_hadronic_second_jet_delta_R_bdt", "", 100, 0, 20);
+  h_lepton_hadronic_first_jet_delta_R = new TH1F("lepton_hadronic_first_jet_delta_R_bdt", "", 50, 0, 10);
+  h_lepton_hadronic_second_jet_delta_R = new TH1F("lepton_hadronic_second_jet_delta_R_bdt", "", 50, 0, 10);
+  h_leptonic_B_hadronic_B_delta_R = new TH1F("leptonic_B_hadronic_B_delta_R_bdt", "", 50, 0, 10);
+  h_leptonic_B_hadronic_first_jet_delta_R_plus_leptonic_B_hadronic_second_jet_delta_R = new TH1F("leptonic_B_hadronic_first_jet_delta_R_plus_leptonic_B_hadronic_second_jet_delta_R_bdt", "", 100, 0, 20);
+  h_leptonic_B_hadronic_first_jet_delta_R = new TH1F("leptonic_B_hadronic_first_jet_delta_R_bdt", "", 50, 0, 10);
+  h_leptonic_B_hadronic_second_jet_delta_R = new TH1F("leptonic_B_hadronic_second_jet_delta_R_bdt", "", 50, 0, 10);
+  h_hadronic_B_hadronic_first_jet_delta_R_plus_hadronic_B_hadronic_second_jet_delta_R = new TH1F("hadronic_B_hadronic_first_jet_delta_R_plus_hadronic_B_hadronic_second_jet_delta_R_bdt", "", 100, 0, 20);
+  h_hadronic_B_hadronic_first_jet_delta_R = new TH1F("hadronic_B_hadronic_first_jet_delta_R_bdt", "", 50, 0, 10);
+  h_hadronic_B_hadronic_second_jet_delta_R = new TH1F("hadronic_B_hadronic_second_jet_delta_R_bdt", "", 50, 0, 10);
+  h_hadronic_first_jet_hadronic_second_jet_delta_R = new TH1F("hadronic_first_jet_hadronic_second_jet_delta_R_bdt", "", 50, 0, 10);
+  //h_leptonic_W_hadronic_W_delta_R;
+  //h_leptonic_T_hadronic_T_delta_R;
+  //h_cos_theta_leading_top_resonance;
+
+  h_aplanarity->SetXTitle("Aplanarity");
+  h_circularity->SetXTitle("Circularity");
+  h_sphericity->SetXTitle("Sphericity");
+  h_mean_csv->SetXTitle("Mean CSV");
+  h_n_btagged_jets->SetXTitle("Number of b-tagged jets");
+  h_st->SetXTitle("ST = HT + p_{T, Lepton} (GeV)");
+  h_theta_lepton->SetXTitle("#theta (leptonic top, lepton)_{resonance rest frame}");
+  h_MET->SetXTitle("MET (GeV)");
+  //h_neutrino_pt->SetXTitle("");
+  h_lepton_pt->SetXTitle("Lepton p_{T} (GeV)");
+  h_lepton_eta->SetXTitle("Lepton #eta");
+  h_leptonic_B_eta->SetXTitle("Leptonic B #eta");
+  h_hadronic_B_eta->SetXTitle("Hadronic B #eta");
+  h_hadronic_first_jet_pt_plus_hadronic_second_jet_pt->SetXTitle("p_{T}^{hadronic first jet} + p_{T}^{hadronic second jet} (GeV)");
+  h_hadronic_first_jet_eta_plus_hadronic_second_jet_eta->SetXTitle("#eta^{hadronic first jet} + #eta^{hadronic second jet}");
+  h_leptonic_T_pt->SetXTitle("Leptonic top p_{T} (GeV)");
+  h_leptonic_T_transverse_mass->SetXTitle("Leptonic top m_{T} (GeV)");
+  h_hadronic_T_pt->SetXTitle("Hadronic top p_{T} (GeV)");
+  //h_resonance_pt->SetXTitle("");
+  //h_resonance_eta->SetXTitle("");
+  h_neutrino_leptonic_B_delta_R->SetXTitle("#Delta R (neutrino, leptonic B)");
+  h_neutrino_lepton_delta_R->SetXTitle("#Delta R (neutrino, lepton)");
+  h_neutrino_hadronic_B_delta_R->SetXTitle("#Delta R (neutrino, hadronic B)");
+  h_neutrino_hadronic_first_jet_delta_R_plus_neutrino_hadronic_second_jet_delta_R->SetXTitle("#Delta R (#nu, hadronic 1^{st} jet) + #Delta R (#nu, hadronic 2^{nd} jet)");
+  h_neutrino_hadronic_first_jet_delta_R->SetXTitle("#Delta R (#nu, hadronic 1^{st} jet)");
+  h_neutrino_hadronic_second_jet_delta_R->SetXTitle("#Delta R (#nu, hadronic 2^{nd} jet)");
+  h_lepton_leptonic_B_delta_R->SetXTitle("#Delta R (lepton, leptonic B)");
+  h_lepton_hadronic_B_delta_R->SetXTitle("#Delta R (lepton, hadronic B)");
+  h_lepton_hadronic_first_jet_delta_R_plus_lepton_hadronic_second_jet_delta_R->SetXTitle("#Delta R (lepton, hadronic 1^{st} jet) + #Delta R (lepton, hadronic 2^{nd} jet)");
+  h_lepton_hadronic_first_jet_delta_R->SetXTitle("#Delta R (lepton, hadronic 1^{st} jet)");
+  h_lepton_hadronic_second_jet_delta_R->SetXTitle("#Delta R (lepton, hadronic 2^{nd} jet)");
+  h_leptonic_B_hadronic_B_delta_R->SetXTitle("#Delta R (leptonic B, hadronic B)");
+  h_leptonic_B_hadronic_first_jet_delta_R_plus_leptonic_B_hadronic_second_jet_delta_R->SetXTitle("#Delta R (leptonic B, hadronic 1^{st} jet) + #Delta R (leptonic B, hadronic 2^{nd} jet)");
+  h_leptonic_B_hadronic_first_jet_delta_R->SetXTitle("#Delta R (leptonic B, hadronic 1^{st} jet)");
+  h_leptonic_B_hadronic_second_jet_delta_R->SetXTitle("#Delta R (leptonic B, hadronic 2^{nd} jet)");
+  h_hadronic_B_hadronic_first_jet_delta_R_plus_hadronic_B_hadronic_second_jet_delta_R->SetXTitle("#Delta R (hadronic B, hadronic 1^{st} jet) + #Delta R (hadronic B, hadronic 2^{nd} jet)");
+  h_hadronic_B_hadronic_first_jet_delta_R->SetXTitle("#Delta R (hadronic B, hadronic 1^{st} jet)");
+  h_hadronic_B_hadronic_second_jet_delta_R->SetXTitle("#Delta R (hadronic B, hadronic 2^{nd} jet)");
+  h_hadronic_first_jet_hadronic_second_jet_delta_R->SetXTitle("#Delta R (hadronic 1^{st} jet, hadronic 2^{nd} jet)");
+  //h_leptonic_W_hadronic_W_delta_R->SetXTitle("");
+  //h_leptonic_T_hadronic_T_delta_R->SetXTitle("");
+  //h_cos_theta_leading_top_resonance->SetXTitle("");
+
+}
+
+void BkgVsTTBDTReader::fillPlots(float weight) {
+  h_aplanarity->Fill(aplanarity, weight);
+  h_circularity->Fill(circularity, weight);
+  h_sphericity->Fill(sphericity, weight);
+  h_mean_csv->Fill(mean_csv, weight);
+  h_n_btagged_jets->Fill(n_btagged_jets, weight);
+  h_st->Fill(st, weight);
+  h_theta_lepton->Fill(theta_lepton, weight);
+  h_MET->Fill(MET, weight);
+  //h_neutrino_pt->Fill(, weight);
+  h_lepton_pt->Fill(lepton_pt, weight);
+  h_lepton_eta->Fill(lepton_eta, weight);
+  h_leptonic_B_eta->Fill(leptonic_B_eta, weight);
+  h_hadronic_B_eta->Fill(hadronic_B_eta, weight);
+  h_hadronic_first_jet_pt_plus_hadronic_second_jet_pt->Fill(hadronic_first_jet_pt_plus_hadronic_second_jet_pt, weight);
+  h_hadronic_first_jet_eta_plus_hadronic_second_jet_eta->Fill(hadronic_first_jet_eta_plus_hadronic_second_jet_eta, weight);
+  h_leptonic_T_pt->Fill(leptonic_T_pt, weight);
+  h_leptonic_T_transverse_mass->Fill(leptonic_T_transverse_mass, weight);
+  h_hadronic_T_pt->Fill(hadronic_T_pt, weight);
+  //h_resonance_pt->Fill(, weight);
+  //h_resonance_eta->Fill(, weight);
+  h_neutrino_leptonic_B_delta_R->Fill(neutrino_leptonic_B_delta_R, weight);
+  h_neutrino_lepton_delta_R->Fill(neutrino_lepton_delta_R, weight);
+  h_neutrino_hadronic_B_delta_R->Fill(neutrino_hadronic_B_delta_R, weight);
+  h_neutrino_hadronic_first_jet_delta_R_plus_neutrino_hadronic_second_jet_delta_R->Fill(neutrino_hadronic_first_jet_delta_R_plus_neutrino_hadronic_second_jet_delta_R, weight);
+  h_neutrino_hadronic_first_jet_delta_R->Fill(neutrino_hadronic_first_jet_delta_R, weight);
+  h_neutrino_hadronic_second_jet_delta_R->Fill(neutrino_hadronic_second_jet_delta_R, weight);
+  h_lepton_leptonic_B_delta_R->Fill(lepton_leptonic_B_delta_R, weight);
+  h_lepton_hadronic_B_delta_R->Fill(lepton_hadronic_B_delta_R, weight);
+  h_lepton_hadronic_first_jet_delta_R_plus_lepton_hadronic_second_jet_delta_R->Fill(lepton_hadronic_first_jet_delta_R_plus_lepton_hadronic_second_jet_delta_R, weight);
+  h_lepton_hadronic_first_jet_delta_R->Fill(lepton_hadronic_first_jet_delta_R, weight);
+  h_lepton_hadronic_second_jet_delta_R->Fill(lepton_hadronic_second_jet_delta_R, weight);
+  h_leptonic_B_hadronic_B_delta_R->Fill(leptonic_B_hadronic_B_delta_R, weight);
+  h_leptonic_B_hadronic_first_jet_delta_R_plus_leptonic_B_hadronic_second_jet_delta_R->Fill(leptonic_B_hadronic_first_jet_delta_R_plus_leptonic_B_hadronic_second_jet_delta_R, weight);
+  h_leptonic_B_hadronic_first_jet_delta_R->Fill(leptonic_B_hadronic_first_jet_delta_R, weight);
+  h_leptonic_B_hadronic_second_jet_delta_R->Fill(leptonic_B_hadronic_second_jet_delta_R, weight);
+  h_hadronic_B_hadronic_first_jet_delta_R_plus_hadronic_B_hadronic_second_jet_delta_R->Fill(hadronic_B_hadronic_first_jet_delta_R_plus_hadronic_B_hadronic_second_jet_delta_R, weight);
+  h_hadronic_B_hadronic_first_jet_delta_R->Fill(hadronic_B_hadronic_first_jet_delta_R, weight);
+  h_hadronic_B_hadronic_second_jet_delta_R->Fill(hadronic_B_hadronic_second_jet_delta_R, weight);
+  h_hadronic_first_jet_hadronic_second_jet_delta_R->Fill(hadronic_first_jet_hadronic_second_jet_delta_R, weight);
+  //h_leptonic_W_hadronic_W_delta_R->Fill(, weight);
+  //h_leptonic_T_hadronic_T_delta_R->Fill(, weight);
+  //h_cos_theta_leading_top_resonance->Fill(, weight);
+}
+
+void BkgVsTTBDTReader::writePlots(TFile* f) {
+  f->cd();
+
+  h_aplanarity->Write();
+  h_circularity->Write();
+  h_sphericity->Write();
+  h_mean_csv->Write();
+  h_n_btagged_jets->Write();
+  h_st->Write();
+  h_theta_lepton->Write();
+  h_MET->Write();
+  //h_neutrino_pt->Write();
+  h_lepton_pt->Write();
+  h_lepton_eta->Write();
+  h_leptonic_B_eta->Write();
+  h_hadronic_B_eta->Write();
+  h_hadronic_first_jet_pt_plus_hadronic_second_jet_pt->Write();
+  h_hadronic_first_jet_eta_plus_hadronic_second_jet_eta->Write();
+  h_leptonic_T_pt->Write();
+  h_leptonic_T_transverse_mass->Write();
+  h_hadronic_T_pt->Write();
+  //h_resonance_pt->Write();
+  //h_resonance_eta->Write();
+  h_neutrino_leptonic_B_delta_R->Write();
+  h_neutrino_lepton_delta_R->Write();
+  h_neutrino_hadronic_B_delta_R->Write();
+  h_neutrino_hadronic_first_jet_delta_R_plus_neutrino_hadronic_second_jet_delta_R->Write();
+  h_neutrino_hadronic_first_jet_delta_R->Write();
+  h_neutrino_hadronic_second_jet_delta_R->Write();
+  h_lepton_leptonic_B_delta_R->Write();
+  h_lepton_hadronic_B_delta_R->Write();
+  h_lepton_hadronic_first_jet_delta_R_plus_lepton_hadronic_second_jet_delta_R->Write();
+  h_lepton_hadronic_first_jet_delta_R->Write();
+  h_lepton_hadronic_second_jet_delta_R->Write();
+  h_leptonic_B_hadronic_B_delta_R->Write();
+  h_leptonic_B_hadronic_first_jet_delta_R_plus_leptonic_B_hadronic_second_jet_delta_R->Write();
+  h_leptonic_B_hadronic_first_jet_delta_R->Write();
+  h_leptonic_B_hadronic_second_jet_delta_R->Write();
+  h_hadronic_B_hadronic_first_jet_delta_R_plus_hadronic_B_hadronic_second_jet_delta_R->Write();
+  h_hadronic_B_hadronic_first_jet_delta_R->Write();
+  h_hadronic_B_hadronic_second_jet_delta_R->Write();
+  h_hadronic_first_jet_hadronic_second_jet_delta_R->Write();
+  //h_leptonic_W_hadronic_W_delta_R->Write();
+  //h_leptonic_T_hadronic_T_delta_R->Write();
+  //h_cos_theta_leading_top_resonance->Write();
+
 }

@@ -5,6 +5,7 @@
 #include <memory>
 
 #include <TBranch.h>
+#include <TFile.h>
 #include <TChain.h>
 #include <TMVA/Reader.h>
 
@@ -14,6 +15,9 @@ class MVAReader {
 
     virtual void initMVA(const std::string& weightFile);
     virtual float evaluate(uint64_t entry) final;
+    virtual void createPlots(TFile* f) {};
+    virtual void writePlots(TFile* f) {};
+    virtual void fillPlots(float weight) {};
 
   protected:
 
