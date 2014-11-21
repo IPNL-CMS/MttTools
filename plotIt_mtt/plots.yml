@@ -23,7 +23,7 @@
   save-extensions: ["pdf"]
 
 'MET_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -32,7 +32,7 @@
   save-extensions: ["pdf"]
   
 'MET?_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   log-y: false 
   show-ratio: true
   fit-ratio: false
@@ -41,7 +41,7 @@
   save-extensions: ["pdf"]
 
 '*Jet*_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -50,7 +50,7 @@
   save-extensions: ["pdf"]
 
 'leptonPt_reco_fullsel':
-  rebin: 5
+  #rebin: 5
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -59,7 +59,7 @@
   save-extensions: ["pdf"]
 
 #'mtt_resolution':
-  #rebin: 4
+  ##rebin: 4
   #log-y: true 
   #show-ratio: true
   #fit-ratio: false
@@ -68,7 +68,7 @@
   #save-extensions: ["pdf"]
 
 'nBTaggedJets_reco_fullsel':
-  rebin: 1
+  #rebin: 1
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -77,7 +77,7 @@
   save-extensions: ["pdf"]
 
 'nGoodJets_reco_fullsel':
-  rebin: 1
+  #rebin: 1
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -86,7 +86,7 @@
   save-extensions: ["pdf"]
 
 'nVertex_reco_fullsel':
-  rebin: 2
+  #rebin: 2
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -96,7 +96,7 @@
   save-extensions: ["pdf"]
 
 #'*TT_reco_fullsel':
-  #rebin: 4
+  ##rebin: 4
   #log-y: true 
   #show-ratio: true
   #fit-ratio: false
@@ -105,7 +105,7 @@
   #save-extensions: ["pdf"]
 
 'selected*_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -114,7 +114,7 @@
   save-extensions: ["pdf"]
 
 'kf_chisquare_fullsel':
-  rebin: 16
+  #rebin: 16
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -123,7 +123,7 @@
   save-extensions: ["pdf"]
 
 'kf_proba_fullsel':
-  rebin: 4
+  #rebin: 4
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -133,7 +133,7 @@
   y-axis-range: [0.001, 100000.]
 
 'kf_proba_fullsel_zoom':
-  rebin: 8 
+  #rebin: 8 
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -143,7 +143,7 @@
   y-axis-range: [0.001, 100000.]
 
 'METPhi_reco_fullsel':
-  rebin: 10
+  #rebin: 10
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -152,7 +152,7 @@
   save-extensions: ["pdf"]
 
 'bestSolChi2_fullsel':
-  rebin: 6
+  #rebin: 6
   log-y: True 
   show-ratio: true
   fit-ratio: false
@@ -161,7 +161,7 @@
   save-extensions: ["pdf"]
 
 'bestSolChi2_exp_fullsel':
-  rebin: 6
+  #rebin: 6
   log-y: True 
   show-ratio: true
   fit-ratio: false
@@ -170,7 +170,7 @@
   save-extensions: ["pdf"]
 
 'bestSolChi2Proba_fullsel':
-  rebin: 6
+  #rebin: 6
   log-y: True 
   show-ratio: true
   fit-ratio: false
@@ -179,7 +179,7 @@
   save-extensions: ["pdf"]
 
 'mtWLeptonic_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -188,7 +188,7 @@
   save-extensions: ["pdf"]
 
 'leptTopPt_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   x-axis: "leptonic top p_{T} [GeV/c]"
   log-y: true 
   show-ratio: true
@@ -198,7 +198,7 @@
   save-extensions: ["pdf"]
 
 'leptTopMt_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -207,7 +207,7 @@
   save-extensions: ["pdf"]
 
 'leptTopEta_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   x-axis: "leptonic top #eta"
   log-y: true 
   show-ratio: true
@@ -217,7 +217,7 @@
   save-extensions: ["pdf"]
 
 'leptTopPhi_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -226,7 +226,7 @@
   save-extensions: ["pdf"]
 
 'leptTopE_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -235,7 +235,7 @@
   save-extensions: ["pdf"]
 
 'mtLep_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -244,7 +244,7 @@
   save-extensions: ["pdf"]
 
 'mtWHadronic_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -253,7 +253,7 @@
   save-extensions: ["pdf"]
 
 'hadrTopPt_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   x-axis: "hadronic top p_{T} [GeV/c]"
   log-y: true 
   show-ratio: true
@@ -263,7 +263,7 @@
   save-extensions: ["pdf"]
 
 'hadrTopMt_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -272,7 +272,7 @@
   save-extensions: ["pdf"]
 
 'hadrTopEta_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   x-axis: "hadronic top #eta"
   log-y: true 
   show-ratio: true
@@ -282,7 +282,7 @@
   save-extensions: ["pdf"]
 
 'hadrTopPhi_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -291,7 +291,7 @@
   save-extensions: ["pdf"]
 
 'hadrTopE_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -300,7 +300,7 @@
   save-extensions: ["pdf"]
 
 'mtHad_reco_fullsel':
-  rebin: 4
+  #rebin: 4
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -309,7 +309,7 @@
   save-extensions: ["pdf"]
 
 #'delta*Tops_reco_fullsel':
-  #rebin: 4
+  ##rebin: 4
   #log-y: true 
   #show-ratio: true
   #fit-ratio: false
@@ -318,7 +318,7 @@
   #save-extensions: ["pdf"]
   
 #'HTFrac':
-  #rebin: 2
+  ##rebin: 2
   #log-y: true 
   #show-ratio: true
   #fit-ratio: false
@@ -335,7 +335,7 @@
   save-extensions: ["pdf"]
 
 '*ity_reco_fullsel':
-  rebin: 2
+  #rebin: 2
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -344,7 +344,7 @@
   save-extensions: ["pdf"]
 
 'isotropy_reco_fullsel':
-  rebin: 2
+  #rebin: 2
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -353,7 +353,7 @@
   save-extensions: ["pdf"]
 
 'C_reco_fullsel':
-  rebin: 2
+  #rebin: 2
   log-y: true 
   show-ratio: true
   fit-ratio: false
@@ -362,7 +362,7 @@
   save-extensions: ["pdf"]
 
 'D_reco_fullsel':
-  rebin: 2
+  #rebin: 2
   log-y: true 
   show-ratio: true
   fit-ratio: false
