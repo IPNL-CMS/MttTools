@@ -1,7 +1,7 @@
 background:
   - b-tag: -1
-    cut: 0.025
-    weights: "/gridgroup/cms/brochet/HTT/CMSSW_analysis/SL6/MttTools/SelectionMVA/BkgVsTT/bdt_trained/21Nov14_btag_categories/all-btag/weights/BDT_all-btag_b_tag_category.weights.xml"
+    cut: -0.038
+    weights: "/gridgroup/cms/brochet/HTT/CMSSW_analysis/SL6/MttTools/SelectionMVA/BkgVsTT/bdt_trained/06Nov14/all-btag/weights/BDT_all-btag_BDT_boost_grad_0p2.weights.xml"
 signal:
   - b-tag: -1
     cut: -1

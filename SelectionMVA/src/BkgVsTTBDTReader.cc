@@ -3,7 +3,7 @@
 #include <Math/Vector3Dfwd.h>
 #include <TMath.h>
 
-#define USE_CATEGORIES true
+#define USE_CATEGORIES false
 
 namespace MVAReaderUtils {
   TLorentzVector* getP4(TClonesArray* array, int index) {
