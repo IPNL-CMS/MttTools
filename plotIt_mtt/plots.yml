@@ -6,6 +6,14 @@
   show-errors: true
   save-extensions: ["pdf"]
 
+'mttSelected_btag_sel_reco_fullsel_binning15GeV':
+  log-y: false
+  show-ratio: true
+  fit-ratio: true
+  fit-function: "pol1"
+  show-errors: true
+  save-extensions: ["pdf"]
+
 'mttSelected_bkg_bdt_btag_sel_reco_fullsel':
   log-y: true
   show-ratio: true
