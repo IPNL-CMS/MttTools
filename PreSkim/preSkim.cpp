@@ -59,6 +59,9 @@ void PreSkim::Loop()
   TH1D *hEtaTT_gen = new TH1D("etaTT_gen", "", 50, -2*M_PI, 2*M_PI);
   TH1D *hEtaTops_gen = new TH1D("etaTops_gen", "", 50, -2*M_PI, 2*M_PI);
 
+  TH1D *hLeptonEta_gen = new TH1D("leptonEta_gen", "", 25, -2*M_PI, 2*M_PI);
+  TH1D *hLeptonPhi_gen = new TH1D("leptonPhi_gen", "", 200, -4., 4.);
+
   TH1D *hFirstJetPt_nosel = new TH1D("firstJetPt_reco_nosel", "", 100, 0., 640.);
   TH1D *hSecondJetPt_nosel = new TH1D("secondJetPt_reco_nosel", "", 100, 0., 620.);
   TH1D *hThirdJetPt_nosel = new TH1D("thirdJetPt_reco_nosel", "", 50, 0., 300.);
@@ -177,6 +180,7 @@ void PreSkim::Loop()
     }
 
     double eventWeight = 1.;
+    double eventWeightNoGenWeight = 1.;
     if (mIsMC) {
       float puWeight = puReweighter.weight(n_trueInteractions);
 
@@ -189,6 +193,7 @@ void PreSkim::Loop()
       eventWeight *= generator_weight;
       eventWeight *= m_lepton_weight;
       eventWeight *= m_btag_weight;
+      eventWeightNoGenWeight = eventWeight/generator_weight;
     }
 
     if (std::isnan(eventWeight)) {
@@ -206,45 +211,50 @@ void PreSkim::Loop()
       else
         h_mtt_gen_nosel_negative->Fill(MC_mtt, eventWeight);
 
-      hBoostTT_gen->Fill(MC_boost_tt, eventWeight);
+      hBoostTT_gen->Fill(MC_boost_tt, eventWeightNoGenWeight);
 
-      hPtTT_gen->Fill(MC_pt_tt, eventWeight);
-      hEtaTT_gen->Fill(MC_eta_tt, eventWeight);
-      hEtaTops_gen->Fill(getP4(gen_top1_p4, 0)->Eta(), eventWeight);
-      hEtaTops_gen->Fill(getP4(gen_top2_p4, 0)->Eta(), eventWeight);
+      hPtTT_gen->Fill(MC_pt_tt, eventWeightNoGenWeight);
+      hEtaTT_gen->Fill(MC_eta_tt, eventWeightNoGenWeight);
+      hEtaTops_gen->Fill(getP4(gen_top1_p4, 0)->Eta(), eventWeightNoGenWeight);
+      hEtaTops_gen->Fill(getP4(gen_top2_p4, 0)->Eta(), eventWeightNoGenWeight);
 
-      hDeltaPhiTops_gen->Fill(fabs(getP4(gen_top1_p4, 0)->DeltaPhi(*getP4(gen_top2_p4, 0))), eventWeight);
-      hDeltaEtaTops_gen->Fill(getP4(gen_top1_p4, 0)->Eta() - getP4(gen_top2_p4, 0)->Eta(), eventWeight);
-      hDeltaRTops_gen->Fill(getP4(gen_top1_p4, 0)->DeltaR(*getP4(gen_top2_p4, 0)), eventWeight);
+      hDeltaPhiTops_gen->Fill(fabs(getP4(gen_top1_p4, 0)->DeltaPhi(*getP4(gen_top2_p4, 0))), eventWeightNoGenWeight);
+      hDeltaEtaTops_gen->Fill(getP4(gen_top1_p4, 0)->Eta() - getP4(gen_top2_p4, 0)->Eta(), eventWeightNoGenWeight);
+      hDeltaRTops_gen->Fill(getP4(gen_top1_p4, 0)->DeltaR(*getP4(gen_top2_p4, 0)), eventWeightNoGenWeight);
+
+      if (gen_lepton_p4->GetEntriesFast()) {
+          hLeptonEta_gen->Fill(getP4(gen_lepton_p4, 0)->Eta(), eventWeightNoGenWeight);
+          hLeptonPhi_gen->Fill(getP4(gen_lepton_p4, 0)->Phi(), eventWeightNoGenWeight);
+      }
     }
 
     if (mIsMC && (MC_channel == 1 || MC_channel == 2)) {
       TLorentzVector leptonic_W(0., 0., 0., 0.);
       if (gen_lepton_p4->GetEntriesFast() && gen_neutrino_p4->GetEntriesFast()) {
-        hDeltaPhiLeptonNeutrino_gen->Fill(fabs(getP4(gen_lepton_p4, 0)->DeltaPhi(*getP4(gen_neutrino_p4, 0))), eventWeight);
-        hDeltaRLeptonNeutrino_gen->Fill(getP4(gen_lepton_p4, 0)->DeltaR(*getP4(gen_neutrino_p4, 0)), eventWeight);
-        hDeltaEtaLeptonNeutrino_gen->Fill(getP4(gen_lepton_p4, 0)->Eta() - getP4(gen_neutrino_p4, 0)->Eta(), eventWeight);
+        hDeltaPhiLeptonNeutrino_gen->Fill(fabs(getP4(gen_lepton_p4, 0)->DeltaPhi(*getP4(gen_neutrino_p4, 0))), eventWeightNoGenWeight);
+        hDeltaRLeptonNeutrino_gen->Fill(getP4(gen_lepton_p4, 0)->DeltaR(*getP4(gen_neutrino_p4, 0)), eventWeightNoGenWeight);
+        hDeltaEtaLeptonNeutrino_gen->Fill(getP4(gen_lepton_p4, 0)->Eta() - getP4(gen_neutrino_p4, 0)->Eta(), eventWeightNoGenWeight);
 
         leptonic_W = *getP4(gen_lepton_p4, 0) + *getP4(gen_neutrino_p4, 0);
-        hLeptonicWPt_gen->Fill(leptonic_W.Pt(), eventWeight);
-        hLeptonicWEta_gen->Fill(leptonic_W.Eta(), eventWeight);
+        hLeptonicWPt_gen->Fill(leptonic_W.Pt(), eventWeightNoGenWeight);
+        hLeptonicWEta_gen->Fill(leptonic_W.Eta(), eventWeightNoGenWeight);
       }
 
       TLorentzVector hadronic_W(0., 0., 0., 0.);
       if (gen_lightJet1_p4->GetEntriesFast() && gen_lightJet2_p4->GetEntriesFast()) {
-        hDeltaPhiTwoLightJets_gen->Fill(fabs(getP4(gen_lightJet1_p4, 0)->DeltaPhi(*getP4(gen_lightJet2_p4, 0))), eventWeight);
-        hDeltaRTwoLightJets_gen->Fill(getP4(gen_lightJet1_p4, 0)->DeltaR(*getP4(gen_lightJet2_p4, 0)), eventWeight);
-        hDeltaEtaTwoLightJets_gen->Fill(getP4(gen_lightJet1_p4, 0)->Eta() - getP4(gen_lightJet2_p4, 0)->Eta(), eventWeight);
+        hDeltaPhiTwoLightJets_gen->Fill(fabs(getP4(gen_lightJet1_p4, 0)->DeltaPhi(*getP4(gen_lightJet2_p4, 0))), eventWeightNoGenWeight);
+        hDeltaRTwoLightJets_gen->Fill(getP4(gen_lightJet1_p4, 0)->DeltaR(*getP4(gen_lightJet2_p4, 0)), eventWeightNoGenWeight);
+        hDeltaEtaTwoLightJets_gen->Fill(getP4(gen_lightJet1_p4, 0)->Eta() - getP4(gen_lightJet2_p4, 0)->Eta(), eventWeightNoGenWeight);
 
         hadronic_W = *getP4(gen_lightJet1_p4, 0) + *getP4(gen_lightJet2_p4, 0);
-        hHadronicWPt_gen->Fill(leptonic_W.Pt(), eventWeight);
-        hHadronicWEta_gen->Fill(leptonic_W.Eta(), eventWeight);
+        hHadronicWPt_gen->Fill(leptonic_W.Pt(), eventWeightNoGenWeight);
+        hHadronicWEta_gen->Fill(leptonic_W.Eta(), eventWeightNoGenWeight);
       }
 
       if (leptonic_W.Pt() != 0 && hadronic_W.Pt() != 0) {
-        hDeltaPhiW_gen->Fill(fabs(leptonic_W.DeltaPhi(hadronic_W)), eventWeight);
-        hDeltaRW_gen->Fill(leptonic_W.DeltaR(hadronic_W), eventWeight);
-        hDeltaEtaW_gen->Fill(leptonic_W.Eta() - hadronic_W.Eta(), eventWeight);
+        hDeltaPhiW_gen->Fill(fabs(leptonic_W.DeltaPhi(hadronic_W)), eventWeightNoGenWeight);
+        hDeltaRW_gen->Fill(leptonic_W.DeltaR(hadronic_W), eventWeightNoGenWeight);
+        hDeltaEtaW_gen->Fill(leptonic_W.Eta() - hadronic_W.Eta(), eventWeightNoGenWeight);
       }
     }
 
