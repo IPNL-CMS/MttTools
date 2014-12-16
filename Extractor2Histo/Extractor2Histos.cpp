@@ -370,6 +370,7 @@ void Extractor2Histos::Loop()
   TH1D *hBoostTT = new TH1D("boostTT_reco_fullsel", "", 50, 0., 1.);
   TH1D *hPtTT = new TH1D("ptTT_reco_fullsel", "", 60, 0., 600.);
   TH1D *hEtaTT = new TH1D("etaTT_reco_fullsel", "", 50, -2*M_PI, 2*M_PI);
+  TH1D *hBetaTT = new TH1D("BetaTT_reco_fullsel", "", 50, 0., 1.);
 
   TH1D *hBoostTT_chi2sel = new TH1D("boostTT_reco_chi2sel", "", 50, 0., 1.);
   TH1D *hPtTT_chi2sel = new TH1D("ptTT_reco_chi2sel", "", 60, 0., 600.);
@@ -541,8 +542,10 @@ void Extractor2Histos::Loop()
   float background_bdt_cut = bdtCuts.getCut(BDTType::BACKGROUND, -1);
   std::string background_bdt_weights = bdtCuts.getWeights(BDTType::BACKGROUND, -1);
 
+  output->cd();
   BkgVsTTBDTReader bkgVsTTBDTReader(m_inputFiles, mIsMC);
   bkgVsTTBDTReader.initMVA(background_bdt_weights);
+  bkgVsTTBDTReader.createPlots(output);
 
   SystVariation btagSystVariation = NOMINAL;
   if (mBTagSyst == "up") {
@@ -1094,6 +1097,9 @@ void Extractor2Histos::Loop()
       LorentzVector selectedHadronicWP4 = *selectedFirstJetP4_AfterReco + *selectedSecondJetP4_AfterReco;
       LorentzVector selectedLeptonicWP4 = *selectedNeutrinoP4_AfterReco + selectedLeptonP4_LV_AfterReco;
 
+      LorentzVector ttbarSystemP4 = *lepTopP4_AfterReco + *hadTopP4_AfterReco;
+      hBetaTT->Fill(ttbarSystemP4.Beta(), eventWeight);
+
       hLeptonicWMt->Fill(selectedLeptonicWP4.Mt(), eventWeight);
       hHadronicWMt->Fill(selectedHadronicWP4.Mt(), eventWeight);
 
@@ -1177,6 +1183,7 @@ void Extractor2Histos::Loop()
       hC->Fill(p_C, eventWeight);
 
       float discriminant = bkgVsTTBDTReader.evaluate(jentry);
+      bkgVsTTBDTReader.fillPlots(eventWeight);
       hBDTDiscriminant->Fill(discriminant, eventWeightNoGenWeight);
 
       if (discriminant > background_bdt_cut) {
@@ -1212,6 +1219,7 @@ void Extractor2Histos::Loop()
   }
 
   output->cd();
+  bkgVsTTBDTReader.writePlots(output);
 
   THStack* hsmtt_chi2_kf_fraction = new THStack("mtt_chi2_kf_fraction", "mtt_chi2_kf_fraction");
   hmtt_AfterChi2->SetLineColor(kRed-7);
