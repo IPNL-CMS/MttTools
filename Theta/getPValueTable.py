@@ -40,8 +40,7 @@ for mass in sorted(pvalues_all):
 
     sys.stdout.write("\sz (m = %d\,\GeV) & " % (m))
 
-    sys.stdout.write(" %.2f & " % float(Z_to(pvalues["median"][0])))
-
+    sys.stdout.write(" %.4f $\pm$ %.4f & " % (float(Z_to(pvalues["median"][0])), float(Z_to(pvalues["median"][1]))))
     median = Z_to(pvalues["median"][0])
     median_up = Z_to(pvalues["median_up"][0])
     median_down = Z_to(pvalues["median_low"][0])
@@ -56,10 +55,10 @@ for mass in sorted(pvalues_all):
     error_up_95 = median_down_2sigma - median
     error_low_95 = median - median_up_2sigma
 
-    sys.stdout.write(" %.2f -- %.2f & " % (median_up, median_down))
-    sys.stdout.write(" %.2f -- %.2f & " % (median_up_2sigma, median_down_2sigma))
+    sys.stdout.write(" %.4f -- %.4f & " % (median_up, median_down))
+    sys.stdout.write(" %.4f -- %.4f & " % (median_up_2sigma, median_down_2sigma))
 
-    sys.stdout.write(" %.2f \\\\" % (float(Z_to(pvalues["observed"][0]))))
+    sys.stdout.write(" %.4f \\\\" % (float(Z_to(pvalues["observed"][0]))))
 
     print("")
 
