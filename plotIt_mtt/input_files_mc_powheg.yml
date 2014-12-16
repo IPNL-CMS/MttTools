@@ -7,7 +7,7 @@
   #line-width: 2
   #fill-type: 0
   #line-type: 1
-  scale: 10
+  #scale: 10
 
 #'Signal_S0_S_i_M500_cpl1_pseudoscalar_histos_nominal.root':
   #type: signal
@@ -18,7 +18,7 @@
   #line-width: 2
   #fill-type: 0
   #line-type: 1
-  scale: 10
+  #scale: 10
 
 #'Signal_S0_S_i_M800_cpl1_pseudoscalar_histos_nominal.root':
   #type: signal
@@ -29,7 +29,7 @@
   #line-width: 2
   #fill-type: 0
   #line-type: 1
-  scale: 10
+  #scale: 10
 
 #  'Signal_S0_S_i_M500_cpl1_scalar_histos_nominal.root':
   #type: signal
