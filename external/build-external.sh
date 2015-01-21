@@ -30,6 +30,54 @@ make install
 cd ..
 rm tclap-1.2.1.tar.gz
 
+# LHAPDF
+curl -O -L http://www.hepforge.org/archive/lhapdf/LHAPDF-6.1.5.tar.gz
+tar xf LHAPDF-6.1.5.tar.gz
+
+cd LHAPDF-6.1.5
+./configure --prefix=$PWD/..
+
+make -j20
+make install
+
+cd ..
+rm LHAPDF-6.1.5.tar.gz
+
+cd share/LHAPDF/
+curl -O -L http://www.hepforge.org/archive/lhapdf/pdfsets/6.1/CT10.tar.gz
+tar xf CT10.tar.gz
+rm CT10.tar.gz
+
+curl -O -L http://www.hepforge.org/archive/lhapdf/pdfsets/6.1/CT10as.tar.gz
+tar xf CT10as.tar.gz
+rm CT10as.tar.gz
+
+curl -O -L http://www.hepforge.org/archive/lhapdf/pdfsets/6.1/CT10nlo.tar.gz
+tar xf CT10nlo.tar.gz
+rm CT10nlo.tar.gz
+
+curl -O -L http://www.hepforge.org/archive/lhapdf/pdfsets/6.1/CT10nlo_as_0117.tar.gz
+tar xf CT10nlo_as_0117.tar.gz
+rm CT10nlo_as_0117.tar.gz
+
+curl -O -L http://www.hepforge.org/archive/lhapdf/pdfsets/6.1/CT10nlo_as_0119.tar.gz
+tar xf CT10nlo_as_0119.tar.gz
+rm CT10nlo_as_0119.tar.gz
+
+curl -O -L http://www.hepforge.org/archive/lhapdf/pdfsets/6.1/CT10nnlo.tar.gz
+tar xf CT10nnlo.tar.gz
+rm CT10nnlo.tar.gz
+
+curl -O -L http://www.hepforge.org/archive/lhapdf/pdfsets/6.1/CT10nnlo_as_0117.tar.gz
+tar xf CT10nnlo_as_0117.tar.gz
+rm CT10nnlo_as_0117.tar.gz
+
+curl -O -L http://www.hepforge.org/archive/lhapdf/pdfsets/6.1/CT10nnlo_as_0119.tar.gz
+tar xf CT10nnlo_as_0119.tar.gz
+rm CT10nnlo_as_0119.tar.gz
+
+cd ../../
+
 # Json cpp
 svn checkout svn://svn.code.sf.net/p/jsoncpp/code/trunk jsoncpp-code
 

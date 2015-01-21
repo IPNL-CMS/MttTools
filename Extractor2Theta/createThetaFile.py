@@ -18,7 +18,8 @@ if not options.root:
 if not options.output:
     parser.error("--output argument is required")
 
-btags = [0, 1, 2]
+#btags = [0, 1, 2]
+btags = [1, 2]
 
 MC = {
         "TT_powheg": "TT",
@@ -41,19 +42,19 @@ Signal = {
             "S0_S_i_M700_cpl1_pseudoscalar": "H700_pseudoscalar",
             "S0_S_i_M800_cpl1_pseudoscalar": "H800_pseudoscalar",
 
-            #"ZPrimeToTTJets_M500GeV_W5GeV": "zp500_narrow",
-            #"ZPrimeToTTJets_M750GeV_W7p5GeV": "zp750_narrow",
-            #"ZPrimeToTTJets_M1000GeV_W10GeV": "zp1000_narrow",
-            #"ZPrimeToTTJets_M1250GeV_W12p5GeV": "zp1250_narrow",
-            #"ZPrimeToTTJets_M1500GeV_W15GeV": "zp1500_narrow",
-            #"ZPrimeToTTJets_M2000GeV_W20GeV": "zp2000_narrow",
+            "ZPrimeToTTJets_M500GeV_W5GeV": "zp500_narrow",
+            "ZPrimeToTTJets_M750GeV_W7p5GeV": "zp750_narrow",
+            "ZPrimeToTTJets_M1000GeV_W10GeV": "zp1000_narrow",
+            "ZPrimeToTTJets_M1250GeV_W12p5GeV": "zp1250_narrow",
+            "ZPrimeToTTJets_M1500GeV_W15GeV": "zp1500_narrow",
+            "ZPrimeToTTJets_M2000GeV_W20GeV": "zp2000_narrow",
 
-            #"ZPrimeToTTJets_M500GeV_W50GeV": "zp500_large",
-            #"ZPrimeToTTJets_M750GeV_W75GeV": "zp750_large",
-            #"ZPrimeToTTJets_M1000GeV_W100GeV": "zp1000_large",
-            #"ZPrimeToTTJets_M1250GeV_W125GeV": "zp1250_large",
-            #"ZPrimeToTTJets_M1500GeV_W150GeV": "zp1500_large",
-            #"ZPrimeToTTJets_M2000GeV_W200GeV": "zp2000_large",
+            "ZPrimeToTTJets_M500GeV_W50GeV": "zp500_large",
+            "ZPrimeToTTJets_M750GeV_W75GeV": "zp750_large",
+            "ZPrimeToTTJets_M1000GeV_W100GeV": "zp1000_large",
+            "ZPrimeToTTJets_M1250GeV_W125GeV": "zp1250_large",
+            "ZPrimeToTTJets_M1500GeV_W150GeV": "zp1500_large",
+            "ZPrimeToTTJets_M2000GeV_W200GeV": "zp2000_large",
         }
 
 systs = []
@@ -71,10 +72,12 @@ if True:
     systs += ["btagUp", "btagDown"]
 
 if True:
-    systs += ["matchingup", "matchingdown", "scaleup", "scaledown"]
+    #systs += ["matchingup", "matchingdown", "scaleup", "scaledown"]
+    systs += ["scaleup", "scaledown"]
 
-if False:
-    systs += ["pdfUp", "pdfDown"]
+if True:
+    systs += ["alphasPdfUp", "alphasPdfDown"]
+    #systs += ["pdfUp", "pdfDown"]
 
 # Load MC files
 

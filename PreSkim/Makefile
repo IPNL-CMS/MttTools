@@ -20,14 +20,14 @@ ROOTLIBS   = $(shell root-config --noldflags --libs)
 CXX           = g++
 CXXFLAGS	    = -O2 -g -Wall -fPIC --std=c++0x
 LD			      = g++
-LDDIR         = -L$(shell root-config --libdir) -L../external/lib -L$(BOOST_ROOT)/lib/
+LDDIR         = -L$(shell root-config --libdir) -L../external/lib -L$(BOOST_ROOT)/lib/ 
 LDFLAGS		    = -fPIC $(shell root-config --ldflags) $(LDDIR)
 SOFLAGS		    = 
 AR            = ar
 ARFLAGS       = -cq
 
 CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/ -I../external/include/ -I$(shell echo $(BOOST_ROOT))/include
-LIBS  		    = $(ROOTLIBS) -lboost_filesystem -lboost_regex
+LIBS  		    = $(ROOTLIBS) -lboost_filesystem -lboost_regex -lLHAPDF
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
 SOURCES		= $(wildcard *.$(SrcSuf))

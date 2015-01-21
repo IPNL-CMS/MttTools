@@ -145,6 +145,12 @@ class Extractor2Histos {
     Float_t hadTopPt_AfterChi2;
     Float_t hadTopEta_AfterChi2;
 
+    int             N_error_pdf;
+    float           pdf_weight_up[MAX_ARRAY_SIZE];
+    float           pdf_weight_down[MAX_ARRAY_SIZE];
+    float           alphas_weight_up;
+    float           alphas_weight_down;
+
     bool            m_triggerPassed;
 
     TClonesArray* gen_top1_p4;
@@ -247,6 +253,7 @@ class Extractor2Histos {
     std::string     mJECSyst = "nominal";
     std::string     mPUSyst = "nominal";
     std::string     mPDFSyst = "nominal";
+    std::string     mAlphasSyst = "nominal";
     std::string     mLeptonSyst = "nominal";
     std::string     mBTagSyst = "nominal";
 
@@ -259,7 +266,7 @@ class Extractor2Histos {
     TClonesArray*   jet_p4;
     TClonesArray*   met_p4;
 
-    Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, bool chi2, bool kf, bool hybrid, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst);
+    Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, bool chi2, bool kf, bool hybrid, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& alphasSyst, const std::string& leptonSyst, const std::string& btagSyst);
 
     virtual ~Extractor2Histos();
     virtual Int_t    GetEntry(Long64_t entry);

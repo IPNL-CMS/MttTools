@@ -55,7 +55,7 @@ files = [
         #["MC_QCD_Pt_250_350_EMEnriched_theta_nominal.root", "skims/semie/MC_QCD_Pt_250_350_EMEnriched_skims_nominal.root"],
         #["MC_QCD_Pt_350_EMEnriched_theta_nominal.root", "skims/semie/MC_QCD_Pt_350_EMEnriched_skims_nominal.root"],
 
-        # Background + Signal
+#        # Background + Signal
         ["Signal_S0_S_i_M400_cpl1_scalar_theta_nominal.root", "skims/%s/Signal_S0_S_i_M400_cpl1_scalar_skims_nominal.root", 2074732, 0.5289 * 5.340],
         ["Signal_S0_S_i_M500_cpl1_scalar_theta_nominal.root", "skims/%s/Signal_S0_S_i_M500_cpl1_scalar_skims_nominal.root", 1990686, 0.3023 * 6.088],
         ["Signal_S0_S_i_M600_cpl1_scalar_theta_nominal.root", "skims/%s/Signal_S0_S_i_M600_cpl1_scalar_skims_nominal.root", 2354567, 0.1891 * 4.886],
@@ -144,5 +144,6 @@ for file in files:
 
 tmpfile.flush()
 
-args = ["parallel", "-u", "-a", tmpfile.name, "-j", "6"] 
+args = ["parallel", "-u", "-a", tmpfile.name, "-j", "20"] 
+#print args
 subprocess.call(args)

@@ -7,7 +7,9 @@
 #include <TRandom2.h>
 #include <vector>
 #include <TProfile.h>
+#include <TKey.h>
 #include <TMath.h>
+#include <TList.h>
 #include <fstream>
 #include <memory>
 #include <chrono>
@@ -206,7 +208,7 @@ void Extractor2Histos::Loop()
   TH1D *hmttSelected_btag_sel = new TH1D("mttSelected_btag_sel_reco_fullsel", "", 40, 0., 2000.);
 
   float hist_min = 250;
-  float hist_max = 1250;
+  float hist_max = 1255;
   int nBins = (hist_max - hist_min) / 15.;
 
   TH1D *hmttSelected_btag_sel_binning15GeV = new TH1D("mttSelected_btag_sel_reco_fullsel_binning15GeV", "", nBins, hist_min, hist_max);
@@ -556,721 +558,782 @@ void Extractor2Histos::Loop()
   NBTagCalculator btagCalculator(m_inputFiles, btagSystVariation);
 
   std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now(), end;
-  for (Long64_t jentry = 0; jentry < nentries; jentry++)
-  {
-    if (jentry % 100000 == 0) {
-      end = std::chrono::system_clock::now();
-      float msec = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-      std::cout << "Processing entry #" << (jentry + 1) << " over " << nentries << " (" << (float) jentry / nentries * 100 << "% - " << msec / 1000. << "s)" << std::endl;
-      start = std::chrono::system_clock::now();
-    }
 
-    GetEntry(jentry);
+  std::cout << "mPDFSyst: " << mPDFSyst << std::endl;
 
-    // Choose if we are run2012 A+B, or C+D
-    bool isRun2012AB = false;
-    if (mIsMC) {
-      double r = random_generator.Rndm();
-      if (r < lumi_run2012_AB_over_total)
-        isRun2012AB = true;
+  if (mPDFSyst == "nominal") N_error_pdf = 1;
 
-      if (mIsMC) {
-        hRunPeriod->Fill( isRun2012AB ? 0 : 1 );
-      }
-    } else {
-      isRun2012AB = (run <= 196531);
-    }
-
-    if (generator_weight > 0) {
-      positive_events++;
-      generator_weight = 1;
-    } else {
-      negative_events++;
-      generator_weight = -1;
-    }
-
-    // Compute event weight
-    if (std::isnan(m_lepton_weight)) {
-      std::cout << "Warning: lepton weight is NaN" << std::endl;
-      m_lepton_weight = 1.;
-    } else if (std::isinf(m_lepton_weight)) {
-      std::cout << "Warning: lepton weight is Inf" << std::endl;
-      m_lepton_weight = 1.;
-    }
-
-    if (std::isnan(m_btag_weight)) {
-      std::cout << "Warning: btag weight is NaN" << std::endl;
-      m_btag_weight = 1.;
-    } else if (std::isinf(m_btag_weight)) {
-      std::cout << "Warning: btag weight is Inf" << std::endl;
-      m_btag_weight = 1.;
-    }
-
-    double eventWeight = 1.;
-    double eventWeightNoGenWeight = 1.;
-    float puWeight = 1.;
-    float topPtWeight = 1.;
-    if (mIsMC) {
-      puWeight = puReweighter.weight(n_trueInteractions);
-
-      if (mLeptonSyst == "up")
-        m_lepton_weight += m_lepton_weight_error;
-      else if (mLeptonSyst == "down")
-        m_lepton_weight -= m_lepton_weight_error;
-
-      if (mBTagSyst == "up")
-        m_btag_weight += m_btag_weight_error;
-      else if (mBTagSyst == "down")
-        m_btag_weight -= m_btag_weight_error;
-
-      hLeptonWeight->Fill(m_lepton_weight);
-      hBTagWeight->Fill(m_btag_weight);
-      hGeneratorWeight->Fill(generator_weight);
-      hPUWeight->Fill(puWeight);
-
-      eventWeight *= puWeight;
-      eventWeight *= m_lepton_weight;
-
-      // Top pt reweighting: see https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting
-      if (MC_channel != 0) {
-        auto SF = [](TLorentzVector* top) {
-          if (top->Pt() > 400)
-            return 1.;
-
-          return std::exp(0.159 - 0.00141 * top->Pt());
-        };
-
-        topPtWeight = std::sqrt(SF(getP4(gen_top1_p4, 0)) * SF(getP4(gen_top2_p4, 0)));
-        //hTopPtWeight->Fill(topPtWeight);
-
-        //eventWeight *= topPtWeight;
+  for (int imem=0; imem<N_error_pdf; imem++) {
+      hmttSelected_btag_sel_binning15GeV->Reset();
+      if (mPDFSyst != "nominal") {
+        std::cout << "Filling histo with PDF weight corresponding to PDF error # " << imem << std::endl;
       }
 
-      eventWeightNoGenWeight = eventWeight;
-      eventWeight *= generator_weight;
-    }
-
-    if (std::isnan(eventWeight)) {
-      std::cout << "Warning: event weight is NaN" << std::endl;
-      eventWeight = 1.;
-    }
-
-    uint32_t numberOfBTaggedJets = 0;
-    if (mIsMC) {
-      numberOfBTaggedJets = btagCalculator.getNumberOfBTaggedJets(jentry);
-    } else {
-      numberOfBTaggedJets = nBtaggedJets_CSVM;
-    }
-
-    hWeight->Fill(eventWeight);
-
-    // Fill gen value
-    if (mIsMC && (MC_channel != 0)) {
-      h_mtt_gen_nosel->Fill(MC_mtt, eventWeight);
-      hBoostTT_gen->Fill(MC_boost_tt, eventWeight);
-
-      hPtTT_gen->Fill(MC_pt_tt, eventWeight);
-      hEtaTT_gen->Fill(MC_eta_tt, eventWeight);
-      hDeltaPhiTops_gen->Fill(fabs(getP4(gen_top1_p4, 0)->DeltaPhi(*getP4(gen_top2_p4, 0))), eventWeight);
-      hDeltaEtaTops_gen->Fill(getP4(gen_top1_p4, 0)->Eta() - getP4(gen_top2_p4, 0)->Eta(), eventWeight);
-      hDeltaRTops_gen->Fill(getP4(gen_top1_p4, 0)->DeltaR(*getP4(gen_top2_p4, 0)), eventWeight);
-    }
-
-    if (mIsMC && (MC_channel == 1 || MC_channel == 2)) {
-      TLorentzVector leptonic_W(0., 0., 0., 0.);
-      if (gen_lepton_p4->GetEntriesFast() && gen_neutrino_p4->GetEntriesFast()) {
-        hDeltaPhiLeptonNeutrino_gen->Fill(fabs(getP4(gen_lepton_p4, 0)->DeltaPhi(*getP4(gen_neutrino_p4, 0))), eventWeight);
-        hDeltaRLeptonNeutrino_gen->Fill(getP4(gen_lepton_p4, 0)->DeltaR(*getP4(gen_neutrino_p4, 0)), eventWeight);
-        hDeltaEtaLeptonNeutrino_gen->Fill(getP4(gen_lepton_p4, 0)->Eta() - getP4(gen_neutrino_p4, 0)->Eta(), eventWeight);
-
-        leptonic_W = *getP4(gen_lepton_p4, 0) + *getP4(gen_neutrino_p4, 0);
-        hLeptonicWPt_gen->Fill(leptonic_W.Pt(), eventWeight);
-        hLeptonicWEta_gen->Fill(leptonic_W.Eta(), eventWeight);
-      }
-
-      TLorentzVector hadronic_W(0., 0., 0., 0.);
-      if (gen_lightJet1_p4->GetEntriesFast() && gen_lightJet2_p4->GetEntriesFast()) {
-        hDeltaPhiTwoLightJets_gen->Fill(fabs(getP4(gen_lightJet1_p4, 0)->DeltaPhi(*getP4(gen_lightJet2_p4, 0))), eventWeight);
-        hDeltaRTwoLightJets_gen->Fill(getP4(gen_lightJet1_p4, 0)->DeltaR(*getP4(gen_lightJet2_p4, 0)), eventWeight);
-        hDeltaEtaTwoLightJets_gen->Fill(getP4(gen_lightJet1_p4, 0)->Eta() - getP4(gen_lightJet2_p4, 0)->Eta(), eventWeight);
-
-        hadronic_W = *getP4(gen_lightJet1_p4, 0) + *getP4(gen_lightJet2_p4, 0);
-        hHadronicWPt_gen->Fill(leptonic_W.Pt(), eventWeight);
-        hHadronicWEta_gen->Fill(leptonic_W.Eta(), eventWeight);
-      }
-
-      if (leptonic_W.Pt() != 0 && hadronic_W.Pt() != 0) {
-        hDeltaPhiW_gen->Fill(fabs(leptonic_W.DeltaPhi(hadronic_W)), eventWeight);
-        hDeltaRW_gen->Fill(leptonic_W.DeltaR(hadronic_W), eventWeight);
-        hDeltaEtaW_gen->Fill(leptonic_W.Eta() - hadronic_W.Eta(), eventWeight);
-      }
-    }
-
-    if (!mIsMC && !m_triggerPassed) {
-      continue;
-    }
-
-    double ptLepton = 0;
-    double etaLepton = 0;
-    double ptLeptonCut = 0;
-    if (mIsSemiMu) {
-      if (nGoodMuons > 0) {
-        ptLepton = muonPt[0];
-        etaLepton = muonEta[0];
-        ptLeptonCut = 26.;
-      }
-    } else {
-      if (nGoodElectrons > 0) {
-        ptLepton = electronPt[0];
-        etaLepton = electronEta[0];
-        ptLeptonCut = 30.;
-      }
-    }
-
-    float HT = 0;
-    float HT30 = 0;
-    for (uint32_t i = 0; i < (uint32_t) jet_p4->GetEntriesFast(); i++) {
-      float pt = ((TLorentzVector*) (*jet_p4)[i])->Pt();
-
-      HT += pt;
-      if (pt > 30)
-        HT30 += pt;
-    }
-
-    float HTFull = HT + ptLepton + MET;
-
-    float mtt_four_leading_jets = 0.;
-    if (! mSkim) {
-      hNTrueInt_nosel->Fill(n_trueInteractions, eventWeight);
-      hNVtx_nosel->Fill(n_vertices, eventWeight);
-      hIsSel->Fill(isSel, eventWeight);
-
-      hMET_nosel->Fill(MET, eventWeight);
-
-      if (jet_p4->GetEntriesFast() > 0) {
-        TLorentzVector* p4 = (TLorentzVector*) (*jet_p4)[0];
-        hFirstJetPt_nosel->Fill(p4->Pt(), eventWeight);
-        hFirstJetEta_nosel->Fill(p4->Eta(), eventWeight);
-      }
-
-      if (jet_p4->GetEntriesFast() > 1) {
-        TLorentzVector* p4 = (TLorentzVector*) (*jet_p4)[1];
-        hSecondJetPt_nosel->Fill(p4->Pt(), eventWeight);
-        hSecondJetEta_nosel->Fill(p4->Eta(), eventWeight);
-      }
-
-      if (jet_p4->GetEntriesFast() > 2) {
-        TLorentzVector* p4 = (TLorentzVector*) (*jet_p4)[2];
-        hThirdJetPt_nosel->Fill(p4->Pt(), eventWeight);
-        hThirdJetEta_nosel->Fill(p4->Eta(), eventWeight);
-      }
-
-      if (jet_p4->GetEntriesFast() > 3) {
-        TLorentzVector* p4 = (TLorentzVector*) (*jet_p4)[3];
-        hFourthJetPt_nosel->Fill(p4->Eta(), eventWeight);
-        hFourthJetEta_nosel->Fill(p4->Pt(), eventWeight);
-      }
-
-      hHT_reco_nosel->Fill(HT, eventWeight);
-      hHT30_reco_nosel->Fill(HT30, eventWeight);
-      hHTFull_reco_nosel->Fill(HTFull, eventWeight);
-
-      if (n_muons > 0) {
-        hMuRelIso_nosel->Fill(muon_relIso[0], eventWeight);
-
-        TLorentzVector* p4 = (TLorentzVector*) (*muon_p4)[0];
-        hLeptonEta_nosel->Fill(p4->Eta(), eventWeight);
-        hLeptonPt_nosel->Fill(p4->Pt(), eventWeight);
-      }
-
-      if (mIsSemiMu)
+      for (Long64_t jentry = 0; jentry < nentries; jentry++)
+      //for (Long64_t jentry = 0; jentry < 100000; jentry++)
       {
-        if (nGoodMuons <= 0)
-          continue;
-      }
-      else
-      {
-        if (nGoodElectrons <= 0)
-          continue;
+          if (jentry % 100000 == 0) {
+              end = std::chrono::system_clock::now();
+              float msec = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+              std::cout << "Processing entry #" << (jentry + 1) << " over " << nentries << " (" << (float) jentry / nentries * 100 << "% - " << msec / 1000. << "s)" << std::endl;
+              start = std::chrono::system_clock::now();
+          }
 
-        // The TOP reference selection exclude electron with
-        // SuperCluster eta between 1.4442 and 1.5660
-        // The TopTrigger efficiency does the same thing, but
-        // using electron eta instead of SuperCluster eta.
-        // Redo a cut here on electron eta
-        // FIXME?
-        if (fabs(etaLepton) >= 1.442 && fabs(etaLepton) < 1.5660)
-          continue;
-      }
-    }
+          GetEntry(jentry);
 
-    if (mUseHybrid) {
-      mUseChi2 = false;
-      mUseKF = false;    
-    }
+          // Choose if we are run2012 A+B, or C+D
+          bool isRun2012AB = false;
+          if (mIsMC) {
+              double r = random_generator.Rndm();
+              if (r < lumi_run2012_AB_over_total)
+                  isRun2012AB = true;
 
-    if (mUseMVA) {
-      if (!mSkim && (isSel != 1 || numComb <= 0))
-        continue;
-      mtt_AfterReco = mtt_AfterMVA;
-    } else if(mUseKF) {
-      if (! kf_converged)
-        continue;
-      Init(true);
-    } else if (mUseChi2) {
-      if (numComb_chi2 == 0)
-        continue;
-      Init(false);
-    } else if (mUseHybrid) {
-      if (numComb_chi2 == 0) {
-        if (kf_converged) {
-          mUseKF = true;
-          mUseChi2 = false;
-        } else
-          continue;
-      } else {
-        if (! kf_converged) {
-          mUseChi2 = true;
-          mUseKF = false;
-        } else {
-          if (kf_proba > 0.9) {
-            mUseKF = true;
-            mUseChi2 = false;          
+              if (mIsMC) {
+                  hRunPeriod->Fill( isRun2012AB ? 0 : 1 );
+              }
           } else {
-            mUseChi2 = true;
-            mUseKF = false;          
+              isRun2012AB = (run <= 196531);
           }
-        }
-      } 
 
-      if (! mUseChi2 && ! mUseKF) continue;
-      if (!mSkim && isSel != 1)
-        continue;
-      Init(mUseKF);
-    }
+          if (generator_weight > 0) {
+              positive_events++;
+              generator_weight = 1;
+          } else {
+              negative_events++;
+              generator_weight = -1;
+          }
 
-    hBestSolChi2->Fill(bestSolChi2, eventWeight);
-    hNGoodJets_chi2sel->Fill(nJets, eventWeight);
-    hNBtaggedJets_chi2sel_extractor->Fill(nBtaggedJets_CSVM, eventWeight);
-    hNBtaggedJets_chi2sel->Fill(numberOfBTaggedJets, eventWeight);
+          // Compute event weight
+          if (std::isnan(m_lepton_weight)) {
+              std::cout << "Warning: lepton weight is NaN" << std::endl;
+              m_lepton_weight = 1.;
+          } else if (std::isinf(m_lepton_weight)) {
+              std::cout << "Warning: lepton weight is Inf" << std::endl;
+              m_lepton_weight = 1.;
+          }
 
-    hLeptonPt_chi2sel->Fill(ptLepton, eventWeight);
-    hLeptonEta_chi2sel->Fill(etaLepton, eventWeight);
-    if (mIsSemiMu)
-      hMuRelIso_chi2sel->Fill(muRelIso[0], eventWeight);
-    else
-      hElRelIso_chi2sel->Fill(elRelIso[0], eventWeight);
+          if (std::isnan(m_btag_weight)) {
+              std::cout << "Warning: btag weight is NaN" << std::endl;
+              m_btag_weight = 1.;
+          } else if (std::isinf(m_btag_weight)) {
+              std::cout << "Warning: btag weight is Inf" << std::endl;
+              m_btag_weight = 1.;
+          }
 
-    hMET_chi2sel->Fill(MET, eventWeight);
+          double eventWeight = 1.;
+          double eventWeightNoGenWeight = 1.;
+          float puWeight = 1.;
+          float topPtWeight = 1.;
+          if (mIsMC) {
+              puWeight = puReweighter.weight(n_trueInteractions);
 
-    hLeptTopPt_chi2sel->Fill(lepTopPt_AfterReco, eventWeight);
-    hLeptTopEta_chi2sel->Fill(lepTopEta_AfterReco, eventWeight);
+              if (mLeptonSyst == "up")
+                  m_lepton_weight += m_lepton_weight_error;
+              else if (mLeptonSyst == "down")
+                  m_lepton_weight -= m_lepton_weight_error;
 
-    hHadrTopPt_chi2sel->Fill(hadTopPt_AfterReco, eventWeight);
-    hHadrTopEta_chi2sel->Fill(hadTopEta_AfterReco, eventWeight);
+              if (mBTagSyst == "up")
+                  m_btag_weight += m_btag_weight_error;
+              else if (mBTagSyst == "down")
+                  m_btag_weight -= m_btag_weight_error;
 
-    hFirstJetPt_chi2sel->Fill(p_1stjetpt, eventWeight);
-    hSecondJetPt_chi2sel->Fill(p_2ndjetpt, eventWeight);
-    hThirdJetPt_chi2sel->Fill(p_3rdjetpt, eventWeight);
-    hFourthJetPt_chi2sel->Fill(p_4thjetpt, eventWeight);
+              hLeptonWeight->Fill(m_lepton_weight);
+              hBTagWeight->Fill(m_btag_weight);
+              hGeneratorWeight->Fill(generator_weight);
+              hPUWeight->Fill(puWeight);
 
-    hFirstJetEta_chi2sel->Fill(jetEta[0], eventWeight);
-    hSecondJetEta_chi2sel->Fill(jetEta[1], eventWeight);
-    hThirdJetEta_chi2sel->Fill(jetEta[2], eventWeight);
-    hFourthJetEta_chi2sel->Fill(jetEta[3], eventWeight);
+              eventWeight *= puWeight;
+              eventWeight *= m_lepton_weight;
 
-    hNVtx_chi2sel->Fill(n_vertices, eventWeight);
+              if (mAlphasSyst != "nominal") {
+                  if (mAlphasSyst == "up")
+                      eventWeight *= alphas_weight_up;
+                  else if (mAlphasSyst == "down")
+                      eventWeight *= alphas_weight_down;
+              }
 
-    hBoostTT_chi2sel->Fill(beta_tt_AfterReco, eventWeight);
-    hPtTT_chi2sel->Fill(pt_tt_AfterReco, eventWeight);
-    hEtaTT_chi2sel->Fill(eta_tt_AfterReco, eventWeight);
+              // Top pt reweighting: see https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting
+              if (MC_channel != 0) {
+                  auto SF = [](TLorentzVector* top) {
+                      if (top->Pt() > 400)
+                          return 1.;
 
-    LorentzVector selectedLeptonP4_LV_AfterReco;
-    if (mUseKF) {
-      selectedLeptonP4_LV_AfterReco = *selectedLeptonP4_AfterKF;
-    } else {
-      selectedLeptonP4_LV_AfterReco = LorentzVector(getP4(selectedLeptonP4_AfterReco, 0)->Pt(), getP4(selectedLeptonP4_AfterReco, 0)->Eta(), getP4(selectedLeptonP4_AfterReco, 0)->Phi(), getP4(selectedLeptonP4_AfterReco, 0)->E());
-    }
+                      return std::exp(0.159 - 0.00141 * top->Pt());
+                  };
 
-    if (mIsMC && MC_channel != 0) {
-      mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel.fill(MC_mtt, mtt_AfterReco, eventWeight);
-      mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel.fill(MC_mtt, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
-      mtt_gen_vs_mtt_reco_resolution_rmsVSmttreco_sortingAlgoSel.fill(mtt_AfterReco, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
+                  topPtWeight = std::sqrt(SF(getP4(gen_top1_p4, 0)) * SF(getP4(gen_top2_p4, 0)));
+                  //hTopPtWeight->Fill(topPtWeight);
 
-      if (mUseKF) {
-        if (kf_proba < 0.2) {
-          mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_lowKfProb.fill(MC_mtt, mtt_AfterReco, eventWeight);
-          mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_lowKfProb.fill(MC_mtt, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
+                  //eventWeight *= topPtWeight;
+              }
 
-        } else {
-          mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_highKfProb.fill(MC_mtt, mtt_AfterReco, eventWeight);
-          mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_highKfProb.fill(MC_mtt, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
-        }
-      }
+              eventWeightNoGenWeight = eventWeight;
+              eventWeight *= generator_weight;
+          }
 
-      if (true) {
+          if (std::isnan(eventWeight)) {
+              std::cout << "Warning: event weight is NaN" << std::endl;
+              eventWeight = 1.;
+          }
 
-        // Reconstruct mtt using the four leading jet
+          uint32_t numberOfBTaggedJets = 0;
+          if (mIsMC) {
+              numberOfBTaggedJets = btagCalculator.getNumberOfBTaggedJets(jentry);
+          } else {
+              numberOfBTaggedJets = nBtaggedJets_CSVM;
+          }
 
-        LorentzVector tt_system = selectedLeptonP4_LV_AfterReco + *selectedNeutrinoP4_AfterReco;
-        int njets = 0;
-        for (int i = 0; i < jet_p4->GetEntriesFast(); i++) {
+          if (mIsMC && mPDFSyst != "nominal") {
 
-          if (njets > 3)
-            break;
+              if (mPDFSyst == "up") {
+                  eventWeight *= pdf_weight_up[imem]; 
+              } else if (mPDFSyst == "down") {
+                  eventWeight *= pdf_weight_down[imem];
+              }
+          }
 
-          TLorentzVector* p = (TLorentzVector*) (*jet_p4)[i];
+          hWeight->Fill(eventWeight);
 
-          if (p->Pt() < 30 || fabs(p->Eta()) > 2.4)
-            continue;
+          // Fill gen value
+          if (mIsMC && (MC_channel != 0)) {
+              h_mtt_gen_nosel->Fill(MC_mtt, eventWeight);
+              hBoostTT_gen->Fill(MC_boost_tt, eventWeight);
 
-          LorentzVector p_LV(p->Pt(), p->Eta(), p->Phi(), p->E());
+              hPtTT_gen->Fill(MC_pt_tt, eventWeight);
+              hEtaTT_gen->Fill(MC_eta_tt, eventWeight);
+              hDeltaPhiTops_gen->Fill(fabs(getP4(gen_top1_p4, 0)->DeltaPhi(*getP4(gen_top2_p4, 0))), eventWeight);
+              hDeltaEtaTops_gen->Fill(getP4(gen_top1_p4, 0)->Eta() - getP4(gen_top2_p4, 0)->Eta(), eventWeight);
+              hDeltaRTops_gen->Fill(getP4(gen_top1_p4, 0)->DeltaR(*getP4(gen_top2_p4, 0)), eventWeight);
 
-          tt_system += p_LV;
-          njets++;
-        }
+          }
 
-        mtt_four_leading_jets = tt_system.M();
+          if (mIsMC && (MC_channel == 1 || MC_channel == 2)) {
+              TLorentzVector leptonic_W(0., 0., 0., 0.);
+              if (gen_lepton_p4->GetEntriesFast() && gen_neutrino_p4->GetEntriesFast()) {
+                  hDeltaPhiLeptonNeutrino_gen->Fill(fabs(getP4(gen_lepton_p4, 0)->DeltaPhi(*getP4(gen_neutrino_p4, 0))), eventWeight);
+                  hDeltaRLeptonNeutrino_gen->Fill(getP4(gen_lepton_p4, 0)->DeltaR(*getP4(gen_neutrino_p4, 0)), eventWeight);
+                  hDeltaEtaLeptonNeutrino_gen->Fill(getP4(gen_lepton_p4, 0)->Eta() - getP4(gen_neutrino_p4, 0)->Eta(), eventWeight);
 
-        mtt_gen_vs_mtt_reco_linearity_fourJets_sortingAlgoSel.fill(MC_mtt, mtt_four_leading_jets, eventWeight);
-        mtt_gen_vs_mtt_reco_resolution_fourJets_sortingAlgoSel.fill(MC_mtt, (mtt_four_leading_jets - MC_mtt) / MC_mtt, eventWeight);
+                  leptonic_W = *getP4(gen_lepton_p4, 0) + *getP4(gen_neutrino_p4, 0);
+                  hLeptonicWPt_gen->Fill(leptonic_W.Pt(), eventWeight);
+                  hLeptonicWEta_gen->Fill(leptonic_W.Eta(), eventWeight);
+              }
 
-        h_mtt_resolution_four_jets->Fill(mtt_four_leading_jets - MC_mtt, eventWeight);
-      }
-    }
+              TLorentzVector hadronic_W(0., 0., 0., 0.);
+              if (gen_lightJet1_p4->GetEntriesFast() && gen_lightJet2_p4->GetEntriesFast()) {
+                  hDeltaPhiTwoLightJets_gen->Fill(fabs(getP4(gen_lightJet1_p4, 0)->DeltaPhi(*getP4(gen_lightJet2_p4, 0))), eventWeight);
+                  hDeltaRTwoLightJets_gen->Fill(getP4(gen_lightJet1_p4, 0)->DeltaR(*getP4(gen_lightJet2_p4, 0)), eventWeight);
+                  hDeltaEtaTwoLightJets_gen->Fill(getP4(gen_lightJet1_p4, 0)->Eta() - getP4(gen_lightJet2_p4, 0)->Eta(), eventWeight);
 
-    bool btagSel = false;
-    //bool useBTagWeight = true;
-    if (mBTag < 0) {
-      btagSel = true;
-      //useBTagWeight = false;
-    } else if (mBTag == 0)
-      btagSel = numberOfBTaggedJets == 0;
-    else if (mBTag == 1)
-      btagSel = numberOfBTaggedJets == 1;
-    else if (mBTag == 2)
-      btagSel = numberOfBTaggedJets > 1;
+                  hadronic_W = *getP4(gen_lightJet1_p4, 0) + *getP4(gen_lightJet2_p4, 0);
+                  hHadronicWPt_gen->Fill(leptonic_W.Pt(), eventWeight);
+                  hHadronicWEta_gen->Fill(leptonic_W.Eta(), eventWeight);
+              }
 
-    //if (useBTagWeight) {
-      //eventWeight *= m_btag_weight;
-    //}
+              if (leptonic_W.Pt() != 0 && hadronic_W.Pt() != 0) {
+                  hDeltaPhiW_gen->Fill(fabs(leptonic_W.DeltaPhi(hadronic_W)), eventWeight);
+                  hDeltaRW_gen->Fill(leptonic_W.DeltaR(hadronic_W), eventWeight);
+                  hDeltaEtaW_gen->Fill(leptonic_W.Eta() - hadronic_W.Eta(), eventWeight);
+              }
+          }
 
-    float firstJetCut = 0, secondJetCut = 0, thirdJetCut = 0;
-    if (isRun2012AB) {
-      firstJetCut = 45;
-      secondJetCut = 45;
-      thirdJetCut = 45;
-    } else {
-      firstJetCut = 55;
-      secondJetCut = 45;
-      thirdJetCut = 35;
-    }
+          if (!mIsMC && !m_triggerPassed) {
+              continue;
+          }
 
-    if (!mSkim && ptLepton <= ptLeptonCut)
-      continue;
+          double ptLepton = 0;
+          double etaLepton = 0;
+          double ptLeptonCut = 0;
+          if (mIsSemiMu) {
+              if (nGoodMuons > 0) {
+                  ptLepton = muonPt[0];
+                  etaLepton = muonEta[0];
+                  ptLeptonCut = 26.;
+              }
+          } else {
+              if (nGoodElectrons > 0) {
+                  ptLepton = electronPt[0];
+                  etaLepton = electronEta[0];
+                  ptLeptonCut = 30.;
+              }
+          }
 
-    if (btagSel && p_1stjetpt > firstJetCut && p_2ndjetpt > secondJetCut && p_3rdjetpt > thirdJetCut) {
+          float HT = 0;
+          float HT30 = 0;
+          for (uint32_t i = 0; i < (uint32_t) jet_p4->GetEntriesFast(); i++) {
+              float pt = ((TLorentzVector*) (*jet_p4)[i])->Pt();
 
-      // New cut: MET > 50 for electron, 1 b-tag category
-      if (mBTag == 1 && !mIsSemiMu) {
-        if (MET < 50)
-          continue;
-      }
+              HT += pt;
+              if (pt > 30)
+                  HT30 += pt;
+          }
 
-      if (mIsMC) {
-        if (isRun2012AB) {
-          m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunA, lumi_run2012_A);
-          m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunB, lumi_run2012_B);
-          m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunC, 0);
-          m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunD, 0);
-        } else {
-          m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunA, 0);
-          m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunB, 0);
-          m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunC, lumi_run2012_C);
-          m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunD, lumi_run2012_D);
-        }
+          float HTFull = HT + ptLepton + MET;
 
-        // Compute trigger weight
-        std::vector<double> triggerWeights = m_trigger_efficiency_provider->get_weight(ptLepton, etaLepton, p_4thjetpt, jetEta[3], n_vertices, nJets, mIsSemiMu, triggerJESSyst);
-        double triggerWeight = triggerWeights[0];
-        if (mTriggerSyst == "up")
-          triggerWeight = triggerWeight + triggerWeights[1];
-        else if (mTriggerSyst == "down")
-          triggerWeight = triggerWeight - triggerWeights[1];
+          float mtt_four_leading_jets = 0.;
+          if (! mSkim) {
+              hNTrueInt_nosel->Fill(n_trueInteractions, eventWeight);
+              hNVtx_nosel->Fill(n_vertices, eventWeight);
+              hIsSel->Fill(isSel, eventWeight);
 
-        eventWeight *= triggerWeight;
+              hMET_nosel->Fill(MET, eventWeight);
 
-        hWeight_fullsel->Fill(eventWeight);
-        hLeptonWeight_fullsel->Fill(m_lepton_weight);
-        hBTagWeight_fullsel->Fill(m_btag_weight);
-        hGeneratorWeight_fullsel->Fill(generator_weight);
-        hPUWeight_fullsel->Fill(puWeight);
-        //hTopPtWeight_fullsel->Fill(topPtWeight);
-        hTriggerWeight_fullsel->Fill(triggerWeight);
+              if (jet_p4->GetEntriesFast() > 0) {
+                  TLorentzVector* p4 = (TLorentzVector*) (*jet_p4)[0];
+                  hFirstJetPt_nosel->Fill(p4->Pt(), eventWeight);
+                  hFirstJetEta_nosel->Fill(p4->Eta(), eventWeight);
+              }
 
-        mtt_gen_vs_mtt_reco_linearity_fullSel.fill(MC_mtt, mtt_AfterReco, eventWeight);
-        mtt_gen_vs_mtt_reco_resolution_fullSel.fill(MC_mtt, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
-        mtt_gen_vs_mtt_reco_linearity_fourJets_fullSel.fill(MC_mtt, mtt_four_leading_jets, eventWeight);
-        mtt_gen_vs_mtt_reco_resolution_fourJets_fullSel.fill(MC_mtt, (mtt_four_leading_jets - MC_mtt) / MC_mtt, eventWeight);
-      }
+              if (jet_p4->GetEntriesFast() > 1) {
+                  TLorentzVector* p4 = (TLorentzVector*) (*jet_p4)[1];
+                  hSecondJetPt_nosel->Fill(p4->Pt(), eventWeight);
+                  hSecondJetEta_nosel->Fill(p4->Eta(), eventWeight);
+              }
 
-      hBestSolChi2_fullsel->Fill(bestSolChi2, eventWeight);
-      hBestSolChi2Exp_fullsel->Fill(exp(-bestSolChi2), eventWeight);
-      hBestSolChi2Proba_fullsel->Fill(TMath::Prob(bestSolChi2, 3), eventWeight); // number of dof = n-1 with n = 4 (terms in chi2)
-      hBoostTT->Fill(beta_tt_AfterReco, eventWeight);
-      hPtTT->Fill(pt_tt_AfterReco, eventWeight);
-      hEtaTT->Fill(eta_tt_AfterReco, eventWeight);
+              if (jet_p4->GetEntriesFast() > 2) {
+                  TLorentzVector* p4 = (TLorentzVector*) (*jet_p4)[2];
+                  hThirdJetPt_nosel->Fill(p4->Pt(), eventWeight);
+                  hThirdJetEta_nosel->Fill(p4->Eta(), eventWeight);
+              }
 
-      hLeptonPt->Fill(ptLepton, eventWeight);
-      hLeptonEta->Fill(etaLepton, eventWeight);
-      hFirstJetPt->Fill(p_1stjetpt, eventWeight);
-      hSecondJetPt->Fill(p_2ndjetpt, eventWeight);
-      hThirdJetPt->Fill(p_3rdjetpt, eventWeight);
-      hFourthJetPt->Fill(p_4thjetpt, eventWeight);
-      hFirstJetEta->Fill(jetEta[0], eventWeight);
-      hSecondJetEta->Fill(jetEta[1], eventWeight);
-      hThirdJetEta->Fill(jetEta[2], eventWeight);
-      hFourthJetEta->Fill(jetEta[3], eventWeight);
-      hMET->Fill(MET, eventWeight);
+              if (jet_p4->GetEntriesFast() > 3) {
+                  TLorentzVector* p4 = (TLorentzVector*) (*jet_p4)[3];
+                  hFourthJetPt_nosel->Fill(p4->Eta(), eventWeight);
+                  hFourthJetEta_nosel->Fill(p4->Pt(), eventWeight);
+              }
 
-      if (met_p4 && met_p4->GetEntriesFast() > 0) {
-        TLorentzVector* p4 = (TLorentzVector*) (*met_p4)[0];
-        hMETPhi->Fill(p4->Phi(), eventWeight);
-        hMETx->Fill(p4->Px(), eventWeight);
-        hMETy->Fill(p4->Py(), eventWeight);
-      }
+              hHT_reco_nosel->Fill(HT, eventWeight);
+              hHT30_reco_nosel->Fill(HT30, eventWeight);
+              hHTFull_reco_nosel->Fill(HTFull, eventWeight);
 
-      hLeptTopPt->Fill(lepTopPt_AfterReco, eventWeight);
-      hLeptTopEta->Fill(lepTopEta_AfterReco, eventWeight);
+              if (n_muons > 0) {
+                  hMuRelIso_nosel->Fill(muon_relIso[0], eventWeight);
 
-      hHadrTopPt->Fill(hadTopPt_AfterReco, eventWeight);
-      hHadrTopEta->Fill(hadTopEta_AfterReco, eventWeight);
+                  TLorentzVector* p4 = (TLorentzVector*) (*muon_p4)[0];
+                  hLeptonEta_nosel->Fill(p4->Eta(), eventWeight);
+                  hLeptonPt_nosel->Fill(p4->Pt(), eventWeight);
+              }
 
-      hNGoodJets->Fill(nJets, eventWeight);
-      hNBtaggedJets_extractor->Fill(nBtaggedJets_CSVM, eventWeight);
-      hNBtaggedJets->Fill(numberOfBTaggedJets, eventWeight);
+              if (mIsSemiMu)
+              {
+                  if (nGoodMuons <= 0)
+                      continue;
+              }
+              else
+              {
+                  if (nGoodElectrons <= 0)
+                      continue;
 
-      hNVtx_noweight->Fill(n_vertices);
-      hNVtx->Fill(n_vertices, eventWeight);
-      hNTrueInt->Fill(n_trueInteractions, eventWeight);
+                  // The TOP reference selection exclude electron with
+                  // SuperCluster eta between 1.4442 and 1.5660
+                  // The TopTrigger efficiency does the same thing, but
+                  // using electron eta instead of SuperCluster eta.
+                  // Redo a cut here on electron eta
+                  // FIXME?
+                  if (fabs(etaLepton) >= 1.442 && fabs(etaLepton) < 1.5660)
+                      continue;
+              }
+          }
 
-      if (mIsSemiMu)
-        hMuRelIso->Fill(muRelIso[0], eventWeight);
-      else
-        hElRelIso->Fill(elRelIso[0], eventWeight);
+          if (mUseHybrid) {
+              mUseChi2 = false;
+              mUseKF = false;    
+          }
 
-      hmtlep->Fill(mLepTop_AfterReco, eventWeight);
-      hmthad->Fill(mHadTop_AfterReco, eventWeight);
+          if (mUseMVA) {
+              if (!mSkim && (isSel != 1 || numComb <= 0))
+                  continue;
+              mtt_AfterReco = mtt_AfterMVA;
+          } else if(mUseKF) {
+              if (! kf_converged)
+                  continue;
+              Init(true);
+          } else if (mUseChi2) {
+              if (numComb_chi2 == 0)
+                  continue;
+              Init(false);
+          } else if (mUseHybrid) {
+              if (numComb_chi2 == 0) {
+                  if (kf_converged) {
+                      mUseKF = true;
+                      mUseChi2 = false;
+                  } else
+                      continue;
+              } else {
+                  if (! kf_converged) {
+                      mUseChi2 = true;
+                      mUseKF = false;
+                  } else {
+                      if (kf_proba > 0.9) {
+                          mUseKF = true;
+                          mUseChi2 = false;          
+                      } else {
+                          mUseChi2 = true;
+                          mUseKF = false;          
+                      }
+                  }
+              } 
 
-      if (mUseHybrid) {
-        if (mUseChi2) {
-          hmtt_AfterChi2->Fill(mtt_AfterReco, eventWeight);
+              if (! mUseChi2 && ! mUseKF) continue;
+              if (!mSkim && isSel != 1)
+                  continue;
+              Init(mUseKF);
+          }
+
+          hBestSolChi2->Fill(bestSolChi2, eventWeight);
+          hNGoodJets_chi2sel->Fill(nJets, eventWeight);
+          hNBtaggedJets_chi2sel_extractor->Fill(nBtaggedJets_CSVM, eventWeight);
+          hNBtaggedJets_chi2sel->Fill(numberOfBTaggedJets, eventWeight);
+
+          hLeptonPt_chi2sel->Fill(ptLepton, eventWeight);
+          hLeptonEta_chi2sel->Fill(etaLepton, eventWeight);
+          if (mIsSemiMu)
+              hMuRelIso_chi2sel->Fill(muRelIso[0], eventWeight);
+          else
+              hElRelIso_chi2sel->Fill(elRelIso[0], eventWeight);
+
+          hMET_chi2sel->Fill(MET, eventWeight);
+
+          hLeptTopPt_chi2sel->Fill(lepTopPt_AfterReco, eventWeight);
+          hLeptTopEta_chi2sel->Fill(lepTopEta_AfterReco, eventWeight);
+
+          hHadrTopPt_chi2sel->Fill(hadTopPt_AfterReco, eventWeight);
+          hHadrTopEta_chi2sel->Fill(hadTopEta_AfterReco, eventWeight);
+
+          hFirstJetPt_chi2sel->Fill(p_1stjetpt, eventWeight);
+          hSecondJetPt_chi2sel->Fill(p_2ndjetpt, eventWeight);
+          hThirdJetPt_chi2sel->Fill(p_3rdjetpt, eventWeight);
+          hFourthJetPt_chi2sel->Fill(p_4thjetpt, eventWeight);
+
+          hFirstJetEta_chi2sel->Fill(jetEta[0], eventWeight);
+          hSecondJetEta_chi2sel->Fill(jetEta[1], eventWeight);
+          hThirdJetEta_chi2sel->Fill(jetEta[2], eventWeight);
+          hFourthJetEta_chi2sel->Fill(jetEta[3], eventWeight);
+
+          hNVtx_chi2sel->Fill(n_vertices, eventWeight);
+
+          hBoostTT_chi2sel->Fill(beta_tt_AfterReco, eventWeight);
+          hPtTT_chi2sel->Fill(pt_tt_AfterReco, eventWeight);
+          hEtaTT_chi2sel->Fill(eta_tt_AfterReco, eventWeight);
+
+          LorentzVector selectedLeptonP4_LV_AfterReco;
+          if (mUseKF) {
+              selectedLeptonP4_LV_AfterReco = *selectedLeptonP4_AfterKF;
+          } else {
+              selectedLeptonP4_LV_AfterReco = LorentzVector(getP4(selectedLeptonP4_AfterReco, 0)->Pt(), getP4(selectedLeptonP4_AfterReco, 0)->Eta(), getP4(selectedLeptonP4_AfterReco, 0)->Phi(), getP4(selectedLeptonP4_AfterReco, 0)->E());
+          }
+
           if (mIsMC && MC_channel != 0) {
-            h_mtt_resolution_AfterChi2->Fill(mtt_AfterReco - MC_mtt, eventWeight);
+              mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel.fill(MC_mtt, mtt_AfterReco, eventWeight);
+              mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel.fill(MC_mtt, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
+              mtt_gen_vs_mtt_reco_resolution_rmsVSmttreco_sortingAlgoSel.fill(mtt_AfterReco, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
+
+              if (mUseKF) {
+                  if (kf_proba < 0.2) {
+                      mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_lowKfProb.fill(MC_mtt, mtt_AfterReco, eventWeight);
+                      mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_lowKfProb.fill(MC_mtt, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
+
+                  } else {
+                      mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_highKfProb.fill(MC_mtt, mtt_AfterReco, eventWeight);
+                      mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_highKfProb.fill(MC_mtt, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
+                  }
+              }
+
+              if (true) {
+
+                  // Reconstruct mtt using the four leading jet
+
+                  LorentzVector tt_system = selectedLeptonP4_LV_AfterReco + *selectedNeutrinoP4_AfterReco;
+                  int njets = 0;
+                  for (int i = 0; i < jet_p4->GetEntriesFast(); i++) {
+
+                      if (njets > 3)
+                          break;
+
+                      TLorentzVector* p = (TLorentzVector*) (*jet_p4)[i];
+
+                      if (p->Pt() < 30 || fabs(p->Eta()) > 2.4)
+                          continue;
+
+                      LorentzVector p_LV(p->Pt(), p->Eta(), p->Phi(), p->E());
+
+                      tt_system += p_LV;
+                      njets++;
+                  }
+
+                  mtt_four_leading_jets = tt_system.M();
+
+                  mtt_gen_vs_mtt_reco_linearity_fourJets_sortingAlgoSel.fill(MC_mtt, mtt_four_leading_jets, eventWeight);
+                  mtt_gen_vs_mtt_reco_resolution_fourJets_sortingAlgoSel.fill(MC_mtt, (mtt_four_leading_jets - MC_mtt) / MC_mtt, eventWeight);
+
+                  h_mtt_resolution_four_jets->Fill(mtt_four_leading_jets - MC_mtt, eventWeight);
+              }
           }
-        }
 
-        else if (mUseKF) {
-          hmtt_AfterKF->Fill(mtt_AfterReco, eventWeight);
-          if (mIsMC && MC_channel != 0) {
-             h_mtt_resolution_AfterKF->Fill(mtt_AfterReco - MC_mtt, eventWeight);
+          bool btagSel = false;
+          //bool useBTagWeight = true;
+          if (mBTag < 0) {
+              btagSel = true;
+              //useBTagWeight = false;
+          } else if (mBTag == 0)
+              btagSel = numberOfBTaggedJets == 0;
+          else if (mBTag == 1)
+              btagSel = numberOfBTaggedJets == 1;
+          else if (mBTag == 2)
+              btagSel = numberOfBTaggedJets > 1;
+
+          //if (useBTagWeight) {
+          //eventWeight *= m_btag_weight;
+          //}
+
+          float firstJetCut = 0, secondJetCut = 0, thirdJetCut = 0;
+          if (isRun2012AB) {
+              firstJetCut = 45;
+              secondJetCut = 45;
+              thirdJetCut = 45;
+          } else {
+              firstJetCut = 55;
+              secondJetCut = 45;
+              thirdJetCut = 35;
           }
-        }
+
+          if (!mSkim && ptLepton <= ptLeptonCut)
+              continue;
+
+          if (btagSel && p_1stjetpt > firstJetCut && p_2ndjetpt > secondJetCut && p_3rdjetpt > thirdJetCut) {
+
+              // New cut: MET > 50 for electron, 0 and 1 b-tag categories
+              if (mBTag <= 1 && !mIsSemiMu) {
+                  if (MET < 50)
+                      continue;
+              }
+
+              /*      float discriminant = bkgVsTTBDTReader.evaluate(jentry);*/
+
+              //if (discriminant <= background_bdt_cut) {
+              //continue;
+              /*}*/
+
+              /*      hBDTDiscriminant->Fill(discriminant, eventWeightNoGenWeight);*/
+              /*bkgVsTTBDTReader.fillPlots(eventWeight);*/
+              if (mIsMC) {
+                  if (isRun2012AB) {
+                      m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunA, lumi_run2012_A);
+                      m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunB, lumi_run2012_B);
+                      m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunC, 0);
+                      m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunD, 0);
+                  } else {
+                      m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunA, 0);
+                      m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunB, 0);
+                      m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunC, lumi_run2012_C);
+                      m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunD, lumi_run2012_D);
+                  }
+
+                  // Compute trigger weight
+                  std::vector<double> triggerWeights = m_trigger_efficiency_provider->get_weight(ptLepton, etaLepton, p_4thjetpt, jetEta[3], n_vertices, nJets, mIsSemiMu, triggerJESSyst);
+                  double triggerWeight = triggerWeights[0];
+                  if (mTriggerSyst == "up")
+                      triggerWeight = triggerWeight + triggerWeights[1];
+                  else if (mTriggerSyst == "down")
+                      triggerWeight = triggerWeight - triggerWeights[1];
+
+                  eventWeight *= triggerWeight;
+
+                  hWeight_fullsel->Fill(eventWeight);
+                  hLeptonWeight_fullsel->Fill(m_lepton_weight);
+                  hBTagWeight_fullsel->Fill(m_btag_weight);
+                  hGeneratorWeight_fullsel->Fill(generator_weight);
+                  hPUWeight_fullsel->Fill(puWeight);
+                  //hTopPtWeight_fullsel->Fill(topPtWeight);
+                  hTriggerWeight_fullsel->Fill(triggerWeight);
+
+                  mtt_gen_vs_mtt_reco_linearity_fullSel.fill(MC_mtt, mtt_AfterReco, eventWeight);
+                  mtt_gen_vs_mtt_reco_resolution_fullSel.fill(MC_mtt, (mtt_AfterReco - MC_mtt) / MC_mtt, eventWeight);
+                  mtt_gen_vs_mtt_reco_linearity_fourJets_fullSel.fill(MC_mtt, mtt_four_leading_jets, eventWeight);
+                  mtt_gen_vs_mtt_reco_resolution_fourJets_fullSel.fill(MC_mtt, (mtt_four_leading_jets - MC_mtt) / MC_mtt, eventWeight);
+              }
+
+              hBestSolChi2_fullsel->Fill(bestSolChi2, eventWeight);
+              hBestSolChi2Exp_fullsel->Fill(exp(-bestSolChi2), eventWeight);
+              hBestSolChi2Proba_fullsel->Fill(TMath::Prob(bestSolChi2, 3), eventWeight); // number of dof = n-1 with n = 4 (terms in chi2)
+              hBoostTT->Fill(beta_tt_AfterReco, eventWeight);
+              hPtTT->Fill(pt_tt_AfterReco, eventWeight);
+              hEtaTT->Fill(eta_tt_AfterReco, eventWeight);
+
+              hLeptonPt->Fill(ptLepton, eventWeight);
+              hLeptonEta->Fill(etaLepton, eventWeight);
+              hFirstJetPt->Fill(p_1stjetpt, eventWeight);
+              hSecondJetPt->Fill(p_2ndjetpt, eventWeight);
+              hThirdJetPt->Fill(p_3rdjetpt, eventWeight);
+              hFourthJetPt->Fill(p_4thjetpt, eventWeight);
+              hFirstJetEta->Fill(jetEta[0], eventWeight);
+              hSecondJetEta->Fill(jetEta[1], eventWeight);
+              hThirdJetEta->Fill(jetEta[2], eventWeight);
+              hFourthJetEta->Fill(jetEta[3], eventWeight);
+              hMET->Fill(MET, eventWeight);
+
+              if (met_p4 && met_p4->GetEntriesFast() > 0) {
+                  TLorentzVector* p4 = (TLorentzVector*) (*met_p4)[0];
+                  hMETPhi->Fill(p4->Phi(), eventWeight);
+                  hMETx->Fill(p4->Px(), eventWeight);
+                  hMETy->Fill(p4->Py(), eventWeight);
+              }
+
+              hLeptTopPt->Fill(lepTopPt_AfterReco, eventWeight);
+              hLeptTopEta->Fill(lepTopEta_AfterReco, eventWeight);
+
+              hHadrTopPt->Fill(hadTopPt_AfterReco, eventWeight);
+              hHadrTopEta->Fill(hadTopEta_AfterReco, eventWeight);
+
+              hNGoodJets->Fill(nJets, eventWeight);
+              hNBtaggedJets_extractor->Fill(nBtaggedJets_CSVM, eventWeight);
+              hNBtaggedJets->Fill(numberOfBTaggedJets, eventWeight);
+
+              hNVtx_noweight->Fill(n_vertices);
+              hNVtx->Fill(n_vertices, eventWeight);
+              hNTrueInt->Fill(n_trueInteractions, eventWeight);
+
+              if (mIsSemiMu)
+                  hMuRelIso->Fill(muRelIso[0], eventWeight);
+              else
+                  hElRelIso->Fill(elRelIso[0], eventWeight);
+
+              hmtlep->Fill(mLepTop_AfterReco, eventWeight);
+              hmthad->Fill(mHadTop_AfterReco, eventWeight);
+
+              if (mUseHybrid) {
+                  if (mUseChi2) {
+                      hmtt_AfterChi2->Fill(mtt_AfterReco, eventWeight);
+                      if (mIsMC && MC_channel != 0) {
+                          h_mtt_resolution_AfterChi2->Fill(mtt_AfterReco - MC_mtt, eventWeight);
+                      }
+                  }
+
+                  else if (mUseKF) {
+                      hmtt_AfterKF->Fill(mtt_AfterReco, eventWeight);
+                      if (mIsMC && MC_channel != 0) {
+                          h_mtt_resolution_AfterKF->Fill(mtt_AfterReco - MC_mtt, eventWeight);
+                      }
+                  }
+              }
+
+              hmttSelected_btag_sel->Fill(mtt_AfterReco, eventWeight);
+              hmttSelected_btag_sel_binning15GeV->Fill(mtt_AfterReco, eventWeight);
+              hmttSelected_btag_sel_no_gen_weight->Fill(mtt_AfterReco, eventWeightNoGenWeight);
+
+              if (eventWeight > 0)
+                  hmttSelected_btag_sel_positive->Fill(mtt_AfterReco, eventWeight);
+              else
+                  hmttSelected_btag_sel_negative->Fill(mtt_AfterReco, eventWeight);
+
+              pMttResolution_btag_sel->Fill(MC_mtt , mtt_AfterReco, eventWeight);
+
+              hDeltaPhiTops_reco_fullsel->Fill(fabs(ROOT::Math::VectorUtil::DeltaPhi(*lepTopP4_AfterReco, *hadTopP4_AfterReco)), eventWeight);
+              hDeltaEtaTops_reco_fullsel->Fill(lepTopP4_AfterReco->Eta() - hadTopP4_AfterReco->Eta(), eventWeight);
+              hDeltaRTops_reco_fullsel->Fill(ROOT::Math::VectorUtil::DeltaR(*lepTopP4_AfterReco, *hadTopP4_AfterReco), eventWeight);
+              hDeltaThetaTops_reco_fullsel->Fill(fabs(lepTopP4_AfterReco->Theta() - hadTopP4_AfterReco->Theta()), eventWeight);
+
+              LorentzVector selectedHadronicWP4 = *selectedFirstJetP4_AfterReco + *selectedSecondJetP4_AfterReco;
+              LorentzVector selectedLeptonicWP4 = *selectedNeutrinoP4_AfterReco + selectedLeptonP4_LV_AfterReco;
+
+              LorentzVector ttbarSystemP4 = *lepTopP4_AfterReco + *hadTopP4_AfterReco;
+              hBetaTT->Fill(ttbarSystemP4.Beta(), eventWeight);
+
+              hLeptonicWMt->Fill(selectedLeptonicWP4.Mt(), eventWeight);
+              hHadronicWMt->Fill(selectedHadronicWP4.Mt(), eventWeight);
+
+              hmWlep->Fill(selectedLeptonicWP4.M(), eventWeight);
+              hmWhad->Fill(selectedHadronicWP4.M(), eventWeight);
+
+              hLeptTopPz->Fill(lepTopP4_AfterReco->Pz(), eventWeight);
+              hHadrTopPz->Fill(hadTopP4_AfterReco->Pz(), eventWeight);
+
+              hLeptTopPhi->Fill(lepTopP4_AfterReco->Phi(), eventWeight);
+              hHadrTopPhi->Fill(hadTopP4_AfterReco->Phi(), eventWeight);
+
+              hTopsDeltaY->Fill(hadTopP4_AfterReco->Rapidity() - lepTopP4_AfterReco->Rapidity(), eventWeight);
+
+              hLeptTopE->Fill(lepTopP4_AfterReco->E(), eventWeight);
+              hLeptTopMt->Fill(lepTopP4_AfterReco->Mt(), eventWeight);
+              hHadrTopE->Fill(hadTopP4_AfterReco->E(), eventWeight);
+              hHadrTopMt->Fill(hadTopP4_AfterReco->Mt(), eventWeight);
+
+              selectedFirstJetPt_AfterReco = selectedFirstJetP4_AfterReco->Pt();
+              selectedSecondJetPt_AfterReco = selectedSecondJetP4_AfterReco->Pt();
+              selectedHadronicBPt_AfterReco = selectedHadronicBP4_AfterReco->Pt();
+              selectedLeptonicBPt_AfterReco = selectedLeptonicBP4_AfterReco->Pt();
+
+              hSelectedFirstJetPt->Fill(selectedFirstJetPt_AfterReco, eventWeight);
+              hSelectedSecondJetPt->Fill(selectedSecondJetPt_AfterReco, eventWeight);
+              hSelectedHadronicBPt->Fill(selectedHadronicBPt_AfterReco, eventWeight);
+              hSelectedLeptonicBPt->Fill(selectedLeptonicBPt_AfterReco, eventWeight);
+              hSelectedNeutrinoPt->Fill(selectedNeutrinoP4_AfterReco->Pt(), eventWeight);
+              hSelectedNeutrinoPz->Fill(selectedNeutrinoP4_AfterReco->Pz(), eventWeight);
+
+              hSelectedFirstJetEta->Fill(selectedFirstJetP4_AfterReco->Eta(), eventWeight);
+              hSelectedSecondJetEta->Fill(selectedSecondJetP4_AfterReco->Eta(), eventWeight);
+              hSelectedHadronicBEta->Fill(selectedHadronicBP4_AfterReco->Eta(), eventWeight);
+              hSelectedLeptonicBEta->Fill(selectedLeptonicBP4_AfterReco->Eta(), eventWeight);
+              hSelectedNeutrinoEta->Fill(selectedNeutrinoP4_AfterReco->Eta(), eventWeight);
+
+              hSelectedFirstJetPhi->Fill(selectedFirstJetP4_AfterReco->Phi(), eventWeight);
+              hSelectedSecondJetPhi->Fill(selectedSecondJetP4_AfterReco->Phi(), eventWeight);
+              hSelectedHadronicBPhi->Fill(selectedHadronicBP4_AfterReco->Phi(), eventWeight);
+              hSelectedLeptonicBPhi->Fill(selectedLeptonicBP4_AfterReco->Phi(), eventWeight);
+              hSelectedNeutrinoPhi->Fill(selectedNeutrinoP4_AfterReco->Phi(), eventWeight);
+
+              hSelectedFirstJetE->Fill(selectedFirstJetP4_AfterReco->E(), eventWeight);
+              hSelectedSecondJetE->Fill(selectedSecondJetP4_AfterReco->E(), eventWeight);
+              hSelectedHadronicBE->Fill(selectedHadronicBP4_AfterReco->E(), eventWeight);
+              hSelectedLeptonicBE->Fill(selectedLeptonicBP4_AfterReco->E(), eventWeight);
+              hSelectedNeutrinoE->Fill(selectedNeutrinoP4_AfterReco->E(), eventWeight);
+
+
+              if (mUseKF) {
+                  hSelectedLeptonPt->Fill(selectedLeptonP4_AfterKF->Pt(), eventWeight);
+                  hSelectedLeptonEta->Fill(selectedLeptonP4_AfterKF->Eta(), eventWeight);
+                  hSelectedLeptonPhi->Fill(selectedLeptonP4_AfterKF->Phi(), eventWeight);
+                  hSelectedLeptonE->Fill(selectedLeptonP4_AfterKF->E(), eventWeight);
+              } else {
+                  hSelectedLeptonPt->Fill(getP4(selectedLeptonP4_AfterReco, 0)->Pt(), eventWeight);
+                  hSelectedLeptonEta->Fill(getP4(selectedLeptonP4_AfterReco, 0)->Eta(), eventWeight);
+                  hSelectedLeptonPhi->Fill(getP4(selectedLeptonP4_AfterReco, 0)->Phi(), eventWeight);
+                  hSelectedLeptonE->Fill(getP4(selectedLeptonP4_AfterReco, 0)->E(), eventWeight);
+              }
+
+              sumPt4JetsSel = selectedFirstJetPt_AfterReco + selectedSecondJetPt_AfterReco + selectedHadronicBPt_AfterReco + selectedLeptonicBPt_AfterReco;
+              sumPtJetsInEvent = 0.;
+              for (int i = 0; i < nJets; i++) {
+                  sumPtJetsInEvent += jetPt[i];
+              }
+              HTFracValue = sumPt4JetsSel/sumPtJetsInEvent;
+              hHTFrac->Fill(HTFracValue, eventWeight);
+
+              if (mtt_AfterReco > 500)
+                  hmttSelected_btag_sel_mass_cut->Fill(mtt_AfterReco, eventWeight);
+
+              h_mtt_resolution->Fill(mtt_AfterReco - MC_mtt, eventWeight);
+              hkf_chisquare->Fill(kf_chisquare, eventWeight);
+              hkf_proba->Fill(kf_proba, eventWeight);
+              hkf_proba_zoom->Fill(kf_proba, eventWeight);
+              hAplanarity->Fill(p_aplanarity, eventWeight);
+              hCircularity->Fill(p_circularity, eventWeight);
+              hSphericity->Fill(p_sphericity, eventWeight);
+              hIsotropy->Fill(p_isotropy, eventWeight);
+              hD->Fill(p_D, eventWeight);
+              hC->Fill(p_C, eventWeight);
+
+              float discriminant = bkgVsTTBDTReader.evaluate(jentry);
+              bkgVsTTBDTReader.fillPlots(eventWeight);
+              hBDTDiscriminant->Fill(discriminant, eventWeightNoGenWeight);
+
+              if (discriminant > background_bdt_cut) {
+                  hmttSelected_background_bdt_btag_sel->Fill(mtt_AfterReco, eventWeight);
+
+                  hNBtaggedJets_extractor_bdtsel->Fill(nBtaggedJets_CSVM, eventWeight);
+                  hNBtaggedJets_bdtsel->Fill(numberOfBTaggedJets, eventWeight);
+
+                  hLeptonPt_bdtsel->Fill(ptLepton, eventWeight);
+                  hFirstJetPt_bdtsel->Fill(p_1stjetpt, eventWeight);
+                  hSecondJetPt_bdtsel->Fill(p_2ndjetpt, eventWeight);
+                  hThirdJetPt_bdtsel->Fill(p_3rdjetpt, eventWeight);
+                  hFourthJetPt_bdtsel->Fill(p_4thjetpt, eventWeight);
+                  hMET_bdtsel->Fill(MET, eventWeight);
+
+                  hSelectedFirstJetPt_bdtsel->Fill(selectedFirstJetPt_AfterReco, eventWeight);
+                  hSelectedSecondJetPt_bdtsel->Fill(selectedSecondJetPt_AfterReco, eventWeight);
+                  hSelectedHadronicBPt_bdtsel->Fill(selectedHadronicBPt_AfterReco, eventWeight);
+                  hSelectedLeptonicBPt_bdtsel->Fill(selectedLeptonicBPt_AfterReco, eventWeight);
+                  hSelectedNeutrinoPt_bdtsel->Fill(selectedNeutrinoP4_AfterReco->Pt(), eventWeight);
+
+                  if (mUseKF) {
+                      hSelectedLeptonPt_bdtsel->Fill(selectedLeptonP4_AfterKF->Pt(), eventWeight);
+                  } else {
+                      hSelectedLeptonPt_bdtsel->Fill(getP4(selectedLeptonP4_AfterReco, 0)->Pt(), eventWeight);
+                  }
+
+                  hLeptTopPt_bdtsel->Fill(lepTopPt_AfterReco, eventWeight);
+                  hHadrTopPt_bdtsel->Fill(hadTopPt_AfterReco, eventWeight);
+
+              }
+          }
       }
+      if (mIsMC && mPDFSyst != "nominal") {
+          output->cd();
+          const char* name = hmttSelected_btag_sel_binning15GeV->GetName();
+          std::stringstream histoName;
+          histoName << name << "_errorPDF_" << imem ;
+          hmttSelected_btag_sel_binning15GeV->Write(histoName.str().c_str());
 
-      hmttSelected_btag_sel->Fill(mtt_AfterReco, eventWeight);
-      hmttSelected_btag_sel_binning15GeV->Fill(mtt_AfterReco, eventWeight);
-      hmttSelected_btag_sel_no_gen_weight->Fill(mtt_AfterReco, eventWeightNoGenWeight);
-
-      if (eventWeight > 0)
-        hmttSelected_btag_sel_positive->Fill(mtt_AfterReco, eventWeight);
-      else
-        hmttSelected_btag_sel_negative->Fill(mtt_AfterReco, eventWeight);
-
-      pMttResolution_btag_sel->Fill(MC_mtt , mtt_AfterReco, eventWeight);
-
-      hDeltaPhiTops_reco_fullsel->Fill(fabs(ROOT::Math::VectorUtil::DeltaPhi(*lepTopP4_AfterReco, *hadTopP4_AfterReco)), eventWeight);
-      hDeltaEtaTops_reco_fullsel->Fill(lepTopP4_AfterReco->Eta() - hadTopP4_AfterReco->Eta(), eventWeight);
-      hDeltaRTops_reco_fullsel->Fill(ROOT::Math::VectorUtil::DeltaR(*lepTopP4_AfterReco, *hadTopP4_AfterReco), eventWeight);
-      hDeltaThetaTops_reco_fullsel->Fill(fabs(lepTopP4_AfterReco->Theta() - hadTopP4_AfterReco->Theta()), eventWeight);
-
-      LorentzVector selectedHadronicWP4 = *selectedFirstJetP4_AfterReco + *selectedSecondJetP4_AfterReco;
-      LorentzVector selectedLeptonicWP4 = *selectedNeutrinoP4_AfterReco + selectedLeptonP4_LV_AfterReco;
-
-      LorentzVector ttbarSystemP4 = *lepTopP4_AfterReco + *hadTopP4_AfterReco;
-      hBetaTT->Fill(ttbarSystemP4.Beta(), eventWeight);
-
-      hLeptonicWMt->Fill(selectedLeptonicWP4.Mt(), eventWeight);
-      hHadronicWMt->Fill(selectedHadronicWP4.Mt(), eventWeight);
-
-      hmWlep->Fill(selectedLeptonicWP4.M(), eventWeight);
-      hmWhad->Fill(selectedHadronicWP4.M(), eventWeight);
-
-      hLeptTopPz->Fill(lepTopP4_AfterReco->Pz(), eventWeight);
-      hHadrTopPz->Fill(hadTopP4_AfterReco->Pz(), eventWeight);
-
-      hLeptTopPhi->Fill(lepTopP4_AfterReco->Phi(), eventWeight);
-      hHadrTopPhi->Fill(hadTopP4_AfterReco->Phi(), eventWeight);
-
-      hTopsDeltaY->Fill(hadTopP4_AfterReco->Rapidity() - lepTopP4_AfterReco->Rapidity(), eventWeight);
-
-      hLeptTopE->Fill(lepTopP4_AfterReco->E(), eventWeight);
-      hLeptTopMt->Fill(lepTopP4_AfterReco->Mt(), eventWeight);
-      hHadrTopE->Fill(hadTopP4_AfterReco->E(), eventWeight);
-      hHadrTopMt->Fill(hadTopP4_AfterReco->Mt(), eventWeight);
-
-      selectedFirstJetPt_AfterReco = selectedFirstJetP4_AfterReco->Pt();
-      selectedSecondJetPt_AfterReco = selectedSecondJetP4_AfterReco->Pt();
-      selectedHadronicBPt_AfterReco = selectedHadronicBP4_AfterReco->Pt();
-      selectedLeptonicBPt_AfterReco = selectedLeptonicBP4_AfterReco->Pt();
-
-      hSelectedFirstJetPt->Fill(selectedFirstJetPt_AfterReco, eventWeight);
-      hSelectedSecondJetPt->Fill(selectedSecondJetPt_AfterReco, eventWeight);
-      hSelectedHadronicBPt->Fill(selectedHadronicBPt_AfterReco, eventWeight);
-      hSelectedLeptonicBPt->Fill(selectedLeptonicBPt_AfterReco, eventWeight);
-      hSelectedNeutrinoPt->Fill(selectedNeutrinoP4_AfterReco->Pt(), eventWeight);
-      hSelectedNeutrinoPz->Fill(selectedNeutrinoP4_AfterReco->Pz(), eventWeight);
-
-      hSelectedFirstJetEta->Fill(selectedFirstJetP4_AfterReco->Eta(), eventWeight);
-      hSelectedSecondJetEta->Fill(selectedSecondJetP4_AfterReco->Eta(), eventWeight);
-      hSelectedHadronicBEta->Fill(selectedHadronicBP4_AfterReco->Eta(), eventWeight);
-      hSelectedLeptonicBEta->Fill(selectedLeptonicBP4_AfterReco->Eta(), eventWeight);
-      hSelectedNeutrinoEta->Fill(selectedNeutrinoP4_AfterReco->Eta(), eventWeight);
-
-      hSelectedFirstJetPhi->Fill(selectedFirstJetP4_AfterReco->Phi(), eventWeight);
-      hSelectedSecondJetPhi->Fill(selectedSecondJetP4_AfterReco->Phi(), eventWeight);
-      hSelectedHadronicBPhi->Fill(selectedHadronicBP4_AfterReco->Phi(), eventWeight);
-      hSelectedLeptonicBPhi->Fill(selectedLeptonicBP4_AfterReco->Phi(), eventWeight);
-      hSelectedNeutrinoPhi->Fill(selectedNeutrinoP4_AfterReco->Phi(), eventWeight);
-
-      hSelectedFirstJetE->Fill(selectedFirstJetP4_AfterReco->E(), eventWeight);
-      hSelectedSecondJetE->Fill(selectedSecondJetP4_AfterReco->E(), eventWeight);
-      hSelectedHadronicBE->Fill(selectedHadronicBP4_AfterReco->E(), eventWeight);
-      hSelectedLeptonicBE->Fill(selectedLeptonicBP4_AfterReco->E(), eventWeight);
-      hSelectedNeutrinoE->Fill(selectedNeutrinoP4_AfterReco->E(), eventWeight);
-      if (mUseKF) {
-        hSelectedLeptonPt->Fill(selectedLeptonP4_AfterKF->Pt(), eventWeight);
-        hSelectedLeptonEta->Fill(selectedLeptonP4_AfterKF->Eta(), eventWeight);
-        hSelectedLeptonPhi->Fill(selectedLeptonP4_AfterKF->Phi(), eventWeight);
-        hSelectedLeptonE->Fill(selectedLeptonP4_AfterKF->E(), eventWeight);
-      } else {
-        hSelectedLeptonPt->Fill(getP4(selectedLeptonP4_AfterReco, 0)->Pt(), eventWeight);
-        hSelectedLeptonEta->Fill(getP4(selectedLeptonP4_AfterReco, 0)->Eta(), eventWeight);
-        hSelectedLeptonPhi->Fill(getP4(selectedLeptonP4_AfterReco, 0)->Phi(), eventWeight);
-        hSelectedLeptonE->Fill(getP4(selectedLeptonP4_AfterReco, 0)->E(), eventWeight);
+          // Decomment this part if you want to compute PDF syst on all histogramms (not only mttSelected_btag_sel_binning15GeV)
+          /*        TList* list = output->GetList();*/
+          //std::cout << "Write histos..." << std::endl;
+          //for (Int_t i=0; i<list->GetEntries(); i++) {
+          //const char* name = list->At(i)->GetName();
+          //std::stringstream histoName;
+          //histoName << name << "_errorPDF_" << imem ;
+          //list->At(i)->Write(histoName.str().c_str());
+          /*}*/      
       }
-
-      sumPt4JetsSel = selectedFirstJetPt_AfterReco + selectedSecondJetPt_AfterReco + selectedHadronicBPt_AfterReco + selectedLeptonicBPt_AfterReco;
-      sumPtJetsInEvent = 0.;
-      for (int i = 0; i < nJets; i++) {
-        sumPtJetsInEvent += jetPt[i];
-      }
-      HTFracValue = sumPt4JetsSel/sumPtJetsInEvent;
-      hHTFrac->Fill(HTFracValue, eventWeight);
-
-      if (mtt_AfterReco > 500)
-        hmttSelected_btag_sel_mass_cut->Fill(mtt_AfterReco, eventWeight);
-
-      h_mtt_resolution->Fill(mtt_AfterReco - MC_mtt, eventWeight);
-      hkf_chisquare->Fill(kf_chisquare, eventWeight);
-      hkf_proba->Fill(kf_proba, eventWeight);
-      hkf_proba_zoom->Fill(kf_proba, eventWeight);
-      hAplanarity->Fill(p_aplanarity, eventWeight);
-      hCircularity->Fill(p_circularity, eventWeight);
-      hSphericity->Fill(p_sphericity, eventWeight);
-      hIsotropy->Fill(p_isotropy, eventWeight);
-      hD->Fill(p_D, eventWeight);
-      hC->Fill(p_C, eventWeight);
-
-      float discriminant = bkgVsTTBDTReader.evaluate(jentry);
-      bkgVsTTBDTReader.fillPlots(eventWeight);
-      hBDTDiscriminant->Fill(discriminant, eventWeightNoGenWeight);
-
-      if (discriminant > background_bdt_cut) {
-        hmttSelected_background_bdt_btag_sel->Fill(mtt_AfterReco, eventWeight);
-
-        hNBtaggedJets_extractor_bdtsel->Fill(nBtaggedJets_CSVM, eventWeight);
-        hNBtaggedJets_bdtsel->Fill(numberOfBTaggedJets, eventWeight);
-
-        hLeptonPt_bdtsel->Fill(ptLepton, eventWeight);
-        hFirstJetPt_bdtsel->Fill(p_1stjetpt, eventWeight);
-        hSecondJetPt_bdtsel->Fill(p_2ndjetpt, eventWeight);
-        hThirdJetPt_bdtsel->Fill(p_3rdjetpt, eventWeight);
-        hFourthJetPt_bdtsel->Fill(p_4thjetpt, eventWeight);
-        hMET_bdtsel->Fill(MET, eventWeight);
-
-        hSelectedFirstJetPt_bdtsel->Fill(selectedFirstJetPt_AfterReco, eventWeight);
-        hSelectedSecondJetPt_bdtsel->Fill(selectedSecondJetPt_AfterReco, eventWeight);
-        hSelectedHadronicBPt_bdtsel->Fill(selectedHadronicBPt_AfterReco, eventWeight);
-        hSelectedLeptonicBPt_bdtsel->Fill(selectedLeptonicBPt_AfterReco, eventWeight);
-        hSelectedNeutrinoPt_bdtsel->Fill(selectedNeutrinoP4_AfterReco->Pt(), eventWeight);
-
-        if (mUseKF) {
-          hSelectedLeptonPt_bdtsel->Fill(selectedLeptonP4_AfterKF->Pt(), eventWeight);
-        } else {
-          hSelectedLeptonPt_bdtsel->Fill(getP4(selectedLeptonP4_AfterReco, 0)->Pt(), eventWeight);
-        }
-
-        hLeptTopPt_bdtsel->Fill(lepTopPt_AfterReco, eventWeight);
-        hHadrTopPt_bdtsel->Fill(hadTopPt_AfterReco, eventWeight);
-
-      }
-    }
   }
 
   output->cd();
-  bkgVsTTBDTReader.writePlots(output);
 
-  THStack* hsmtt_chi2_kf_fraction = new THStack("mtt_chi2_kf_fraction", "mtt_chi2_kf_fraction");
-  hmtt_AfterChi2->SetLineColor(kRed-7);
-  hmtt_AfterChi2->SetFillColor(kRed-7);
-  hmtt_AfterKF->SetLineColor(kGreen-8);
-  hmtt_AfterKF->SetFillColor(kGreen-8);
-  hsmtt_chi2_kf_fraction->Add(hmtt_AfterChi2);
-  hsmtt_chi2_kf_fraction->Add(hmtt_AfterKF);
-  hsmtt_chi2_kf_fraction->Write();
+  if (mPDFSyst == "nominal") {
+      bkgVsTTBDTReader.writePlots(output);
 
-  THStack* hs_mtt_resolution_chi2_kf_fraction = new THStack("mtt_resolution_chi2_kf_fraction", "mtt_resolution_chi2_kf_fraction");
-  h_mtt_resolution_AfterChi2->SetLineColor(kRed-7);
-  h_mtt_resolution_AfterChi2->SetFillColor(kRed-7);
-  h_mtt_resolution_AfterKF->SetLineColor(kGreen-8);
-  h_mtt_resolution_AfterKF->SetFillColor(kGreen-8);
-  hs_mtt_resolution_chi2_kf_fraction->Add(h_mtt_resolution_AfterChi2);
-  hs_mtt_resolution_chi2_kf_fraction->Add(h_mtt_resolution_AfterKF);
-  hs_mtt_resolution_chi2_kf_fraction->Write();
+      THStack* hsmtt_chi2_kf_fraction = new THStack("mtt_chi2_kf_fraction", "mtt_chi2_kf_fraction");
+      hmtt_AfterChi2->SetLineColor(kRed-7);
+      hmtt_AfterChi2->SetFillColor(kRed-7);
+      hmtt_AfterKF->SetLineColor(kGreen-8);
+      hmtt_AfterKF->SetFillColor(kGreen-8);
+      hsmtt_chi2_kf_fraction->Add(hmtt_AfterChi2);
+      hsmtt_chi2_kf_fraction->Add(hmtt_AfterKF);
+      hsmtt_chi2_kf_fraction->Write();
 
-  if (mIsMC && hTopPtWeight_fullsel->GetEntries() > 0) {
-    std::cout << "Top pt reweighting mean weight: " << hTopPtWeight_fullsel->GetMean() << std::endl;
-    std::cout << "Use this value to compute the new number of generated events for this sample" << std::endl;
+      THStack* hs_mtt_resolution_chi2_kf_fraction = new THStack("mtt_resolution_chi2_kf_fraction", "mtt_resolution_chi2_kf_fraction");
+      h_mtt_resolution_AfterChi2->SetLineColor(kRed-7);
+      h_mtt_resolution_AfterChi2->SetFillColor(kRed-7);
+      h_mtt_resolution_AfterKF->SetLineColor(kGreen-8);
+      h_mtt_resolution_AfterKF->SetFillColor(kGreen-8);
+      hs_mtt_resolution_chi2_kf_fraction->Add(h_mtt_resolution_AfterChi2);
+      hs_mtt_resolution_chi2_kf_fraction->Add(h_mtt_resolution_AfterKF);
+      hs_mtt_resolution_chi2_kf_fraction->Write();
 
-    // Save some useful informations
-    boost::filesystem::path p(mOutputFile);
-    p.replace_extension("info");
+      if (mIsMC && hTopPtWeight_fullsel->GetEntries() > 0) {
+          std::cout << "Top pt reweighting mean weight: " << hTopPtWeight_fullsel->GetMean() << std::endl;
+          std::cout << "Use this value to compute the new number of generated events for this sample" << std::endl;
 
-    std::ofstream f(p.string());
-    //f << hTopPtWeight_fullsel->GetMean() << std::endl;
-    f << 1 << std::endl;
-    f.close();
+          // Save some useful informations
+          boost::filesystem::path p(mOutputFile);
+          p.replace_extension("info");
+
+          std::ofstream f(p.string());
+          //f << hTopPtWeight_fullsel->GetMean() << std::endl;
+          f << 1 << std::endl;
+          f.close();
+      }
+
+      output->Write();
   }
 
-  output->Write();
 
-  if (mIsMC) {
-    mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel.write(output);
-    mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel.write(output);
-    mtt_gen_vs_mtt_reco_resolution_rmsVSmttreco_sortingAlgoSel.write(output);
-    mtt_gen_vs_mtt_reco_linearity_fourJets_sortingAlgoSel.write(output);
-    mtt_gen_vs_mtt_reco_resolution_fourJets_sortingAlgoSel.write(output);
+  if (mIsMC && mPDFSyst == "nominal") {
+      mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel.write(output);
+      mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel.write(output);
+      mtt_gen_vs_mtt_reco_resolution_rmsVSmttreco_sortingAlgoSel.write(output);
+      mtt_gen_vs_mtt_reco_linearity_fourJets_sortingAlgoSel.write(output);
+      mtt_gen_vs_mtt_reco_resolution_fourJets_sortingAlgoSel.write(output);
 
-    mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_lowKfProb.write(output);
-    mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_lowKfProb.write(output);
-    mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_highKfProb.write(output);
-    mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_highKfProb.write(output);
+      mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_lowKfProb.write(output);
+      mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_lowKfProb.write(output);
+      mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_highKfProb.write(output);
+      mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_highKfProb.write(output);
 
-    mtt_gen_vs_mtt_reco_linearity_fullSel.write(output);
-    mtt_gen_vs_mtt_reco_resolution_fullSel.write(output);
-    mtt_gen_vs_mtt_reco_linearity_fourJets_fullSel.write(output);
-    mtt_gen_vs_mtt_reco_resolution_fourJets_fullSel.write(output);
+      mtt_gen_vs_mtt_reco_linearity_fullSel.write(output);
+      mtt_gen_vs_mtt_reco_resolution_fullSel.write(output);
+      mtt_gen_vs_mtt_reco_linearity_fourJets_fullSel.write(output);
+      mtt_gen_vs_mtt_reco_resolution_fourJets_fullSel.write(output);
   }
 
   output->Close();
@@ -1288,7 +1351,7 @@ void loadChain(const std::vector<std::string>& inputFiles, const std::string& tr
   output->SetCacheSize(30*1024*1024);
 }
 
-Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, bool chi2, bool kf, bool hybrid, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& leptonSyst, const std::string& btagSyst) : fMTT(0), fVertices(0), fEvent(0)
+Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, int btag, bool skim, bool mva, bool chi2, bool kf, bool hybrid, const std::string& triggerSyst, const std::string& jecSyst, const std::string& puSyst, const std::string& pdfSyst, const std::string& alphasSyst, const std::string& leptonSyst, const std::string& btagSyst) : fMTT(0), fVertices(0), fEvent(0)
 {
   mIsSemiMu = isSemiMu;
   mIsMC = isMC;
@@ -1303,6 +1366,7 @@ Extractor2Histos::Extractor2Histos(const std::vector<std::string>& inputFiles, c
   mJECSyst = jecSyst;
   mPUSyst = puSyst;
   mPDFSyst = pdfSyst;
+  mAlphasSyst = alphasSyst;
   mLeptonSyst = leptonSyst;
   mBTagSyst = btagSyst;
   m_inputFiles = inputFiles;
@@ -1550,6 +1614,17 @@ void Extractor2Histos::Init()
   SetBranchAddress(fMTT, "D", &p_D);
   SetBranchAddress(fMTT, "C", &p_C);
 
+  if (mPDFSyst != "nominal") {
+    SetBranchAddress(fMTT, "nErrorPdf", &N_error_pdf);
+    SetBranchAddress(fMTT, "MC_pdf_weight_up", &pdf_weight_up);
+    SetBranchAddress(fMTT, "MC_pdf_weight_down", &pdf_weight_down);
+    fMTT->GetEntry(0);
+  }
+  if (mAlphasSyst != "nominal") {
+    SetBranchAddress(fMTT, "MC_alphas_weight_up", &alphas_weight_up);
+    SetBranchAddress(fMTT, "MC_alphas_weight_down", &alphas_weight_down);
+  }
+
   if (mUseMVA) {
     SetBranchAddress(fMTT, "numComb_MVA", &numComb);
     SetBranchAddress(fMTT, "mLepTop_AfterMVA", &mLepTop_AfterReco);
@@ -1731,6 +1806,7 @@ int main(int argc, char** argv) {
     TCLAP::ValueArg<std::string> triggerSystArg("", "trigger-syst", "Computing trigger weight systematic", false, "nominal", "string", cmd);
     TCLAP::ValueArg<std::string> pileupSystArg("", "pileup-syst", "PU profile to use for pileup reweigthing", false, "nominal", "string", cmd);
     TCLAP::ValueArg<std::string> pdfSystArg("", "pdf-syst", "PDF systematic to compute", false, "nominal", "string", cmd);
+    TCLAP::ValueArg<std::string> alphasSystArg("", "alphas-syst", "PDF systematic du to alphas variations to compute", false, "nominal", "string", cmd);
     TCLAP::ValueArg<std::string> btagSystArg("", "btag-syst", "Compute btag weight systematic", false, "nominal", "string", cmd);
     TCLAP::ValueArg<std::string> leptonSystArg("", "lepton-syst", "Compute lepton weight systematic", false, "nominal", "string", cmd);
 
@@ -1778,6 +1854,13 @@ int main(int argc, char** argv) {
       exit(1);
     }
 
+    std::string alphasSyst = alphasSystArg.getValue();
+    std::transform(alphasSyst.begin(), alphasSyst.end(), alphasSyst.begin(), ::tolower);
+    if (alphasSyst != "nominal" && alphasSyst != "up" && alphasSyst != "down") {
+      std::cerr << "--alphas-syst can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
+
     std::string leptonSyst = leptonSystArg.getValue();
     std::transform(leptonSyst.begin(), leptonSyst.end(), leptonSyst.begin(), ::tolower);
     if (leptonSyst != "nominal" && leptonSyst != "up" && leptonSyst != "down") {
@@ -1801,7 +1884,7 @@ int main(int argc, char** argv) {
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    Extractor2Histos convertor(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData, btagArg.getValue(), skimArg.getValue(), mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue(), triggerSyst, jecSyst, puSyst, pdfSyst, leptonSyst, btagSyst);
+    Extractor2Histos convertor(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData, btagArg.getValue(), skimArg.getValue(), mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue(), triggerSyst, jecSyst, puSyst, pdfSyst, alphasSyst, leptonSyst, btagSyst);
     convertor.Loop();
 
   } catch (TCLAP::ArgException &e) {

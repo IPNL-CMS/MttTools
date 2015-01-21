@@ -57,7 +57,7 @@ final_backgrounds = ["H400_scalar", "H500_scalar", "H600_scalar", "H700_scalar",
 categories = ["e", "mu"]
 btags = [1, 2]
 
-systs = ["jec", "jer", "pu", "btag", "lept", "trig", "matching", "scale"]
+systs = ["jec", "jer", "pu", "btag", "lept", "trig", "matching", "scale", "alphaspdf"]
 
 def getBTagName(btag):
     b = "%dbtag" % btag

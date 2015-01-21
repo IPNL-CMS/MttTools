@@ -13,6 +13,7 @@
 
 #include "../PUReweighting/PUReweighter.h"
 #include "tclap/CmdLine.h"
+#include "LHAPDF/LHAPDF.h"
 
 // Load libdpm at startup, on order to be sure that rfio files are working
 #include <dlfcn.h>
@@ -134,6 +135,11 @@ void PreSkim::Loop()
 
   // Clone trees
   TTree* mtt_clone = fMTT->CloneTree(0);
+  mtt_clone->Branch("nErrorPdf" , &m_N_error_pdf , "nErrorPdf/I");
+  mtt_clone->Branch("MC_pdf_weight_up" , &m_pdf_weight_up , "MC_pdf_weight_up[nErrorPdf]/F");
+  mtt_clone->Branch("MC_pdf_weight_down" , &m_pdf_weight_down , "MC_pdf_weight_down[nErrorPdf]/F");
+  mtt_clone->Branch("MC_alphas_weight_up" , &m_alphas_weight_up , "MC_alphas_weight_up/F");
+  mtt_clone->Branch("MC_alphas_weight_down" , &m_alphas_weight_down , "MC_alphas_weight_down/F");
   mtt_clone->SetAutoSave(0);
   TTree* vertices_clone = fVertices->CloneTree(0);
   vertices_clone->SetAutoSave(0);
@@ -149,6 +155,27 @@ void PreSkim::Loop()
   //TTree* muon_clone = fMuon->CloneTree(0);
   //TTree* muon_loose_clone = fMuonLoose->CloneTree(0);
   //TTree* mc_clone = fMC->CloneTree(0);
+
+  // PDF set for TT_powheg (NNLO)
+  //const std::string setname = "CT10nnlo";
+
+  // PDF set for signal (LO)
+  const std::string setname = "CT10";
+
+  const LHAPDF::PDFSet set(setname);
+  //const size_t m_Nmembers_pdf = set.size()-1;
+  m_Nmembers_pdf = set.size();
+  m_N_error_pdf = (m_Nmembers_pdf-1)/2;
+
+  // Fill xpdf using all PDF members.
+  const std::vector<LHAPDF::PDF*> pdfs = set.mkPDFs();
+  // PDF set for TT_powheg (NNLO)
+  //const LHAPDF::PDF* pdf_as_down = LHAPDF::mkPDF("CT10nnlo_as_0117", 0);
+  //const LHAPDF::PDF* pdf_as_up = LHAPDF::mkPDF("CT10nnlo_as_0119", 0);
+
+  // PDF set for signal (LO)
+  const LHAPDF::PDF* pdf_as_down = LHAPDF::mkPDF("CT10as", 4); // PDF member with alphaS_Mz = 0.117
+  const LHAPDF::PDF* pdf_as_up = LHAPDF::mkPDF("CT10as", 6); // PDF member with alphaS_Mz = 0.119
 
   std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now(), end;
   for (Long64_t jentry = 0; jentry < nentries; jentry++)
@@ -194,6 +221,40 @@ void PreSkim::Loop()
       eventWeight *= m_lepton_weight;
       eventWeight *= m_btag_weight;
       eventWeightNoGenWeight = eventWeight/generator_weight;
+
+      // PDF uncertainty du to strong coupling alpha_s variations
+      // See https://www.hep.ucl.ac.uk/pdf4lhc/PDF4LHC_practical_guide.pdf
+      // https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopSystematics#PDF_uncertainties
+      // http://cms.cern.ch/iCMS/jsp/openfile.jsp?tp=draft&files=AN2009_048_v1.pdf
+
+      double xpdf1 = pdfs[0]->xfxQ(pdf_id1, pdf_x1, pdf_scale);
+      double xpdf2 = pdfs[0]->xfxQ(pdf_id2, pdf_x2, pdf_scale);
+      double w0 = xpdf1 * xpdf2;
+      double xpdf1_new = 0.;
+      double xpdf2_new = 0.;
+      double pdf_weight;
+      for (size_t imem = 1; imem < m_Nmembers_pdf; imem++) {
+        xpdf1_new = pdfs[imem]->xfxQ(pdf_id1, pdf_x1, pdf_scale);
+        xpdf2_new = pdfs[imem]->xfxQ(pdf_id2, pdf_x2, pdf_scale);
+        pdf_weight = xpdf1_new * xpdf2_new / w0;
+        if (imem % 2 == 0) {
+          m_pdf_weight_down[imem/2 - 1] = pdf_weight;
+        } else {
+          m_pdf_weight_up[(imem-1)/2] = pdf_weight;
+        }
+      }
+
+      // PDF uncertainty du to strong coupling alpha_s variations
+      // See https://www.hep.ucl.ac.uk/pdf4lhc/PDF4LHC_practical_guide.pdf
+      // https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopSystematics#PDF_uncertainties
+      // http://cms.cern.ch/iCMS/jsp/openfile.jsp?tp=draft&files=AN2009_048_v1.pdf
+      xpdf1_new = pdf_as_down->xfxQ(pdf_id1, pdf_x1, pdf_scale);
+      xpdf2_new = pdf_as_down->xfxQ(pdf_id2, pdf_x2, pdf_scale);
+      m_alphas_weight_down = xpdf1_new * xpdf2_new / w0;
+
+      xpdf1_new = pdf_as_up->xfxQ(pdf_id1, pdf_x1, pdf_scale);
+      xpdf2_new = pdf_as_up->xfxQ(pdf_id2, pdf_x2, pdf_scale);
+      m_alphas_weight_up = xpdf1_new * xpdf2_new / w0;
     }
 
     if (std::isnan(eventWeight)) {
@@ -371,6 +432,8 @@ void PreSkim::Loop()
   output->Write();
   output->Close();
   delete output;
+  delete pdf_as_down;
+  delete pdf_as_up;
 }
 
 void PreSkim::loadChain(const std::vector<std::string>& inputFiles, const std::string& treeName, TChain*& output) {
@@ -473,6 +536,12 @@ void PreSkim::Init()
   setBranchAddress(fMTT, "lepton_weight", m_lepton_weight);
   setBranchAddress(fMTT, "btag_weight", m_btag_weight);
 
+  setBranchAddress(fEvent, "pdf_x1", pdf_x1);
+  setBranchAddress(fEvent, "pdf_x2", pdf_x2);
+  setBranchAddress(fEvent, "pdf_id1", pdf_id1);
+  setBranchAddress(fEvent, "pdf_id2", pdf_id2);
+  setBranchAddress(fEvent, "pdf_scale", pdf_scale);
+
   if (fMTT->GetBranch("trigger_passed")) {
     setBranchAddress(fMTT, "trigger_passed", m_triggerPassed);
   } else {
@@ -507,6 +576,14 @@ void PreSkim::Init()
 
   jet_p4 = NULL;
   setBranchAddress(fJet, "jet_4vector", jet_p4);
+
+  m_Nmembers_pdf = 0;
+  m_N_error_pdf = 0;
+  for (int tmp = 0; tmp < 100; ++tmp)
+  {
+    m_pdf_weight_up[tmp] = 1.;
+    m_pdf_weight_down[tmp] = 1.;
+  }
 }
 
 void loadInputFiles(const std::string& filename, std::vector<std::string>& files) {

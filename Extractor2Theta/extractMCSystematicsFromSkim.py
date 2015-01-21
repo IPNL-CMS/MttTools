@@ -126,9 +126,13 @@ if True:
     systs["btagUp"] = ["nominal", "--btag-syst up"]
     systs["btagDown"] = ["nominal", "--btag-syst down"]
 
-if False:
-    systs["pdfUp"] = ["nominal", "--pdf-syst up"]
-    systs["pdfDown"] = ["nominal", "--pdf-syst down"]
+if True:
+    systs["pdfOnlyUp"] = ["nominal", "--pdf-syst up"]
+    systs["pdfOnlyDown"] = ["nominal", "--pdf-syst down"]
+
+if True:
+    systs["alphasOnlyUp"] = ["nominal", "--alphas-syst up"]
+    systs["alphasOnlyDown"] = ["nominal", "--alphas-syst down"]
 
 
 sortingAlgoArg = ""
@@ -212,4 +216,5 @@ for file in generator_syst_files:
 tmpfile.flush()
 
 args = ["parallel", "-u", "-a", tmpfile.name, "-j", "20"] 
+#print args
 subprocess.call(args)

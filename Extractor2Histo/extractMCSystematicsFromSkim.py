@@ -44,11 +44,11 @@ files = [
 
         # Background
         ["MC_TT_powheg_histos_%s.root", "skims/%s/Systematics/MC_TT_powheg_skims_%s.root"],
-        ["MC_TT_madgraph_histos_%s.root", "skims/%s/Systematics/MC_TT_madgraph_skims_%s.root"],
-        ["MC_TT_mcatnlo_histos_%s.root", "skims/%s/Systematics/MC_TT_mcatnlo_skims_%s.root"],
-        ["MC_TT_madgraph_dilept_histos_%s.root", "skims/%s/Systematics/MC_TT_madgraph_dilept_skims_%s.root"],
-        ["MC_TT_madgraph_semilept_histos_%s.root", "skims/%s/Systematics/MC_TT_madgraph_semilept_skims_%s.root"],
-        ["MC_TT_madgraph_hadronic_histos_%s.root", "skims/%s/Systematics/MC_TT_madgraph_hadronic_skims_%s.root"],
+        #["MC_TT_madgraph_histos_%s.root", "skims/%s/Systematics/MC_TT_madgraph_skims_%s.root"],
+##        ["MC_TT_mcatnlo_histos_%s.root", "skims/%s/Systematics/MC_TT_mcatnlo_skims_%s.root"],
+        #["MC_TT_madgraph_dilept_histos_%s.root", "skims/%s/Systematics/MC_TT_madgraph_dilept_skims_%s.root"],
+        #["MC_TT_madgraph_semilept_histos_%s.root", "skims/%s/Systematics/MC_TT_madgraph_semilept_skims_%s.root"],
+        #["MC_TT_madgraph_hadronic_histos_%s.root", "skims/%s/Systematics/MC_TT_madgraph_hadronic_skims_%s.root"],
 
         ["MC_T_tW-channel_histos_%s.root", "skims/%s/Systematics/MC_T_tW-channel_skims_%s.root"],
         ["MC_T_s-channel_histos_%s.root", "skims/%s/Systematics/MC_T_s-channel_skims_%s.root"],
@@ -121,16 +121,21 @@ if True:
     systs["btagDown"] = ["nominal", "--btag-syst down"]
 
 if False:
-    systs["pdfUp"] = ["nominal", "--pdf-syst up"]
-    systs["pdfDown"] = ["nominal", "--pdf-syst down"]
+    systs["pdfOnlyUp"] = ["nominal", "--pdf-syst up"]
+    systs["pdfOnlyDown"] = ["nominal", "--pdf-syst down"]
+
+if False:
+    systs["alphasOnlyUp"] = ["nominal", "--alphas-syst up"]
+    systs["alphasOnlyDown"] = ["nominal", "--alphas-syst down"]
 
 if True:
-    systs["matchingup"] = ["matchingup", ""]
-    systs["matchingdown"] = ["matchingdown", ""]
+#    systs["matchingup"] = ["matchingup", ""]
+    #systs["matchingdown"] = ["matchingdown", ""]
     systs["scaleup"] = ["scaleup", ""]
     systs["scaledown"] = ["scaledown", ""]
 
-btags = [-1, 0, 1, 2]
+#btags = [-1, 0, 1, 2]
+btags = [1, 2]
 
 def getBFolderName(btag):
     b = "%d-btag" % btag
@@ -189,5 +194,6 @@ for file in files:
 
 tmpfile.flush()
 
-args = ["parallel", "-u", "-a", tmpfile.name, "-j", "30"] 
+args = ["parallel", "-u", "-a", tmpfile.name, "-j", "20"] 
+#print args
 subprocess.call(args)

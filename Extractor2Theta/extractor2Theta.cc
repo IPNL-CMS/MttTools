@@ -28,11 +28,24 @@
 
 #include "TopTriggerEfficiencyProvider.h"
 
+#define MAX_ARRAY_SIZE 100
+
 PUProfile puProfile;
 
 ExtractorPostprocessing selection;
 
-void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* event, TChain* vertices, const std::string& outputFile, bool isData, bool isZprime, const std::string& type, int max, double lumi_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
+std::vector<TH1F*> buildMttVectorH1(int nHisto, const std::string& aName, Int_t nbinsx, Double_t xlow, Double_t xup)
+{
+	std::vector<TH1F*> myVector;
+	for(int i=0; i<nHisto; i++) {
+		std::stringstream histoName;
+		histoName << aName << "_errorPDF_" << i ;
+		myVector.push_back(new TH1F(histoName.str().c_str(), histoName.str().c_str(), nbinsx, xlow, xup));
+	}
+	return myVector;
+}
+
+void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* event, TChain* vertices, const std::string& outputFile, bool isData, bool isZprime, const std::string& type, int max, double lumi_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& alphasSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
 
   float mtt_afterReco, pt_1stJet, pt_2ndJet, pt_3rdJet, pt_4thJet, mtt_AfterKF, mtt_AfterChi2, mtt_AfterMVA;
   int isSel = 1, nBtaggedJets_CSVM;
@@ -179,10 +192,25 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
     triggerJESSyst = TopTriggerEfficiencyProvider::DOWN;
 
   std::vector<float>* pdfWeights = NULL;
+
+  int             N_error_pdf;
+  float           pdf_weight_up[MAX_ARRAY_SIZE];
+  float           pdf_weight_down[MAX_ARRAY_SIZE];
+  float           alphas_weight_up;
+  float           alphas_weight_down;
   bool doPDFSyst = pdfSyst != "nominal";
+  bool doPDFAlphasSyst = alphasSyst != "nominal";
   if (doPDFSyst) {
-    mtt->SetBranchStatus("pdf_weights", 1);
-    mtt->SetBranchAddress("pdf_weights", &pdfWeights);
+    //mtt->SetBranchStatus("pdf_weights", 1);
+    //mtt->SetBranchAddress("pdf_weights", &pdfWeights);
+    SetBranchAddress(mtt, "nErrorPdf", &N_error_pdf);
+    SetBranchAddress(mtt, "MC_pdf_weight_up", &pdf_weight_up);
+    SetBranchAddress(mtt, "MC_pdf_weight_down", &pdf_weight_down);
+    mtt->GetEntry(0);
+  }
+  if (doPDFAlphasSyst) {
+    SetBranchAddress(mtt, "MC_alphas_weight_up", &alphas_weight_up);
+    SetBranchAddress(mtt, "MC_alphas_weight_down", &alphas_weight_down);
   }
 
   int64_t entries = mtt->GetEntries();
@@ -245,10 +273,20 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
   TH1* h_mtt_1btag = new TH1D("mtt_1btag", "mtt", nBins, hist_min, hist_max);
   TH1* h_mtt_2btag = new TH1D("mtt_2btag", "mtt", nBins, hist_min, hist_max);
 
+  std::vector<TH1F*> v_mtt_0btag = buildMttVectorH1(N_error_pdf, "mtt_0btag", nBins, hist_min, hist_max);
+  std::vector<TH1F*> v_mtt_1btag = buildMttVectorH1(N_error_pdf, "mtt_1btag", nBins, hist_min, hist_max);
+  std::vector<TH1F*> v_mtt_2btag = buildMttVectorH1(N_error_pdf, "mtt_2btag", nBins, hist_min, hist_max);
+
   std::map<int, TH1*> h_mtt = {
     {0, h_mtt_0btag},
     {1, h_mtt_1btag},
     {2, h_mtt_2btag}
+  };
+
+  std::map<int, std::vector<TH1F*>> h_mtt_pdf = {
+    {0, v_mtt_0btag},
+    {1, v_mtt_1btag},
+    {2, v_mtt_2btag}
   };
 
   for (int64_t i = 0; i < entries; i++) {
@@ -340,10 +378,10 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
       //continue;
     }
 
-    //float discriminant = bkgVsTTBDTReader.evaluate(i);
+/*    float discriminant = bkgVsTTBDTReader.evaluate(i);*/
 
     //if (discriminant < background_bdt_cut) 
-      //continue;
+      /*continue;*/
     
     uint32_t numberOfBTaggedJets = 0;
     if (! isData) {
@@ -364,8 +402,8 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
     if (max > 0 && selectedEntries[index] >= max)
       continue;
 
-    // Cut on MET < 50 for btag == 1 && semi-e category
-    if (numberOfBTaggedJets == 1 && !isSemiMu) {
+    // Cut on MET < 50 for btag == 1 or == 0 && semi-e category
+    if (numberOfBTaggedJets <= 1 && !isSemiMu) {
       if (MET < 50)
         continue;
     }
@@ -405,34 +443,51 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
       output_weight *= puReweigher->weight(n_trueInteractions) * generator_weight * lumi_weight * triggerWeight * lepton_weight;
     }
 
+    if (doPDFAlphasSyst) {
+      if (alphasSyst == "up")
+        output_weight *= alphas_weight_up;
+      else if (alphasSyst == "down")
+        output_weight *= alphas_weight_down;
+    }
+
     if (doPDFSyst) {
-      // 4? pdf systematics
-      double sum = 0;
-      for (unsigned int i = 0; i < (pdfWeights->size() / 2); i++) {
-        int up_index = 2 * i;
-        int down_index = up_index + 1;
 
-        double up = (*pdfWeights)[up_index];
-        double down = (*pdfWeights)[down_index];
+//*****************************************************************************************
 
-        /*
-           std::cout << "up weight: " << up << std::endl;
-           std::cout << "down weight: " << down << std::endl;
-           */
-
-        if (pdfSyst == "up") {
-          sum += pow(std::max(std::max(up - 1, down - 1), 0.), 2);
-        } else {
-          sum += pow(std::max(std::max(1 - up, 1 - down), 0.), 2);
+        for (int imem=0; imem<N_error_pdf; imem++) {
+            if (pdfSyst == "up") {
+              h_mtt_pdf[index][imem]->Fill(mtt_afterReco, output_weight*pdf_weight_up[imem]); 
+            } else if (pdfSyst == "down") {
+              h_mtt_pdf[index][imem]->Fill(mtt_afterReco, output_weight*pdf_weight_down[imem]);
+            }
         }
-      }
+/*      // 4? pdf systematics*/
+      //double sum = 0;
+      //for (unsigned int i = 0; i < (pdfWeights->size() / 2); i++) {
+        //int up_index = 2 * i;
+        //int down_index = up_index + 1;
 
-      double pdf_weight = sqrt(sum);
-      //std::cout << "event weight: " << pdf_weight << std::endl;
-      if (pdfSyst == "down")
-        pdf_weight *= -1;
+        //double up = (*pdfWeights)[up_index];
+        //double down = (*pdfWeights)[down_index];
 
-      output_weight *= (pdf_weight / 1.645) + 1;
+        //[>
+           //std::cout << "up weight: " << up << std::endl;
+           //std::cout << "down weight: " << down << std::endl;
+           //*/
+
+        //if (pdfSyst == "up") {
+          //sum += pow(std::max(std::max(up - 1, down - 1), 0.), 2);
+        //} else {
+          //sum += pow(std::max(std::max(1 - up, 1 - down), 0.), 2);
+        //}
+      //}
+
+      //double pdf_weight = sqrt(sum);
+      ////std::cout << "event weight: " << pdf_weight << std::endl;
+      //if (pdfSyst == "down")
+        //pdf_weight *= -1;
+
+      /*output_weight *= (pdf_weight / 1.645) + 1;*/
     }
 
     h_mtt[index]->Fill(mtt_afterReco, output_weight);
@@ -440,8 +495,16 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
 
   TFile* output = TFile::Open(outputFile.c_str(), "recreate");
 
-  for (auto& hist: h_mtt) {
-    hist.second->Write();
+  if (!doPDFSyst) {
+      for (auto& hist: h_mtt) {
+          hist.second->Write();
+      }
+  } else {
+      for (auto& hist: h_mtt_pdf) {
+          for (int imem=0; imem<N_error_pdf; imem++) {
+              hist.second[imem]->Write();
+          }
+      }
   }
 
   output->Close();
@@ -467,12 +530,12 @@ void loadChain(const std::vector<std::string>& inputFiles, TChain*& mtt, TChain*
   vertices->SetCacheSize(30*1024*1024);
 }
 
-void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, bool isZprime, const std::string& type, int max, double generator_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
+void reduce(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isData, bool isZprime, const std::string& type, int max, double generator_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& alphasSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
 
   TChain* mtt = NULL, *event = NULL, *vertices = NULL;
 
   loadChain(inputFiles, mtt, event, vertices);
-  reduce(inputFiles, mtt, event, vertices, outputFile, isData, isZprime, type, max, generator_weight, puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, useMVA, useChi2, useKF, useHybrid, runOnSkim);
+  reduce(inputFiles, mtt, event, vertices, outputFile, isData, isZprime, type, max, generator_weight, puSyst, pdfSyst, alphasSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, useMVA, useChi2, useKF, useHybrid, runOnSkim);
 
   delete mtt;
   delete event;
@@ -512,6 +575,7 @@ int main(int argc, char** argv)
     TCLAP::ValueArg<double> generatorWeightArg("", "weight", "MC generator weight", false, 1., "double", cmd);
 
     TCLAP::ValueArg<std::string> pdfSystArg("", "pdf-syst", "PDF systematic to compute", false, "nominal", "string", cmd);
+    TCLAP::ValueArg<std::string> alphasSystArg("", "alphas-syst", "PDF systematic du to alphas variations to compute", false, "nominal", "string", cmd);
     TCLAP::ValueArg<std::string> jecSystArg("", "jec-syst", "Computing trigger weight for this JEC up / down", false, "nominal", "string", cmd);
     TCLAP::ValueArg<std::string> triggerSystArg("", "trigger-syst", "Computing trigger weight systematic", false, "nominal", "string", cmd);
     TCLAP::ValueArg<std::string> pileupSystArg("", "pileup-syst", "PU profile to use for pileup reweigthing", false, "nominal", "string", cmd);
@@ -575,6 +639,13 @@ int main(int argc, char** argv)
       exit(1);
     }
 
+    std::string alphasSyst = alphasSystArg.getValue();
+    std::transform(alphasSyst.begin(), alphasSyst.end(), alphasSyst.begin(), ::tolower);
+    if (alphasSyst != "nominal" && alphasSyst != "up" && alphasSyst != "down") {
+      std::cerr << "--alphas-syst can only be 'nominal', 'up' or 'down'" << std::endl;
+      exit(1);
+    }
+
     std::string leptonSyst = leptonSystArg.getValue();
     std::transform(leptonSyst.begin(), leptonSyst.end(), leptonSyst.begin(), ::tolower);
     if (leptonSyst != "nominal" && leptonSyst != "up" && leptonSyst != "down") {
@@ -599,7 +670,7 @@ int main(int argc, char** argv)
       loadInputFiles(inputListArg.getValue(), inputFiles);
     }
 
-    reduce(inputFiles, outputFileArg.getValue(), isData, isZprime, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue(), puSyst, pdfSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue(), skimArg.getValue()); 
+    reduce(inputFiles, outputFileArg.getValue(), isData, isZprime, typeArg.getValue(), maxEntriesArg.getValue(), generatorWeightArg.getValue(), puSyst, pdfSyst, alphasSyst, jecSyst, triggerSyst, leptonSyst, btagSyst, mvaArg.getValue(), chi2Arg.getValue(), kfArg.getValue(), hybridArg.getValue(), skimArg.getValue()); 
 
   } catch (TCLAP::ArgException& e) {
     std::cout << e.what() << std::endl;
