@@ -48,7 +48,7 @@ uint32_t NBTagCalculator::getNumberOfBTaggedJets(uint32_t entry) {
       btag_efficiency_syst_variation = DOWN;
     }
 
-    if (btagUtil.updateJetBTagStatus(isBTagged, pt, eta, flavor, (*jet_scaleFactor)[j][0], btag_efficiency_syst_variation))
+    if (btagUtil.updateJetBTagStatus(isBTagged, pt, eta, flavor, scale_factor, btag_efficiency_syst_variation))
       numberOfBTaggedJets++;
 
   }
