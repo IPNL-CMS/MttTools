@@ -41,3 +41,20 @@ MttTools> cd external/
 external> ./build-external.sh
 external> cd..
 ```
+
+## New: make LHAPDF library available
+
+```bash
+MttTools> cd external/
+external> export PATH=$PWD/bin:$PATH
+external> export LD_LIBRARY_PATH=$PWD/lib:$LD_LIBRARY_PATH
+external> export PYTHONPATH=$PWD/lib64/python2.6/site-packages:$PYTHONPATH
+```
+
+Check that everything is ok:
+
+```bash
+external> lhapdf-config --help
+external> cd..
+```
+
