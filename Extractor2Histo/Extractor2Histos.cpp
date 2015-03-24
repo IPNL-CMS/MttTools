@@ -42,7 +42,7 @@ struct Dummy
 };
 static Dummy foo;
 
-const int nBins = 12;
+const int nBins_gauss = 12;
 const double bins[] = {340, 400, 450, 500, 550, 600, 650, 750, 850, 950, 1050, 1200, 1400};
 
 //const int nBins = 10;
@@ -344,29 +344,29 @@ void Extractor2Histos::Loop()
   TH1D *h_mtt_resolution = new TH1D("mtt_resolution", "", 100, -600., 600.);
   TH1D *h_mtt_resolution_four_jets = new TH1D("mtt_resolution_four_jets", "", 100, -600., 600.);
 
-  GaussianProfile mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel("mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel", nBins, bins);
-  GaussianProfile mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel("mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel", nBins, bins, 100, -1.2, 1.2);
-  GaussianProfile mtt_gen_vs_mtt_reco_resolution_rmsVSmttreco_sortingAlgoSel("mtt_gen_vs_mtt_reco_resolution_rmsVSmttreco_sortingAlgoSel", nBins, bins, 100, -1.2, 1.2);
+  GaussianProfile mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel("mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel", nBins_gauss, bins);
+  GaussianProfile mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel("mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel", nBins_gauss, bins, 100, -1.2, 1.2);
+  GaussianProfile mtt_gen_vs_mtt_reco_resolution_rmsVSmttreco_sortingAlgoSel("mtt_gen_vs_mtt_reco_resolution_rmsVSmttreco_sortingAlgoSel", nBins_gauss, bins, 100, -1.2, 1.2);
 
-  GaussianProfile mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_lowKfProb("mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_lowKfProb", nBins, bins);
-  GaussianProfile mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_lowKfProb("mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_lowKfProb", nBins, bins, 100, -1.2, 1.2);
+  GaussianProfile mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_lowKfProb("mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_lowKfProb", nBins_gauss, bins);
+  GaussianProfile mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_lowKfProb("mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_lowKfProb", nBins_gauss, bins, 100, -1.2, 1.2);
 
-  GaussianProfile mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_highKfProb("mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_highKfProb", nBins, bins);
-  GaussianProfile mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_highKfProb("mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_highKfProb", nBins, bins, 100, -1.2, 1.2);
+  GaussianProfile mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_highKfProb("mtt_gen_vs_mtt_reco_linearity_sortingAlgoSel_highKfProb", nBins_gauss, bins);
+  GaussianProfile mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_highKfProb("mtt_gen_vs_mtt_reco_resolution_sortingAlgoSel_highKfProb", nBins_gauss, bins, 100, -1.2, 1.2);
 
-  GaussianProfile mtt_gen_vs_mtt_reco_linearity_fullSel("mtt_gen_vs_mtt_reco_linearity_fullSel", nBins, bins);
-  GaussianProfile mtt_gen_vs_mtt_reco_resolution_fullSel("mtt_gen_vs_mtt_reco_resolution_fullSel", nBins, bins, 100, -1.2, 1.2);
+  GaussianProfile mtt_gen_vs_mtt_reco_linearity_fullSel("mtt_gen_vs_mtt_reco_linearity_fullSel", nBins_gauss, bins);
+  GaussianProfile mtt_gen_vs_mtt_reco_resolution_fullSel("mtt_gen_vs_mtt_reco_resolution_fullSel", nBins_gauss, bins, 100, -1.2, 1.2);
 
-  //GaussianProfile mtt_gen_vs_mtt_reco_chi2sel("mtt_gen_vs_mtt_reco_chi2sel", nBins, bins);
-  //GaussianProfile mtt_gen_vs_mtt_reso_chi2sel("mtt_gen_vs_mtt_reso_chi2sel", nBins, bins, 100, -1.2, 1.2);
+  //GaussianProfile mtt_gen_vs_mtt_reco_chi2sel("mtt_gen_vs_mtt_reco_chi2sel", nBins_gauss, bins);
+  //GaussianProfile mtt_gen_vs_mtt_reso_chi2sel("mtt_gen_vs_mtt_reso_chi2sel", nBins_gauss, bins, 100, -1.2, 1.2);
 
-  GaussianProfile mtt_gen_vs_mtt_reco_linearity_fourJets_sortingAlgoSel("mtt_gen_vs_mtt_reco_linearity_fourJets_sortingAlgoSel", nBins, bins);
-  GaussianProfile mtt_gen_vs_mtt_reco_resolution_fourJets_sortingAlgoSel("mtt_gen_vs_mtt_reco_resolution_fourJets_sortingAlgoSel", nBins, bins, 100, -1.2, 1.2);
+  GaussianProfile mtt_gen_vs_mtt_reco_linearity_fourJets_sortingAlgoSel("mtt_gen_vs_mtt_reco_linearity_fourJets_sortingAlgoSel", nBins_gauss, bins);
+  GaussianProfile mtt_gen_vs_mtt_reco_resolution_fourJets_sortingAlgoSel("mtt_gen_vs_mtt_reco_resolution_fourJets_sortingAlgoSel", nBins_gauss, bins, 100, -1.2, 1.2);
 
-  GaussianProfile mtt_gen_vs_mtt_reco_linearity_fourJets_fullSel("mtt_gen_vs_mtt_reco_linearity_fourJets_fullSel", nBins, bins);
-  GaussianProfile mtt_gen_vs_mtt_reco_resolution_fourJets_fullSel("mtt_gen_vs_mtt_reco_resolution_fourJets_fullSel", nBins, bins, 100, -1.2, 1.2);
+  GaussianProfile mtt_gen_vs_mtt_reco_linearity_fourJets_fullSel("mtt_gen_vs_mtt_reco_linearity_fourJets_fullSel", nBins_gauss, bins);
+  GaussianProfile mtt_gen_vs_mtt_reco_resolution_fourJets_fullSel("mtt_gen_vs_mtt_reco_resolution_fourJets_fullSel", nBins_gauss, bins, 100, -1.2, 1.2);
 
-  TProfile *pMttResolution_btag_sel = new TProfile("pMttResolution_btag_sel", "", nBins, bins);
+  TProfile *pMttResolution_btag_sel = new TProfile("pMttResolution_btag_sel", "", nBins_gauss, bins);
   pMttResolution_btag_sel->SetXTitle("m_{t#bar{t}}^{gen} (GeV)");
 
   TH1D *hBoostTT = new TH1D("boostTT_reco_fullsel", "", 50, 0., 1.);
