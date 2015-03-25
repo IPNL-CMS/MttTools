@@ -110,7 +110,7 @@ def MakePvalPlot(MG):
     dhist.GetXaxis().SetLabelSize(0.04)
     dhist.GetXaxis().SetRangeUser(MINMH, MAXMH)
     dhist.GetYaxis().SetRangeUser(MINPV, MAXPV)
-    dhist.GetXaxis().SetTitle("m_{t#bar{t}} (GeV)")
+    dhist.GetXaxis().SetTitle("m_{S_{0}} (GeV)")
     dhist.GetYaxis().SetTitle("Local p-value")
     dhist.Draw("AXIS")
 
