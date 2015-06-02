@@ -39,6 +39,8 @@ class PreSkim: public TObject {
 
     std::string     mDataset;
     bool            mIsMC;
+    bool            mDoPDFWeight;
+    bool            mDoPDFWeightForSignal;
     bool            mIsSemiMu;
 
     Float_t         MC_boost_tt;
@@ -92,6 +94,18 @@ class PreSkim: public TObject {
     Float_t         beta_tt_AfterChi2;
     int             selectedLeptonIndex_AfterChi2;
 
+    Float_t         pdf_x1;
+    Float_t         pdf_x2;
+    Int_t           pdf_id1;
+    Int_t           pdf_id2;
+    Float_t         pdf_scale;
+    int             m_Nmembers_pdf;
+    int             m_N_error_pdf;
+    float           m_pdf_weight_up[100];
+    float           m_pdf_weight_down[100];
+    float           m_alphas_weight_up;
+    float           m_alphas_weight_down;
+
     bool            m_triggerPassed;
 
     TClonesArray* gen_top1_p4;
@@ -118,7 +132,7 @@ class PreSkim: public TObject {
     TClonesArray*   jet_p4;
     TClonesArray*   met_p4;
 
-    PreSkim(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC);
+    PreSkim(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, bool doPDFWeight, bool doPDFWeightForSignal);
 
     virtual ~PreSkim();
     virtual Int_t    GetEntry(Long64_t entry);

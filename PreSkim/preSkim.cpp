@@ -156,26 +156,44 @@ void PreSkim::Loop()
   //TTree* muon_loose_clone = fMuonLoose->CloneTree(0);
   //TTree* mc_clone = fMC->CloneTree(0);
 
-  // PDF set for TT_powheg (NNLO)
-  //const std::string setname = "CT10nnlo";
 
-  // PDF set for signal (LO)
-  const std::string setname = "CT10";
+  std::string setname;
+  if (mDoPDFWeightForSignal) {
+      // PDF set for signal (LO)
+      setname = "CT10";  
+  } else {
+      // PDF set for TT_powheg (NLO)
+      setname = "CT10nlo";  
+  }
 
-  const LHAPDF::PDFSet set(setname);
+
+  LHAPDF::PDFSet set(setname);
   //const size_t m_Nmembers_pdf = set.size()-1;
   m_Nmembers_pdf = set.size();
   m_N_error_pdf = (m_Nmembers_pdf-1)/2;
 
   // Fill xpdf using all PDF members.
-  const std::vector<LHAPDF::PDF*> pdfs = set.mkPDFs();
-  // PDF set for TT_powheg (NNLO)
-  //const LHAPDF::PDF* pdf_as_down = LHAPDF::mkPDF("CT10nnlo_as_0117", 0);
-  //const LHAPDF::PDF* pdf_as_up = LHAPDF::mkPDF("CT10nnlo_as_0119", 0);
+  std::vector<LHAPDF::PDF*> pdfs;
+  if (mDoPDFWeight) {
+    pdfs = set.mkPDFs();
+  }
 
-  // PDF set for signal (LO)
-  const LHAPDF::PDF* pdf_as_down = LHAPDF::mkPDF("CT10as", 4); // PDF member with alphaS_Mz = 0.117
-  const LHAPDF::PDF* pdf_as_up = LHAPDF::mkPDF("CT10as", 6); // PDF member with alphaS_Mz = 0.119
+  LHAPDF::PDF* pdf_as_down = NULL;
+  LHAPDF::PDF* pdf_as_up = NULL;
+  if (mDoPDFWeight) {
+    if (mDoPDFWeightForSignal) {
+      // PDF set for signal (LO)
+      pdf_as_down = LHAPDF::mkPDF("CT10as", 4); // PDF member with alphaS_Mz = 0.117
+      pdf_as_up = LHAPDF::mkPDF("CT10as", 6); // PDF member with alphaS_Mz = 0.119
+
+    } else {
+      // PDF set for TT_powheg (NLO)
+      pdf_as_down = LHAPDF::mkPDF("CT10nlo_as_0117", 0);
+      pdf_as_up = LHAPDF::mkPDF("CT10nlo_as_0119", 0);
+    }
+  }
+
+
 
   std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now(), end;
   for (Long64_t jentry = 0; jentry < nentries; jentry++)
@@ -222,39 +240,41 @@ void PreSkim::Loop()
       eventWeight *= m_btag_weight;
       eventWeightNoGenWeight = eventWeight/generator_weight;
 
-      // PDF uncertainty du to strong coupling alpha_s variations
-      // See https://www.hep.ucl.ac.uk/pdf4lhc/PDF4LHC_practical_guide.pdf
-      // https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopSystematics#PDF_uncertainties
-      // http://cms.cern.ch/iCMS/jsp/openfile.jsp?tp=draft&files=AN2009_048_v1.pdf
+      if (mDoPDFWeight) {
+        // PDF uncertainty du to strong coupling alpha_s variations
+        // See https://www.hep.ucl.ac.uk/pdf4lhc/PDF4LHC_practical_guide.pdf
+        // https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopSystematics#PDF_uncertainties
+        // http://cms.cern.ch/iCMS/jsp/openfile.jsp?tp=draft&files=AN2009_048_v1.pdf
 
-      double xpdf1 = pdfs[0]->xfxQ(pdf_id1, pdf_x1, pdf_scale);
-      double xpdf2 = pdfs[0]->xfxQ(pdf_id2, pdf_x2, pdf_scale);
-      double w0 = xpdf1 * xpdf2;
-      double xpdf1_new = 0.;
-      double xpdf2_new = 0.;
-      double pdf_weight;
-      for (size_t imem = 1; imem < m_Nmembers_pdf; imem++) {
-        xpdf1_new = pdfs[imem]->xfxQ(pdf_id1, pdf_x1, pdf_scale);
-        xpdf2_new = pdfs[imem]->xfxQ(pdf_id2, pdf_x2, pdf_scale);
-        pdf_weight = xpdf1_new * xpdf2_new / w0;
-        if (imem % 2 == 0) {
-          m_pdf_weight_down[imem/2 - 1] = pdf_weight;
-        } else {
-          m_pdf_weight_up[(imem-1)/2] = pdf_weight;
+        double xpdf1 = pdfs[0]->xfxQ(pdf_id1, pdf_x1, pdf_scale);
+        double xpdf2 = pdfs[0]->xfxQ(pdf_id2, pdf_x2, pdf_scale);
+        double w0 = xpdf1 * xpdf2;
+        double xpdf1_new = 0.;
+        double xpdf2_new = 0.;
+        double pdf_weight;
+        for (size_t imem = 1; imem < m_Nmembers_pdf; imem++) {
+          xpdf1_new = pdfs[imem]->xfxQ(pdf_id1, pdf_x1, pdf_scale);
+          xpdf2_new = pdfs[imem]->xfxQ(pdf_id2, pdf_x2, pdf_scale);
+          pdf_weight = xpdf1_new * xpdf2_new / w0;
+          if (imem % 2 == 0) {
+            m_pdf_weight_down[imem/2 - 1] = pdf_weight;
+          } else {
+            m_pdf_weight_up[(imem-1)/2] = pdf_weight;
+          }
         }
+
+        // PDF uncertainty du to strong coupling alpha_s variations
+        // See https://www.hep.ucl.ac.uk/pdf4lhc/PDF4LHC_practical_guide.pdf
+        // https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopSystematics#PDF_uncertainties
+        // http://cms.cern.ch/iCMS/jsp/openfile.jsp?tp=draft&files=AN2009_048_v1.pdf
+        xpdf1_new = pdf_as_down->xfxQ(pdf_id1, pdf_x1, pdf_scale);
+        xpdf2_new = pdf_as_down->xfxQ(pdf_id2, pdf_x2, pdf_scale);
+        m_alphas_weight_down = xpdf1_new * xpdf2_new / w0;
+
+        xpdf1_new = pdf_as_up->xfxQ(pdf_id1, pdf_x1, pdf_scale);
+        xpdf2_new = pdf_as_up->xfxQ(pdf_id2, pdf_x2, pdf_scale);
+        m_alphas_weight_up = xpdf1_new * xpdf2_new / w0;
       }
-
-      // PDF uncertainty du to strong coupling alpha_s variations
-      // See https://www.hep.ucl.ac.uk/pdf4lhc/PDF4LHC_practical_guide.pdf
-      // https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopSystematics#PDF_uncertainties
-      // http://cms.cern.ch/iCMS/jsp/openfile.jsp?tp=draft&files=AN2009_048_v1.pdf
-      xpdf1_new = pdf_as_down->xfxQ(pdf_id1, pdf_x1, pdf_scale);
-      xpdf2_new = pdf_as_down->xfxQ(pdf_id2, pdf_x2, pdf_scale);
-      m_alphas_weight_down = xpdf1_new * xpdf2_new / w0;
-
-      xpdf1_new = pdf_as_up->xfxQ(pdf_id1, pdf_x1, pdf_scale);
-      xpdf2_new = pdf_as_up->xfxQ(pdf_id2, pdf_x2, pdf_scale);
-      m_alphas_weight_up = xpdf1_new * xpdf2_new / w0;
     }
 
     if (std::isnan(eventWeight)) {
@@ -449,10 +469,12 @@ void PreSkim::loadChain(const std::vector<std::string>& inputFiles, const std::s
   output->SetBranchStatus("*", 1);
 }
 
-PreSkim::PreSkim(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC) : fMTT(0), fVertices(0), fEvent(0)
+PreSkim::PreSkim(const std::vector<std::string>& inputFiles, const std::string& outputFile, bool isSemiMu, bool isMC, bool doPDFWeight, bool doPDFWeightForSignal = false) : fMTT(0), fVertices(0), fEvent(0)
 {
   mIsSemiMu = isSemiMu;
   mIsMC = isMC;
+  mDoPDFWeight = doPDFWeight;
+  mDoPDFWeightForSignal = doPDFWeightForSignal;
   mOutputFile = outputFile;
 
   // Get trees
@@ -620,6 +642,9 @@ int main(int argc, char** argv) {
 
     cmd.xorAdd(semimuArg, semieArg);
 
+    TCLAP::SwitchArg doPDFWeightArg("", "do-pdf-weight", "Do you want to compute PDF weights?", cmd, false);
+    TCLAP::SwitchArg doPDFWeightForSignalArg("", "do-pdf-weight-for-signal", "Are you computing PDF weights for signal process?", cmd, false);
+
     TCLAP::ValueArg<std::string> pileupArg("", "pileup", "PU profile used for MC production", false, "S10", "string", cmd);
 
     TCLAP::ValueArg<std::string> pileupSystArg("", "pileup-syst", "PU profile to use for pileup reweigthing", false, "nominal", "string", cmd);
@@ -668,7 +693,7 @@ int main(int argc, char** argv) {
       return 1;
     }
     
-    PreSkim skimmer(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData);
+    PreSkim skimmer(inputFiles, outputFileArg.getValue(), semimuArg.isSet(), !isData, doPDFWeightArg.getValue(), doPDFWeightForSignalArg.getValue());
     skimmer.Loop();
 
   } catch (TCLAP::ArgException &e) {
