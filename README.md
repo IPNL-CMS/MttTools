@@ -18,7 +18,7 @@ Using SSH keys (see how to generate a SSH key and add it to GitHub [here](https:
 myWorkingDir> git clone git@github.com:IPNL-CMS/MttTools.git
 ```
 
-You can see that the directory "plotIt" is empty. Retrieve the code from the corresponding sub-repository as showed below:
+You can see that the directory "plotIt" is empty. Retrieve the code from the corresponding sub-repository as shown below:
 
 ```bash
 myWorkingDir> cd MttTools
