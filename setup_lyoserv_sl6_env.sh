@@ -13,3 +13,9 @@ source /cvmfs/cms.cern.ch/slc6_amd64_gcc472/external/git/1.8.3.1-cms2/etc/profil
 export GIT_EXEC_PATH=/cvmfs/cms.cern.ch/slc6_amd64_gcc472/external/git/1.8.3.1-cms2/libexec/git-core
 
 export BOOST_ROOT
+
+echo "Sourcing LHAPDF library"
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+export PATH=$DIR/external/bin:$PATH
+export LD_LIBRARY_PATH=$DIR/external/lib:$LD_LIBRARY_PATH
+export PYTHONPATH=$DIR/external/lib64/python2.6/site-packages:$PYTHONPATH
