@@ -45,8 +45,12 @@ clean:
 	@rm *.o;
 	@rm *.d;
 	@rm ../PUReweighting/*.o;
+	@rm dict.cpp dict.h;
 
-preSkim: preSkim.o ../PUReweighting/PUReweighter.o
+dict.cpp: Linkdef.h
+	rootcint -f $@ -c -p dict_headers.h $^
+
+preSkim: dict.o preSkim.o ../PUReweighting/PUReweighter.o
 	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ $(LIBS)
 
 %.o: %.cpp
