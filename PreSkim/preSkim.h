@@ -99,8 +99,13 @@ class PreSkim: public TObject {
     Int_t           pdf_id1;
     Int_t           pdf_id2;
     Float_t         pdf_scale;
-    int             m_Nmembers_pdf;
-    int             m_N_error_pdf;
+    // PDF uncertainties
+    std::map<std::string, std::vector<float>> *m_pdf_weights_up;
+    std::map<std::string, std::vector<float>> *m_pdf_weights_down;
+    std::map<std::string, float> *m_alphas_weights_up;
+    std::map<std::string, float> *m_alphas_weights_down;
+    // special treatment for NNPDF: alphas and pdf combined
+    std::map<std::string, std::vector<float>> *m_alphaspdf_weights_NNPDF;
     float           m_pdf_weight_up[100];
     float           m_pdf_weight_down[100];
     float           m_alphas_weight_up;
