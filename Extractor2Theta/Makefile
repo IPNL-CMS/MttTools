@@ -43,8 +43,12 @@ all: extractor2Theta
 clean:
 	@rm *.o;
 	@rm ../PUReweighting/*.o;
+	@rm dict.cpp dict.h;
 
-extractor2Theta: extractor2Theta.o ../PUReweighting/PUReweighter.o ../external/TopTriggerEfficiencyProvider.o ../ExtractorPostprocessing/ExtractorPostprocessing.o ../SelectionMVA/lib/libMVAReader.a ../SelectionMVA/lib/libBDTCuts.a
+dict.cpp: Linkdef.h
+	rootcint -f $@ -c -p dict_headers.h $^
+
+extractor2Theta: dict.o extractor2Theta.o ../PUReweighting/PUReweighter.o ../external/TopTriggerEfficiencyProvider.o ../ExtractorPostprocessing/ExtractorPostprocessing.o ../SelectionMVA/lib/libMVAReader.a ../SelectionMVA/lib/libBDTCuts.a
 	$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@ -Wl,-Bstatic -lMVAReader -lBDTCuts -lBTagUtils -lyaml-cpp -Wl,-Bdynamic $(LIBS)
 
 %.o: %.cpp

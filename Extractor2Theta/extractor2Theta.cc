@@ -45,6 +45,10 @@ std::vector<TH1F*> buildMttVectorH1(int nHisto, const std::string& aName, Int_t 
 	return myVector;
 }
 
+TLorentzVector* getP4(TClonesArray* array, int index) {
+  return (TLorentzVector*) array->At(index);
+}
+
 void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* event, TChain* vertices, const std::string& outputFile, bool isData, bool isZprime, const std::string& type, int max, double lumi_weight, const std::string& puSyst, const std::string& pdfSyst, const std::string& alphasSyst, const std::string& jecSyst, const std::string& triggerSyst, const std::string& leptonSyst, const std::string& btagSyst, bool useMVA, bool useChi2, bool useKF, bool useHybrid, bool runOnSkim) {
 
   float mtt_afterReco, pt_1stJet, pt_2ndJet, pt_3rdJet, pt_4thJet, mtt_AfterKF, mtt_AfterChi2, mtt_AfterMVA;
@@ -152,6 +156,17 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
   mtt->SetBranchAddress("nJets", &nJets);
   mtt->SetBranchAddress("jetEta", jetEta);
 
+  TClonesArray* gen_top1_p4 = NULL;
+  TClonesArray* gen_top2_p4 = NULL;
+
+  if (! isData) {
+    SetBranchAddress(mtt, "MC_Top1_p4", &gen_top1_p4);
+    SetBranchAddress(mtt, "MC_Top2_p4", &gen_top2_p4);
+  }
+
+  Int_t MC_channel;
+  SetBranchAddress(mtt, "MC_channel", &MC_channel);
+
   float MET = 0;
   SetBranchAddress(mtt, "MET", &MET);
 
@@ -191,29 +206,26 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
   else if (jecSyst == "down")
     triggerJESSyst = TopTriggerEfficiencyProvider::DOWN;
 
-  std::vector<float>* pdfWeights = NULL;
+  int64_t entries = mtt->GetEntries();
 
-  int             N_error_pdf;
-  float           pdf_weight_up[MAX_ARRAY_SIZE];
-  float           pdf_weight_down[MAX_ARRAY_SIZE];
-  float           alphas_weight_up;
-  float           alphas_weight_down;
+  std::map<std::string, std::vector<float>> *pdf_weights_up = NULL;
+  std::map<std::string, std::vector<float>> *pdf_weights_down = NULL;
+  std::map<std::string, std::vector<float>> *alphas_weights_up = NULL;
+  std::map<std::string, std::vector<float>> *alphas_weights_down = NULL;
+
   bool doPDFSyst = pdfSyst != "nominal";
   bool doPDFAlphasSyst = alphasSyst != "nominal";
   if (doPDFSyst) {
-    //mtt->SetBranchStatus("pdf_weights", 1);
-    //mtt->SetBranchAddress("pdf_weights", &pdfWeights);
-    SetBranchAddress(mtt, "nErrorPdf", &N_error_pdf);
-    SetBranchAddress(mtt, "MC_pdf_weight_up", &pdf_weight_up);
-    SetBranchAddress(mtt, "MC_pdf_weight_down", &pdf_weight_down);
+    SetBranchAddress(mtt, "MC_pdf_weights_up", &pdf_weights_up);
+    SetBranchAddress(mtt, "MC_pdf_weights_down", &pdf_weights_down);
+
     mtt->GetEntry(0);
   }
   if (doPDFAlphasSyst) {
-    SetBranchAddress(mtt, "MC_alphas_weight_up", &alphas_weight_up);
-    SetBranchAddress(mtt, "MC_alphas_weight_down", &alphas_weight_down);
+    SetBranchAddress(mtt, "MC_alphas_weights_up", &alphas_weights_up);
+    SetBranchAddress(mtt, "MC_alphas_weights_down", &alphas_weights_down);
+    mtt->GetEntry(0);
   }
-
-  int64_t entries = mtt->GetEntries();
 
   std::map<int, int64_t> selectedEntries;
 
@@ -273,9 +285,37 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
   TH1* h_mtt_1btag = new TH1D("mtt_1btag", "mtt", nBins, hist_min, hist_max);
   TH1* h_mtt_2btag = new TH1D("mtt_2btag", "mtt", nBins, hist_min, hist_max);
 
-  std::vector<TH1F*> v_mtt_0btag = buildMttVectorH1(N_error_pdf, "mtt_0btag", nBins, hist_min, hist_max);
-  std::vector<TH1F*> v_mtt_1btag = buildMttVectorH1(N_error_pdf, "mtt_1btag", nBins, hist_min, hist_max);
-  std::vector<TH1F*> v_mtt_2btag = buildMttVectorH1(N_error_pdf, "mtt_2btag", nBins, hist_min, hist_max);
+  std::map<std::string, std::vector<TH1F*>> v_mtt_0btag_pdf;
+  std::map<std::string, std::vector<TH1F*>> v_mtt_1btag_pdf;
+  std::map<std::string, std::vector<TH1F*>> v_mtt_2btag_pdf;
+
+  if (pdf_weights_up) {
+    for (auto& set: (*pdf_weights_up)) {
+      std::string histoName;
+      histoName = "mtt_0btag_pdf_" + set.first;
+      v_mtt_0btag_pdf[set.first] = buildMttVectorH1(set.second.size(), histoName, nBins, hist_min, hist_max);
+      histoName = "mtt_1btag_pdf_" + set.first;
+      v_mtt_1btag_pdf[set.first] = buildMttVectorH1(set.second.size(), histoName, nBins, hist_min, hist_max);
+      histoName = "mtt_2btag_pdf_" + set.first;
+      v_mtt_2btag_pdf[set.first] = buildMttVectorH1(set.second.size(), histoName, nBins, hist_min, hist_max);
+    }
+  }
+
+  std::map<std::string, TH1F*> v_mtt_0btag_alphas;
+  std::map<std::string, TH1F*> v_mtt_1btag_alphas;
+  std::map<std::string, TH1F*> v_mtt_2btag_alphas;
+
+  if (alphas_weights_up) {
+    for (auto& set: (*alphas_weights_up)) {
+      std::string histoName;
+      histoName = "mtt_0btag_alphas_" + set.first;
+      v_mtt_0btag_alphas[set.first] = new TH1F(histoName.c_str(), histoName.c_str(), nBins, hist_min, hist_max);
+      histoName = "mtt_1btag_alphas_" + set.first;
+      v_mtt_1btag_alphas[set.first] = new TH1F(histoName.c_str(), histoName.c_str(), nBins, hist_min, hist_max);
+      histoName = "mtt_2btag_alphas_" + set.first;
+      v_mtt_2btag_alphas[set.first] = new TH1F(histoName.c_str(), histoName.c_str(), nBins, hist_min, hist_max);
+    }  
+  }
 
   std::map<int, TH1*> h_mtt = {
     {0, h_mtt_0btag},
@@ -283,10 +323,16 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
     {2, h_mtt_2btag}
   };
 
-  std::map<int, std::vector<TH1F*>> h_mtt_pdf = {
-    {0, v_mtt_0btag},
-    {1, v_mtt_1btag},
-    {2, v_mtt_2btag}
+  std::map<int, std::map<std::string, std::vector<TH1F*>>> h_mtt_pdf = {
+    {0, v_mtt_0btag_pdf},
+    {1, v_mtt_1btag_pdf},
+    {2, v_mtt_2btag_pdf}
+  };
+
+  std::map<int, std::map<std::string, TH1F*>> h_mtt_alphas = {
+    {0, v_mtt_0btag_alphas},
+    {1, v_mtt_1btag_alphas},
+    {2, v_mtt_2btag_alphas}
   };
 
   for (int64_t i = 0; i < entries; i++) {
@@ -409,6 +455,7 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
     }
 
     output_weight = 1.;
+    float topPtWeight = 1.;
     if (! isData) {
       if (isRun2012AB) {
         m_trigger_efficiency_provider->setLumi(TopTriggerEfficiencyProvider::RunA, lumi_run2012_A);
@@ -441,53 +488,44 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
         //btag_weight -= btag_weight_error;
 
       output_weight *= puReweigher->weight(n_trueInteractions) * generator_weight * lumi_weight * triggerWeight * lepton_weight;
+
+      // Top pt reweighting: see https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting
+/*      if (MC_channel != 0) {*/
+        //auto SF = [](TLorentzVector* top) {
+          //if (top->Pt() > 400)
+            //return 1.;
+
+          //return std::exp(0.159 - 0.00141 * top->Pt());
+        //};
+
+        //topPtWeight = std::sqrt(SF(getP4(gen_top1_p4, 0)) * SF(getP4(gen_top2_p4, 0)));
+
+        //output_weight *= topPtWeight;
+      /*}*/
     }
 
     if (doPDFAlphasSyst) {
-      if (alphasSyst == "up")
-        output_weight *= alphas_weight_up;
-      else if (alphasSyst == "down")
-        output_weight *= alphas_weight_down;
+      for (auto& set: (*alphas_weights_up)) {
+          if (alphasSyst == "up") {
+            h_mtt_alphas[index][set.first]->Fill(mtt_afterReco, output_weight*(*alphas_weights_up)[set.first][0]); 
+          } else if (alphasSyst == "down") {
+            h_mtt_alphas[index][set.first]->Fill(mtt_afterReco, output_weight*(*alphas_weights_down)[set.first][0]);
+          }
+      }
     }
 
     if (doPDFSyst) {
 
-//*****************************************************************************************
-
-        for (int imem=0; imem<N_error_pdf; imem++) {
-            if (pdfSyst == "up") {
-              h_mtt_pdf[index][imem]->Fill(mtt_afterReco, output_weight*pdf_weight_up[imem]); 
-            } else if (pdfSyst == "down") {
-              h_mtt_pdf[index][imem]->Fill(mtt_afterReco, output_weight*pdf_weight_down[imem]);
-            }
+      //*****************************************************************************************
+      for (auto& set: (*pdf_weights_up)) {
+        for (int imem=0; imem<set.second.size(); imem++) {
+          if (pdfSyst == "up") {
+            h_mtt_pdf[index][set.first][imem]->Fill(mtt_afterReco, output_weight*(*pdf_weights_up)[set.first][imem]); 
+          } else if (pdfSyst == "down") {
+            h_mtt_pdf[index][set.first][imem]->Fill(mtt_afterReco, output_weight*(*pdf_weights_down)[set.first][imem]);
+          }
         }
-/*      // 4? pdf systematics*/
-      //double sum = 0;
-      //for (unsigned int i = 0; i < (pdfWeights->size() / 2); i++) {
-        //int up_index = 2 * i;
-        //int down_index = up_index + 1;
-
-        //double up = (*pdfWeights)[up_index];
-        //double down = (*pdfWeights)[down_index];
-
-        //[>
-           //std::cout << "up weight: " << up << std::endl;
-           //std::cout << "down weight: " << down << std::endl;
-           //*/
-
-        //if (pdfSyst == "up") {
-          //sum += pow(std::max(std::max(up - 1, down - 1), 0.), 2);
-        //} else {
-          //sum += pow(std::max(std::max(1 - up, 1 - down), 0.), 2);
-        //}
-      //}
-
-      //double pdf_weight = sqrt(sum);
-      ////std::cout << "event weight: " << pdf_weight << std::endl;
-      //if (pdfSyst == "down")
-        //pdf_weight *= -1;
-
-      /*output_weight *= (pdf_weight / 1.645) + 1;*/
+      }
     }
 
     h_mtt[index]->Fill(mtt_afterReco, output_weight);
@@ -495,16 +533,25 @@ void reduce(const std::vector<std::string>& inputFiles, TChain* mtt, TChain* eve
 
   TFile* output = TFile::Open(outputFile.c_str(), "recreate");
 
-  if (!doPDFSyst) {
-      for (auto& hist: h_mtt) {
-          hist.second->Write();
+  if (doPDFSyst) {
+    for (auto& index: h_mtt_pdf) {
+      for (auto& set: index.second) {
+        for (int imem=0; imem<set.second.size(); imem++) {
+          set.second[imem]->Write();
+        }
+
       }
+    }
+  } else if (doPDFAlphasSyst) {
+    for (auto& index: h_mtt_alphas) {
+      for (auto& set: index.second) {
+        set.second->Write();
+      }
+    }
   } else {
-      for (auto& hist: h_mtt_pdf) {
-          for (int imem=0; imem<N_error_pdf; imem++) {
-              hist.second[imem]->Write();
-          }
-      }
+    for (auto& hist: h_mtt) {
+      hist.second->Write();
+    } 
   }
 
   output->Close();
