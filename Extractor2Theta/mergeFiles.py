@@ -40,6 +40,16 @@ toMerge = [
         {
             "inputs": ["WW", "WZ", "ZZ"],
             "output": "dibosons"
+        },
+
+        {
+            "inputs": ["QCD_pt15to30_bEnriched_MuEnrichedPt14", "QCD_pt30to50_bEnriched_MuEnrichedPt14", "QCD_pt50to150_bEnriched_MuEnrichedPt14", "QCD_pt150_bEnriched_MuEnrichedPt14"],
+            "output": "QCD_MuEnriched"
+        },
+
+        {
+            "inputs": ["QCD_Pt_20_30_EMEnriched", "QCD_Pt_30_80_EMEnriched", "QCD_Pt_80_170_EMEnriched", "QCD_Pt_170_250_EMEnriched", "QCD_Pt_250_350_EMEnriched", "QCD_Pt_350_EMEnriched"],
+            "output": "QCD_EMEnriched"
         }
         ]
 
@@ -48,9 +58,16 @@ for type in ["semie", "semimu"]:
 
     for data in toMerge:
         filenames = map(formatFileName, data["inputs"])
+        skip_job = False
+        for file in filenames:
+            if not os.path.exists(file):
+                print("Warning input file '%s' does not exist. Skipping job." % file)
+                skip_job = True
+        if skip_job :
+            continue
         args = ["hadd", "-f", formatFileName(data["output"])]
         args += filenames
-
+        #print args
         subprocess.call(args)
 
 systs = ["JECup", "JECdown", "JERup", "JERdown", "puUp", "puDown", "trigUp", "trigDown", "leptUp", "leptDown", "btagUp", "btagDown"]
@@ -60,6 +77,13 @@ for type in ["semie", "semimu"]:
     for syst in systs:
         for data in toMerge:
             filenames = map(formatFileName, data["inputs"])
+            skip_job = False
+            for file in filenames:
+                if not os.path.exists(file.replace("nominal", syst)):
+                    print("Warning input file '%s' does not exist. Skipping job." % file)
+                    skip_job = True
+            if skip_job :
+                continue
             args = ["hadd", "-f", formatFileName(data["output"]).replace("nominal", syst)]
             args += [f.replace("nominal", syst) for f in filenames]
 

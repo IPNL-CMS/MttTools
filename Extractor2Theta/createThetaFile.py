@@ -27,7 +27,9 @@ MC = {
         "Tbar": "single_antitop",
         "DYJetsToLL_M-50": "zjets",
         "WJetsToLNu": "wjets",
-        "dibosons": "dibosons"
+        "dibosons": "dibosons",
+        #"QCD_EMEnriched": "QCD",
+        #"QCD_MuEnriched": "QCD",
      }
 
 Signal = {
@@ -91,6 +93,9 @@ for type in ["semie", "semimu"]:
     tag = "e" if "semie" in type else "mu"
     for filename, title in MC.items():
         f = os.path.join(root, type, "MC_%s_theta_nominal.root" % filename)
+        if not os.path.exists(f):
+            print("Warning input file '%s' does not exist. Skipping job." % f)
+            continue
         f_ = TFile.Open(f)
         for btag in btags:
             hist_name = "mtt_%dbtag" % btag
