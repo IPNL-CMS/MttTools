@@ -137,14 +137,12 @@ void PreSkim::Loop()
   TTree* mtt_clone = fMTT->CloneTree(0);
   m_pdf_weights_up = NULL;
   m_pdf_weights_down = NULL;
-  m_alphaspdf_weights_NNPDF = NULL;
   m_alphas_weights_up = NULL;
   m_alphas_weights_down = NULL;
   mtt_clone->Branch("MC_pdf_weights_up", "std::map<std::string, std::vector<float>>", &m_pdf_weights_up);
   mtt_clone->Branch("MC_pdf_weights_down", "std::map<std::string, std::vector<float>>", &m_pdf_weights_down);
-  mtt_clone->Branch("MC_alphas_weights_up", "std::map<std::string, float>", &m_alphas_weights_up);
-  mtt_clone->Branch("MC_alphas_weights_down", "std::map<std::string, float>", &m_alphas_weights_down);
-  mtt_clone->Branch("MC_alphaspdf_weights_NNPDF", "std::map<std::string, std::vector<float>>", &m_alphaspdf_weights_NNPDF);
+  mtt_clone->Branch("MC_alphas_weights_up", "std::map<std::string, std::vector<float>>", &m_alphas_weights_up);
+  mtt_clone->Branch("MC_alphas_weights_down", "std::map<std::string, std::vector<float>>", &m_alphas_weights_down);
   mtt_clone->SetAutoSave(0);
   TTree* vertices_clone = fVertices->CloneTree(0);
   vertices_clone->SetAutoSave(0);
@@ -207,9 +205,8 @@ void PreSkim::Loop()
   if (mDoPDFWeight) {
     m_pdf_weights_up = new std::map<std::string, std::vector<float>>;
     m_pdf_weights_down = new std::map<std::string, std::vector<float>>;
-    m_alphas_weights_up = new std::map<std::string, float>;
-    m_alphas_weights_down = new std::map<std::string, float>;
-    m_alphaspdf_weights_NNPDF = new std::map<std::string, std::vector<float>>;
+    m_alphas_weights_up = new std::map<std::string, std::vector<float>>;
+    m_alphas_weights_down = new std::map<std::string, std::vector<float>>;
     for (int i=0; i < setnames.size(); i++) {
         if (setnames[i] == "NNPDF23_nlo") {
             // first add nominal PDF
@@ -302,14 +299,10 @@ void PreSkim::Loop()
           w0 = xpdf1 * xpdf2;
           (*m_pdf_weights_up)[setnames[i]].clear();
           (*m_pdf_weights_down)[setnames[i]].clear();
-          (*m_alphaspdf_weights_NNPDF)[setnames[i]].clear();
           for (size_t imem = 1; imem < pdfs[setnames[i]].size(); imem++) {
             xpdf1_new = pdfs[setnames[i]][imem]->xfxQ(pdf_id1, pdf_x1, pdf_scale);
             xpdf2_new = pdfs[setnames[i]][imem]->xfxQ(pdf_id2, pdf_x2, pdf_scale);
             pdf_weight = xpdf1_new * xpdf2_new / w0;
-            if (setnames[i] == "NNPDF23_nlo") {
-                (*m_alphaspdf_weights_NNPDF)[setnames[i]].push_back(pdf_weight);
-            } 
             if (imem % 2 == 0) {
                 (*m_pdf_weights_down)[setnames[i]].push_back(pdf_weight);
             } else {
@@ -323,13 +316,15 @@ void PreSkim::Loop()
           // http://cms.cern.ch/iCMS/jsp/openfile.jsp?tp=draft&files=AN2009_048_v1.pdf
 
           if (setnames[i] != "NNPDF23_nlo") {
+              (*m_alphas_weights_up)[setnames[i]].clear();
+              (*m_alphas_weights_down)[setnames[i]].clear();
               xpdf1_new = pdfs_as_down[setnames[i]]->xfxQ(pdf_id1, pdf_x1, pdf_scale);
               xpdf2_new = pdfs_as_down[setnames[i]]->xfxQ(pdf_id2, pdf_x2, pdf_scale);
-              (*m_alphas_weights_down)[setnames[i]] = xpdf1_new * xpdf2_new / w0;
+              (*m_alphas_weights_down)[setnames[i]].push_back(xpdf1_new * xpdf2_new / w0);
 
               xpdf1_new = pdfs_as_up[setnames[i]]->xfxQ(pdf_id1, pdf_x1, pdf_scale);
               xpdf2_new = pdfs_as_up[setnames[i]]->xfxQ(pdf_id2, pdf_x2, pdf_scale);
-              (*m_alphas_weights_up)[setnames[i]] = xpdf1_new * xpdf2_new / w0;
+              (*m_alphas_weights_up)[setnames[i]].push_back(xpdf1_new * xpdf2_new / w0);
           }
         }
       }
