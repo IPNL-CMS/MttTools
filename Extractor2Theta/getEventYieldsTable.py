@@ -49,12 +49,12 @@ toMerge = [
 final_backgrounds = ["H400_scalar", "H500_scalar", "H600_scalar", "H700_scalar", "H800_scalar", "H400_pseudoscalar", "H500_pseudoscalar", "H600_pseudoscalar", "H700_pseudoscalar", "H800_pseudoscalar", "LINE", "dibosons", "st", "wjets", "zjets", "TT"]
 
 scales = {
-        'TT': 1.11656917895,
-        'single_top': 0.752977096273,
-        'single_antitop': 0.726020758287,
-        'wjets': 0.752756649328,
-        'zjets': 0.798077448158,
-        'dibosons': 0.89601062945
+        'TT': 1.11675662108,
+        'single_top': 0.749739813633,
+        'single_antitop': 0.719572253505,
+        'wjets': 0.75109998778,
+        'dibosons': 0.894875328472,
+        'zjets': 0.78900146367
         }
 
 categories = ["e", "mu"]
@@ -194,15 +194,16 @@ for bkg in final_backgrounds:
         events[("mu", 2, bkg)]
         ))
 
-    events[("e", 1)] += events[("e", 1, bkg)]
-    events[("e", 2)] += events[("e", 2, bkg)]
-    events[("mu", 1)] += events[("mu", 1, bkg)]
-    events[("mu", 2)] += events[("mu", 2, bkg)]
+    if not "scalar" in bkg:
+        events[("e", 1)] += events[("e", 1, bkg)]
+        events[("e", 2)] += events[("e", 2, bkg)]
+        events[("mu", 1)] += events[("mu", 1, bkg)]
+        events[("mu", 2)] += events[("mu", 2, bkg)]
 
-    sys_errors[("e", 1)] = math.sqrt( sys_errors[("e", 1)]**2 + sys_errors[("e", 1, bkg)]**2 )
-    sys_errors[("e", 2)] = math.sqrt( sys_errors[("e", 2)]**2 + sys_errors[("e", 2, bkg)]**2 )
-    sys_errors[("mu", 1)] = math.sqrt( sys_errors[("mu", 1)]**2 + sys_errors[("mu", 1, bkg)]**2 )
-    sys_errors[("mu", 2)] = math.sqrt( sys_errors[("mu", 2)]**2 + sys_errors[("mu", 2, bkg)]**2 )
+        sys_errors[("e", 1)] = math.sqrt( sys_errors[("e", 1)]**2 + sys_errors[("e", 1, bkg)]**2 )
+        sys_errors[("e", 2)] = math.sqrt( sys_errors[("e", 2)]**2 + sys_errors[("e", 2, bkg)]**2 )
+        sys_errors[("mu", 1)] = math.sqrt( sys_errors[("mu", 1)]**2 + sys_errors[("mu", 1, bkg)]**2 )
+        sys_errors[("mu", 2)] = math.sqrt( sys_errors[("mu", 2)]**2 + sys_errors[("mu", 2, bkg)]**2 ) 
 
 
 # Compute systematic error
