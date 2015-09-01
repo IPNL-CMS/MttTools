@@ -253,8 +253,17 @@ int main(int argc, char** argv) {
                 uncertainties->SetBinContent(i, 0.);
                 uncertainties->SetBinError(i, delta_percent);
 
+                float delta_plus = fabs(norm_plus-nominal_value);
+                float delta_plus_percent = (delta_plus == 0 || nominal_value == 0) ? 0 : delta_plus / nominal_value;
+
+                float delta_minus = fabs(norm_minus-nominal_value);
+                float delta_minus_percent = (delta_minus == 0 || nominal_value == 0) ? 0 : delta_minus / nominal_value;
+
+                uncertainties->SetBinContent(i, 0.);
+                uncertainties->SetBinError(i, delta_percent);
+
                 uncertainties_asym->SetPoint(index, nominal_x, 0.);
-                uncertainties_asym->SetPointError(index, 0, 0, delta_percent, delta_percent);
+                uncertainties_asym->SetPointError(index, 0, 0, delta_minus_percent, delta_plus_percent);
                 index++;
 
                 if (! manual) {
