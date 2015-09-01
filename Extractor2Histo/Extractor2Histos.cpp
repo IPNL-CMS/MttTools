@@ -208,7 +208,7 @@ void Extractor2Histos::Loop()
   TH1D *hmttSelected_btag_sel = new TH1D("mttSelected_btag_sel_reco_fullsel", "", 40, 0., 2000.);
 
   float hist_min = 250;
-  float hist_max = 1255;
+  float hist_max = 1250;
   int nBins = (hist_max - hist_min) / 15.;
 
   TH1D *hmttSelected_btag_sel_binning15GeV = new TH1D("mttSelected_btag_sel_reco_fullsel_binning15GeV", "", nBins, hist_min, hist_max);
