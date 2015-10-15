@@ -138,6 +138,8 @@ for type in ["semie", "semimu"]:
             hist_name = "mtt_%s_%dbtag__%s" % (tag, btag, title)
             sigma_x = {} # store sigma per mtt bin per syst 
             for syst in theta_syst:
+                if syst == "beta_signal":
+                    continue
                 # Special treatment for lept syst 
                 if syst == "lept_mu" and type == "semie":
                     continue
@@ -232,11 +234,15 @@ for type in ["semie", "semimu"]:
                 #total_uncertainties.SetBinContent(k, 0)
                 delta_2 = 0.
                 for i, syst_i in enumerate(theta_syst):
+                    if syst_i == "beta_signal":
+                        continue
                     if syst_i == "lept_mu" and type == "semie":
                         continue
                     if syst_i == "lept_e" and type == "semimu":
                         continue
                     for j, syst_j in enumerate(theta_syst):
+                        if syst_j == "beta_signal":
+                            continue
                         if syst_j == "lept_mu" and type == "semie":
                             continue
                         if syst_j == "lept_e" and type == "semimu":
