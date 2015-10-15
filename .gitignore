@@ -6,3 +6,7 @@
 *.root
 *.swo
 *.a
+*.swm
+*.swn
+*.orig
+
