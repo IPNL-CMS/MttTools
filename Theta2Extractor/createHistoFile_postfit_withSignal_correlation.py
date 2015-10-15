@@ -236,16 +236,14 @@ for type in ["semie", "semimu"]:
                         continue
                     if syst_i == "lept_e" and type == "semimu":
                         continue
-                    sigma_i = sigma_x[syst_i].GetBinError(k)
-                    delta_2 = delta_2 + sigma_i * sigma_i 
                     for j, syst_j in enumerate(theta_syst):
                         if syst_j == "lept_mu" and type == "semie":
                             continue
                         if syst_j == "lept_e" and type == "semimu":
                            continue
-                        if j != i:
-                            sigma_j = sigma_x[syst_j].GetBinError(k)
-                            delta_2 = delta_2 + corr[i][j] * sigma_i * sigma_j
+                        sigma_i = sigma_x[syst_i].GetBinError(k)
+                        sigma_j = sigma_x[syst_j].GetBinError(k)
+                        delta_2 = delta_2 + corr[i][j] * sigma_i * sigma_j # if i = j, corr[i][j] = 1
                 total_uncertainties.SetBinError(k, sqrt(delta_2))
             output.cd()
             total_uncertainties.Write()
