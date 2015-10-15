@@ -135,10 +135,12 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
   TClonesArray* m_jet_lorentzvector = new TClonesArray("TLorentzVector");
   int  n_jets;
   int  m_jet_MCIndex[m_jets_MAX];
+  float  m_jet_qgtag_likelihood[m_jets_MAX];
 
   SetBranchAddress(jets, "n_jets", &n_jets);
   SetBranchAddress(jets, "jet_4vector", &m_jet_lorentzvector);
   SetBranchAddress(jets, "jet_mcParticleIndex", &m_jet_MCIndex);
+  SetBranchAddress(jets, "jet_qgtag_likelihood", &m_jet_qgtag_likelihood);
 
   // Electrons
   static const int 	m_electrons_MAX  = 100;
@@ -193,7 +195,8 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
   SetBranchAddress(mtt, "pass_lepton_cut", &pass_lepton_cut);
 
   TClonesArray* lepton_p4 = new TClonesArray("TLorentzVector");
-  SetBranchAddress(mtt, "selectedLeptonP4_AfterChi2", &lepton_p4);
+  //SetBranchAddress(mtt, "selectedLeptonP4_AfterChi2", &lepton_p4);
+  SetBranchAddress(mtt, "selectedLeptonP4", &lepton_p4);
 
   // Histograms
   TH1* h_deltaPtFirstJet  = new TH1F("deltapt_firstjet", "Delta pt first jet", 70, -1.5, 1.5);
@@ -217,6 +220,9 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
   TH1* h_ptSystem_large  = new TH1F("pt_system_large", "tt system pt", 200, 0, 800);
 
   TH1* h_htFrac  = new TH1F("ht_frac", "HT frac", 50, 0, 1);
+  TH1* h_ht  = new TH1F("ht", "HT", 200, 0, 800);
+
+  TH1* h_qgLikelihood  = new TH1F("qgLikelihood", "QG Lieklihood", 50, 0, 1);
 
   // Wrong combinaison plot
   TH1* h_hadronicWMass_wrong = new TH1F("w_mass_wrong", "hadronic w mass (wrong selection)", 200, 0, 600);
@@ -225,6 +231,8 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
   TH1* h_leptonicTopMassE_wrong = new TH1F("leptonic_top_mass_e_wrong", "leptonic top mass - e channel (wrong selection)", 200, 0, 800);
   TH1* h_ptSystem_wrong  = new TH1F("pt_system_wrong", "tt system pt (wrong selection)", 200, 0, 800);
   TH1* h_htFrac_wrong  = new TH1F("ht_frac_wrong", "HT frac (wrong selection)", 50, 0, 1);
+  TH1* h_ht_wrong  = new TH1F("ht_wrong", "HT (wrong selection)", 200, 0, 800);
+  TH1* h_qgLikelihood_wrong  = new TH1F("qgLikelihood_wrong", "QG Lieklihood (wrong selection)", 50, 0, 1);
 
   // 2012 luminosity
   float mu_lumi_run2012_A = 0;
@@ -447,6 +455,8 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
               double htFrac = firstJetP4->Pt() + secondJetP4->Pt() + thirdJetP4->Pt() + fourthJetP4->Pt();
               htFrac /= allJet_pt;
               h_htFrac_wrong->Fill(htFrac);
+              h_ht_wrong->Fill(allJet_pt);
+              h_qgLikelihood_wrong->Fill(m_jet_qgtag_likelihood[j1] + m_jet_qgtag_likelihood[j2] + m_jet_qgtag_likelihood[j3] + m_jet_qgtag_likelihood[j4]);
             }
           }
         }
@@ -523,6 +533,8 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
     double htFrac = firstJetP4->Pt() + secondJetP4->Pt() + hadronicBP4->Pt() + leptonicBP4->Pt();
     htFrac /= allJet_pt;
     h_htFrac->Fill(htFrac);
+    h_ht->Fill(allJet_pt);
+    h_qgLikelihood->Fill(m_jet_qgtag_likelihood[recoFirstJetIndex] + m_jet_qgtag_likelihood[recoSecondJetIndex] + m_jet_qgtag_likelihood[recoHadronicBIndex] + m_jet_qgtag_likelihood[recoLeptonicBIndex]);
 
     selectedEntries++;
     if (isSemiMu)
@@ -597,6 +609,9 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
   h_ptSystem_large->Write();
 
   h_htFrac->Write();
+  h_ht->Write();
+
+  h_qgLikelihood->Write();
 
   h_hadronicWMass_wrong->Write();
   h_hadronicTopMass_wrong->Write();
@@ -604,6 +619,8 @@ void process(const std::vector<std::string>& inputFiles, const std::string& outp
   h_leptonicTopMassE_wrong->Write();
   h_ptSystem_wrong->Write();
   h_htFrac_wrong->Write();
+  h_ht_wrong->Write();
+  h_qgLikelihood_wrong->Write();
 
   output->Close();
   

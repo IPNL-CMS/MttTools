@@ -1,7 +1,7 @@
 TLegend* createLegend(TH1* a, TH1* b, bool left = false) {
   TLegend* l = NULL;
   if (! left)
-    l = new TLegend(0.35, 0.75, 0.88, 0.88);
+    l = new TLegend(0.40, 0.75, 0.88, 0.88);
   else
     l = new TLegend(0.12, 0.75, 0.45, 0.88);
 
@@ -49,11 +49,23 @@ void plotGoodWrongCombinaison(TFile* f) {
   TH1* ht_frac = (TH1*) f->Get("ht_frac");
   TH1* ht_frac_wrong = (TH1*) f->Get("ht_frac_wrong");
 
+  TH1* ht = (TH1*) f->Get("ht");
+  TH1* ht_wrong = (TH1*) f->Get("ht_wrong");
+
+  TH1* qgLikelihood = (TH1*) f->Get("qgLikelihood");
+  TH1* qgLikelihood_wrong = (TH1*) f->Get("qgLikelihood_wrong");
+
   int binmax = pt_syst->GetMaximumBin();
   double ptsyst_x = pt_syst->GetXaxis()->GetBinCenter(binmax);
 
   binmax = ht_frac->GetMaximumBin();
   double htfrac_x = ht_frac->GetXaxis()->GetBinCenter(binmax);
+
+  binmax = ht->GetMaximumBin();
+  double ht_x = ht->GetXaxis()->GetBinCenter(binmax);
+
+  binmax = qgLikelihood->GetMaximumBin();
+  double qgLikelihood_x = qgLikelihood->GetXaxis()->GetBinCenter(binmax);
 
    TIter next(gDirectory->GetList());
    TObject *obj;
@@ -108,6 +120,20 @@ void plotGoodWrongCombinaison(TFile* f) {
   ht_frac->SetMarkerSize(0.8);
   ht_frac_wrong->SetTitle("H_{T} fraction (all comb.)");
   //ht_frac->Rebin(2);
+
+  ht->SetTitle("H_{T}");
+  ht->GetXaxis()->SetTitle("H_{T} (GeV)");
+  ht->SetMarkerStyle(20);
+  ht->SetMarkerSize(0.8);
+  ht_wrong->SetTitle("H_{T} (all comb.)");
+  ht->Rebin(4);
+
+  qgLikelihood->SetTitle("QG Likelihood");
+  qgLikelihood->GetXaxis()->SetTitle("QG Likelihood");
+  qgLikelihood->SetMarkerStyle(20);
+  qgLikelihood->SetMarkerSize(0.8);
+  qgLikelihood_wrong->SetTitle("QG Likelihood (all comb.)");
+  //qgLikelihood->Rebin(2);
   
   int red_color = TColor::GetColor("#C44D58");
   int bkg_color = TColor::GetColor("#ECD078");
@@ -142,6 +168,16 @@ void plotGoodWrongCombinaison(TFile* f) {
   ht_frac_wrong->SetFillColor(bkg_color);
   ht_frac_wrong->SetFillStyle(1001);
   //ht_frac_wrong->Rebin(2);
+
+  ht_wrong->SetLineColor(bkg_color);
+  ht_wrong->SetFillColor(bkg_color);
+  ht_wrong->SetFillStyle(1001);
+  ht_wrong->Rebin(4);
+
+  qgLikelihood_wrong->SetLineColor(bkg_color);
+  qgLikelihood_wrong->SetFillColor(bkg_color);
+  qgLikelihood_wrong->SetFillStyle(1001);
+  //qgLikelihood_wrong->Rebin(2);
 
   // Fit plots
   TF1* top_gaussian = new TF1("f1", "gaus", 150, 210);
@@ -194,6 +230,8 @@ void plotGoodWrongCombinaison(TFile* f) {
 
     std::cout << "TT system pt: " << ptsyst_x << " +/- " << pt_syst->GetRMS() << std::endl;
     std::cout << "HT frac: " << htfrac_x << " +/- " << ht_frac->GetRMS() << std::endl;
+    std::cout << "HT : " << ht_x << " +/- " << ht->GetRMS() << std::endl;
+    std::cout << "QG Lieklihood: " << qgLikelihood_x << " +/- " << qgLikelihood->GetRMS() << std::endl;
   //} else {
     //std::cout << w_gaussian->GetParameter(1) << "\t" << w_gaussian->GetParameter(2) << std::endl;
     //std::cout << top_gaussian->GetParameter(1) << "\t" << top_gaussian->GetParameter(2) << std::endl;
@@ -258,4 +296,20 @@ void plotGoodWrongCombinaison(TFile* f) {
   createLegend(ht_frac, ht_frac_wrong, true)->Draw();
 
   c1->Print("chi2_discrimant_combinations_ht_frac.pdf");
+
+  ht_wrong->Scale(ht->Integral() / ht_wrong->Integral());
+  ht->Draw("hist P");
+  ht_wrong->Draw("hist same");
+  ht->Draw("P same");
+  createLegend(ht, ht_wrong)->Draw();
+
+  c1->Print("chi2_discrimant_combinations_ht.pdf");
+
+  qgLikelihood_wrong->Scale(qgLikelihood->Integral() / qgLikelihood_wrong->Integral());
+  qgLikelihood->Draw("hist P");
+  qgLikelihood_wrong->Draw("hist same");
+  qgLikelihood->Draw("P same");
+  createLegend(qgLikelihood, qgLikelihood_wrong, true)->Draw();
+
+  c1->Print("chi2_discrimant_combinations_qgLikelihood.pdf");
 }

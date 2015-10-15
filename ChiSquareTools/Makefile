@@ -29,7 +29,7 @@ ARFLAGS       = -cq
 LDDIR         = $(shell echo "-L" $$LD_LIBRARY_PATH | sed -e 's/:/ -L/g') -L$(ROOFIT_LIBDIR)/ -L../lib/
 
 CXXFLAGS	   += $(ROOTCFLAGS) $(INCLUDES) -I. -I../include/
-LIBS  		    = $(LDDIR) $(ROOTLIBS) 
+LIBS  		    = $(LDDIR) $(ROOTLIBS) -lGenVector
 GLIBS	    	  = $(ROOTGLIBS)
 #------------------------------------------------------------------------------
 SOURCES		= $(wildcard *.$(SrcSuf))
@@ -41,7 +41,7 @@ SOBJECTS	= $(SOURCES:.$(SrcSuf)=.$(DllSuf))
 
 ###
 
-all: computeChiSquareRefValues computeChiSquareEfficiency
+all: computeChiSquareRefValues computeChiSquareEfficiency computeQGTag computeAssociableEfficiency
 
 clean:
 	@rm *.o;
@@ -50,6 +50,12 @@ computeChiSquareRefValues: computeChiSquareRefValues.o KinFit.o
 	$(LD) $(LIBS) $(SOFLAGS) $(LDFLAGS) $+ -o $@
 
 computeChiSquareEfficiency: computeChiSquareEfficiency.o
+	$(LD) $(LIBS) $(SOFLAGS) $(LDFLAGS) $+ -o $@
+
+computeQGTag: computeQGTag.o
+	$(LD) $(LIBS) $(SOFLAGS) $(LDFLAGS) $+ -o $@
+
+computeAssociableEfficiency: computeAssociableEfficiency.o
 	$(LD) $(LIBS) $(SOFLAGS) $(LDFLAGS) $+ -o $@
 
 %.o: %.cpp
